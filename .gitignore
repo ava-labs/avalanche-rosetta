@@ -1,5 +1,13 @@
 .DS_Store
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
 *.json
 *.log
+*.out
 avalanche-rosetta
 tmp
+vendor/
