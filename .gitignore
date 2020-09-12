@@ -1,0 +1,5 @@
+.DS_Store
+*.json
+*.log
+avalanche-rosetta
+tmp
