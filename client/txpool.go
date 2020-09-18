@@ -8,7 +8,7 @@ type TxPoolClient struct {
 
 func NewTxPoolClient(endpoint string) *TxPoolClient {
 	return &TxPoolClient{
-		rpc: NewRPCClient(fmt.Sprintf("%s%s", endpoint, EvmPrefix)),
+		rpc: NewRPCClient(fmt.Sprintf("%s%s", endpoint, PrefixEVM)),
 	}
 }
 

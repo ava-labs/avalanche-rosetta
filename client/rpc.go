@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	InfoPrefix     = "/ext/info"
-	PlatformPrefix = "/ext/P"
-	AvmPrefix      = "/ext/bc/X"
-	EvmPrefix      = "/ext/bc/C/rpc"
+	PrefixInfo     = "/ext/info"
+	PrefixPlatform = "/ext/P"
+	PrefixAVM      = "/ext/bc/X"
+	PrefixEVM      = "/ext/bc/C/rpc"
 )
 
 // RPC implements a generic JSON-RPCv2 client

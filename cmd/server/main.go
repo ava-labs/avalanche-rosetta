@@ -17,7 +17,7 @@ import (
 
 var (
 	cmdName    = "avalanche-rosetta"
-	cmdVersion = "0.1.0"
+	cmdVersion = service.RosettaVersion
 )
 
 var opts struct {

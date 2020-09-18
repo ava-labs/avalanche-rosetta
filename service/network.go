@@ -85,10 +85,13 @@ func (s *NetworkService) NetworkOptions(ctx context.Context, request *types.Netw
 		return nil, errStatusNodeVersionFailed
 	}
 
+	middlewareVersion := MiddlewareVersion
+
 	resp := &types.NetworkOptionsResponse{
 		Version: &types.Version{
-			RosettaVersion: RosettaVersion,
-			NodeVersion:    nodeVersion,
+			RosettaVersion:    RosettaVersion,
+			MiddlewareVersion: &middlewareVersion,
+			NodeVersion:       nodeVersion,
 		},
 		Allow: &types.Allow{
 			OperationStatuses: mapper.OperationStatuses,

@@ -13,7 +13,7 @@ type EvmClient struct {
 }
 
 func NewEvmClient(endpoint string) *EvmClient {
-	ethclient, err := ethclient.Dial(fmt.Sprintf("%s%s", endpoint, EvmPrefix))
+	ethclient, err := ethclient.Dial(fmt.Sprintf("%s%s", endpoint, PrefixEVM))
 	if err != nil {
 		// TODO: this should not panic at all
 		panic(err)

@@ -68,10 +68,10 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 	}
 
 	// Fetch the parent block since we dont have full info on the block itself
-	parentBlock, err := s.evm.BlockByHash(context.Background(), block.ParentHash())
+	parentBlock, err := s.evm.HeaderByHash(context.Background(), block.ParentHash())
 	if err == nil {
 		parentBlockIdentifier = &types.BlockIdentifier{
-			Index: parentBlock.Number().Int64(),
+			Index: parentBlock.Number.Int64(),
 			Hash:  parentBlock.Hash().String(),
 		}
 	} else {
@@ -112,6 +112,13 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 			ParentBlockIdentifier: parentBlockIdentifier,
 			Timestamp:             int64(block.Time() * 1000),
 			Transactions:          transactions,
+			Metadata: map[string]interface{}{
+				"gas_limit":  block.GasLimit(),
+				"gas_used":   block.GasUsed(),
+				"difficulty": block.Difficulty(),
+				"nonce":      block.Nonce(),
+				"size":       block.Size().String(),
+			},
 		},
 	}, nil
 }

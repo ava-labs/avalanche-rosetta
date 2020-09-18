@@ -16,7 +16,7 @@ type infoPeersResponse struct {
 
 func NewInfoClient(endpoint string) *InfoClient {
 	return &InfoClient{
-		rpc: NewRPCClient(fmt.Sprintf("%s%s", endpoint, InfoPrefix)),
+		rpc: NewRPCClient(fmt.Sprintf("%s%s", endpoint, PrefixInfo)),
 	}
 }
 
