@@ -1,4 +1,4 @@
-.PHONY: build
+.PHONY: build test
 
 build:
 	go build -o ./avalanche-rosetta ./cmd/server
