@@ -81,6 +81,7 @@ func main() {
 		mapper.OperationTypes,               // supported operation types
 		true,                                // historical balance lookup
 		[]*types.NetworkIdentifier{network}, // supported networs
+		[]string{},                          // call methods
 	)
 	if err != nil {
 		log.Fatal("server asserter init error:", err)
