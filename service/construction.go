@@ -46,16 +46,6 @@ func (s ConstructionService) ConstructionSubmit(ctx context.Context, req *types.
 	}, nil
 }
 
-// ConstructionCombine implements /construction/combine endpoint
-func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
-	return nil, errNotSupported
-}
-
-// ConstructionDerive implements /construction/derive endpoint
-func (s ConstructionService) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
-	return nil, errNotSupported
-}
-
 // ConstructionHash implements /construction/hash endpoint
 func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
 	tx, err := txFromInput(req.SignedTransaction)
@@ -68,6 +58,16 @@ func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.Co
 			Hash: tx.Hash().String(),
 		},
 	}, nil
+}
+
+// ConstructionCombine implements /construction/combine endpoint
+func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
+	return nil, errNotSupported
+}
+
+// ConstructionDerive implements /construction/derive endpoint
+func (s ConstructionService) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
+	return nil, errNotSupported
 }
 
 // ConstructionParse implements /construction/parse endpoint

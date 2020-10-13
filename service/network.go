@@ -96,7 +96,7 @@ func (s *NetworkService) NetworkOptions(ctx context.Context, request *types.Netw
 		Allow: &types.Allow{
 			OperationStatuses: mapper.OperationStatuses,
 			OperationTypes:    mapper.OperationTypes,
-			Errors:            allErrors(),
+			Errors:            errorList(),
 		},
 	}
 

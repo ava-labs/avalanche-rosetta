@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -30,8 +29,7 @@ func NewMempoolService(network *types.NetworkIdentifier, evmClient *client.EvmCl
 func (s MempoolService) Mempool(ctx context.Context, req *types.NetworkRequest) (*types.MempoolResponse, *types.Error) {
 	content, err := s.txpool.Content()
 	if err != nil {
-		log.Println("txpool fetch error:", err)
-		return nil, errInternalError
+		return nil, errorWithInfo(errInternalError, err)
 	}
 
 	return &types.MempoolResponse{

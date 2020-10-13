@@ -27,7 +27,7 @@ var (
 	errConstructionSubmitFailed = makeError(301, "Transaction submission failed", true)
 )
 
-func allErrors() []*types.Error {
+func errorList() []*types.Error {
 	return []*types.Error{
 		errNotImplemented,
 		errNotSupported,
