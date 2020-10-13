@@ -46,8 +46,9 @@ List of all available Rosetta RPC server endpoints
 | POST   | /account/balance       | Y      | Get an Account Balance
 | POST   | /mempool               | Y      | Get All Mempool Transactions
 | POST   | /mempool/transaction   | -      | Get a Mempool Transaction
+| POST   | /construction/metadata | Y      | Get Transaction Hash
 | POST   | /construction/metadata | -      | Get Transaction Construction Metadata
-| POST   | /construction/submit   | -      | Submit a Signed Transaction
+| POST   | /construction/submit   | Y      | Submit a Signed Transaction
 
 ### Development
 

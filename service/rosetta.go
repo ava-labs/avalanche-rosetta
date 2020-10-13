@@ -18,7 +18,7 @@ var (
 
 func SetChainID(val *big.Int) {
 	if val == nil {
-		panic("chain id value cant be nil")
+		panic("chain id value must be set")
 	}
 	signer = ethtypes.NewEIP155Signer(val)
 }

@@ -6,10 +6,6 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	ethrpl "github.com/ethereum/go-ethereum/rlp"
-
 	"github.com/figment-networks/avalanche-rosetta/client"
 )
 
@@ -27,17 +23,20 @@ func NewConstructionService(network *types.NetworkIdentifier, evmClient *client.
 	}
 }
 
+// ConstructionMetadata implements /construction/metadata endpoint
+func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error) {
+	return &types.ConstructionMetadataResponse{}, nil
+}
+
 // ConstructionSubmit implements /construction/submit endpoint
 func (s ConstructionService) ConstructionSubmit(ctx context.Context, req *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error) {
-	rawTx := ethcommon.Hex2Bytes(req.SignedTransaction)
-	tx := &ethtypes.Transaction{}
-
-	if err := ethrpl.DecodeBytes(rawTx, tx); err != nil {
+	tx, err := txFromInput(req.SignedTransaction)
+	if err != nil {
 		return nil, errorWithInfo(errConstructionInvalidTx, err)
 	}
 
 	if err := s.evm.SendTransaction(ctx, tx); err != nil {
-		return nil, errorWithInfo(errConstructionSubmit, err)
+		return nil, errorWithInfo(errConstructionSubmitFailed, err)
 	}
 
 	return &types.TransactionIdentifierResponse{
@@ -59,12 +58,16 @@ func (s ConstructionService) ConstructionDerive(ctx context.Context, req *types.
 
 // ConstructionHash implements /construction/hash endpoint
 func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
-	return nil, errNotSupported
-}
+	tx, err := txFromInput(req.SignedTransaction)
+	if err != nil {
+		return nil, errorWithInfo(errConstructionInvalidTx, err)
+	}
 
-// ConstructionMetadata implements /construction/metadata endpoint
-func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error) {
-	return nil, errNotImplemented
+	return &types.TransactionIdentifierResponse{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			Hash: tx.Hash().String(),
+		},
+	}, nil
 }
 
 // ConstructionParse implements /construction/parse endpoint

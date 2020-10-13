@@ -23,12 +23,15 @@ var (
 	errBlockNotFound     = makeError(202, "Block was not found", false)
 
 	// Construction service errors
-	errConstructionInvalidTx = makeError(300, "Invalid transaction data", false)
-	errConstructionSubmit    = makeError(301, "Transaction submission failed", true)
+	errConstructionInvalidTx    = makeError(300, "Invalid transaction data", false)
+	errConstructionSubmitFailed = makeError(301, "Transaction submission failed", true)
 )
 
 func allErrors() []*types.Error {
 	return []*types.Error{
+		errNotImplemented,
+		errNotSupported,
+		errInvalidInput,
 		errInternalError,
 
 		errStatusBlockFetchFailed,
@@ -38,6 +41,9 @@ func allErrors() []*types.Error {
 		errBlockInvalidInput,
 		errBlockFetchFailed,
 		errBlockNotFound,
+
+		errConstructionSubmitFailed,
+		errConstructionInvalidTx,
 	}
 }
 
