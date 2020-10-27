@@ -7,6 +7,7 @@ import (
 )
 
 type config struct {
+	Mode        string `json:"mode"`
 	RPCEndpoint string `json:"rpc_endpoint"`
 	ListenAddr  string `json:"listen_addr"`
 	NetworkName string `json:"network_name"`
@@ -27,12 +28,22 @@ func readConfig(path string) (*config, error) {
 	return cfg, nil
 }
 
+func (c *config) ApplyDefaults() {
+	if c.Mode == "" {
+		c.Mode = "online"
+	}
+
+	if c.ListenAddr == "" {
+		c.ListenAddr = "0.0.0.0:8080"
+	}
+}
+
 func (c *config) Validate() error {
 	if c.RPCEndpoint == "" {
 		return errors.New("avalanche rpc endpoint is not provided")
 	}
-	if c.ListenAddr == "" {
-		c.ListenAddr = "0.0.0.0:8080"
-	}
+
+	c.ApplyDefaults()
+
 	return nil
 }
