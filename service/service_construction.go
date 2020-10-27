@@ -75,7 +75,12 @@ func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types
 		return nil, errorWithInfo(errConstructionInvalidTx, err)
 	}
 
-	txData, err := tx.MarshalJSON()
+	signedTx, err := tx.WithSignature(signer, req.Signatures[0].Bytes)
+	if err != nil {
+		return nil, errorWithInfo(errInternalError, err)
+	}
+
+	txData, err := signedTx.MarshalJSON()
 	if err != nil {
 		return nil, errorWithInfo(errInternalError, err)
 	}
