@@ -2,12 +2,16 @@
 
 [Rosetta][1] server implementation for [Avalanche][2] Blockchain.
 
+*Under active development*
+
+*Please note this implementation only works with C-Chain*
+
 ## Requirements
 
-In order to run the Avalanche Rosetta server you will need access to [Gecko][3]
+In order to run the Avalanche Rosetta server you will need access to [Avalanche][3]
 services via RPC. More info in available APIs found [here][4].
 
-See Gecko documentation on how to run the chain node locally. If you don't run
+See AvalancheGo documentation on how to run the chain node locally. If you don't run
 the Avalanche node yourself you might use a hosted service like [Figment DataHub][5].
 
 ## Installation
@@ -67,6 +71,6 @@ Apache License v2.0
 
 [1]: https://www.rosetta-api.org/
 [2]: https://www.avalabs.org/
-[3]: https://github.com/ava-labs/gecko
+[3]: https://github.com/ava-labs/avalanchego
 [4]: https://docs.avax.network/v1.0/en/api/intro-apis/
-[5]: https://figment.network/datahub/
+[5]: https://figment.io/datahub/
