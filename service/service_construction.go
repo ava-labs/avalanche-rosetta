@@ -5,6 +5,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/figment-networks/avalanche-rosetta/client"
 )
@@ -62,12 +63,44 @@ func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.Co
 
 // ConstructionCombine implements /construction/combine endpoint
 func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
-	return nil, errNotSupported
+	if req.UnsignedTransaction == "" {
+		return nil, errorWithInfo(errInvalidInput, "transaction data is not provided")
+	}
+	if len(req.Signatures) == 0 {
+		return nil, errorWithInfo(errInvalidInput, "signature is not provided")
+	}
+
+	tx, err := unsignedTxFromInput(req.UnsignedTransaction)
+	if err != nil {
+		return nil, errorWithInfo(errConstructionInvalidTx, err)
+	}
+
+	txData, err := tx.MarshalJSON()
+	if err != nil {
+		return nil, errorWithInfo(errInternalError, err)
+	}
+
+	return &types.ConstructionCombineResponse{
+		SignedTransaction: string(txData),
+	}, nil
 }
 
 // ConstructionDerive implements /construction/derive endpoint
 func (s ConstructionService) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
-	return nil, errNotSupported
+	if req.PublicKey == nil {
+		return nil, errorWithInfo(errInvalidInput, "public key is not provided")
+	}
+
+	key, err := crypto.DecompressPubkey(req.PublicKey.Bytes)
+	if err != nil {
+		return nil, errorWithInfo(errConstructionInvalidPubkey, err)
+	}
+
+	return &types.ConstructionDeriveResponse{
+		AccountIdentifier: &types.AccountIdentifier{
+			Address: crypto.PubkeyToAddress(*key).Hex(),
+		},
+	}, nil
 }
 
 // ConstructionParse implements /construction/parse endpoint

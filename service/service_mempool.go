@@ -5,6 +5,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+
 	"github.com/figment-networks/avalanche-rosetta/client"
 	"github.com/figment-networks/avalanche-rosetta/mapper"
 )
@@ -42,6 +43,5 @@ func (s MempoolService) Mempool(ctx context.Context, req *types.NetworkRequest) 
 
 // MempoolTransaction implements the /mempool/transaction endpoint
 func (s MempoolService) MempoolTransaction(ctx context.Context, req *types.MempoolTransactionRequest) (*types.MempoolTransactionResponse, *types.Error) {
-	// full transaction information is not available it seems
 	return nil, errNotImplemented
 }

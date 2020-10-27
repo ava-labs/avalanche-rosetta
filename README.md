@@ -36,19 +36,24 @@ avalanche-rosetta -config=./config.json
 
 List of all available Rosetta RPC server endpoints
 
-| Method | Path                   | Status | Description
-|--------|------------------------|--------|------------------------------------
-| POST   | /network/list          | Y      | Get List of Available Networks
-| POST   | /network/status        | Y      | Get Network Status
-| POST   | /network/options       | Y      | Get Network Options
-| POST   | /block                 | Y      | Get a Block
-| POST   | /block/transaction     | Y      | Get a Block Transaction
-| POST   | /account/balance       | Y      | Get an Account Balance
-| POST   | /mempool               | Y      | Get All Mempool Transactions
-| POST   | /mempool/transaction   | -      | Get a Mempool Transaction
-| POST   | /construction/metadata | Y      | Get Transaction Hash
-| POST   | /construction/metadata | -      | Get Transaction Construction Metadata
-| POST   | /construction/submit   | Y      | Submit a Signed Transaction
+| Method | Path                     | Status | Description
+|--------|--------------------------|--------|------------------------------------
+| POST   | /network/list            | Y      | Get List of Available Networks
+| POST   | /network/status          | Y      | Get Network Status
+| POST   | /network/options         | Y      | Get Network Options
+| POST   | /block                   | Y      | Get a Block
+| POST   | /block/transaction       | Y      | Get a Block Transaction
+| POST   | /account/balance         | Y      | Get an Account Balance
+| POST   | /mempool                 | Y      | Get All Mempool Transactions counts
+| POST   | /mempool/transaction     | N/A    | Get a Mempool Transaction
+| POST   | /construction/combine    | Y      | Create Network Transaction from Signatures
+| POST   | /construction/derive     | Y      | Derive an AccountIdentifier from a PublicKey
+| POST   | /construction/hash       | Y      | Get the Hash of a Signed Transaction
+| POST   | /construction/metadata   | -      | Get Transaction Construction Metadata
+| POST   | /construction/parse      | -      | Parse a Transaction
+| POST   | /construction/payloads   | -      | Generate an Unsigned Transaction and Signing Payloads
+| POST   | /construction/preprocess | -      | Create a Request to Fetch Metadata
+| POST   | /construction/submit     | Y      | Submit a Signed Transaction
 
 ### Development
 

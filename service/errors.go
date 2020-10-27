@@ -23,8 +23,9 @@ var (
 	errBlockNotFound     = makeError(202, "Block was not found", false)
 
 	// Construction service errors
-	errConstructionInvalidTx    = makeError(300, "Invalid transaction data", false)
-	errConstructionSubmitFailed = makeError(301, "Transaction submission failed", true)
+	errConstructionInvalidTx     = makeError(300, "Invalid transaction data", false)
+	errConstructionSubmitFailed  = makeError(301, "Transaction submission failed", true)
+	errConstructionInvalidPubkey = makeError(302, "Invalid public key data", false)
 )
 
 func errorList() []*types.Error {
@@ -55,7 +56,12 @@ func makeError(code int32, message string, retriable bool) *types.Error {
 	}
 }
 
-func errorWithInfo(rosettaErr *types.Error, err error) *types.Error {
-	rosettaErr.Details["error"] = err.Error()
+func errorWithInfo(rosettaErr *types.Error, message interface{}) *types.Error {
+	switch t := message.(type) {
+	case error:
+		rosettaErr.Details["error"] = t.Error()
+	default:
+		rosettaErr.Details["error"] = t
+	}
 	return rosettaErr
 }

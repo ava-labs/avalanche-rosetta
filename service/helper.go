@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"math/big"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -12,6 +13,16 @@ import (
 
 	"github.com/figment-networks/avalanche-rosetta/client"
 )
+
+type unsignedTx struct {
+	Nonce    uint64   `json:"nonce"`
+	From     string   `json:"from"`
+	To       string   `json:"to"`
+	Amount   *big.Int `json:"value"`
+	GasPrice *big.Int `json:"gas_price"`
+	GasLimit uint64   `json:"gas"`
+	Input    []byte   `json:"input"`
+}
 
 func blockHeaderFromInput(evm *client.EvmClient, input *types.PartialBlockIdentifier) (*ethtypes.Header, *types.Error) {
 	var (
@@ -45,4 +56,24 @@ func txFromInput(input string) (*ethtypes.Transaction, error) {
 	tx := &ethtypes.Transaction{}
 
 	return tx, ethrpl.DecodeBytes(rawTx, tx)
+}
+
+func unsignedTxFromInput(input string) (*ethtypes.Transaction, error) {
+	tx := unsignedTx{}
+	inputBytes := []byte(input)
+
+	if err := json.Unmarshal(inputBytes, &tx); err != nil {
+		return nil, err
+	}
+
+	ethTx := ethtypes.NewTransaction(
+		tx.Nonce,
+		ethcommon.HexToAddress(tx.To),
+		tx.Amount,
+		tx.GasLimit,
+		tx.GasPrice,
+		inputBytes,
+	)
+
+	return ethTx, nil
 }
