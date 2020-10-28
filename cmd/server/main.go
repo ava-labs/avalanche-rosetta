@@ -128,11 +128,13 @@ func configureRouter(
 	blockService := service.NewBlockService(serviceConfig, evmClient)
 	accountService := service.NewAccountService(serviceConfig, evmClient)
 	mempoolService := service.NewMempoolService(serviceConfig, evmClient, txpoolClient)
+	constructionService := service.NewConstructionService(serviceConfig, evmClient)
 
 	return server.NewRouter(
 		server.NewNetworkAPIController(networkService, asserter),
 		server.NewBlockAPIController(blockService, asserter),
 		server.NewAccountAPIController(accountService, asserter),
 		server.NewMempoolAPIController(mempoolService, asserter),
+		server.NewConstructionAPIController(constructionService, asserter),
 	)
 }
