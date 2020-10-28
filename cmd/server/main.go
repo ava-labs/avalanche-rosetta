@@ -129,6 +129,7 @@ func configureRouter(
 	accountService := service.NewAccountService(serviceConfig, evmClient)
 	mempoolService := service.NewMempoolService(serviceConfig, evmClient, txpoolClient)
 	constructionService := service.NewConstructionService(serviceConfig, evmClient)
+	callService := service.NewCallService(serviceConfig, evmClient)
 
 	return server.NewRouter(
 		server.NewNetworkAPIController(networkService, asserter),
@@ -136,5 +137,6 @@ func configureRouter(
 		server.NewAccountAPIController(accountService, asserter),
 		server.NewMempoolAPIController(mempoolService, asserter),
 		server.NewConstructionAPIController(constructionService, asserter),
+		server.NewCallAPIController(callService, asserter),
 	)
 }

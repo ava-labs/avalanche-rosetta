@@ -28,6 +28,9 @@ var (
 	errConstructionInvalidTx     = makeError(300, "Invalid transaction data", false)
 	errConstructionInvalidPubkey = makeError(301, "Invalid public key data", false)
 	errConstructionSubmitFailed  = makeError(302, "Transaction submission failed", true)
+
+	// Call service errors
+	errCallInvalidMethod = makeError(400, "Invalid call method", false)
 )
 
 func errorList() []*types.Error {
@@ -49,6 +52,8 @@ func errorList() []*types.Error {
 
 		errConstructionSubmitFailed,
 		errConstructionInvalidTx,
+
+		errCallInvalidMethod,
 	}
 }
 
