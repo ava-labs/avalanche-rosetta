@@ -76,6 +76,10 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 // TransactionHash returns the network-specific transaction hash for a signed transaction.
 //
 func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
+	if req.SignedTransaction == "" {
+		return nil, errorWithInfo(errInvalidInput, "signed transaction value is not provided")
+	}
+
 	tx, err := txFromInput(req.SignedTransaction)
 	if err != nil {
 		return nil, errorWithInfo(errConstructionInvalidTx, err)
@@ -83,7 +87,7 @@ func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.Co
 
 	return &types.TransactionIdentifierResponse{
 		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: tx.Hash().String(),
+			Hash: tx.Hash().Hex(),
 		},
 	}, nil
 }
