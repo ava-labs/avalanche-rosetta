@@ -15,20 +15,24 @@ import (
 
 // AccountService implements the /account/* endpoints
 type AccountService struct {
-	network *types.NetworkIdentifier
-	evm     *client.EvmClient
+	config *Config
+	evm    *client.EvmClient
 }
 
 // NewAccountService returns a new network servicer
-func NewAccountService(network *types.NetworkIdentifier, evmClient *client.EvmClient) server.AccountAPIServicer {
+func NewAccountService(config *Config, evmClient *client.EvmClient) server.AccountAPIServicer {
 	return &AccountService{
-		network: network,
-		evm:     evmClient,
+		config: config,
+		evm:    evmClient,
 	}
 }
 
 // AccountBalance implements the /account/balance endpoint
 func (s AccountService) AccountBalance(ctx context.Context, req *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
+	if s.config.IsOfflineMode() {
+		return nil, errUnavailableOffline
+	}
+
 	if req.AccountIdentifier == nil {
 		return nil, errInvalidInput
 	}

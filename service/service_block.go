@@ -18,20 +18,24 @@ import (
 
 // BlockService implements the /block/* endpoints
 type BlockService struct {
-	network *types.NetworkIdentifier
-	evm     *client.EvmClient
+	config *Config
+	evm    *client.EvmClient
 }
 
 // NewBlockService returns a new block servicer
-func NewBlockService(network *types.NetworkIdentifier, evmClient *client.EvmClient) server.BlockAPIServicer {
+func NewBlockService(config *Config, evmClient *client.EvmClient) server.BlockAPIServicer {
 	return &BlockService{
-		network: network,
-		evm:     evmClient,
+		config: config,
+		evm:    evmClient,
 	}
 }
 
 // Block implements the /block endpoint
 func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (*types.BlockResponse, *types.Error) {
+	if s.config.IsOfflineMode() {
+		return nil, errUnavailableOffline
+	}
+
 	if request.BlockIdentifier == nil {
 		return nil, errBlockInvalidInput
 	}
@@ -80,7 +84,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 	}
 
 	for _, tx := range block.Transactions() {
-		msg, err := tx.AsMessage(signer)
+		msg, err := tx.AsMessage(s.config.Signer())
 		if err != nil {
 			log.Println("tx message error:", err)
 			return nil, errInternalError
@@ -125,6 +129,10 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 
 // BlockTransaction implements the /block/transaction endpoint.
 func (s *BlockService) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
+	if s.config.IsOfflineMode() {
+		return nil, errUnavailableOffline
+	}
+
 	hash := ethcommon.HexToHash(request.TransactionIdentifier.Hash)
 	tx, pending, err := s.evm.TransactionByHash(context.Background(), hash)
 	if err != nil {
@@ -136,7 +144,7 @@ func (s *BlockService) BlockTransaction(ctx context.Context, request *types.Bloc
 		return nil, errInternalError
 	}
 
-	msg, err := tx.AsMessage(signer)
+	msg, err := tx.AsMessage(s.config.Signer())
 	if err != nil {
 		return nil, errInternalError
 	}

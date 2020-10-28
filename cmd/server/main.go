@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"math/big"
 	"net/http"
 
 	"github.com/coinbase/rosetta-sdk-go/asserter"
@@ -60,7 +61,6 @@ func main() {
 			log.Fatal("cant fetch chain id from rpc:", err)
 		}
 		cfg.ChainID = chainID.Int64()
-		service.SetChainID(chainID)
 	}
 
 	if cfg.NetworkName == "" {
@@ -87,9 +87,15 @@ func main() {
 		log.Fatal("server asserter init error:", err)
 	}
 
+	serviceConfig := &service.Config{
+		Mode:      cfg.Mode,
+		ChainID:   big.NewInt(cfg.ChainID),
+		NetworkID: network,
+	}
+
 	router := server.CorsMiddleware(
 		server.LoggerMiddleware(
-			configureRouter(network, asserter, evmClient, infoClient, txpoolClient),
+			configureRouter(serviceConfig, asserter, evmClient, infoClient, txpoolClient),
 		),
 	)
 
@@ -100,16 +106,16 @@ func main() {
 }
 
 func configureRouter(
-	network *types.NetworkIdentifier,
+	serviceConfig *service.Config,
 	asserter *asserter.Asserter,
 	evmClient *client.EvmClient,
 	infoClient *client.InfoClient,
 	txpoolClient *client.TxPoolClient,
 ) http.Handler {
-	networkService := service.NewNetworkService(network, evmClient, infoClient)
-	blockService := service.NewBlockService(network, evmClient)
-	accountService := service.NewAccountService(network, evmClient)
-	mempoolService := service.NewMempoolService(network, evmClient, txpoolClient)
+	networkService := service.NewNetworkService(serviceConfig, evmClient, infoClient)
+	blockService := service.NewBlockService(serviceConfig, evmClient)
+	accountService := service.NewAccountService(serviceConfig, evmClient)
+	mempoolService := service.NewMempoolService(serviceConfig, evmClient, txpoolClient)
 
 	return server.NewRouter(
 		server.NewNetworkAPIController(networkService, asserter),

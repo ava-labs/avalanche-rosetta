@@ -13,17 +13,17 @@ import (
 
 // NetworkService implements all /network endpoints
 type NetworkService struct {
-	network *types.NetworkIdentifier
-	info    *client.InfoClient
-	evm     *client.EvmClient
+	config *Config
+	info   *client.InfoClient
+	evm    *client.EvmClient
 }
 
 // NewNetworkService returns a new network servicer
-func NewNetworkService(network *types.NetworkIdentifier, evmClient *client.EvmClient, infoClient *client.InfoClient) server.NetworkAPIServicer {
+func NewNetworkService(config *Config, evmClient *client.EvmClient, infoClient *client.InfoClient) server.NetworkAPIServicer {
 	return &NetworkService{
-		network: network,
-		evm:     evmClient,
-		info:    infoClient,
+		config: config,
+		evm:    evmClient,
+		info:   infoClient,
 	}
 }
 
@@ -31,13 +31,17 @@ func NewNetworkService(network *types.NetworkIdentifier, evmClient *client.EvmCl
 func (s *NetworkService) NetworkList(ctx context.Context, request *types.MetadataRequest) (*types.NetworkListResponse, *types.Error) {
 	return &types.NetworkListResponse{
 		NetworkIdentifiers: []*types.NetworkIdentifier{
-			s.network,
+			s.config.NetworkID,
 		},
 	}, nil
 }
 
 // NetworkStatus implements the /network/status endpoint
 func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
+	if s.config.IsOfflineMode() {
+		return nil, errUnavailableOffline
+	}
+
 	// Fetch the latest block
 	blockHeader, err := s.evm.HeaderByNumber(context.Background(), nil)
 	if err != nil {
@@ -80,6 +84,10 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 
 // NetworkOptions implements the /network/options endpoint
 func (s *NetworkService) NetworkOptions(ctx context.Context, request *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
+	if s.config.IsOfflineMode() {
+		return nil, errUnavailableOffline
+	}
+
 	nodeVersion, err := s.info.NodeVersion()
 	if err != nil {
 		return nil, errStatusNodeVersionFailed

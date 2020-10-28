@@ -12,22 +12,26 @@ import (
 
 // MempoolService implements the /mempool/* endpoints
 type MempoolService struct {
-	network *types.NetworkIdentifier
-	evm     *client.EvmClient
-	txpool  *client.TxPoolClient
+	config *Config
+	evm    *client.EvmClient
+	txpool *client.TxPoolClient
 }
 
 // NewMempoolService returns a new mempool servicer
-func NewMempoolService(network *types.NetworkIdentifier, evmClient *client.EvmClient, txpoolClient *client.TxPoolClient) server.MempoolAPIServicer {
+func NewMempoolService(config *Config, evmClient *client.EvmClient, txpoolClient *client.TxPoolClient) server.MempoolAPIServicer {
 	return &MempoolService{
-		network: network,
-		evm:     evmClient,
-		txpool:  txpoolClient,
+		config: config,
+		evm:    evmClient,
+		txpool: txpoolClient,
 	}
 }
 
 // Mempool implements the /mempool endpoint
 func (s MempoolService) Mempool(ctx context.Context, req *types.NetworkRequest) (*types.MempoolResponse, *types.Error) {
+	if s.config.IsOfflineMode() {
+		return nil, errUnavailableOffline
+	}
+
 	content, err := s.txpool.Content()
 	if err != nil {
 		return nil, errorWithInfo(errInternalError, err)

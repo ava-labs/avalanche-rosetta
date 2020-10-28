@@ -6,10 +6,11 @@ import (
 
 var (
 	// General errors
-	errNotImplemented = makeError(1, "Endpoint is not implemented", false)
-	errNotSupported   = makeError(2, "Endpoint is not supported", false)
-	errInternalError  = makeError(3, "Internal server error", true)
-	errInvalidInput   = makeError(4, "Invalid input", false)
+	errNotImplemented     = makeError(1, "Endpoint is not implemented", false)
+	errNotSupported       = makeError(2, "Endpoint is not supported", false)
+	errUnavailableOffline = makeError(3, "Endpoint is not available offline", false)
+	errInternalError      = makeError(4, "Internal server error", true)
+	errInvalidInput       = makeError(5, "Invalid input", false)
 
 	// Network service errors
 	errStatusBlockFetchFailed  = makeError(100, "Unable to fetch block", true)
@@ -24,16 +25,17 @@ var (
 
 	// Construction service errors
 	errConstructionInvalidTx     = makeError(300, "Invalid transaction data", false)
-	errConstructionSubmitFailed  = makeError(301, "Transaction submission failed", true)
-	errConstructionInvalidPubkey = makeError(302, "Invalid public key data", false)
+	errConstructionInvalidPubkey = makeError(301, "Invalid public key data", false)
+	errConstructionSubmitFailed  = makeError(302, "Transaction submission failed", true)
 )
 
 func errorList() []*types.Error {
 	return []*types.Error{
 		errNotImplemented,
 		errNotSupported,
-		errInvalidInput,
+		errUnavailableOffline,
 		errInternalError,
+		errInvalidInput,
 
 		errStatusBlockFetchFailed,
 		errStatusBlockNotFound,

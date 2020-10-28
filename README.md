@@ -53,7 +53,7 @@ List of all available Rosetta RPC server endpoints
 | POST   | /construction/combine    | Y      | Create Network Transaction from Signatures
 | POST   | /construction/derive     | Y      | Derive an AccountIdentifier from a PublicKey
 | POST   | /construction/hash       | Y      | Get the Hash of a Signed Transaction
-| POST   | /construction/metadata   | -      | Get Transaction Construction Metadata
+| POST   | /construction/metadata   | Y      | Get Transaction Construction Metadata
 | POST   | /construction/parse      | -      | Parse a Transaction
 | POST   | /construction/payloads   | -      | Generate an Unsigned Transaction and Signing Payloads
 | POST   | /construction/preprocess | -      | Create a Request to Fetch Metadata
