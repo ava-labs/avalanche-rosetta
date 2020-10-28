@@ -5,14 +5,14 @@ import (
 )
 
 const (
-	OpFee            = "fee"
-	OpTransfer       = "transfer"
-	OpTokenTransfer  = "token_transfer"
-	OpContractCreate = "contract_create"
-	OpContractCall   = "contract_call"
+	OpFee            = "FEE"
+	OpTransfer       = "TRANSFER"
+	OpTokenTransfer  = "TOKEN_TRANSFER"
+	OpContractCreate = "CONTRACT_CREATE"
+	OpContractCall   = "CONTRACT_CALL"
 
-	TxStatusSuccess = "success"
-	TxStatusFailure = "failure"
+	TxStatusSuccess = "SUCCESS"
+	TxStatusFailure = "FAILURE"
 )
 
 var (

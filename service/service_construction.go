@@ -41,25 +41,27 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 	}
 
 	from, ok := req.Options["from"].(string)
-	if !ok {
+	if !ok || from == "" {
 		return nil, errorWithInfo(errInvalidInput, "from address is not provided")
 	}
 
 	nonce, err := s.evm.Client.PendingNonceAt(context.Background(), ethcommon.HexToAddress(from))
 	if err != nil {
-		return nil, errorWithInfo(errInternalError, err)
+		return nil, errorWithInfo(errClientError, err)
 	}
 
 	gasPrice, err := s.evm.Client.SuggestGasPrice(context.Background())
 	if err != nil {
-		return nil, errorWithInfo(errInternalError, err)
+		return nil, errorWithInfo(errClientError, err)
 	}
 
-	suggestedFee := gasPrice.Int64() * int64(21000)
+	gasLimit := 21000
+	suggestedFee := gasPrice.Int64() * int64(gasLimit)
 
 	return &types.ConstructionMetadataResponse{
 		Metadata: map[string]interface{}{
 			"nonce":     nonce,
+			"gas_limit": gasLimit,
 			"gas_price": gasPrice,
 		},
 		SuggestedFee: []*types.Amount{

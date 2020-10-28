@@ -11,6 +11,7 @@ var (
 	errUnavailableOffline = makeError(3, "Endpoint is not available offline", false)
 	errInternalError      = makeError(4, "Internal server error", true)
 	errInvalidInput       = makeError(5, "Invalid input", false)
+	errClientError        = makeError(6, "Client error", true)
 
 	// Network service errors
 	errStatusBlockFetchFailed  = makeError(100, "Unable to fetch block", true)
@@ -36,6 +37,7 @@ func errorList() []*types.Error {
 		errUnavailableOffline,
 		errInternalError,
 		errInvalidInput,
+		errClientError,
 
 		errStatusBlockFetchFailed,
 		errStatusBlockNotFound,
