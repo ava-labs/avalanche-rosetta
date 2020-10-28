@@ -54,8 +54,15 @@ func main() {
 	infoClient := client.NewInfoClient(cfg.RPCEndpoint)
 	txpoolClient := client.NewTxPoolClient(cfg.RPCEndpoint)
 
+	log.Println("starting server in", cfg.Mode, "mode")
+
 	if cfg.ChainID == 0 {
 		log.Println("chain id is not provided, fetching from rpc...")
+
+		if cfg.Mode == service.ModeOffline {
+			log.Fatal("cant fetch chain id in offline mode")
+		}
+
 		chainID, err := evmClient.ChainID(context.Background())
 		if err != nil {
 			log.Fatal("cant fetch chain id from rpc:", err)
@@ -65,6 +72,11 @@ func main() {
 
 	if cfg.NetworkName == "" {
 		log.Println("network name is not provided, fetching from rpc...")
+
+		if cfg.Mode == service.ModeOffline {
+			log.Fatal("cant fetch network name in offline mode")
+		}
+
 		networkName, err := infoClient.NetworkName()
 		if err != nil {
 			log.Fatal("cant fetch network name:", err)
