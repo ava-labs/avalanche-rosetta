@@ -179,7 +179,7 @@ func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.C
 		}
 
 		tx.To = t.To().String()
-		tx.Amount = t.Value()
+		tx.Value = t.Value()
 		tx.Input = t.Data()
 		tx.Nonce = t.Nonce()
 		tx.GasPrice = t.GasPrice()
@@ -202,7 +202,7 @@ func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.C
 				Address: tx.From,
 			},
 			Amount: &types.Amount{
-				Value:    new(big.Int).Neg(tx.Amount).String(),
+				Value:    new(big.Int).Neg(tx.Value).String(),
 				Currency: mapper.AvaxCurrency,
 			},
 		},
@@ -220,7 +220,7 @@ func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.C
 				Address: tx.To,
 			},
 			Amount: &types.Amount{
-				Value:    tx.Amount.String(),
+				Value:    tx.Value.String(),
 				Currency: mapper.AvaxCurrency,
 			},
 		},

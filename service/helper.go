@@ -23,7 +23,7 @@ type unsignedTx struct {
 	Nonce    uint64   `json:"nonce"`
 	From     string   `json:"from"`
 	To       string   `json:"to"`
-	Amount   *big.Int `json:"value"`
+	Value    *big.Int `json:"value"`
 	GasPrice *big.Int `json:"gas_price"`
 	GasLimit uint64   `json:"gas"`
 	Input    []byte   `json:"input"`
@@ -80,7 +80,7 @@ func unsignedTxFromInput(input string) (*ethtypes.Transaction, error) {
 	ethTx := ethtypes.NewTransaction(
 		tx.Nonce,
 		ethcommon.HexToAddress(tx.To),
-		tx.Amount,
+		tx.Value,
 		tx.GasLimit,
 		tx.GasPrice,
 		inputBytes,
@@ -116,7 +116,7 @@ func txFromMatches(matches []*parser.Match, kv map[string]interface{}) (*ethtype
 		From:     fromAddress,
 		To:       toAddress,
 		Nonce:    nonce,
-		Amount:   amount,
+		Value:    amount,
 		GasPrice: gasPrice,
 		GasLimit: transferGasLimit,
 		Input:    data,
