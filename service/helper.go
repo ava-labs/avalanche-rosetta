@@ -5,12 +5,18 @@ import (
 	"encoding/json"
 	"math/big"
 
+	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/figment-networks/avalanche-rosetta/client"
+)
+
+const (
+	transferGasLimit = uint64(21000)
 )
 
 type unsignedTx struct {
@@ -21,6 +27,11 @@ type unsignedTx struct {
 	GasPrice *big.Int `json:"gas_price"`
 	GasLimit uint64   `json:"gas"`
 	Input    []byte   `json:"input"`
+}
+
+type txMetadata struct {
+	Nonce    uint64   `json:"nonce"`
+	GasPrice *big.Int `json:"gas_price"`
 }
 
 func blockHeaderFromInput(evm *client.EvmClient, input *types.PartialBlockIdentifier) (*ethtypes.Header, *types.Error) {
@@ -76,4 +87,49 @@ func unsignedTxFromInput(input string) (*ethtypes.Transaction, error) {
 	)
 
 	return ethTx, nil
+}
+
+func txFromMatches(matches []*parser.Match, kv map[string]interface{}) (*ethtypes.Transaction, *unsignedTx, error) {
+	var metadata txMetadata
+	if err := unmarshalJSONMap(kv, &metadata); err != nil {
+		return nil, nil, err
+	}
+
+	fromOp, _ := matches[0].First()
+	fromAddress := fromOp.Account.Address
+	toOp, amount := matches[1].First()
+	toAddress := toOp.Account.Address
+	nonce := metadata.Nonce
+	gasPrice := metadata.GasPrice
+	data := []byte{}
+
+	tx := ethtypes.NewTransaction(
+		metadata.Nonce,
+		common.HexToAddress(toAddress),
+		amount,
+		transferGasLimit,
+		gasPrice,
+		data,
+	)
+
+	unTx := &unsignedTx{
+		From:     fromAddress,
+		To:       toAddress,
+		Nonce:    nonce,
+		Amount:   amount,
+		GasPrice: gasPrice,
+		GasLimit: transferGasLimit,
+		Input:    data,
+	}
+
+	return tx, unTx, nil
+}
+
+func unmarshalJSONMap(m map[string]interface{}, i interface{}) error {
+	b, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(b, i)
 }

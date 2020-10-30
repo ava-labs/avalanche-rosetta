@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	OpCall           = "CALL"
 	OpFee            = "FEE"
 	OpTransfer       = "TRANSFER"
 	OpTokenTransfer  = "TOKEN_TRANSFER"
@@ -34,6 +35,7 @@ var (
 
 	OperationTypes = []string{
 		OpFee,
+		OpCall,
 		OpTransfer,
 		OpTokenTransfer,
 		OpContractCreate,

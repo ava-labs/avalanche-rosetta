@@ -2,12 +2,16 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"math/big"
 	"strconv"
 
+	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/figment-networks/avalanche-rosetta/client"
@@ -45,6 +49,11 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 		return nil, errorWithInfo(errInvalidInput, "from address is not provided")
 	}
 
+	balance, err := s.evm.Client.BalanceAt(context.Background(), ethcommon.HexToAddress(from), nil)
+	if err != nil {
+		return nil, errorWithInfo(errClientError, err)
+	}
+
 	nonce, err := s.evm.Client.PendingNonceAt(context.Background(), ethcommon.HexToAddress(from))
 	if err != nil {
 		return nil, errorWithInfo(errClientError, err)
@@ -55,14 +64,15 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 		return nil, errorWithInfo(errClientError, err)
 	}
 
-	gasLimit := 21000
-	suggestedFee := gasPrice.Int64() * int64(gasLimit)
+	suggestedFee := gasPrice.Int64() * int64(transferGasLimit)
 
 	return &types.ConstructionMetadataResponse{
 		Metadata: map[string]interface{}{
-			"nonce":     nonce,
-			"gas_limit": gasLimit,
-			"gas_price": gasPrice,
+			"nonce":         nonce,
+			"balance":       balance,
+			"gas_limit":     transferGasLimit,
+			"gas_price":     gasPrice,
+			"suggested_fee": suggestedFee,
 		},
 		SuggestedFee: []*types.Amount{
 			{
@@ -160,7 +170,89 @@ func (s ConstructionService) ConstructionDerive(ctx context.Context, req *types.
 // (after /construction/payloads) and before broadcast (after /construction/combine).
 //
 func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
-	return nil, errNotSupported
+	var tx unsignedTx
+
+	if !req.Signed {
+		if err := json.Unmarshal([]byte(req.Transaction), &tx); err != nil {
+			return nil, errorWithInfo(errInvalidInput, err)
+		}
+	} else {
+		t := new(ethtypes.Transaction)
+		if err := t.UnmarshalJSON([]byte(req.Transaction)); err != nil {
+			return nil, errorWithInfo(errInvalidInput, err)
+		}
+
+		tx.To = t.To().String()
+		tx.Amount = t.Value()
+		tx.Input = t.Data()
+		tx.Nonce = t.Nonce()
+		tx.GasPrice = t.GasPrice()
+		tx.GasLimit = t.Gas()
+
+		msg, err := t.AsMessage(s.config.Signer())
+		if err != nil {
+			return nil, errorWithInfo(errInvalidInput, err)
+		}
+		tx.From = msg.From().Hex()
+	}
+
+	ops := []*types.Operation{
+		{
+			Type: mapper.OpCall,
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 0,
+			},
+			Account: &types.AccountIdentifier{
+				Address: tx.From,
+			},
+			Amount: &types.Amount{
+				Value:    new(big.Int).Neg(tx.Amount).String(),
+				Currency: mapper.AvaxCurrency,
+			},
+		},
+		{
+			Type: mapper.OpCall,
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 1,
+			},
+			RelatedOperations: []*types.OperationIdentifier{
+				{
+					Index: 0,
+				},
+			},
+			Account: &types.AccountIdentifier{
+				Address: tx.To,
+			},
+			Amount: &types.Amount{
+				Value:    tx.Amount.String(),
+				Currency: mapper.AvaxCurrency,
+			},
+		},
+	}
+
+	metadata := map[string]interface{}{
+		"nonce":     tx.Nonce,
+		"gas_price": tx.GasPrice,
+		"gas_limit": tx.GasLimit,
+	}
+
+	if req.Signed {
+		return &types.ConstructionParseResponse{
+			Operations: ops,
+			AccountIdentifierSigners: []*types.AccountIdentifier{
+				{
+					Address: tx.From,
+				},
+			},
+			Metadata: metadata,
+		}, nil
+	}
+
+	return &types.ConstructionParseResponse{
+		Operations:               ops,
+		AccountIdentifierSigners: []*types.AccountIdentifier{},
+		Metadata:                 metadata,
+	}, nil
 }
 
 // ConstructionPayloads implements /construction/payloads endpoint
@@ -176,7 +268,61 @@ func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.C
 // whatever operations were provided during construction.
 //
 func (s ConstructionService) ConstructionPayloads(ctx context.Context, req *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
-	return nil, errNotSupported
+	descriptions := &parser.Descriptions{
+		OperationDescriptions: []*parser.OperationDescription{
+			{
+				Type: mapper.OpCall,
+				Account: &parser.AccountDescription{
+					Exists: true,
+				},
+				Amount: &parser.AmountDescription{
+					Exists:   true,
+					Sign:     parser.NegativeAmountSign,
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+			{
+				Type: mapper.OpCall,
+				Account: &parser.AccountDescription{
+					Exists: true,
+				},
+				Amount: &parser.AmountDescription{
+					Exists:   true,
+					Sign:     parser.PositiveAmountSign,
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+		},
+		ErrUnmatched: true,
+	}
+
+	matches, err := parser.MatchOperations(descriptions, req.Operations)
+	if err != nil {
+		return nil, errorWithInfo(errInvalidInput, "unclear intent")
+	}
+	tx, unTx, err := txFromMatches(matches, req.Metadata)
+	if err != nil {
+		return nil, errorWithInfo(errInternalError, "cant parse matches")
+	}
+	if tx == nil {
+		return nil, errorWithInfo(errInternalError, "cant build eth transaction")
+	}
+
+	unsignedTxData, err := json.Marshal(unTx)
+	if err != nil {
+		return nil, errorWithInfo(errInternalError, err)
+	}
+
+	payload := &types.SigningPayload{
+		AccountIdentifier: &types.AccountIdentifier{Address: unTx.From},
+		Bytes:             s.config.Signer().Hash(tx).Bytes(),
+		SignatureType:     types.EcdsaRecovery,
+	}
+
+	return &types.ConstructionPayloadsResponse{
+		UnsignedTransaction: string(unsignedTxData),
+		Payloads:            []*types.SigningPayload{payload},
+	}, nil
 }
 
 // ConstructionPreprocess implements /construction/preprocess endpoint.
@@ -185,7 +331,47 @@ func (s ConstructionService) ConstructionPayloads(ctx context.Context, req *type
 // any metadata that is needed for transaction construction given (i.e. account nonce).
 //
 func (s ConstructionService) ConstructionPreprocess(ctx context.Context, req *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {
-	return nil, errNotSupported
+	descriptions := &parser.Descriptions{
+		OperationDescriptions: []*parser.OperationDescription{
+			{
+				Type: mapper.OpCall,
+				Account: &parser.AccountDescription{
+					Exists: true,
+				},
+				Amount: &parser.AmountDescription{
+					Exists:   true,
+					Sign:     parser.NegativeAmountSign,
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+			{
+				Type: mapper.OpCall,
+				Account: &parser.AccountDescription{
+					Exists: true,
+				},
+				Amount: &parser.AmountDescription{
+					Exists:   true,
+					Sign:     parser.PositiveAmountSign,
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+		},
+		ErrUnmatched: true,
+	}
+
+	matches, err := parser.MatchOperations(descriptions, req.Operations)
+	if err != nil {
+		return nil, errorWithInfo(errInvalidInput, "unclear intent")
+	}
+
+	fromOp, _ := matches[0].First()
+	fromAddress := fromOp.Account.Address
+
+	return &types.ConstructionPreprocessResponse{
+		Options: map[string]interface{}{
+			"from": fromAddress,
+		},
+	}, nil
 }
 
 // ConstructionSubmit implements /construction/submit endpoint.
