@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"math/big"
-	"strconv"
 
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
@@ -75,10 +74,7 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 			"suggested_fee": suggestedFee,
 		},
 		SuggestedFee: []*types.Amount{
-			{
-				Value:    strconv.FormatInt(suggestedFee, 10),
-				Currency: mapper.AvaxCurrency,
-			},
+			mapper.FeeAmount(suggestedFee),
 		},
 	}, nil
 }
