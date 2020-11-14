@@ -15,7 +15,6 @@ func NewDebugClient(endpoint string) *DebugClient {
 	}
 }
 
-// https://github.com/ava-labs/coreth/issues/28
 func (c DebugClient) TraceTransaction(hash string) error {
 	return errors.New("debug rpc trace call is not supported yet")
 }
