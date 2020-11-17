@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/figment-networks/avalanche-rosetta/client"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
+	"github.com/figment-networks/avalanche-rosetta/client"
 )
 
 func Transaction(header *ethtypes.Header, tx *ethtypes.Transaction, msg *ethtypes.Message, receipt *ethtypes.Receipt) (*types.Transaction, error) {
