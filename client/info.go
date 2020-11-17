@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 )
 
 // InfoClient implements Info API client spec
@@ -39,7 +40,7 @@ func (c InfoClient) NetworkID() (string, error) {
 func (c InfoClient) NetworkName() (string, error) {
 	resp := map[string]string{}
 	err := c.rpc.Call("info.getNetworkName", nil, &resp)
-	return resp["networkName"], err
+	return strings.Title(resp["networkName"]), err
 }
 
 func (c InfoClient) NodeID() (string, error) {

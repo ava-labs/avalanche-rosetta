@@ -8,7 +8,6 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
@@ -105,7 +104,7 @@ func txFromMatches(matches []*parser.Match, kv map[string]interface{}) (*ethtype
 
 	tx := ethtypes.NewTransaction(
 		metadata.Nonce,
-		common.HexToAddress(toAddress),
+		ethcommon.HexToAddress(toAddress),
 		amount,
 		transferGasLimit,
 		gasPrice,
