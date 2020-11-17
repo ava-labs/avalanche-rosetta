@@ -12,3 +12,4 @@ avalanche-rosetta
 tmp
 vendor/
 config/*.json
+bin/*

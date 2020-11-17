@@ -1,4 +1,4 @@
-.PHONY: build test docker-build
+.PHONY: build test dist docker-build docker-push
 
 PROJECT      ?= avalanche-rosetta
 GIT_COMMIT   ?= $(shell git rev-parse HEAD)
@@ -9,11 +9,16 @@ DOCKER_TAG   ?= latest
 build:
 	go build -o ./avalanche-rosetta ./cmd/server
 
-setup:
-	# noop for now
-
 test:
 	go test -v -cover -race ./...
 
+dist:
+	@mkdir -p ./bin
+	GOOS=linux GOARCH=amd64 go build -o ./bin/avalanche-rosetta_linux-amd64 ./cmd/server
+	GOOS=darwin GOARCH=amd64 go build -o ./bin/avalanche-rosetta_darwin-amd64 ./cmd/server
+
 docker-build:
 	docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile .
+
+docker-push:
+	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}

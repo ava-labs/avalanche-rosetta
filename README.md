@@ -59,12 +59,16 @@ List of all available Rosetta RPC server endpoints
 | POST   | /construction/payloads   | Y      | Generate an Unsigned Transaction and Signing Payloads
 | POST   | /construction/preprocess | Y      | Create a Request to Fetch Metadata
 | POST   | /construction/submit     | Y      | Submit a Signed Transaction
+| POST   | /call                    | N/A    | Perform a Blockchain Call
 
 ### Development
 
 Available Make commands:
 
-- `make build` - Build the development version of the binary
+- `make build`        - Build the development version of the binary
+- `make dist`         - Build binaries for Linux & Mac
+- `make docker-build` - Build a Docker image
+- `make docker-push`  - Push a Docker image to the registry
 
 ## License
 
