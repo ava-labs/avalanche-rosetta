@@ -65,7 +65,7 @@ func makeError(code int32, message string, retriable bool) *types.Error {
 	}
 }
 
-func errorWithInfo(rosettaErr *types.Error, message interface{}) *types.Error {
+func wrapError(rosettaErr *types.Error, message interface{}) *types.Error {
 	if rosettaErr.Details == nil {
 		rosettaErr.Details = map[string]interface{}{}
 	}

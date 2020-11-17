@@ -34,7 +34,7 @@ func (s MempoolService) Mempool(ctx context.Context, req *types.NetworkRequest) 
 
 	content, err := s.txpool.Content()
 	if err != nil {
-		return nil, errorWithInfo(errInternalError, err)
+		return nil, wrapError(errClientError, err)
 	}
 
 	return &types.MempoolResponse{

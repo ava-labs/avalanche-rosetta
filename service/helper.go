@@ -55,7 +55,7 @@ func blockHeaderFromInput(evm *client.EvmClient, input *types.PartialBlockIdenti
 	}
 
 	if err != nil {
-		return nil, errorWithInfo(errInternalError, err)
+		return nil, wrapError(errInternalError, err)
 	}
 
 	return header, nil

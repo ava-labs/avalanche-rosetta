@@ -45,22 +45,22 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 
 	from, ok := req.Options["from"].(string)
 	if !ok || from == "" {
-		return nil, errorWithInfo(errInvalidInput, "from address is not provided")
+		return nil, wrapError(errInvalidInput, "from address is not provided")
 	}
 
 	balance, err := s.evm.Client.BalanceAt(context.Background(), ethcommon.HexToAddress(from), nil)
 	if err != nil {
-		return nil, errorWithInfo(errClientError, err)
+		return nil, wrapError(errClientError, err)
 	}
 
 	nonce, err := s.evm.Client.PendingNonceAt(context.Background(), ethcommon.HexToAddress(from))
 	if err != nil {
-		return nil, errorWithInfo(errClientError, err)
+		return nil, wrapError(errClientError, err)
 	}
 
 	gasPrice, err := s.evm.Client.SuggestGasPrice(context.Background())
 	if err != nil {
-		return nil, errorWithInfo(errClientError, err)
+		return nil, wrapError(errClientError, err)
 	}
 
 	suggestedFee := gasPrice.Int64() * int64(transferGasLimit)
@@ -85,12 +85,12 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 //
 func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
 	if req.SignedTransaction == "" {
-		return nil, errorWithInfo(errInvalidInput, "signed transaction value is not provided")
+		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
 	}
 
 	tx, err := txFromInput(req.SignedTransaction)
 	if err != nil {
-		return nil, errorWithInfo(errConstructionInvalidTx, err)
+		return nil, wrapError(errConstructionInvalidTx, err)
 	}
 
 	return &types.TransactionIdentifierResponse{
@@ -111,25 +111,25 @@ func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types
 		return nil, errUnavailableOffline
 	}
 	if req.UnsignedTransaction == "" {
-		return nil, errorWithInfo(errInvalidInput, "transaction data is not provided")
+		return nil, wrapError(errInvalidInput, "transaction data is not provided")
 	}
 	if len(req.Signatures) == 0 {
-		return nil, errorWithInfo(errInvalidInput, "signature is not provided")
+		return nil, wrapError(errInvalidInput, "signature is not provided")
 	}
 
 	tx, err := unsignedTxFromInput(req.UnsignedTransaction)
 	if err != nil {
-		return nil, errorWithInfo(errConstructionInvalidTx, err)
+		return nil, wrapError(errConstructionInvalidTx, err)
 	}
 
 	signedTx, err := tx.WithSignature(s.config.Signer(), req.Signatures[0].Bytes)
 	if err != nil {
-		return nil, errorWithInfo(errInternalError, err)
+		return nil, wrapError(errInternalError, err)
 	}
 
 	txData, err := signedTx.MarshalJSON()
 	if err != nil {
-		return nil, errorWithInfo(errInternalError, err)
+		return nil, wrapError(errInternalError, err)
 	}
 
 	return &types.ConstructionCombineResponse{
@@ -144,12 +144,12 @@ func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types
 //
 func (s ConstructionService) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	if req.PublicKey == nil {
-		return nil, errorWithInfo(errInvalidInput, "public key is not provided")
+		return nil, wrapError(errInvalidInput, "public key is not provided")
 	}
 
 	key, err := ethcrypto.DecompressPubkey(req.PublicKey.Bytes)
 	if err != nil {
-		return nil, errorWithInfo(errConstructionInvalidPubkey, err)
+		return nil, wrapError(errConstructionInvalidPubkey, err)
 	}
 
 	return &types.ConstructionDeriveResponse{
@@ -170,12 +170,12 @@ func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.C
 
 	if !req.Signed {
 		if err := json.Unmarshal([]byte(req.Transaction), &tx); err != nil {
-			return nil, errorWithInfo(errInvalidInput, err)
+			return nil, wrapError(errInvalidInput, err)
 		}
 	} else {
 		t := new(ethtypes.Transaction)
 		if err := t.UnmarshalJSON([]byte(req.Transaction)); err != nil {
-			return nil, errorWithInfo(errInvalidInput, err)
+			return nil, wrapError(errInvalidInput, err)
 		}
 
 		tx.To = t.To().String()
@@ -187,7 +187,7 @@ func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.C
 
 		msg, err := t.AsMessage(s.config.Signer())
 		if err != nil {
-			return nil, errorWithInfo(errInvalidInput, err)
+			return nil, wrapError(errInvalidInput, err)
 		}
 		tx.From = msg.From().Hex()
 	}
@@ -294,19 +294,19 @@ func (s ConstructionService) ConstructionPayloads(ctx context.Context, req *type
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
 	if err != nil {
-		return nil, errorWithInfo(errInvalidInput, "unclear intent")
+		return nil, wrapError(errInvalidInput, "unclear intent")
 	}
 	tx, unTx, err := txFromMatches(matches, req.Metadata)
 	if err != nil {
-		return nil, errorWithInfo(errInternalError, "cant parse matches")
+		return nil, wrapError(errInternalError, "cant parse matches")
 	}
 	if tx == nil {
-		return nil, errorWithInfo(errInternalError, "cant build eth transaction")
+		return nil, wrapError(errInternalError, "cant build eth transaction")
 	}
 
 	unsignedTxData, err := json.Marshal(unTx)
 	if err != nil {
-		return nil, errorWithInfo(errInternalError, err)
+		return nil, wrapError(errInternalError, err)
 	}
 
 	payload := &types.SigningPayload{
@@ -357,7 +357,7 @@ func (s ConstructionService) ConstructionPreprocess(ctx context.Context, req *ty
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
 	if err != nil {
-		return nil, errorWithInfo(errInvalidInput, "unclear intent")
+		return nil, wrapError(errInvalidInput, "unclear intent")
 	}
 
 	fromOp, _ := matches[0].First()
@@ -381,11 +381,11 @@ func (s ConstructionService) ConstructionSubmit(ctx context.Context, req *types.
 
 	tx, err := txFromInput(req.SignedTransaction)
 	if err != nil {
-		return nil, errorWithInfo(errConstructionInvalidTx, err)
+		return nil, wrapError(errConstructionInvalidTx, err)
 	}
 
 	if err := s.evm.SendTransaction(ctx, tx); err != nil {
-		return nil, errorWithInfo(errConstructionSubmitFailed, err)
+		return nil, wrapError(errConstructionSubmitFailed, err)
 	}
 
 	return &types.TransactionIdentifierResponse{

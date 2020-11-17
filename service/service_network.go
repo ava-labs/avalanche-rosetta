@@ -45,25 +45,25 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 	// Fetch the latest block
 	blockHeader, err := s.evm.HeaderByNumber(context.Background(), nil)
 	if err != nil {
-		return nil, errStatusBlockFetchFailed
+		return nil, wrapError(errClientError, err)
 	}
 	if blockHeader == nil {
-		return nil, errStatusBlockNotFound
+		return nil, wrapError(errClientError, "latest block not found")
 	}
 
 	// Fetch the genesis block
 	genesisHeader, err := s.evm.HeaderByNumber(context.Background(), big.NewInt(0))
 	if err != nil {
-		return nil, errStatusBlockFetchFailed
+		return nil, wrapError(errClientError, err)
 	}
 	if genesisHeader == nil {
-		return nil, errStatusBlockNotFound
+		return nil, wrapError(errClientError, "genesis block not found")
 	}
 
-	// Fetch all node's peers
+	// Fetch peers
 	infoPeers, err := s.info.Peers()
 	if err != nil {
-		return nil, errStatusPeersFailed
+		return nil, wrapError(errClientError, err)
 	}
 	peers := mapper.Peers(infoPeers)
 
@@ -73,7 +73,6 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 			Index: blockHeader.Number.Int64(),
 			Hash:  blockHeader.Hash().String(),
 		},
-		// TODO: include oldest block
 		GenesisBlockIdentifier: &types.BlockIdentifier{
 			Index: genesisHeader.Number.Int64(),
 			Hash:  genesisHeader.Hash().String(),
@@ -90,7 +89,7 @@ func (s *NetworkService) NetworkOptions(ctx context.Context, request *types.Netw
 
 	nodeVersion, err := s.info.NodeVersion()
 	if err != nil {
-		return nil, errStatusNodeVersionFailed
+		return nil, wrapError(errClientError, nodeVersion)
 	}
 
 	middlewareVersion := MiddlewareVersion
