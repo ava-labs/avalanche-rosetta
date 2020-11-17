@@ -19,7 +19,7 @@ ENV GOOS=linux
 RUN \
   GO_VERSION=$(go version | awk {'print $3'}) \
   GIT_COMMIT=$(git rev-parse HEAD) \
-  make setup && make build
+  make build
 
 # ------------------------------------------------------------------------------
 # Target Image
