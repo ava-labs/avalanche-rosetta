@@ -31,6 +31,7 @@ var (
 
 	// Call service errors
 	errCallInvalidMethod = makeError(400, "Invalid call method", false)
+	errCallInvalidParams = makeError(400, "invalid call params", false)
 )
 
 func errorList() []*types.Error {
