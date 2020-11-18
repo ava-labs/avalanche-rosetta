@@ -19,14 +19,16 @@ import (
 // BlockService implements the /block/* endpoints
 type BlockService struct {
 	config *Config
+	debug  *client.DebugClient
 	evm    *client.EvmClient
 }
 
 // NewBlockService returns a new block servicer
-func NewBlockService(config *Config, evmClient *client.EvmClient) server.BlockAPIServicer {
+func NewBlockService(config *Config, evmClient *client.EvmClient, debugClient *client.DebugClient) server.BlockAPIServicer {
 	return &BlockService{
 		config: config,
 		evm:    evmClient,
+		debug:  debugClient,
 	}
 }
 
@@ -101,7 +103,12 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 			return nil, errInternalError
 		}
 
-		transaction, err := mapper.Transaction(block.Header(), tx, &msg, receipt)
+		trace, err := s.debug.TraceTransaction(tx.Hash().String())
+		if err != nil {
+			return nil, wrapError(errClientError, err)
+		}
+
+		transaction, err := mapper.Transaction(block.Header(), tx, &msg, receipt, trace)
 		if err != nil {
 			log.Println("transaction mapper error:", err)
 			return nil, errInternalError
@@ -161,7 +168,7 @@ func (s *BlockService) BlockTransaction(ctx context.Context, request *types.Bloc
 		return nil, errInternalError
 	}
 
-	transaction, err := mapper.Transaction(header, tx, &msg, receipt)
+	transaction, err := mapper.Transaction(header, tx, &msg, receipt, nil)
 	if err != nil {
 		log.Println("tx mapper error:", err)
 		return nil, errInternalError

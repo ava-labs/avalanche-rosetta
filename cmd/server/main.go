@@ -50,9 +50,14 @@ func main() {
 		log.Fatal("config validation error:", err)
 	}
 
-	evmClient := client.NewEvmClient(cfg.RPCEndpoint)
+	evmClient, err := client.NewEvmClient(cfg.RPCEndpoint)
+	if err != nil {
+		log.Fatal("evm client init error:", err)
+	}
+
 	infoClient := client.NewInfoClient(cfg.RPCEndpoint)
 	txpoolClient := client.NewTxPoolClient(cfg.RPCEndpoint)
+	debugClient := client.NewDebugClient(cfg.RPCEndpoint)
 
 	log.Println("starting server in", cfg.Mode, "mode")
 
@@ -108,7 +113,7 @@ func main() {
 
 	router := server.CorsMiddleware(
 		server.LoggerMiddleware(
-			configureRouter(serviceConfig, asserter, evmClient, infoClient, txpoolClient),
+			configureRouter(serviceConfig, asserter, evmClient, infoClient, txpoolClient, debugClient),
 		),
 	)
 
@@ -124,9 +129,10 @@ func configureRouter(
 	evmClient *client.EvmClient,
 	infoClient *client.InfoClient,
 	txpoolClient *client.TxPoolClient,
+	debugClient *client.DebugClient,
 ) http.Handler {
 	networkService := service.NewNetworkService(serviceConfig, evmClient, infoClient)
-	blockService := service.NewBlockService(serviceConfig, evmClient)
+	blockService := service.NewBlockService(serviceConfig, evmClient, debugClient)
 	accountService := service.NewAccountService(serviceConfig, evmClient)
 	mempoolService := service.NewMempoolService(serviceConfig, evmClient, txpoolClient)
 	constructionService := service.NewConstructionService(serviceConfig, evmClient)
