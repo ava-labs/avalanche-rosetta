@@ -62,3 +62,11 @@ func (s AccountService) AccountBalance(ctx context.Context, req *types.AccountBa
 
 	return resp, nil
 }
+
+// AccountCoins implements the /account/coins endpoint
+func (s AccountService) AccountCoins(ctx context.Context, req *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error) {
+	if s.config.IsOfflineMode() {
+		return nil, errUnavailableOffline
+	}
+	return nil, errNotImplemented
+}

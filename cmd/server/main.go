@@ -18,7 +18,7 @@ import (
 
 var (
 	cmdName    = "avalanche-rosetta"
-	cmdVersion = service.RosettaVersion
+	cmdVersion = service.MiddlewareVersion
 )
 
 var opts struct {
@@ -94,6 +94,7 @@ func main() {
 		true,                                // historical balance lookup
 		[]*types.NetworkIdentifier{network}, // supported networs
 		[]string{},                          // call methods
+		false,                               // mempool coins
 	)
 	if err != nil {
 		log.Fatal("server asserter init error:", err)

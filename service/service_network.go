@@ -96,7 +96,7 @@ func (s *NetworkService) NetworkOptions(ctx context.Context, request *types.Netw
 
 	resp := &types.NetworkOptionsResponse{
 		Version: &types.Version{
-			RosettaVersion:    RosettaVersion,
+			RosettaVersion:    types.RosettaAPIVersion,
 			MiddlewareVersion: &middlewareVersion,
 			NodeVersion:       nodeVersion,
 		},
