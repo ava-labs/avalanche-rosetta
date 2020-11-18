@@ -97,7 +97,7 @@ func main() {
 	asserter, err := asserter.NewServer(
 		mapper.OperationTypes,               // supported operation types
 		true,                                // historical balance lookup
-		[]*types.NetworkIdentifier{network}, // supported networs
+		[]*types.NetworkIdentifier{network}, // supported networks
 		[]string{},                          // call methods
 		false,                               // mempool coins
 	)

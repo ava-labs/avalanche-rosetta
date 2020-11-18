@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"math/big"
 	"strings"
 
@@ -49,11 +48,9 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		blockIdentifier       *types.BlockIdentifier
 		parentBlockIdentifier *types.BlockIdentifier
 		block                 *ethtypes.Block
-		transactions          []*types.Transaction
 		err                   error
 	)
 
-	// Fetch block by hash
 	if hash := request.BlockIdentifier.Hash; hash != nil {
 		block, err = s.evm.BlockByHash(context.Background(), ethcommon.HexToHash(*hash))
 	} else {
@@ -65,7 +62,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		if strings.Contains(err.Error(), "not found") {
 			return nil, errBlockNotFound
 		}
-		return nil, errBlockFetchFailed
+		return nil, wrapError(errClientError, err)
 	}
 
 	blockIdentifier = &types.BlockIdentifier{
@@ -73,7 +70,6 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		Hash:  block.Hash().String(),
 	}
 
-	// Fetch the parent block since we dont have full info on the block itself
 	parentBlock, err := s.evm.HeaderByHash(context.Background(), block.ParentHash())
 	if err == nil {
 		parentBlockIdentifier = &types.BlockIdentifier{
@@ -81,40 +77,12 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 			Hash:  parentBlock.Hash().String(),
 		}
 	} else {
-		log.Println("parent block fetch failed:", err)
-		return nil, errBlockFetchFailed
+		return nil, wrapError(errClientError, err)
 	}
 
-	for _, tx := range block.Transactions() {
-		msg, err := tx.AsMessage(s.config.Signer())
-		if err != nil {
-			log.Println("tx message error:", err)
-			return nil, errInternalError
-		}
-
-		receipt, err := s.evm.TransactionReceipt(context.Background(), tx.Hash())
-		if err != nil {
-			if strings.Contains(err.Error(), "not found") {
-				log.Println("cant find receipt for", tx.Hash())
-				continue
-			}
-
-			log.Println("tx receipt fetch error:", err)
-			return nil, errInternalError
-		}
-
-		trace, err := s.debug.TraceTransaction(tx.Hash().String())
-		if err != nil {
-			return nil, wrapError(errClientError, err)
-		}
-
-		transaction, err := mapper.Transaction(block.Header(), tx, &msg, receipt, trace)
-		if err != nil {
-			log.Println("transaction mapper error:", err)
-			return nil, errInternalError
-		}
-
-		transactions = append(transactions, transaction)
+	transactions, terr := s.fetchTransactions(ctx, block)
+	if err != nil {
+		return nil, terr
 	}
 
 	return &types.BlockResponse{
@@ -140,41 +108,68 @@ func (s *BlockService) BlockTransaction(ctx context.Context, request *types.Bloc
 		return nil, errUnavailableOffline
 	}
 
+	if request.BlockIdentifier == nil {
+		return nil, wrapError(errInvalidInput, "block identifier is not provided")
+	}
+
+	header, err := s.evm.HeaderByHash(ctx, ethcommon.HexToHash(request.BlockIdentifier.Hash))
+	if err != nil {
+		return nil, wrapError(errClientError, err)
+	}
+
 	hash := ethcommon.HexToHash(request.TransactionIdentifier.Hash)
 	tx, pending, err := s.evm.TransactionByHash(context.Background(), hash)
 	if err != nil {
-		log.Println("tx fetch error:", err)
-		return nil, errInternalError
+		return nil, wrapError(errClientError, err)
 	}
 	if pending {
-		log.Println("tx pending:", tx.Hash().String())
-		return nil, errInternalError
+		return nil, nil
 	}
 
-	msg, err := tx.AsMessage(s.config.Signer())
+	transaction, terr := s.fetchTransaction(ctx, tx, header)
 	if err != nil {
-		return nil, errInternalError
-	}
-
-	receipt, err := s.evm.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		log.Println("tx receipt fetch error:", err)
-		return nil, errInternalError
-	}
-
-	header, err := s.evm.HeaderByNumber(context.Background(), receipt.BlockNumber)
-	if err != nil {
-		log.Println("block header fetch error:", err)
-		return nil, errInternalError
-	}
-
-	transaction, err := mapper.Transaction(header, tx, &msg, receipt, nil)
-	if err != nil {
-		log.Println("tx mapper error:", err)
-		return nil, errInternalError
+		return nil, terr
 	}
 
 	return &types.BlockTransactionResponse{
 		Transaction: transaction,
 	}, nil
+}
+
+func (s *BlockService) fetchTransactions(ctx context.Context, block *ethtypes.Block) ([]*types.Transaction, *types.Error) {
+	transactions := []*types.Transaction{}
+
+	for _, tx := range block.Transactions() {
+		transaction, err := s.fetchTransaction(ctx, tx, block.Header())
+		if err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, transaction)
+	}
+
+	return transactions, nil
+}
+
+func (s *BlockService) fetchTransaction(ctx context.Context, tx *ethtypes.Transaction, header *ethtypes.Header) (*types.Transaction, *types.Error) {
+	msg, err := tx.AsMessage(s.config.Signer())
+	if err != nil {
+		return nil, wrapError(errClientError, err)
+	}
+
+	receipt, err := s.evm.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		return nil, wrapError(errClientError, err)
+	}
+
+	trace, err := s.debug.TraceTransaction(tx.Hash().String())
+	if err != nil {
+		return nil, wrapError(errClientError, err)
+	}
+
+	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace)
+	if err != nil {
+		return nil, wrapError(errInternalError, err)
+	}
+
+	return transaction, nil
 }

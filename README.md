@@ -1,10 +1,8 @@
 # avalanche-rosetta
 
-[Rosetta][1] server implementation for [Avalanche][2] Blockchain.
+[Rosetta][1] server implementation for [Avalanche][2] C-Chain.
 
 *Under active development*
-
-*Please note this implementation only works with C-Chain*
 
 ## Requirements
 
@@ -59,7 +57,7 @@ List of all available Rosetta RPC server endpoints
 | POST   | /construction/payloads   | Y      | Generate an Unsigned Transaction and Signing Payloads
 | POST   | /construction/preprocess | Y      | Create a Request to Fetch Metadata
 | POST   | /construction/submit     | Y      | Submit a Signed Transaction
-| POST   | /call                    | N/A    | Perform a Blockchain Call
+| POST   | /call                    | Y      | Perform a Blockchain Call
 
 ### Development
 
