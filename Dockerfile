@@ -12,9 +12,6 @@ ENV CGO_ENABLED=1
 ENV GOARCH=amd64
 ENV GOOS=linux
 
-RUN pwd
-RUN ls -al
-
 RUN go mod download
 
 RUN \
@@ -48,11 +45,10 @@ COPY --from=build \
   /app/rosetta
 
 COPY --from=build \
-  /go/src/github.com/figment-networks/avalanche-rosetta/avalanche-rosetta/docker/start.sh \
+  /go/src/github.com/figment-networks/avalanche-rosetta/docker/start.sh \
   /app/start
 
 EXPOSE 9650
 EXPOSE 8081
 
 CMD ["/app/start"]
-

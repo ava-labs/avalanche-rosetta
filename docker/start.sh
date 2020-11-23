@@ -1,5 +1,7 @@
 #!/bin/bash
 
+AVALANCHE_NETWORK=${AVALANCHE_NETWORK:testnet}
+
 cat <<EOF >> /app/avalanchego-config.json
 {
   "network-id": "$AVALANCHE_NETWORK",

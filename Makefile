@@ -18,7 +18,7 @@ dist:
 	GOOS=darwin GOARCH=amd64 go build -o ./bin/avalanche-rosetta_darwin-amd64 ./cmd/server
 
 docker-build:
-	docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile .
+	docker build --no-cache -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile .
 
 docker-push:
 	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
