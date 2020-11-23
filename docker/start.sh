@@ -1,6 +1,7 @@
 #!/bin/bash
 
 AVALANCHE_NETWORK=${AVALANCHE_NETWORK:testnet}
+AVALANCHE_CHAIN=${AVALANCHE_CHAIN:43113}
 
 cat <<EOF >> /app/avalanchego-config.json
 {
@@ -28,9 +29,11 @@ cat <<EOF >> /app/rosetta-config.json
 {
   "mode": "online",
   "rpc_endpoint": "http://localhost:9650",
-  "listen_addr": "0.0.0.0:8081"
+  "listen_addr": "0.0.0.0:8081",
+  "network_id": 1,
+  "chain_id": "$AVALANCHE_CHAIN"
 }
 EOF
 
-/app/avalanchego --config-file=/app/avalanchego-config.json & \
+/app/avalanchego --config-file=/app/avalanchego-config.json &
 /app/rosetta -config=/app/rosetta-config.json
