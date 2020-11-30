@@ -44,6 +44,7 @@ COPY --from=build \
   /go/src/github.com/figment-networks/avalanche-rosetta/avalanche-rosetta \
   /app/rosetta
 
+# Install service start script
 COPY --from=build \
   /go/src/github.com/figment-networks/avalanche-rosetta/docker/start.sh \
   /app/start
