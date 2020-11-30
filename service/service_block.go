@@ -70,14 +70,21 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		Hash:  block.Hash().String(),
 	}
 
-	parentBlock, err := s.evm.HeaderByHash(context.Background(), block.ParentHash())
-	if err == nil {
-		parentBlockIdentifier = &types.BlockIdentifier{
-			Index: parentBlock.Number.Int64(),
-			Hash:  parentBlock.Hash().String(),
+	if block.ParentHash().String() != genesisBlockHash {
+		parentBlock, err := s.evm.HeaderByHash(context.Background(), block.ParentHash())
+		if err == nil {
+			parentBlockIdentifier = &types.BlockIdentifier{
+				Index: parentBlock.Number.Int64(),
+				Hash:  parentBlock.Hash().String(),
+			}
+		} else {
+			return nil, wrapError(errClientError, err)
 		}
 	} else {
-		return nil, wrapError(errClientError, err)
+		parentBlockIdentifier = &types.BlockIdentifier{
+			Index: 0,
+			Hash:  genesisBlockHash,
+		}
 	}
 
 	transactions, terr := s.fetchTransactions(ctx, block)

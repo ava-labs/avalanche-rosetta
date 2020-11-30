@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	//ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/figment-networks/avalanche-rosetta/client"
@@ -55,7 +54,7 @@ func Transaction(
 	ops = append(ops, feeOps...)
 
 	traces := client.FlattenTraces(trace, []*client.FlatCall{})
-	traceOps := traceOps(traces, len(traces))
+	traceOps := traceOps(traces, len(feeOps))
 	ops = append(ops, traceOps...)
 
 	return &types.Transaction{

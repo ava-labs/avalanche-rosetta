@@ -13,3 +13,4 @@ tmp
 vendor/
 config/*.json
 bin/*
+rosetta-data

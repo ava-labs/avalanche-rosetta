@@ -34,7 +34,7 @@ func (s AccountService) AccountBalance(ctx context.Context, req *types.AccountBa
 	}
 
 	if req.AccountIdentifier == nil {
-		return nil, errInvalidInput
+		return nil, wrapError(errInvalidInput, "account identifier is not provided")
 	}
 
 	header, err := blockHeaderFromInput(s.evm, req.BlockIdentifier)

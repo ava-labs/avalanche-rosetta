@@ -25,7 +25,7 @@ docker-push:
 	docker push ${DOCKER_TAG}
 
 run-testnet:
-	docker run -e AVALANCHE_NETWORK=testnet -e AVALANCHE_CHAIN=43113 --rm -p 8082:8081 -p 9651:9650 -it ${DOCKER_TAG}
+	docker run -e AVALANCHE_NETWORK=testnet -e AVALANCHE_CHAIN=43113 --rm -p 8081:8081 -p 9650:9650 -it ${DOCKER_TAG}
 
 run-mainnet:
 	docker run -e AVALANCHE_NETWORK=mainnet -e AVALANCHE_CHAIN=43114 --rm -p 8081:8081 -p 9650:9650 -it ${DOCKER_TAG}

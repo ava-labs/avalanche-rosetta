@@ -37,6 +37,7 @@ var (
 	}
 
 	OperationTypes = []string{
+		OpFee,
 		OpCall,
 		OpCreate,
 		OpCreate2,
