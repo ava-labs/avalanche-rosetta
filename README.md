@@ -26,7 +26,6 @@ Before you start running the server you need to create a configuration file:
   "mode": "online",
   "listen_addr": "0.0.0.0:8080"
 }
-
 ```
 
 Start the server by running the following command:
@@ -61,12 +60,15 @@ List of all available Rosetta RPC server endpoints
 
 ### Development
 
-Available Make commands:
+Available commands:
 
-- `make build`        - Build the development version of the binary
-- `make dist`         - Build binaries for Linux & Mac
-- `make docker-build` - Build a Docker image
-- `make docker-push`  - Push a Docker image to the registry
+- `make build`              - Build the development version of the binary
+- `make test`               - Run the test suite
+- `make dist`               - Build distribution binaries
+- `make docker-build`       - Build a Docker image
+- `make docker-push`        - Push a Docker image to the registry
+- `make docker-run-testnet` - Run node and rosetta testnet server
+- `make docker-run-mainnet` - Run node and rosetta mainnet server
 
 ## License
 
