@@ -9,25 +9,25 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/ethclient"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/figment-networks/avalanche-rosetta/client"
 	"github.com/figment-networks/avalanche-rosetta/mapper"
 )
 
 // ConstructionService implements /construction/* endpoints
 type ConstructionService struct {
 	config *Config
-	evm    *client.EvmClient
+	client *ethclient.Client
 }
 
 // NewConstructionService returns a new contruction servicer
-func NewConstructionService(config *Config, evmClient *client.EvmClient) server.ConstructionAPIServicer {
+func NewConstructionService(config *Config, client *ethclient.Client) server.ConstructionAPIServicer {
 	return &ConstructionService{
 		config: config,
-		evm:    evmClient,
+		client: client,
 	}
 }
 
@@ -48,17 +48,17 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 		return nil, wrapError(errInvalidInput, "from address is not provided")
 	}
 
-	balance, err := s.evm.Client.BalanceAt(context.Background(), ethcommon.HexToAddress(from), nil)
+	balance, err := s.client.BalanceAt(context.Background(), ethcommon.HexToAddress(from), nil)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
 
-	nonce, err := s.evm.Client.PendingNonceAt(context.Background(), ethcommon.HexToAddress(from))
+	nonce, err := s.client.NonceAt(context.Background(), ethcommon.HexToAddress(from), nil)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
 
-	gasPrice, err := s.evm.Client.SuggestGasPrice(context.Background())
+	gasPrice, err := s.client.SuggestGasPrice(context.Background())
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
@@ -384,7 +384,7 @@ func (s ConstructionService) ConstructionSubmit(ctx context.Context, req *types.
 		return nil, wrapError(errConstructionInvalidTx, err)
 	}
 
-	if err := s.evm.SendTransaction(ctx, tx); err != nil {
+	if err := s.client.SendTransaction(ctx, tx); err != nil {
 		return nil, wrapError(errConstructionSubmitFailed, err)
 	}
 

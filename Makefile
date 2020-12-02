@@ -1,11 +1,12 @@
-.PHONY: build test dist docker-build docker-push
+.PHONY: build test dist docker-build docker-push docker-run-testnet docker-run-mainnet
 
-PROJECT      ?= avalanche-rosetta
-GIT_COMMIT   ?= $(shell git rev-parse HEAD)
-GO_VERSION   ?= $(shell go version | awk {'print $$3'})
-DOCKER_IMAGE ?= figmentnetworks/${PROJECT}
-DOCKER_LABEL ?= latest
-DOCKER_TAG   ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
+PROJECT           ?= avalanche-rosetta
+GIT_COMMIT        ?= $(shell git rev-parse HEAD)
+GO_VERSION        ?= $(shell go version | awk {'print $$3'})
+DOCKER_IMAGE      ?= figmentnetworks/${PROJECT}
+DOCKER_LABEL      ?= latest
+DOCKER_TAG        ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
+AVALANCHE_VERSION ?= v1.0.6
 
 build:
 	go build -o ./avalanche-rosetta ./cmd/server
@@ -19,13 +20,19 @@ dist:
 	GOOS=darwin GOARCH=amd64 go build -o ./bin/avalanche-rosetta_darwin-amd64 ./cmd/server
 
 docker-build:
-	docker build --no-cache -t ${DOCKER_TAG} -f Dockerfile .
+	docker build \
+		--no-cache \
+		--build-arg AVALANCHE_VERSION=${AVALANCHE_VERSION} \
+		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
+		-t ${DOCKER_TAG} \
+		-f Dockerfile \
+		.
 
 docker-push:
 	docker push ${DOCKER_TAG}
 
-run-testnet:
+docker-run-testnet:
 	docker run -e AVALANCHE_NETWORK=testnet -e AVALANCHE_CHAIN=43113 --rm -p 8081:8081 -p 9650:9650 -it ${DOCKER_TAG}
 
-run-mainnet:
-	docker run -e AVALANCHE_NETWORK=mainnet -e AVALANCHE_CHAIN=43114 --rm -p 8081:8081 -p 9650:9650 -it ${DOCKER_TAG}
+docker-run-mainnet:
+	docker run -e AVALANCHE_NETWORK=mainnet -e AVALANCHE_CHAIN=43114 --rm -p 8082:8081 -p 9651:9650 -it ${DOCKER_TAG}

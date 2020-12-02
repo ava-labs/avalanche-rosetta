@@ -8,10 +8,9 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/ethclient"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-
-	"github.com/figment-networks/avalanche-rosetta/client"
 )
 
 const (
@@ -34,23 +33,23 @@ type txMetadata struct {
 	GasPrice *big.Int `json:"gas_price"`
 }
 
-func blockHeaderFromInput(evm *client.EvmClient, input *types.PartialBlockIdentifier) (*ethtypes.Header, *types.Error) {
+func blockHeaderFromInput(client *ethclient.Client, input *types.PartialBlockIdentifier) (*ethtypes.Header, *types.Error) {
 	var (
 		header *ethtypes.Header
 		err    error
 	)
 
 	if input == nil {
-		header, err = evm.HeaderByNumber(context.Background(), nil)
+		header, err = client.HeaderByNumber(context.Background(), nil)
 	} else {
 		if input.Hash == nil && input.Index == nil {
 			return nil, errInvalidInput
 		}
 
 		if input.Index != nil {
-			header, err = evm.HeaderByNumber(context.Background(), big.NewInt(*input.Index))
+			header, err = client.HeaderByNumber(context.Background(), big.NewInt(*input.Index))
 		} else {
-			header, err = evm.HeaderByHash(context.Background(), ethcommon.HexToHash(*input.Hash))
+			header, err = client.HeaderByHash(context.Background(), ethcommon.HexToHash(*input.Hash))
 		}
 	}
 

@@ -4,7 +4,8 @@ import (
 	"math/big"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
+	corethTypes "github.com/ava-labs/coreth/core/types"
 )
 
 type Config struct {
@@ -26,6 +27,6 @@ func (c Config) IsOnlineMode() bool {
 	return c.Mode == ModeOnline
 }
 
-func (c Config) Signer() ethtypes.EIP155Signer {
-	return ethtypes.NewEIP155Signer(c.ChainID)
+func (c Config) Signer() corethTypes.Signer {
+	return corethTypes.NewEIP155Signer(c.ChainID)
 }

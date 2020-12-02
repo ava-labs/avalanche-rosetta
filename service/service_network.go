@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/ava-labs/coreth/ethclient"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -15,11 +16,11 @@ import (
 type NetworkService struct {
 	config *Config
 	info   *client.InfoClient
-	evm    *client.EvmClient
+	evm    *ethclient.Client
 }
 
 // NewNetworkService returns a new network servicer
-func NewNetworkService(config *Config, evmClient *client.EvmClient, infoClient *client.InfoClient) server.NetworkAPIServicer {
+func NewNetworkService(config *Config, evmClient *ethclient.Client, infoClient *client.InfoClient) server.NetworkAPIServicer {
 	return &NetworkService{
 		config: config,
 		evm:    evmClient,
@@ -66,6 +67,7 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 		return nil, wrapError(errClientError, err)
 	}
 	peers := mapper.Peers(infoPeers)
+	blocknum := blockHeader.Number.Int64()
 
 	return &types.NetworkStatusResponse{
 		CurrentBlockTimestamp: int64(blockHeader.Time * 1000),
@@ -76,6 +78,11 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 		GenesisBlockIdentifier: &types.BlockIdentifier{
 			Index: genesisHeader.Number.Int64(),
 			Hash:  genesisHeader.Hash().String(),
+		},
+		SyncStatus: &types.SyncStatus{
+			CurrentIndex: blocknum,
+			TargetIndex:  &blocknum,
+			Stage:        types.String("current"),
 		},
 		Peers: peers,
 	}, nil

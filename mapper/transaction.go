@@ -1,14 +1,21 @@
 package mapper
 
 import (
+	"crypto/sha1"
+	"fmt"
 	"log"
 	"math/big"
 	"strings"
 
+	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/figment-networks/avalanche-rosetta/client"
+)
+
+var (
+	x2crate = big.NewInt(1000000000)
 )
 
 func Transaction(
@@ -71,6 +78,100 @@ func Transaction(
 	}, nil
 }
 
+func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error) {
+	transactions := []*types.Transaction{}
+
+	extra := block.ExtraData()
+	if len(extra) == 0 {
+		return transactions, nil
+	}
+
+	tx := &evm.Tx{}
+	if _, err := codecManager.Unmarshal(extra, tx); err != nil {
+		return nil, err
+	}
+
+	var txID string
+	var idx int64
+
+	ops := []*types.Operation{}
+
+	switch t := tx.UnsignedTx.(type) {
+	case *evm.UnsignedImportTx:
+		for _, in := range t.ImportedInputs {
+			// TODO: should use a proper tx hash for identification
+			txID = in.TxID.String()
+			break
+		}
+
+		for _, out := range t.Outs {
+			op := &types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: idx,
+				},
+				Type:   OpImport,
+				Status: types.String(StatusSuccess),
+				Account: &types.AccountIdentifier{
+					Address: out.Address.Hex(),
+				},
+				Amount: &types.Amount{
+					Value:    new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), x2crate).String(),
+					Currency: AvaxCurrency,
+				},
+				Metadata: map[string]interface{}{
+					"blockchain_id": t.BlockchainID.String(),
+					"network_id":    t.NetworkID,
+					"source_chain":  t.SourceChain.String(),
+					"meta":          t.Metadata,
+					"asset_id":      out.AssetID.String(),
+				},
+			}
+			ops = append(ops, op)
+			idx++
+		}
+	case *evm.UnsignedExportTx:
+		// TODO: should use a proper tx hash for identification
+		txID = fmt.Sprintf("%02x", sha1.Sum(extra))
+
+		for _, in := range t.Ins {
+			op := &types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: idx,
+				},
+				Type:   OpExport,
+				Status: types.String(StatusSuccess),
+				Account: &types.AccountIdentifier{
+					Address: in.Address.Hex(),
+				},
+				Amount: &types.Amount{
+					Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(x2crate)).String(),
+					Currency: AvaxCurrency,
+				},
+				Metadata: map[string]interface{}{
+					"blockchain_id":     t.BlockchainID.String(),
+					"network_id":        t.NetworkID,
+					"destination_chain": t.DestinationChain.String(),
+					"meta":              t.Metadata,
+					"asset_id":          in.AssetID.String(),
+				},
+			}
+			ops = append(ops, op)
+			idx++
+		}
+	}
+
+	transactions = append(transactions, &types.Transaction{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			Hash: txID,
+		},
+		Operations: ops,
+	})
+
+	return transactions, nil
+}
+
+// MempoolTransactionsIDs returns a list of transction IDs in the mempool
+// TODO: is not really needed but included for API completion
 func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.TransactionIdentifier {
 	result := []*types.TransactionIdentifier{}
 

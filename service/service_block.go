@@ -5,11 +5,12 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ava-labs/coreth/ethclient"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
+	corethTypes "github.com/ava-labs/coreth/core/types"
 
 	"github.com/figment-networks/avalanche-rosetta/client"
 	"github.com/figment-networks/avalanche-rosetta/mapper"
@@ -19,11 +20,11 @@ import (
 type BlockService struct {
 	config *Config
 	debug  *client.DebugClient
-	evm    *client.EvmClient
+	evm    *ethclient.Client
 }
 
 // NewBlockService returns a new block servicer
-func NewBlockService(config *Config, evmClient *client.EvmClient, debugClient *client.DebugClient) server.BlockAPIServicer {
+func NewBlockService(config *Config, evmClient *ethclient.Client, debugClient *client.DebugClient) server.BlockAPIServicer {
 	return &BlockService{
 		config: config,
 		evm:    evmClient,
@@ -47,7 +48,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 	var (
 		blockIdentifier       *types.BlockIdentifier
 		parentBlockIdentifier *types.BlockIdentifier
-		block                 *ethtypes.Block
+		block                 *corethTypes.Block
 		err                   error
 	)
 
@@ -87,6 +88,11 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		}
 	}
 
+	crossTransactions, err := mapper.CrossChainTransactions(block)
+	if err != nil {
+		return nil, wrapError(errInternalError, err)
+	}
+
 	transactions, terr := s.fetchTransactions(ctx, block)
 	if err != nil {
 		return nil, terr
@@ -97,7 +103,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 			BlockIdentifier:       blockIdentifier,
 			ParentBlockIdentifier: parentBlockIdentifier,
 			Timestamp:             int64(block.Time() * 1000),
-			Transactions:          transactions,
+			Transactions:          append(crossTransactions, transactions...),
 			Metadata: map[string]interface{}{
 				"gas_limit":  block.GasLimit(),
 				"gas_used":   block.GasUsed(),
@@ -143,7 +149,7 @@ func (s *BlockService) BlockTransaction(ctx context.Context, request *types.Bloc
 	}, nil
 }
 
-func (s *BlockService) fetchTransactions(ctx context.Context, block *ethtypes.Block) ([]*types.Transaction, *types.Error) {
+func (s *BlockService) fetchTransactions(ctx context.Context, block *corethTypes.Block) ([]*types.Transaction, *types.Error) {
 	transactions := []*types.Transaction{}
 
 	for _, tx := range block.Transactions() {
@@ -157,7 +163,7 @@ func (s *BlockService) fetchTransactions(ctx context.Context, block *ethtypes.Bl
 	return transactions, nil
 }
 
-func (s *BlockService) fetchTransaction(ctx context.Context, tx *ethtypes.Transaction, header *ethtypes.Header) (*types.Transaction, *types.Error) {
+func (s *BlockService) fetchTransaction(ctx context.Context, tx *corethTypes.Transaction, header *corethTypes.Header) (*types.Transaction, *types.Error) {
 	msg, err := tx.AsMessage(s.config.Signer())
 	if err != nil {
 		return nil, wrapError(errClientError, err)

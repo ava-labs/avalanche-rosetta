@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/ava-labs/coreth/ethclient"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -50,7 +51,7 @@ func main() {
 		log.Fatal("config validation error:", err)
 	}
 
-	evmClient, err := client.NewEvmClient(cfg.RPCEndpoint)
+	evmClient, err := ethclient.Dial(cfg.RPCEndpoint + client.PrefixEVM)
 	if err != nil {
 		log.Fatal("evm client init error:", err)
 	}
@@ -126,7 +127,7 @@ func main() {
 func configureRouter(
 	serviceConfig *service.Config,
 	asserter *asserter.Asserter,
-	evmClient *client.EvmClient,
+	evmClient *ethclient.Client,
 	infoClient *client.InfoClient,
 	txpoolClient *client.TxPoolClient,
 	debugClient *client.DebugClient,

@@ -4,17 +4,16 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/ava-labs/coreth/ethclient"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
-
-	"github.com/figment-networks/avalanche-rosetta/client"
 )
 
 // CallService implements /call/* endpoints
 type CallService struct {
 	config *Config
-	evm    *client.EvmClient
+	evm    *ethclient.Client
 }
 
 // GetTransactionReceiptInput is the input to the call
@@ -24,7 +23,7 @@ type GetTransactionReceiptInput struct {
 }
 
 // NewCallService returns a new call servicer
-func NewCallService(config *Config, evmClient *client.EvmClient) server.CallAPIServicer {
+func NewCallService(config *Config, evmClient *ethclient.Client) server.CallAPIServicer {
 	return &CallService{
 		config: config,
 		evm:    evmClient,

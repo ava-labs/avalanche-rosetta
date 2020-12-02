@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/ava-labs/coreth/ethclient"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -13,12 +14,12 @@ import (
 // MempoolService implements the /mempool/* endpoints
 type MempoolService struct {
 	config *Config
-	evm    *client.EvmClient
+	evm    *ethclient.Client
 	txpool *client.TxPoolClient
 }
 
 // NewMempoolService returns a new mempool servicer
-func NewMempoolService(config *Config, evmClient *client.EvmClient, txpoolClient *client.TxPoolClient) server.MempoolAPIServicer {
+func NewMempoolService(config *Config, evmClient *ethclient.Client, txpoolClient *client.TxPoolClient) server.MempoolAPIServicer {
 	return &MempoolService{
 		config: config,
 		evm:    evmClient,

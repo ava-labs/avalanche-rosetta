@@ -14,6 +14,8 @@ const (
 	OpDelegateCall = "DELEGATECALL"
 	OpStaticCall   = "STATICCALL"
 	OpDestruct     = "DESTRUCT"
+	OpImport       = "IMPORT"
+	OpExport       = "EXPORT"
 
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
@@ -46,6 +48,8 @@ var (
 		OpDelegateCall,
 		OpStaticCall,
 		OpDestruct,
+		OpImport,
+		OpExport,
 	}
 )
 

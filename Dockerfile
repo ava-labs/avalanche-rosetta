@@ -1,7 +1,24 @@
 # ------------------------------------------------------------------------------
+# Build avalanche
+# ------------------------------------------------------------------------------
+FROM golang:1.15 AS avalanche
+
+ARG AVALANCHE_VERSION
+
+RUN git clone https://github.com/ava-labs/avalanchego.git \
+  /go/src/github.com/ava-labs/avalanchego
+
+WORKDIR /go/src/github.com/ava-labs/avalanchego
+
+RUN git checkout $AVALANCHE_VERSION && \
+    ./scripts/build.sh
+
+# ------------------------------------------------------------------------------
 # Build avalanche rosetta
 # ------------------------------------------------------------------------------
-FROM golang:1.15 AS build
+FROM golang:1.15 AS rosetta
+
+ARG ROSETTA_VERSION
 
 RUN git clone https://github.com/figment-networks/avalanche-rosetta.git \
   /go/src/github.com/figment-networks/avalanche-rosetta
@@ -12,7 +29,8 @@ ENV CGO_ENABLED=1
 ENV GOARCH=amd64
 ENV GOOS=linux
 
-RUN go mod download
+RUN git checkout $ROSETTA_VERSION && \
+    go mod download
 
 RUN \
   GO_VERSION=$(go version | awk {'print $3'}) \
@@ -24,28 +42,29 @@ RUN \
 # ------------------------------------------------------------------------------
 FROM ubuntu:18.04
 
-ENV AVALANCHE_VERSION=v1.0.5
-
 # Install dependencies
 RUN apt-get update -y && \
     apt-get install -y wget
 
 WORKDIR /app
 
-# Install avalanchego
-RUN \
-  wget -q https://github.com/ava-labs/avalanchego/releases/download/$AVALANCHE_VERSION/avalanchego-linux-$AVALANCHE_VERSION.tar.gz && \
-  tar -xzf avalanchego-linux-$AVALANCHE_VERSION.tar.gz && \
-  rm *.gz && \
-  mv avalanchego-$AVALANCHE_VERSION/* .
+# Install avalanche binaries
+COPY --from=avalanche \
+  /go/src/github.com/ava-labs/avalanchego/build/avalanchego \
+  /app/avalanchego
+
+# Install plugins
+COPY --from=avalanche \
+  /go/src/github.com/ava-labs/avalanchego/build/plugins/* \
+  /app/plugins/
 
 # Install rosetta server
-COPY --from=build \
+COPY --from=rosetta \
   /go/src/github.com/figment-networks/avalanche-rosetta/avalanche-rosetta \
   /app/rosetta
 
 # Install service start script
-COPY --from=build \
+COPY --from=rosetta \
   /go/src/github.com/figment-networks/avalanche-rosetta/docker/start.sh \
   /app/start
 
