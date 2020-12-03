@@ -1,4 +1,4 @@
-# avalanche-rosetta
+# Avalanche Rosetta
 
 [Rosetta][1] server implementation for [Avalanche][2] C-Chain.
 

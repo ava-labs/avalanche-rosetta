@@ -60,14 +60,19 @@ func makeError(code int32, message string, retriable bool) *types.Error {
 		Code:      code,
 		Message:   message,
 		Retriable: retriable,
+		Details:   map[string]interface{}{},
 	}
 }
 
 func wrapError(err *types.Error, message interface{}) *types.Error {
 	newErr := makeError(err.Code, err.Message, err.Retriable)
 
-	if newErr.Details == nil {
-		newErr.Details = map[string]interface{}{}
+	if err.Description != nil {
+		newErr.Description = err.Description
+	}
+
+	for k, v := range err.Details {
+		newErr.Details[k] = v
 	}
 
 	switch t := message.(type) {

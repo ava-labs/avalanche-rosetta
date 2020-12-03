@@ -85,7 +85,8 @@ func TestConstructionDerive(t *testing.T) {
 			},
 		})
 		assert.Nil(t, resp)
-		assert.Equal(t, errConstructionInvalidPubkey, err)
+		assert.Equal(t, errConstructionInvalidPubkey.Code, err.Code)
+		assert.Equal(t, "invalid public key", err.Details["error"])
 	})
 
 	t.Run("valid public key", func(t *testing.T) {
