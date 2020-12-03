@@ -3,7 +3,8 @@
 PROJECT           ?= avalanche-rosetta
 GIT_COMMIT        ?= $(shell git rev-parse HEAD)
 GO_VERSION        ?= $(shell go version | awk {'print $$3'})
-DOCKER_IMAGE      ?= figmentnetworks/${PROJECT}
+DOCKER_ORG        ?= figmentnetworks
+DOCKER_IMAGE      ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL      ?= latest
 DOCKER_TAG        ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
 AVALANCHE_VERSION ?= v1.0.6
