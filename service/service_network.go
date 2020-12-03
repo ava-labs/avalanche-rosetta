@@ -108,9 +108,11 @@ func (s *NetworkService) NetworkOptions(ctx context.Context, request *types.Netw
 			NodeVersion:       nodeVersion,
 		},
 		Allow: &types.Allow{
-			OperationStatuses: mapper.OperationStatuses,
-			OperationTypes:    mapper.OperationTypes,
-			Errors:            errorList(),
+			OperationStatuses:       mapper.OperationStatuses,
+			OperationTypes:          mapper.OperationTypes,
+			CallMethods:             mapper.CallMethods,
+			Errors:                  Errors,
+			HistoricalBalanceLookup: true,
 		},
 	}
 

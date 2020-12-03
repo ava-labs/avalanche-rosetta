@@ -75,6 +75,6 @@ RUN wget https://github.com/coinbase/rosetta-cli/releases/download/v0.6.2/rosett
     rm *.tar.gz
 
 EXPOSE 9650
-EXPOSE 8081
+EXPOSE 8080
 
 CMD ["/app/start"]

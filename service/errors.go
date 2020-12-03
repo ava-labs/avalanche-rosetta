@@ -5,13 +5,34 @@ import (
 )
 
 var (
+	// Errors lists all available error types
+	Errors = []*types.Error{
+		errNotImplemented,
+		errNotSupported,
+		errNotReady,
+		errUnavailableOffline,
+		errInternalError,
+		errInvalidInput,
+		errClientError,
+		errStatusBlockFetchFailed,
+		errStatusBlockNotFound,
+		errStatusPeersFailed,
+		errBlockInvalidInput,
+		errBlockFetchFailed,
+		errBlockNotFound,
+		errConstructionSubmitFailed,
+		errConstructionInvalidTx,
+		errCallInvalidMethod,
+	}
+
 	// General errors
 	errNotImplemented     = makeError(1, "Endpoint is not implemented", false)
 	errNotSupported       = makeError(2, "Endpoint is not supported", false)
-	errUnavailableOffline = makeError(3, "Endpoint is not available offline", false)
-	errInternalError      = makeError(4, "Internal server error", true)
-	errInvalidInput       = makeError(5, "Invalid input", false)
-	errClientError        = makeError(6, "Client error", true)
+	errNotReady           = makeError(3, "Node is not ready", true)
+	errUnavailableOffline = makeError(4, "Endpoint is not available offline", false)
+	errInternalError      = makeError(5, "Internal server error", true)
+	errInvalidInput       = makeError(6, "Invalid input", false)
+	errClientError        = makeError(7, "Client error", true)
 
 	// Network service errors
 	errStatusBlockFetchFailed  = makeError(100, "Unable to fetch block", true)
@@ -34,30 +55,6 @@ var (
 	errCallInvalidParams = makeError(400, "invalid call params", false)
 )
 
-func errorList() []*types.Error {
-	return []*types.Error{
-		errNotImplemented,
-		errNotSupported,
-		errUnavailableOffline,
-		errInternalError,
-		errInvalidInput,
-		errClientError,
-
-		errStatusBlockFetchFailed,
-		errStatusBlockNotFound,
-		errStatusPeersFailed,
-
-		errBlockInvalidInput,
-		errBlockFetchFailed,
-		errBlockNotFound,
-
-		errConstructionSubmitFailed,
-		errConstructionInvalidTx,
-
-		errCallInvalidMethod,
-	}
-}
-
 func makeError(code int32, message string, retriable bool) *types.Error {
 	return &types.Error{
 		Code:      code,
@@ -66,16 +63,19 @@ func makeError(code int32, message string, retriable bool) *types.Error {
 	}
 }
 
-func wrapError(rosettaErr *types.Error, message interface{}) *types.Error {
-	if rosettaErr.Details == nil {
-		rosettaErr.Details = map[string]interface{}{}
+func wrapError(err *types.Error, message interface{}) *types.Error {
+	newErr := makeError(err.Code, err.Message, err.Retriable)
+
+	if newErr.Details == nil {
+		newErr.Details = map[string]interface{}{}
 	}
 
 	switch t := message.(type) {
 	case error:
-		rosettaErr.Details["error"] = t.Error()
+		newErr.Details["error"] = t.Error()
 	default:
-		rosettaErr.Details["error"] = t
+		newErr.Details["error"] = t
 	}
-	return rosettaErr
+
+	return newErr
 }

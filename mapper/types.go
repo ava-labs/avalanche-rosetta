@@ -51,6 +51,10 @@ var (
 		OpImport,
 		OpExport,
 	}
+
+	CallMethods = []string{
+		"eth_getTransactionReceipt",
+	}
 )
 
 func CallType(t string) bool {

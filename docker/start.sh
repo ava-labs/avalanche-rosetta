@@ -30,7 +30,7 @@ cat <<EOF > /app/rosetta-config.json
 {
   "mode": "$AVALANCHE_MODE",
   "rpc_endpoint": "http://localhost:9650",
-  "listen_addr": "0.0.0.0:8081",
+  "listen_addr": "0.0.0.0:8080",
   "network_id": 1,
   "network_name": "$AVALANCHE_NETWORK",
   "chain_id": $AVALANCHE_CHAIN

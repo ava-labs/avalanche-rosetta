@@ -1,10 +1,9 @@
 package mapper
 
 import (
-	"crypto/sha1"
-	"fmt"
 	"log"
 	"math/big"
+	"reflect"
 	"strings"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
@@ -91,15 +90,14 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 		return nil, err
 	}
 
-	var txID string
 	var idx int64
+	var txID string
 
 	ops := []*types.Operation{}
 
 	switch t := tx.UnsignedTx.(type) {
 	case *evm.UnsignedImportTx:
 		for _, in := range t.ImportedInputs {
-			// TODO: should use a proper tx hash for identification
 			txID = in.TxID.String()
 			break
 		}
@@ -119,6 +117,7 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
+					"tx_id":         txID,
 					"blockchain_id": t.BlockchainID.String(),
 					"network_id":    t.NetworkID,
 					"source_chain":  t.SourceChain.String(),
@@ -130,9 +129,6 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 			idx++
 		}
 	case *evm.UnsignedExportTx:
-		// TODO: should use a proper tx hash for identification
-		txID = fmt.Sprintf("%02x", sha1.Sum(extra))
-
 		for _, in := range t.Ins {
 			op := &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
@@ -158,11 +154,13 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 			ops = append(ops, op)
 			idx++
 		}
+	default:
+		panic("Unsupported transaction:" + reflect.TypeOf(t).String())
 	}
 
 	transactions = append(transactions, &types.Transaction{
 		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: txID,
+			Hash: block.Hash().String(),
 		},
 		Operations: ops,
 	})
