@@ -12,6 +12,7 @@ type config struct {
 	ListenAddr  string `json:"listen_addr"`
 	NetworkName string `json:"network_name"`
 	ChainID     int64  `json:"chain_id"`
+	LogRequests bool   `json:"log_requests"`
 }
 
 func readConfig(path string) (*config, error) {

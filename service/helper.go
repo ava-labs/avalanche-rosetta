@@ -9,7 +9,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/ethclient"
+	ethclient "github.com/ava-labs/coreth/ethclient"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
@@ -25,6 +25,7 @@ type unsignedTx struct {
 	Value    *big.Int `json:"value"`
 	GasPrice *big.Int `json:"gas_price"`
 	GasLimit uint64   `json:"gas"`
+	ChainID  *big.Int `json:"chain_id"`
 	Input    []byte   `json:"input"`
 }
 
@@ -68,27 +69,7 @@ func txFromInput(input string) (*ethtypes.Transaction, error) {
 	return tx, nil
 }
 
-func unsignedTxFromInput(input string) (*ethtypes.Transaction, error) {
-	tx := unsignedTx{}
-	inputBytes := []byte(input)
-
-	if err := json.Unmarshal(inputBytes, &tx); err != nil {
-		return nil, err
-	}
-
-	ethTx := ethtypes.NewTransaction(
-		tx.Nonce,
-		ethcommon.HexToAddress(tx.To),
-		tx.Value,
-		tx.GasLimit,
-		tx.GasPrice,
-		inputBytes,
-	)
-
-	return ethTx, nil
-}
-
-func txFromMatches(matches []*parser.Match, kv map[string]interface{}) (*ethtypes.Transaction, *unsignedTx, error) {
+func txFromMatches(matches []*parser.Match, kv map[string]interface{}, chainID *big.Int) (*ethtypes.Transaction, *unsignedTx, error) {
 	var metadata txMetadata
 	if err := unmarshalJSONMap(kv, &metadata); err != nil {
 		return nil, nil, err
@@ -100,25 +81,26 @@ func txFromMatches(matches []*parser.Match, kv map[string]interface{}) (*ethtype
 	toAddress := toOp.Account.Address
 	nonce := metadata.Nonce
 	gasPrice := metadata.GasPrice
-	data := []byte{}
+	transferData := []byte{}
 
 	tx := ethtypes.NewTransaction(
-		metadata.Nonce,
+		nonce,
 		ethcommon.HexToAddress(toAddress),
 		amount,
 		transferGasLimit,
 		gasPrice,
-		data,
+		transferData,
 	)
 
 	unTx := &unsignedTx{
 		From:     fromAddress,
 		To:       toAddress,
-		Nonce:    nonce,
 		Value:    amount,
+		Input:    tx.Data(),
+		Nonce:    tx.Nonce(),
 		GasPrice: gasPrice,
-		GasLimit: transferGasLimit,
-		Input:    data,
+		GasLimit: tx.Gas(),
+		ChainID:  chainID,
 	}
 
 	return tx, unTx, nil

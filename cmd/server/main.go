@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
@@ -112,11 +114,13 @@ func main() {
 		NetworkID: network,
 	}
 
-	router := server.CorsMiddleware(
-		server.LoggerMiddleware(
-			configureRouter(serviceConfig, asserter, evmClient, infoClient, txpoolClient, debugClient),
-		),
-	)
+	handler := configureRouter(serviceConfig, asserter, evmClient, infoClient, txpoolClient, debugClient)
+	if cfg.LogRequests {
+		handler = inspectMiddleware(handler)
+	}
+	handler = server.LoggerMiddleware(handler)
+
+	router := server.CorsMiddleware(handler)
 
 	log.Printf(`using avax (chain=%q chainid="%d" network=%q) rpc endpoint: %v`, service.BlockchainName, cfg.ChainID, cfg.NetworkName, cfg.RPCEndpoint)
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
@@ -147,4 +151,19 @@ func configureRouter(
 		server.NewConstructionAPIController(constructionService, asserter),
 		server.NewCallAPIController(callService, asserter),
 	)
+}
+
+// Inspect middlware used to inspect the body of requets
+func inspectMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			panic(err)
+		}
+		body = bytes.TrimSpace(body)
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+		log.Printf("[DEBUG] %s %s: %s\n", r.Method, r.URL.Path, body)
+		next.ServeHTTP(w, r)
+	})
 }

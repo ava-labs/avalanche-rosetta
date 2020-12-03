@@ -4,7 +4,6 @@
     "network": "Fuji"
   },
   "online_url": "http://localhost:8080",
-  "data_directory": "/tmp/avalanche-rosetta/mainnet",
   "http_timeout": 10,
   "max_retries": 5,
   "retry_elapsed_time": 0,
@@ -14,7 +13,14 @@
   "log_configuration": false,
   "compression_disabled": false,
   "memory_limit_disabled": false,
-  "construction": null,
+  "construction": {
+    "offline_url": "http://localhost:8080",
+    "constructor_dsl_file": "./avalanche.ros",
+    "end_conditions": {
+      "create_account": 1,
+      "transfer": 1
+    }
+  },
   "data": {
     "active_reconciliation_concurrency": 16,
     "inactive_reconciliation_concurrency": 4,

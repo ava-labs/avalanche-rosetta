@@ -117,12 +117,21 @@ func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types
 		return nil, wrapError(errInvalidInput, "signature is not provided")
 	}
 
-	tx, err := unsignedTxFromInput(req.UnsignedTransaction)
-	if err != nil {
+	var tx unsignedTx
+	if err := json.Unmarshal([]byte(req.UnsignedTransaction), &tx); err != nil {
 		return nil, wrapError(errConstructionInvalidTx, err)
 	}
 
-	signedTx, err := tx.WithSignature(s.config.Signer(), req.Signatures[0].Bytes)
+	ethTx := ethtypes.NewTransaction(
+		tx.Nonce,
+		ethcommon.HexToAddress(tx.To),
+		tx.Value,
+		tx.GasLimit,
+		tx.GasPrice,
+		tx.Input,
+	)
+
+	signedTx, err := ethTx.WithSignature(ethtypes.NewEIP155Signer(tx.ChainID), req.Signatures[0].Bytes)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
@@ -184,6 +193,7 @@ func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.C
 		tx.Nonce = t.Nonce()
 		tx.GasPrice = t.GasPrice()
 		tx.GasLimit = t.Gas()
+		tx.ChainID = s.config.ChainID
 
 		msg, err := t.AsMessage(s.config.Signer())
 		if err != nil {
@@ -230,6 +240,7 @@ func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.C
 		"nonce":     tx.Nonce,
 		"gas_price": tx.GasPrice,
 		"gas_limit": tx.GasLimit,
+		"chain_id":  tx.ChainID,
 	}
 
 	if req.Signed {
@@ -296,7 +307,7 @@ func (s ConstructionService) ConstructionPayloads(ctx context.Context, req *type
 	if err != nil {
 		return nil, wrapError(errInvalidInput, "unclear intent")
 	}
-	tx, unTx, err := txFromMatches(matches, req.Metadata)
+	tx, unTx, err := txFromMatches(matches, req.Metadata, s.config.ChainID)
 	if err != nil {
 		return nil, wrapError(errInternalError, "cant parse matches")
 	}
