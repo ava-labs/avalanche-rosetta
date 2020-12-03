@@ -68,6 +68,12 @@ COPY --from=rosetta \
   /go/src/github.com/figment-networks/avalanche-rosetta/docker/start.sh \
   /app/start
 
+# Install rosetta CLI
+RUN wget https://github.com/coinbase/rosetta-cli/releases/download/v0.6.2/rosetta-cli-0.6.2-linux-amd64.tar.gz && \
+    tar -xzf rosetta-cli-0.6.2-linux-amd64.tar.gz && \
+    mv rosetta-cli-0.6.2-linux-amd64 rosetta-cli && \
+    rm *.tar.gz
+
 EXPOSE 9650
 EXPOSE 8081
 

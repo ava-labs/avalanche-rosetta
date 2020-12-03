@@ -1,4 +1,4 @@
-.PHONY: build test dist docker-build docker-push docker-run-testnet docker-run-mainnet
+.PHONY: build test dist docker-build docker-push docker-run-testnet docker-run-testnet-offline docker-run-mainnet docker-run-mainnet-offline
 
 PROJECT           ?= avalanche-rosetta
 GIT_COMMIT        ?= $(shell git rev-parse HEAD)
@@ -31,8 +31,34 @@ docker-build:
 docker-push:
 	docker push ${DOCKER_TAG}
 
+# Start the Testnet in ONLINE mode
 docker-run-testnet:
-	docker run -e AVALANCHE_NETWORK=testnet -e AVALANCHE_CHAIN=43113 --rm -p 8081:8081 -p 9650:9650 -it ${DOCKER_TAG}
+	docker run \
+		-e AVALANCHE_NETWORK=testnet \
+		-e AVALANCHE_CHAIN=43113 \
+		-e AVALANCHE_MODE=online \
+		--rm -p 8081:8081 -p 9650:9650 -it ${DOCKER_TAG}
 
+# Start the Testnet in OFFLINE mode
+docker-run-testnet-offline:
+	docker run \
+		-e AVALANCHE_NETWORK=testnet \
+		-e AVALANCHE_CHAIN=43113 \
+		-e AVALANCHE_MODE=offline \
+		--rm -p 8081:8081 -p 9650:9650 -it ${DOCKER_TAG}
+
+# Start the Mainnet in ONLINE mode
 docker-run-mainnet:
-	docker run -e AVALANCHE_NETWORK=mainnet -e AVALANCHE_CHAIN=43114 --rm -p 8082:8081 -p 9651:9650 -it ${DOCKER_TAG}
+	docker run \
+		-e AVALANCHE_NETWORK=mainnet \
+		-e AVALANCHE_CHAIN=43114 \
+		-e AVALANCHE_MODE=online \
+		--rm -p 8082:8081 -p 9650:9650 -it ${DOCKER_TAG}
+
+# Start the Mainnet in ONLINE mode
+docker-run-mainnet-offline:
+	docker run \
+		-e AVALANCHE_NETWORK=mainnet \
+		-e AVALANCHE_CHAIN=43114 \
+		-e AVALANCHE_MODE=offline \
+		--rm -p 8082:8081 -p 9650:9650 -it ${DOCKER_TAG}

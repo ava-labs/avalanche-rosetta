@@ -1,0 +1,45 @@
+{
+  "network": {
+    "blockchain": "Avalanche",
+    "network": "Fuji"
+  },
+  "online_url": "http://localhost:8080",
+  "data_directory": "/tmp/avalanche-rosetta/mainnet",
+  "http_timeout": 10,
+  "max_retries": 5,
+  "retry_elapsed_time": 0,
+  "max_online_connections": 40,
+  "max_sync_concurrency": 20,
+  "tip_delay": 3600,
+  "log_configuration": false,
+  "compression_disabled": false,
+  "memory_limit_disabled": false,
+  "construction": null,
+  "data": {
+    "active_reconciliation_concurrency": 16,
+    "inactive_reconciliation_concurrency": 4,
+    "inactive_reconciliation_frequency": 250,
+    "initial_balance_fetch_disabled": false,
+    "log_blocks": false,
+    "log_transactions": false,
+    "log_balance_changes": false,
+    "log_reconciliations": true,
+    "ignore_reconciliation_error": false,
+    "exempt_accounts": "",
+    "bootstrap_balances": "",
+    "interesting_accounts": "",
+    "reconciliation_disabled": false,
+    "inactive_discrepency_search_disabled": false,
+    "balance_tracking_disabled": false,
+    "historical_balance_enabled": true,
+    "coin_tracking_disabled": false,
+    "results_output_file": "",
+    "end_conditions": {
+      "tip": true,
+      "reconciliation_coverage": {
+        "coverage": 0.95,
+        "tip": true
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 export AVALANCHE_NETWORK=${AVALANCHE_NETWORK:-testnet}
 export AVALANCHE_CHAIN=${AVALANCHE_CHAIN:-43113}
+export AVALANCHE_MODE=${AVALANCHE_CHAIN:online}
 
 cat <<EOF > /app/avalanchego-config.json
 {
@@ -27,7 +28,7 @@ EOF
 
 cat <<EOF > /app/rosetta-config.json
 {
-  "mode": "online",
+  "mode": "$AVALANCHE_MODE",
   "rpc_endpoint": "http://localhost:9650",
   "listen_addr": "0.0.0.0:8081",
   "network_id": 1,
