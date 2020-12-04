@@ -41,13 +41,13 @@ create_account(1){
   }
 }
 
-transfer(1){
+transfer(10){
   transfer{
     transfer.network = {"network":"Fuji", "blockchain":"Avalanche"};
     currency = {"symbol":"AVAX", "decimals":18};
     sender = find_balance({
       "minimum_balance":{
-        "value": "10000000000000000",
+        "value": "1000000000000000",
         "currency": {{currency}}
       }
     });
@@ -86,50 +86,6 @@ transfer(1){
         "account":{{recipient.account_identifier}},
         "amount":{
           "value":{{recipient_amount}},
-          "currency":{{currency}}
-        }
-      }
-    ];
-  }
-}
-
-return_funds(1){
-  // TODO: add suggested fee dry run to ensure account fully cleared
-  transfer{
-    transfer.network = {"network":"Fuji", "blockchain":"Avalanche"};
-    currency = {"symbol":"AVAX", "decimals":18};
-    max_fee = "84000000000000";
-    sender = find_balance({
-      "minimum_balance":{
-        "value": {{max_fee}},
-        "currency": {{currency}}
-      }
-    });
-
-    // Set the recipient_amount as some sender.balance-max_fee
-    available_amount = {{sender.balance.value}} - {{max_fee}};
-    print_message({"available_amount":{{available_amount}}});
-    sender_amount = 0 - {{available_amount}};
-
-    // Provide a static address as the recipient and construct operations
-    faucet = {"address":"0x572f4D80f10f663B5049F789546f25f70Bb62a7F"};
-    transfer.confirmation_depth = "1";
-    transfer.operations = [
-      {
-        "operation_identifier":{"index":0},
-        "type":"CALL",
-        "account":{{sender.account_identifier}},
-        "amount":{
-          "value":{{sender_amount}},
-          "currency":{{currency}}
-        }
-      },
-      {
-        "operation_identifier":{"index":1},
-        "type":"CALL",
-        "account":{{faucet}},
-        "amount":{
-          "value":{{available_amount}},
           "currency":{{currency}}
         }
       }

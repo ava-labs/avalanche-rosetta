@@ -15,10 +15,12 @@
   "memory_limit_disabled": false,
   "construction": {
     "offline_url": "http://localhost:8080",
+    "stale_depth": 3,
+    "broadcast_limit": 5,
     "constructor_dsl_file": "./avalanche.ros",
     "end_conditions": {
-      "create_account": 1,
-      "transfer": 1
+      "create_account": 10,
+      "transfer": 10
     }
   },
   "data": {

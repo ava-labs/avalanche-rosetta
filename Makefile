@@ -1,4 +1,4 @@
-.PHONY: build test dist docker-build docker-push docker-run-testnet docker-run-testnet-offline docker-run-mainnet docker-run-mainnet-offline
+.PHONY: build test dist docker-build docker-push run-testnet run-testnet-offline run-mainnet run-mainnet-offline
 
 PROJECT           ?= avalanche-rosetta
 GIT_COMMIT        ?= $(shell git rev-parse HEAD)
@@ -33,7 +33,7 @@ docker-push:
 	docker push ${DOCKER_TAG}
 
 # Start the Testnet in ONLINE mode
-docker-run-testnet:
+run-testnet:
 	docker run \
 		-e AVALANCHE_NETWORK=Fuji \
 		-e AVALANCHE_CHAIN=43113 \
@@ -41,7 +41,7 @@ docker-run-testnet:
 		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
 
 # Start the Testnet in OFFLINE mode
-docker-run-testnet-offline:
+run-testnet-offline:
 	docker run \
 		-e AVALANCHE_NETWORK=Fuji \
 		-e AVALANCHE_CHAIN=43113 \
@@ -49,7 +49,7 @@ docker-run-testnet-offline:
 		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
 
 # Start the Mainnet in ONLINE mode
-docker-run-mainnet:
+run-mainnet:
 	docker run \
 		-e AVALANCHE_NETWORK=Mainnet \
 		-e AVALANCHE_CHAIN=43114 \
@@ -57,7 +57,7 @@ docker-run-mainnet:
 		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
 
 # Start the Mainnet in ONLINE mode
-docker-run-mainnet-offline:
+run-mainnet-offline:
 	docker run \
 		-e AVALANCHE_NETWORK=Mainnet \
 		-e AVALANCHE_CHAIN=43114 \
