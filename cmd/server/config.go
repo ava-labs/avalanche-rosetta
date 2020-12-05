@@ -34,6 +34,10 @@ func (c *config) ApplyDefaults() {
 		c.Mode = "online"
 	}
 
+	if c.RPCEndpoint == "" {
+		c.RPCEndpoint = "http://localhost:9650"
+	}
+
 	if c.ListenAddr == "" {
 		c.ListenAddr = "0.0.0.0:8080"
 	}
