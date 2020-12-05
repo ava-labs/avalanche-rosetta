@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 
-	"github.com/ava-labs/coreth/ethclient"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -14,16 +13,14 @@ import (
 // MempoolService implements the /mempool/* endpoints
 type MempoolService struct {
 	config *Config
-	evm    *ethclient.Client
-	txpool *client.TxPoolClient
+	client client.Client
 }
 
 // NewMempoolService returns a new mempool servicer
-func NewMempoolService(config *Config, evmClient *ethclient.Client, txpoolClient *client.TxPoolClient) server.MempoolAPIServicer {
+func NewMempoolService(config *Config, client client.Client) server.MempoolAPIServicer {
 	return &MempoolService{
 		config: config,
-		evm:    evmClient,
-		txpool: txpoolClient,
+		client: client,
 	}
 }
 
@@ -33,7 +30,7 @@ func (s MempoolService) Mempool(ctx context.Context, req *types.NetworkRequest) 
 		return nil, errUnavailableOffline
 	}
 
-	content, err := s.txpool.Content()
+	content, err := s.client.TxPoolContent(ctx)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}

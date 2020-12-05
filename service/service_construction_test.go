@@ -53,7 +53,7 @@ func TestContructionHash(t *testing.T) {
 			SignedTransaction: "{}",
 		})
 		assert.Nil(t, resp)
-		assert.Equal(t, errConstructionInvalidTx.Code, err.Code)
+		assert.Equal(t, errInvalidInput.Code, err.Code)
 	})
 
 	t.Run("valid transaction", func(t *testing.T) {
@@ -85,7 +85,7 @@ func TestConstructionDerive(t *testing.T) {
 			},
 		})
 		assert.Nil(t, resp)
-		assert.Equal(t, errConstructionInvalidPubkey.Code, err.Code)
+		assert.Equal(t, errInvalidInput.Code, err.Code)
 		assert.Equal(t, "invalid public key", err.Details["error"])
 	})
 

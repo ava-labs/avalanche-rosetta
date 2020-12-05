@@ -9,7 +9,6 @@ import (
 	"math/big"
 	"net/http"
 
-	"github.com/ava-labs/coreth/ethclient"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -53,14 +52,10 @@ func main() {
 		log.Fatal("config validation error:", err)
 	}
 
-	evmClient, err := ethclient.Dial(cfg.RPCEndpoint + client.PrefixEVM)
+	apiClient, err := client.NewClient(cfg.RPCEndpoint)
 	if err != nil {
-		log.Fatal("evm client init error:", err)
+		log.Fatal("client init error:", err)
 	}
-
-	infoClient := client.NewInfoClient(cfg.RPCEndpoint)
-	txpoolClient := client.NewTxPoolClient(cfg.RPCEndpoint)
-	debugClient := client.NewDebugClient(cfg.RPCEndpoint)
 
 	log.Println("starting server in", cfg.Mode, "mode")
 
@@ -71,7 +66,7 @@ func main() {
 			log.Fatal("cant fetch chain id in offline mode")
 		}
 
-		chainID, err := evmClient.ChainID(context.Background())
+		chainID, err := apiClient.ChainID(context.Background())
 		if err != nil {
 			log.Fatal("cant fetch chain id from rpc:", err)
 		}
@@ -85,7 +80,7 @@ func main() {
 			log.Fatal("cant fetch network name in offline mode")
 		}
 
-		networkName, err := infoClient.NetworkName()
+		networkName, err := apiClient.NetworkName(context.Background())
 		if err != nil {
 			log.Fatal("cant fetch network name:", err)
 		}
@@ -114,7 +109,7 @@ func main() {
 		NetworkID: network,
 	}
 
-	handler := configureRouter(serviceConfig, asserter, evmClient, infoClient, txpoolClient, debugClient)
+	handler := configureRouter(serviceConfig, asserter, apiClient)
 	if cfg.LogRequests {
 		handler = inspectMiddleware(handler)
 	}
@@ -131,17 +126,14 @@ func main() {
 func configureRouter(
 	serviceConfig *service.Config,
 	asserter *asserter.Asserter,
-	evmClient *ethclient.Client,
-	infoClient *client.InfoClient,
-	txpoolClient *client.TxPoolClient,
-	debugClient *client.DebugClient,
+	apiClient client.Client,
 ) http.Handler {
-	networkService := service.NewNetworkService(serviceConfig, evmClient, infoClient)
-	blockService := service.NewBlockService(serviceConfig, evmClient, debugClient)
-	accountService := service.NewAccountService(serviceConfig, evmClient)
-	mempoolService := service.NewMempoolService(serviceConfig, evmClient, txpoolClient)
-	constructionService := service.NewConstructionService(serviceConfig, evmClient)
-	callService := service.NewCallService(serviceConfig, evmClient)
+	networkService := service.NewNetworkService(serviceConfig, apiClient)
+	blockService := service.NewBlockService(serviceConfig, apiClient)
+	accountService := service.NewAccountService(serviceConfig, apiClient)
+	mempoolService := service.NewMempoolService(serviceConfig, apiClient)
+	constructionService := service.NewConstructionService(serviceConfig, apiClient)
+	callService := service.NewCallService(serviceConfig, apiClient)
 
 	return server.NewRouter(
 		server.NewNetworkAPIController(networkService, asserter),

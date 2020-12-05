@@ -8,6 +8,10 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
+type infoPeersResponse struct {
+	Peers []Peer `json:"peers"`
+}
+
 type Peer struct {
 	ID           string `json:"nodeID"`
 	IP           string `json:"ip"`
