@@ -74,6 +74,11 @@ RUN wget https://github.com/coinbase/rosetta-cli/releases/download/v0.6.2/rosett
     mv rosetta-cli-0.6.2-linux-amd64 rosetta-cli && \
     rm *.tar.gz
 
+# Copy rosetta CLI configuration
+COPY --from=rosetta \
+  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-cli-conf \
+  /app/rosetta-cli-conf
+
 EXPOSE 9650
 EXPOSE 8080
 

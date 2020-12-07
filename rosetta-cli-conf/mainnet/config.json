@@ -23,7 +23,7 @@
     "log_blocks": false,
     "log_transactions": false,
     "log_balance_changes": false,
-    "log_reconciliations": true,
+    "log_reconciliations": false,
     "ignore_reconciliation_error": false,
     "exempt_accounts": "",
     "bootstrap_balances": "",
