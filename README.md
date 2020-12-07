@@ -33,13 +33,38 @@ Start the server by running the following command:
 ```bash
 avalanche-rosetta -config=./config.json
 ```
+## Configuration
+
+Full configuration example:
+
+```json
+{
+  "mode": "online",
+  "rpc_endpoint": "http://localhost:9650",
+  "listen_addr": "0.0.0.0:8080",
+  "network_name": "Fuji",
+  "chain_id": 43113,
+  "log_requests": true
+}
+```
+
+Where:
+
+| Name          | Type    | Default | Description
+|---------------|---------|---------|-------------------------------------------
+| mode          | string  | `online` | Mode of operations. One of: `online`, `offline`
+| rpc_endpoint  | string  | `http://localhost:9650` | Avalanche RPC endpoint
+| listen_addr   | string  | `http://localhost:8080` | Rosetta server listen address (host/port)
+| network_name  | string  | - | Avalanche network name
+| chain_id      | integer | - | Avalanche C-Chain ID
+| log_requests  | bool    | `false` | Enable request body logging
 
 ### RPC Endpoints
 
 List of all available Rosetta RPC server endpoints
 
 | Method | Path                     | Status | Description
-|--------|--------------------------|--------|------------------------------------
+|--------|--------------------------|--------|----------------------------------
 | POST   | /network/list            | Y      | Get List of Available Networks
 | POST   | /network/status          | Y      | Get Network Status
 | POST   | /network/options         | Y      | Get Network Options
@@ -58,17 +83,48 @@ List of all available Rosetta RPC server endpoints
 | POST   | /construction/submit     | Y      | Submit a Signed Transaction
 | POST   | /call                    | Y      | Perform a Blockchain Call
 
-### Development
+## Development
 
 Available commands:
 
-- `make build`              - Build the development version of the binary
-- `make test`               - Run the test suite
-- `make dist`               - Build distribution binaries
-- `make docker-build`       - Build a Docker image
-- `make docker-push`        - Push a Docker image to the registry
-- `make docker-run-testnet` - Run node and rosetta testnet server
-- `make docker-run-mainnet` - Run node and rosetta mainnet server
+- `make build`               - Build the development version of the binary
+- `make test`                - Run the test suite
+- `make dist`                - Build distribution binaries
+- `make docker-build`        - Build a Docker image
+- `make docker-push`         - Push a Docker image to the registry
+- `make run-testnet`         - Run node and rosetta testnet server
+- `make run-testnet-offline` - Run node and rosetta testnet server
+- `make run-mainnet`         - Run node and rosetta mainnet server
+- `make run-mainnet-offline` - Run node and rosetta mainnet server
+
+## Testing Rosetta
+
+Rosetta implementaion could be testing using the Rosetta CLI.
+
+First start the Testnet service by running:
+
+```bash
+make run-testnet
+```
+
+Wait until the node is done bootstrapping, then start the data check:
+
+```bash
+rosetta-cli check:data --configuration-file=./rosetta-cli-conf/testnet/config.json
+```
+
+Run the construction check:
+
+```bash
+rosetta-cli check:construction --configuration-file=./rosetta-cli-conf/testnet/config.json
+```
+
+Alternatively, you can execute the checks in the node docker container:
+
+```bash
+make check-testnet-data
+make check-testnet-construction
+```
 
 ## License
 

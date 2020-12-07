@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/big"
 
-	"github.com/ava-labs/coreth/ethclient"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -15,16 +14,14 @@ import (
 // NetworkService implements all /network endpoints
 type NetworkService struct {
 	config *Config
-	info   *client.InfoClient
-	evm    *ethclient.Client
+	client client.Client
 }
 
 // NewNetworkService returns a new network servicer
-func NewNetworkService(config *Config, evmClient *ethclient.Client, infoClient *client.InfoClient) server.NetworkAPIServicer {
+func NewNetworkService(config *Config, client client.Client) server.NetworkAPIServicer {
 	return &NetworkService{
 		config: config,
-		evm:    evmClient,
-		info:   infoClient,
+		client: client,
 	}
 }
 
@@ -44,7 +41,7 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 	}
 
 	// Fetch the latest block
-	blockHeader, err := s.evm.HeaderByNumber(context.Background(), nil)
+	blockHeader, err := s.client.HeaderByNumber(ctx, nil)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
@@ -53,7 +50,7 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 	}
 
 	// Fetch the genesis block
-	genesisHeader, err := s.evm.HeaderByNumber(context.Background(), big.NewInt(0))
+	genesisHeader, err := s.client.HeaderByNumber(ctx, big.NewInt(0))
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
@@ -62,7 +59,7 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 	}
 
 	// Fetch peers
-	infoPeers, err := s.info.Peers()
+	infoPeers, err := s.client.Peers(ctx)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
@@ -82,7 +79,7 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 		SyncStatus: &types.SyncStatus{
 			CurrentIndex: blocknum,
 			TargetIndex:  &blocknum,
-			Stage:        types.String("current"),
+			Stage:        types.String("synced"),
 		},
 		Peers: peers,
 	}, nil
@@ -94,7 +91,7 @@ func (s *NetworkService) NetworkOptions(ctx context.Context, request *types.Netw
 		return nil, errUnavailableOffline
 	}
 
-	nodeVersion, err := s.info.NodeVersion()
+	nodeVersion, err := s.client.NodeVersion(ctx)
 	if err != nil {
 		return nil, wrapError(errClientError, nodeVersion)
 	}

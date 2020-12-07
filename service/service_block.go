@@ -5,12 +5,11 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ava-labs/coreth/ethclient"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	corethTypes "github.com/ava-labs/coreth/core/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/figment-networks/avalanche-rosetta/client"
 	"github.com/figment-networks/avalanche-rosetta/mapper"
@@ -19,16 +18,14 @@ import (
 // BlockService implements the /block/* endpoints
 type BlockService struct {
 	config *Config
-	debug  *client.DebugClient
-	evm    *ethclient.Client
+	client client.Client
 }
 
 // NewBlockService returns a new block servicer
-func NewBlockService(config *Config, evmClient *ethclient.Client, debugClient *client.DebugClient) server.BlockAPIServicer {
+func NewBlockService(config *Config, client client.Client) server.BlockAPIServicer {
 	return &BlockService{
 		config: config,
-		evm:    evmClient,
-		debug:  debugClient,
+		client: client,
 	}
 }
 
@@ -53,10 +50,10 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 	)
 
 	if hash := request.BlockIdentifier.Hash; hash != nil {
-		block, err = s.evm.BlockByHash(context.Background(), ethcommon.HexToHash(*hash))
+		block, err = s.client.BlockByHash(context.Background(), ethcommon.HexToHash(*hash))
 	} else {
 		if index := request.BlockIdentifier.Index; block == nil && index != nil {
-			block, err = s.evm.BlockByNumber(context.Background(), big.NewInt(*index))
+			block, err = s.client.BlockByNumber(context.Background(), big.NewInt(*index))
 		}
 	}
 	if err != nil {
@@ -72,7 +69,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 	}
 
 	if block.ParentHash().String() != genesisBlockHash {
-		parentBlock, err := s.evm.HeaderByHash(context.Background(), block.ParentHash())
+		parentBlock, err := s.client.HeaderByHash(context.Background(), block.ParentHash())
 		if err == nil {
 			parentBlockIdentifier = &types.BlockIdentifier{
 				Index: parentBlock.Number.Int64(),
@@ -94,7 +91,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 	}
 
 	transactions, terr := s.fetchTransactions(ctx, block)
-	if err != nil {
+	if terr != nil {
 		return nil, terr
 	}
 
@@ -125,13 +122,13 @@ func (s *BlockService) BlockTransaction(ctx context.Context, request *types.Bloc
 		return nil, wrapError(errInvalidInput, "block identifier is not provided")
 	}
 
-	header, err := s.evm.HeaderByHash(ctx, ethcommon.HexToHash(request.BlockIdentifier.Hash))
+	header, err := s.client.HeaderByHash(ctx, ethcommon.HexToHash(request.BlockIdentifier.Hash))
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
 
 	hash := ethcommon.HexToHash(request.TransactionIdentifier.Hash)
-	tx, pending, err := s.evm.TransactionByHash(context.Background(), hash)
+	tx, pending, err := s.client.TransactionByHash(context.Background(), hash)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
@@ -169,12 +166,12 @@ func (s *BlockService) fetchTransaction(ctx context.Context, tx *corethTypes.Tra
 		return nil, wrapError(errClientError, err)
 	}
 
-	receipt, err := s.evm.TransactionReceipt(context.Background(), tx.Hash())
+	receipt, err := s.client.TransactionReceipt(context.Background(), tx.Hash())
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
 
-	trace, err := s.debug.TraceTransaction(tx.Hash().String())
+	trace, err := s.client.TraceTransaction(ctx, tx.Hash().String())
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}

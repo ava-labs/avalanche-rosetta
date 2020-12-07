@@ -3,7 +3,14 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"os"
+
+	"github.com/figment-networks/avalanche-rosetta/service"
+)
+
+var (
+	errMissingRPC  = errors.New("avalanche rpc endpoint is not provided")
+	errInvalidMode = errors.New("invalid rosetta mode")
 )
 
 type config struct {
@@ -16,22 +23,25 @@ type config struct {
 }
 
 func readConfig(path string) (*config, error) {
-	data, err := ioutil.ReadFile(path)
+	cfg := &config{}
+
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
-	cfg := &config{}
-	if err := json.Unmarshal(data, cfg); err != nil {
-		return nil, err
-	}
-
-	return cfg, nil
+	err = json.NewDecoder(f).Decode(cfg)
+	return cfg, err
 }
 
 func (c *config) ApplyDefaults() {
 	if c.Mode == "" {
 		c.Mode = "online"
+	}
+
+	if c.RPCEndpoint == "" {
+		c.RPCEndpoint = "http://localhost:9650"
 	}
 
 	if c.ListenAddr == "" {
@@ -40,11 +50,15 @@ func (c *config) ApplyDefaults() {
 }
 
 func (c *config) Validate() error {
+	c.ApplyDefaults()
+
 	if c.RPCEndpoint == "" {
-		return errors.New("avalanche rpc endpoint is not provided")
+		return errMissingRPC
 	}
 
-	c.ApplyDefaults()
+	if !(c.Mode == service.ModeOffline || c.Mode == service.ModeOnline) {
+		return errInvalidMode
+	}
 
 	return nil
 }

@@ -1,4 +1,6 @@
-.PHONY: build test dist docker-build docker-push run-testnet run-testnet-offline run-mainnet run-mainnet-offline
+.PHONY: build test dist docker-build docker-push \
+				run-testnet run-testnet-offline run-mainnet run-mainnet-offline \
+				check-testnet-data check-testnet-construction check-mainnet-data
 
 PROJECT           ?= avalanche-rosetta
 GIT_COMMIT        ?= $(shell git rev-parse HEAD)
@@ -10,7 +12,8 @@ DOCKER_TAG        ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
 AVALANCHE_VERSION ?= v1.1.0
 
 build:
-	go build -o ./avalanche-rosetta ./cmd/server
+	go build -o ./rosetta-server ./cmd/server
+	go build -o ./rosetta-runner ./cmd/runner
 
 test:
 	go test -v -cover -race ./...
@@ -29,6 +32,14 @@ docker-build:
 		-f Dockerfile \
 		.
 
+docker-build-standalone:
+	docker build \
+		--no-cache \
+		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
+		-t ${DOCKER_ORG}/${PROJECT}-server:${DOCKER_LABEL} \
+		-f Dockerfile.rosetta \
+		.
+
 docker-push:
 	docker push ${DOCKER_TAG}
 
@@ -38,6 +49,7 @@ run-testnet:
 		-e AVALANCHE_NETWORK=Fuji \
 		-e AVALANCHE_CHAIN=43113 \
 		-e AVALANCHE_MODE=online \
+		--name avalanche-testnet \
 		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
 
 # Start the Testnet in OFFLINE mode
@@ -46,6 +58,7 @@ run-testnet-offline:
 		-e AVALANCHE_NETWORK=Fuji \
 		-e AVALANCHE_CHAIN=43113 \
 		-e AVALANCHE_MODE=offline \
+		--name avalanche-testnet-offline \
 		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
 
 # Start the Mainnet in ONLINE mode
@@ -54,6 +67,7 @@ run-mainnet:
 		-e AVALANCHE_NETWORK=Mainnet \
 		-e AVALANCHE_CHAIN=43114 \
 		-e AVALANCHE_MODE=online \
+		--name avalanche-mainnet \
 		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
 
 # Start the Mainnet in ONLINE mode
@@ -62,4 +76,17 @@ run-mainnet-offline:
 		-e AVALANCHE_NETWORK=Mainnet \
 		-e AVALANCHE_CHAIN=43114 \
 		-e AVALANCHE_MODE=offline \
+		--name avalanche-mainnet-offline \
 		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
+
+# Perform the Testnet data check
+check-testnet-data:
+	docker exec -it avalanche-testnet /app/rosetta-cli check:data --configuration-file=/app/rosetta-cli-conf/testnet/config.json
+
+# Perform the Testnet construction check
+check-testnet-construction:
+	docker exec -it avalanche-testnet /app/rosetta-cli check:construction --configuration-file=/app/rosetta-cli-conf/testnet/config.json
+
+# Perform the Mainnet data check
+check-mainnet-data:
+	docker exec -it avalanche-mainnet /app/rosetta-cli check:data --configuration-file=/app/rosetta-cli-conf/testnet/config.json

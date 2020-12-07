@@ -60,8 +60,13 @@ COPY --from=avalanche \
 
 # Install rosetta server
 COPY --from=rosetta \
-  /go/src/github.com/figment-networks/avalanche-rosetta/avalanche-rosetta \
-  /app/rosetta
+  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-server \
+  /app/rosetta-server
+
+# Install rosetta runner
+COPY --from=rosetta \
+  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-runner \
+  /app/rosetta-runner
 
 # Install service start script
 COPY --from=rosetta \
@@ -73,6 +78,11 @@ RUN wget https://github.com/coinbase/rosetta-cli/releases/download/v0.6.2/rosett
     tar -xzf rosetta-cli-0.6.2-linux-amd64.tar.gz && \
     mv rosetta-cli-0.6.2-linux-amd64 rosetta-cli && \
     rm *.tar.gz
+
+# Copy rosetta CLI configuration
+COPY --from=rosetta \
+  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-cli-conf \
+  /app/rosetta-cli-conf
 
 EXPOSE 9650
 EXPOSE 8080

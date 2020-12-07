@@ -10,21 +10,21 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/ethclient"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
+	"github.com/figment-networks/avalanche-rosetta/client"
 	"github.com/figment-networks/avalanche-rosetta/mapper"
 )
 
 // ConstructionService implements /construction/* endpoints
 type ConstructionService struct {
 	config *Config
-	client *ethclient.Client
+	client client.Client
 }
 
 // NewConstructionService returns a new contruction servicer
-func NewConstructionService(config *Config, client *ethclient.Client) server.ConstructionAPIServicer {
+func NewConstructionService(config *Config, client client.Client) server.ConstructionAPIServicer {
 	return &ConstructionService{
 		config: config,
 		client: client,
@@ -48,17 +48,17 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 		return nil, wrapError(errInvalidInput, "from address is not provided")
 	}
 
-	balance, err := s.client.BalanceAt(context.Background(), ethcommon.HexToAddress(from), nil)
+	balance, err := s.client.BalanceAt(ctx, ethcommon.HexToAddress(from), nil)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
 
-	nonce, err := s.client.NonceAt(context.Background(), ethcommon.HexToAddress(from), nil)
+	nonce, err := s.client.NonceAt(ctx, ethcommon.HexToAddress(from), nil)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
 
-	gasPrice, err := s.client.SuggestGasPrice(context.Background())
+	gasPrice, err := s.client.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
@@ -90,7 +90,7 @@ func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.Co
 
 	tx, err := txFromInput(req.SignedTransaction)
 	if err != nil {
-		return nil, wrapError(errConstructionInvalidTx, err)
+		return nil, wrapError(errInvalidInput, err)
 	}
 
 	return &types.TransactionIdentifierResponse{
@@ -119,7 +119,7 @@ func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types
 
 	var tx unsignedTx
 	if err := json.Unmarshal([]byte(req.UnsignedTransaction), &tx); err != nil {
-		return nil, wrapError(errConstructionInvalidTx, err)
+		return nil, wrapError(errInvalidInput, err)
 	}
 
 	ethTx := ethtypes.NewTransaction(
@@ -158,7 +158,7 @@ func (s ConstructionService) ConstructionDerive(ctx context.Context, req *types.
 
 	key, err := ethcrypto.DecompressPubkey(req.PublicKey.Bytes)
 	if err != nil {
-		return nil, wrapError(errConstructionInvalidPubkey, err)
+		return nil, wrapError(errInvalidInput, err)
 	}
 
 	return &types.ConstructionDeriveResponse{
@@ -392,11 +392,11 @@ func (s ConstructionService) ConstructionSubmit(ctx context.Context, req *types.
 
 	tx, err := txFromInput(req.SignedTransaction)
 	if err != nil {
-		return nil, wrapError(errConstructionInvalidTx, err)
+		return nil, wrapError(errInvalidInput, err)
 	}
 
 	if err := s.client.SendTransaction(ctx, tx); err != nil {
-		return nil, wrapError(errConstructionSubmitFailed, err)
+		return nil, wrapError(errClientError, err)
 	}
 
 	return &types.TransactionIdentifierResponse{
