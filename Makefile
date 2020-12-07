@@ -7,7 +7,7 @@ DOCKER_ORG        ?= figmentnetworks
 DOCKER_IMAGE      ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL      ?= latest
 DOCKER_TAG        ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION ?= v1.0.6
+AVALANCHE_VERSION ?= v1.1.0
 
 build:
 	go build -o ./avalanche-rosetta ./cmd/server
