@@ -65,7 +65,7 @@ func main() {
 
 	g.Go(func() error {
 		defer cancel()
-		return startCommand(ctx, rosettaBin, "--config", rosettaBin)
+		return startCommand(ctx, rosettaBin, "-config", rosettaBin)
 	})
 
 	err := g.Wait()
@@ -79,6 +79,7 @@ func startCommand(ctx context.Context, path string, opts ...string) (err error) 
 	defer log.Println("command finished", path, "error:", err)
 
 	cmd := exec.CommandContext(ctx, path, opts...)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
