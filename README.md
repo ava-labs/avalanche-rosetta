@@ -29,7 +29,7 @@ Before you start running the server you need to create a configuration file:
 
 ```json
 {
-  "rpc_endpoint": "https://testapi.avax.network",
+  "rpc_endpoint": "https://api.avax-test.network",
   "mode": "online",
   "listen_addr": "0.0.0.0:8080"
 }
