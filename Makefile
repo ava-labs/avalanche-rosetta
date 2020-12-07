@@ -12,7 +12,8 @@ DOCKER_TAG        ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
 AVALANCHE_VERSION ?= v1.1.0
 
 build:
-	go build -o ./avalanche-rosetta ./cmd/server
+	go build -o ./rosetta-server ./cmd/server
+	go build -o ./rosetta-runner ./cmd/runner
 
 test:
 	go test -v -cover -race ./...

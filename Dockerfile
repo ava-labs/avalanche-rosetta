@@ -60,8 +60,13 @@ COPY --from=avalanche \
 
 # Install rosetta server
 COPY --from=rosetta \
-  /go/src/github.com/figment-networks/avalanche-rosetta/avalanche-rosetta \
-  /app/rosetta
+  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-server \
+  /app/rosetta-server
+
+# Install rosetta runner
+COPY --from=rosetta \
+  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-runner \
+  /app/rosetta-runner
 
 # Install service start script
 COPY --from=rosetta \

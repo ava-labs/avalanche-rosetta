@@ -37,6 +37,9 @@ cat <<EOF > /app/rosetta-config.json
 }
 EOF
 
-# TODO: run these 2 commands via process manager!
-/app/avalanchego --config-file=/app/avalanchego-config.json & \
-/app/rosetta -config=/app/rosetta-config.json
+/app/rosetta-runner \
+  -mode $AVALANCHE_MODE \
+  -avalanche-bin /app/avalanchego \
+  -avalanche-config /app/avalanchego-config.json \
+  -rosetta-bin /app/rosetta-server \
+  -rosetta-config rosetta-config.json

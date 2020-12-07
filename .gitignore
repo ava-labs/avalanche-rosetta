@@ -9,6 +9,8 @@
 *.log
 *.out
 avalanche-rosetta
+rosetta-server
+rosetta-runner
 tmp
 vendor/
 config/*.json
