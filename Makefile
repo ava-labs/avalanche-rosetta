@@ -1,4 +1,6 @@
-.PHONY: build test dist docker-build docker-push run-testnet run-testnet-offline run-mainnet run-mainnet-offline
+.PHONY: build test dist docker-build docker-push \
+				run-testnet run-testnet-offline run-mainnet run-mainnet-offline \
+				check-testnet-data check-mainnet-data
 
 PROJECT           ?= avalanche-rosetta
 GIT_COMMIT        ?= $(shell git rev-parse HEAD)
