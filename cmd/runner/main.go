@@ -65,7 +65,7 @@ func main() {
 
 	g.Go(func() error {
 		defer cancel()
-		return startCommand(ctx, rosettaBin, "-config", rosettaBin)
+		return startCommand(ctx, rosettaBin, "-config", rosettaConfig)
 	})
 
 	err := g.Wait()
