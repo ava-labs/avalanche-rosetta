@@ -46,6 +46,7 @@ docker-push:
 # Start the Testnet in ONLINE mode
 run-testnet:
 	docker run \
+		-v $(PWD)/.avalanchego:/root/.avalanchego \
 		-e AVALANCHE_NETWORK=Fuji \
 		-e AVALANCHE_CHAIN=43113 \
 		-e AVALANCHE_MODE=online \
@@ -64,6 +65,7 @@ run-testnet-offline:
 # Start the Mainnet in ONLINE mode
 run-mainnet:
 	docker run \
+		-v $(PWD)/.avalanchego:/root/.avalanchego \
 		-e AVALANCHE_NETWORK=Mainnet \
 		-e AVALANCHE_CHAIN=43114 \
 		-e AVALANCHE_MODE=online \

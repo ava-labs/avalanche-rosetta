@@ -16,3 +16,4 @@ vendor/
 config/*.json
 bin/*
 rosetta-data
+.avalanchego
