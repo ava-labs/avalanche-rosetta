@@ -119,6 +119,13 @@ Run the construction check:
 rosetta-cli check:construction --configuration-file=./rosetta-cli-conf/testnet/config.json
 ```
 
+Alternatively, you can execute the checks in the node docker container:
+
+```bash
+make check-testnet-data
+make check-testnet-construction
+```
+
 ## License
 
 Apache License v2.0

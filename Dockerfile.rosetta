@@ -1,5 +1,6 @@
 #
-# NOTE: This is a standalone image for running the rosetta server
+# NOTE: This is a standalone image for running the rosetta server.
+#       See Dockerfile for the full implementation (node + server + tools).
 #
 # ------------------------------------------------------------------------------
 # Builder Image
@@ -15,7 +16,7 @@ RUN go mod download
 
 COPY . .
 
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=1
 ENV GOARCH=amd64
 ENV GOOS=linux
 
@@ -32,9 +33,9 @@ FROM alpine:3.10 AS release
 WORKDIR /app
 
 COPY --from=build \
-  /go/src/github.com/figment-networks/avalanche-rosetta/avalanche-rosetta \
-  /app/avalanche-rosetta
+  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-server \
+  /app/rosetta-server
 
 EXPOSE 8080
 
-ENTRYPOINT ["/app/avalanche-rosetta"]
+ENTRYPOINT ["/app/rosetta-server"]

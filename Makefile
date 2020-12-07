@@ -1,6 +1,6 @@
 .PHONY: build test dist docker-build docker-push \
 				run-testnet run-testnet-offline run-mainnet run-mainnet-offline \
-				check-testnet-data check-mainnet-data
+				check-testnet-data check-testnet-construction check-mainnet-data
 
 PROJECT           ?= avalanche-rosetta
 GIT_COMMIT        ?= $(shell git rev-parse HEAD)
@@ -30,6 +30,14 @@ docker-build:
 		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
 		-t ${DOCKER_TAG} \
 		-f Dockerfile \
+		.
+
+docker-build-standalone:
+	docker build \
+		--no-cache \
+		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
+		-t ${DOCKER_ORG}/${PROJECT}-server:${DOCKER_LABEL} \
+		-f Dockerfile.rosetta \
 		.
 
 docker-push:
@@ -74,6 +82,10 @@ run-mainnet-offline:
 # Perform the Testnet data check
 check-testnet-data:
 	docker exec -it avalanche-testnet /app/rosetta-cli check:data --configuration-file=/app/rosetta-cli-conf/testnet/config.json
+
+# Perform the Testnet construction check
+check-testnet-construction:
+	docker exec -it avalanche-testnet /app/rosetta-cli check:construction --configuration-file=/app/rosetta-cli-conf/testnet/config.json
 
 # Perform the Mainnet data check
 check-mainnet-data:
