@@ -2,7 +2,7 @@
 
 export AVALANCHE_NETWORK=${AVALANCHE_NETWORK:-testnet}
 export AVALANCHE_CHAIN=${AVALANCHE_CHAIN:-43113}
-export AVALANCHE_MODE=${AVALANCHE_CHAIN:online}
+export AVALANCHE_MODE=${AVALANCHE_MODE:online}
 
 cat <<EOF > /app/avalanchego-config.json
 {
