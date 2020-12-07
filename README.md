@@ -14,7 +14,14 @@ the Avalanche node yourself you might use a hosted service like [Figment DataHub
 
 ## Installation
 
-*Not available yet*
+Clone repository, then build the rosetta server by running the following commands:
+
+```bash
+make setup
+make build
+```
+
+If successful, you will have `rosetta-server` binary in your current directory.
 
 ## Usage
 
@@ -31,7 +38,7 @@ Before you start running the server you need to create a configuration file:
 Start the server by running the following command:
 
 ```bash
-avalanche-rosetta -config=./config.json
+./rosetta-server -config=./config.json
 ```
 ## Configuration
 
@@ -101,7 +108,13 @@ Available commands:
 
 Rosetta implementaion could be testing using the Rosetta CLI.
 
-First start the Testnet service by running:
+Before we can start the service, we need to build the docker image:
+
+```bash
+make docker-build
+```
+
+Next, start the Testnet service by running:
 
 ```bash
 make run-testnet

@@ -1,4 +1,4 @@
-.PHONY: build test dist docker-build docker-push \
+.PHONY: build setup test dist docker-build docker-push \
 				run-testnet run-testnet-offline run-mainnet run-mainnet-offline \
 				check-testnet-data check-testnet-construction check-mainnet-data
 
@@ -14,6 +14,9 @@ AVALANCHE_VERSION ?= v1.1.0
 build:
 	go build -o ./rosetta-server ./cmd/server
 	go build -o ./rosetta-runner ./cmd/runner
+
+setup:
+	go mod download
 
 test:
 	go test -v -cover -race ./...
