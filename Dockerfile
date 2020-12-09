@@ -42,6 +42,8 @@ RUN \
 # ------------------------------------------------------------------------------
 FROM ubuntu:18.04
 
+ARG ROSETTA_CLI_VERSION
+
 # Install dependencies
 RUN apt-get update -y && \
     apt-get install -y wget
@@ -74,9 +76,9 @@ COPY --from=rosetta \
   /app/start
 
 # Install rosetta CLI
-RUN wget https://github.com/coinbase/rosetta-cli/releases/download/v0.6.2/rosetta-cli-0.6.2-linux-amd64.tar.gz && \
-    tar -xzf rosetta-cli-0.6.2-linux-amd64.tar.gz && \
-    mv rosetta-cli-0.6.2-linux-amd64 rosetta-cli && \
+RUN wget https://github.com/coinbase/rosetta-cli/releases/download/v$ROSETTA_CLI_VERSION/rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \
+    tar -xzf rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \
+    mv rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64 rosetta-cli && \
     rm *.tar.gz
 
 # Copy rosetta CLI configuration
