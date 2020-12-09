@@ -43,9 +43,9 @@
     "coin_tracking_disabled": false,
     "results_output_file": "",
     "end_conditions": {
-      "tip": true,
       "reconciliation_coverage": {
         "coverage": 0.95,
+        "from_tip": true,
         "tip": true
       }
     }
