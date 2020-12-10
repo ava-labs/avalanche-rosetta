@@ -101,4 +101,4 @@ check-testnet-construction:
 
 # Perform the Mainnet data check
 check-mainnet-data:
-	docker exec -it avalanche-mainnet /app/rosetta-cli check:data --configuration-file=/app/rosetta-cli-conf/testnet/config.json
+	docker exec -it avalanche-mainnet /app/rosetta-cli check:data --configuration-file=/app/rosetta-cli-conf/mainnet/config.json
