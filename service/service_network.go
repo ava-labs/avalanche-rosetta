@@ -64,7 +64,6 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 		return nil, wrapError(errClientError, err)
 	}
 	peers := mapper.Peers(infoPeers)
-	blocknum := blockHeader.Number.Int64()
 
 	return &types.NetworkStatusResponse{
 		CurrentBlockTimestamp: int64(blockHeader.Time * 1000),
@@ -77,9 +76,7 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 			Hash:  genesisHeader.Hash().String(),
 		},
 		SyncStatus: &types.SyncStatus{
-			CurrentIndex: blocknum,
-			TargetIndex:  &blocknum,
-			Stage:        types.String("synced"),
+			Synced: types.Bool(true),
 		},
 		Peers: peers,
 	}, nil
