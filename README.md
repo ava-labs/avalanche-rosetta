@@ -146,5 +146,5 @@ Apache License v2.0
 [1]: https://www.rosetta-api.org/
 [2]: https://www.avalabs.org/
 [3]: https://github.com/ava-labs/avalanchego
-[4]: https://docs.avax.network/v1.0/en/api/intro-apis/
+[4]: https://docs.avax.network/build/avalanchego-apis
 [5]: https://figment.io/datahub/
