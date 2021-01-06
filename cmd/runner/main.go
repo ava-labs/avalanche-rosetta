@@ -51,34 +51,44 @@ func init() {
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	go handleSignals([]context.CancelFunc{cancel})
+	handleSignals([]context.CancelFunc{cancel})
 
-	g, ctx := errgroup.WithContext(ctx)
+	g, _ := errgroup.WithContext(context.Background())
 
 	if mode == "online" {
 		g.Go(func() error {
+			defer cancel()
 			return startCommand(ctx, avalancheBin, "--config-file", avalancheConfig)
 		})
 	}
 
 	g.Go(func() error {
+		defer cancel()
 		return startCommand(ctx, rosettaBin, "-config", rosettaConfig)
 	})
 
-	err := g.Wait()
-	if err != nil {
+	if err := g.Wait(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func startCommand(ctx context.Context, path string, opts ...string) (err error) {
 	log.Println("starting command:", path, opts)
-	defer log.Println("command finished", path, "error:", err)
+	defer log.Println("command", path, "finished, error:", err)
 
-	cmd := exec.CommandContext(ctx, path, opts...)
+	cmd := exec.Command(path, opts...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			if cmd.Process != nil {
+				cmd.Process.Signal(syscall.SIGTERM)
+			}
+		}
+	}()
 
 	err = cmd.Run()
 	return err
