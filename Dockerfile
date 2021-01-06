@@ -89,4 +89,4 @@ COPY --from=rosetta \
 EXPOSE 9650
 EXPOSE 8080
 
-CMD ["/app/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
