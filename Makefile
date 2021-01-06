@@ -11,7 +11,7 @@ DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
 AVALANCHE_VERSION   ?= v1.1.0
-ROSETTA_CLI_VERSION ?= 0.6.4
+ROSETTA_CLI_VERSION ?= 0.6.6
 
 build:
 	go build -o ./rosetta-server ./cmd/server
