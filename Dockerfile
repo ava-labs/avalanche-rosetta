@@ -76,7 +76,7 @@ COPY --from=rosetta \
   /app/entrypoint.sh
 
 # Install rosetta CLI
-RUN wget https://github.com/coinbase/rosetta-cli/releases/download/v$ROSETTA_CLI_VERSION/rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \
+RUN wget -q https://github.com/coinbase/rosetta-cli/releases/download/v$ROSETTA_CLI_VERSION/rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \
     tar -xzf rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \
     mv rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64 rosetta-cli && \
     rm *.tar.gz
