@@ -72,8 +72,8 @@ COPY --from=rosetta \
 
 # Install service start script
 COPY --from=rosetta \
-  /go/src/github.com/figment-networks/avalanche-rosetta/docker/start.sh \
-  /app/start
+  /go/src/github.com/figment-networks/avalanche-rosetta/docker/entrypoint.sh \
+  /app/entrypoint.sh
 
 # Install rosetta CLI
 RUN wget https://github.com/coinbase/rosetta-cli/releases/download/v$ROSETTA_CLI_VERSION/rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \
@@ -89,4 +89,4 @@ COPY --from=rosetta \
 EXPOSE 9650
 EXPOSE 8080
 
-CMD ["/app/start"]
+CMD ["/app/entrypoint.sh"]

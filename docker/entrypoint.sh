@@ -37,7 +37,11 @@ cat <<EOF > /app/rosetta-config.json
 }
 EOF
 
-/app/rosetta-runner \
+if [ -n "$@" ]; then
+  exec $@
+fi
+
+exec /app/rosetta-runner \
   -mode $AVALANCHE_MODE \
   -avalanche-bin /app/avalanchego \
   -avalanche-config /app/avalanchego-config.json \

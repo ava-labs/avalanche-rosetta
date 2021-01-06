@@ -58,7 +58,10 @@ run-testnet:
 		-e AVALANCHE_CHAIN=43113 \
 		-e AVALANCHE_MODE=online \
 		--name avalanche-testnet \
-		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
+		-p 8080:8080 \
+		-p 9650:9650 \
+		-it \
+		${DOCKER_TAG}
 
 # Start the Testnet in OFFLINE mode
 run-testnet-offline:
@@ -68,7 +71,10 @@ run-testnet-offline:
 		-e AVALANCHE_CHAIN=43113 \
 		-e AVALANCHE_MODE=offline \
 		--name avalanche-testnet-offline \
-		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
+		-p 8080:8080 \
+		-p 9650:9650 \
+		-it \
+		${DOCKER_TAG}
 
 # Start the Mainnet in ONLINE mode
 run-mainnet:
@@ -79,7 +85,10 @@ run-mainnet:
 		-e AVALANCHE_CHAIN=43114 \
 		-e AVALANCHE_MODE=online \
 		--name avalanche-mainnet \
-		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
+		-p 8080:8080 \
+		-p 9650:9650 \
+		-it \
+		${DOCKER_TAG}
 
 # Start the Mainnet in ONLINE mode
 run-mainnet-offline:
@@ -89,7 +98,10 @@ run-mainnet-offline:
 		-e AVALANCHE_CHAIN=43114 \
 		-e AVALANCHE_MODE=offline \
 		--name avalanche-mainnet-offline \
-		--rm -p 8080:8080 -p 9650:9650 -it ${DOCKER_TAG}
+		-p 8080:8080 \
+		-p 9650:9650 \
+		-it \
+		${DOCKER_TAG}
 
 # Perform the Testnet data check
 check-testnet-data:
