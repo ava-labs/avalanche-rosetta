@@ -11,6 +11,7 @@ import (
 const (
 	prefixInfo = "/ext/info"
 	prefixEth  = "/ext/bc/C/rpc"
+	prefixAvm  = "/ext/bc/X"
 )
 
 type Client interface {
@@ -31,13 +32,16 @@ type Client interface {
 	NetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]Peer, error)
 	NodeVersion(context.Context) (string, error)
+	AssetDescription(context.Context, string) (*Asset, error)
 }
 
 type client struct {
 	*EthClient
 	*InfoClient
+	*AvmClient
 }
 
+// NewClient returns a new client for Avalanche APIs
 func NewClient(endpoint string) (Client, error) {
 	eth, err := NewEthClient(endpoint)
 	if err != nil {
@@ -49,5 +53,14 @@ func NewClient(endpoint string) (Client, error) {
 		return nil, err
 	}
 
-	return client{EthClient: eth, InfoClient: info}, nil
+	avm, err := NewAvmClient(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	return client{
+		EthClient:  eth,
+		InfoClient: info,
+		AvmClient:  avm,
+	}, nil
 }
