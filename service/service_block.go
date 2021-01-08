@@ -96,29 +96,9 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		return nil, terr
 	}
 
-	crossTxs, err := mapper.CrossChainTransactions(block)
+	crosstx, terr := s.fetchCrossChainTransactions(ctx, block)
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
-	}
-	for _, tx := range crossTxs {
-		// Skip empty import/export transactions
-		if len(tx.Operations) == 0 {
-			continue
-		}
-
-		op := tx.Operations[0]
-
-		// Determine currency symbol from the tx asset ID
-		asset, err := s.lookupAsset(ctx, op.Amount.Currency.Symbol)
-		if err != nil {
-			return nil, wrapError(errClientError, err)
-		}
-
-		// Only include transaction with native AVAX currency
-		if asset.Symbol == mapper.AvaxCurrency.Symbol {
-			op.Amount.Currency = mapper.AvaxCurrency
-			transactions = append(transactions, tx)
-		}
+		return nil, terr
 	}
 
 	return &types.BlockResponse{
@@ -126,7 +106,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 			BlockIdentifier:       blockIdentifier,
 			ParentBlockIdentifier: parentBlockIdentifier,
 			Timestamp:             int64(block.Time() * 1000),
-			Transactions:          transactions,
+			Transactions:          append(transactions, crosstx...),
 			Metadata:              mapper.BlockMetadata(block),
 		},
 	}, nil
@@ -202,6 +182,44 @@ func (s *BlockService) fetchTransaction(ctx context.Context, tx *corethTypes.Tra
 	}
 
 	return transaction, nil
+}
+
+func (s *BlockService) fetchCrossChainTransactions(ctx context.Context, block *corethTypes.Block) ([]*types.Transaction, *types.Error) {
+	result := []*types.Transaction{}
+
+	crossTxs, err := mapper.CrossChainTransactions(block)
+	if err != nil {
+		return nil, wrapError(errInternalError, err)
+	}
+
+	for _, tx := range crossTxs {
+		// Skip empty import/export transactions
+		if len(tx.Operations) == 0 {
+			continue
+		}
+
+		selectedOps := []*types.Operation{}
+		for _, op := range tx.Operations {
+			// Determine currency symbol from the tx asset ID
+			asset, err := s.lookupAsset(ctx, op.Amount.Currency.Symbol)
+			if err != nil {
+				return nil, wrapError(errClientError, err)
+			}
+
+			// Select operations with AVAX currency
+			if asset.Symbol == mapper.AvaxCurrency.Symbol {
+				op.Amount.Currency = mapper.AvaxCurrency
+				selectedOps = append(selectedOps, op)
+			}
+		}
+
+		if len(selectedOps) > 0 {
+			tx.Operations = selectedOps
+			result = append(result, tx)
+		}
+	}
+
+	return result, nil
 }
 
 func (s *BlockService) lookupAsset(ctx context.Context, id string) (*client.Asset, error) {
