@@ -4,7 +4,6 @@
     "network": "Mainnet"
   },
   "online_url": "http://localhost:8080",
-  "data_directory": "/tmp/avalanche-rosetta/mainnet",
   "http_timeout": 30,
   "max_retries": 5,
   "retry_elapsed_time": 0,
