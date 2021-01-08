@@ -87,7 +87,7 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 
 	tx := &evm.Tx{}
 	if _, err := codecManager.Unmarshal(extra, tx); err != nil {
-		return nil, err
+		return transactions, err
 	}
 
 	var idx int64
@@ -113,8 +113,10 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 					Address: out.Address.Hex(),
 				},
 				Amount: &types.Amount{
-					Value:    new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), x2crate).String(),
-					Currency: AvaxCurrency,
+					Value: new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), x2crate).String(),
+					Currency: &types.Currency{
+						Symbol: out.AssetID.String(),
+					},
 				},
 				Metadata: map[string]interface{}{
 					"tx_id":         txID,
@@ -140,8 +142,10 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 					Address: in.Address.Hex(),
 				},
 				Amount: &types.Amount{
-					Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(x2crate)).String(),
-					Currency: AvaxCurrency,
+					Value: new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(x2crate)).String(),
+					Currency: &types.Currency{
+						Symbol: in.AssetID.String(),
+					},
 				},
 				Metadata: map[string]interface{}{
 					"blockchain_id":     t.BlockchainID.String(),

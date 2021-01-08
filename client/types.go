@@ -51,6 +51,13 @@ type TxPoolContent struct {
 	Queued  TxAccountMap `json:"queued"`
 }
 
+type Asset struct {
+	ID           string `json:"assetId"`
+	Name         string `json:"name"`
+	Symbol       string `json:"symbol"`
+	Denomination string `json:"denomination"`
+}
+
 type Call struct {
 	Type         string         `json:"type"`
 	From         common.Address `json:"from"`

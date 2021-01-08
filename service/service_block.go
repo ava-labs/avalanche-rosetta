@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 	"strings"
+	"sync"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -19,13 +20,18 @@ import (
 type BlockService struct {
 	config *Config
 	client client.Client
+
+	assets     map[string]*client.Asset
+	assetsLock sync.Mutex
 }
 
 // NewBlockService returns a new block servicer
-func NewBlockService(config *Config, client client.Client) server.BlockAPIServicer {
+func NewBlockService(config *Config, rcpClient client.Client) server.BlockAPIServicer {
 	return &BlockService{
-		config: config,
-		client: client,
+		config:     config,
+		client:     rcpClient,
+		assets:     map[string]*client.Asset{},
+		assetsLock: sync.Mutex{},
 	}
 }
 
@@ -85,13 +91,13 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		}
 	}
 
-	crossTransactions, err := mapper.CrossChainTransactions(block)
-	if err != nil {
-		return nil, wrapError(errInternalError, err)
-	}
-
 	transactions, terr := s.fetchTransactions(ctx, block)
 	if terr != nil {
+		return nil, terr
+	}
+
+	crosstx, terr := s.fetchCrossChainTransactions(ctx, block)
+	if err != nil {
 		return nil, terr
 	}
 
@@ -100,14 +106,8 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 			BlockIdentifier:       blockIdentifier,
 			ParentBlockIdentifier: parentBlockIdentifier,
 			Timestamp:             int64(block.Time() * 1000),
-			Transactions:          append(crossTransactions, transactions...),
-			Metadata: map[string]interface{}{
-				"gas_limit":  block.GasLimit(),
-				"gas_used":   block.GasUsed(),
-				"difficulty": block.Difficulty(),
-				"nonce":      block.Nonce(),
-				"size":       block.Size().String(),
-			},
+			Transactions:          append(transactions, crosstx...),
+			Metadata:              mapper.BlockMetadata(block),
 		},
 	}, nil
 }
@@ -182,4 +182,59 @@ func (s *BlockService) fetchTransaction(ctx context.Context, tx *corethTypes.Tra
 	}
 
 	return transaction, nil
+}
+
+func (s *BlockService) fetchCrossChainTransactions(ctx context.Context, block *corethTypes.Block) ([]*types.Transaction, *types.Error) {
+	result := []*types.Transaction{}
+
+	crossTxs, err := mapper.CrossChainTransactions(block)
+	if err != nil {
+		return nil, wrapError(errInternalError, err)
+	}
+
+	for _, tx := range crossTxs {
+		// Skip empty import/export transactions
+		if len(tx.Operations) == 0 {
+			continue
+		}
+
+		selectedOps := []*types.Operation{}
+		for _, op := range tx.Operations {
+			// Determine currency symbol from the tx asset ID
+			asset, err := s.lookupAsset(ctx, op.Amount.Currency.Symbol)
+			if err != nil {
+				return nil, wrapError(errClientError, err)
+			}
+
+			// Select operations with AVAX currency
+			if asset.Symbol == mapper.AvaxCurrency.Symbol {
+				op.Amount.Currency = mapper.AvaxCurrency
+				selectedOps = append(selectedOps, op)
+			}
+		}
+
+		if len(selectedOps) > 0 {
+			tx.Operations = selectedOps
+			result = append(result, tx)
+		}
+	}
+
+	return result, nil
+}
+
+func (s *BlockService) lookupAsset(ctx context.Context, id string) (*client.Asset, error) {
+	if asset, ok := s.assets[id]; ok {
+		return asset, nil
+	}
+
+	asset, err := s.client.AssetDescription(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	s.assetsLock.Lock()
+	s.assets[id] = asset
+	s.assetsLock.Unlock()
+
+	return asset, nil
 }
