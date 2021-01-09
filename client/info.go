@@ -13,6 +13,7 @@ const (
 	methodGetNodeID       = "info.getNodeID"
 	methodGetNodeVersion  = "info.getNodeVersion"
 	methodGetPeers        = "info.peers"
+	methodIsBootstrapped  = "info.isBootstrapped"
 )
 
 // InfoClient is a client for the Info API
@@ -24,6 +25,14 @@ type InfoClient struct {
 func NewInfoClient(endpoint string) (*InfoClient, error) {
 	c := Dial(fmt.Sprintf("%s%s", endpoint, prefixInfo))
 	return &InfoClient{rpc: c}, nil
+}
+
+// IsBootstrapped returns true if a chans is bootstrapped
+func (c *InfoClient) IsBootstrapped(ctx context.Context, chain string) (bool, error) {
+	args := map[string]string{"chain": chain}
+	resp := map[string]bool{}
+	err := c.rpc.Call(ctx, methodIsBootstrapped, args, &resp)
+	return resp["isBootstrapped"], err
 }
 
 // BlockchainID returns the current blockchain identifier

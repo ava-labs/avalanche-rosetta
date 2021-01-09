@@ -40,6 +40,11 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 		return nil, errUnavailableOffline
 	}
 
+	// Check if all C/X chains are ready
+	if err := checkBoostrapStatus(ctx, s.client); err != nil {
+		return nil, err
+	}
+
 	// Fetch the latest block
 	blockHeader, err := s.client.HeaderByNumber(ctx, nil)
 	if err != nil {
@@ -111,4 +116,26 @@ func (s *NetworkService) NetworkOptions(ctx context.Context, request *types.Netw
 	}
 
 	return resp, nil
+}
+
+func checkBoostrapStatus(ctx context.Context, client client.Client) *types.Error {
+	cReady, err := client.IsBootstrapped(ctx, "C")
+	if err != nil {
+		return wrapError(errClientError, err)
+	}
+
+	xReady, err := client.IsBootstrapped(ctx, "X")
+	if err != nil {
+		return wrapError(errClientError, err)
+	}
+
+	if !cReady {
+		return wrapError(errNotReady, "C-Chain is not ready")
+	}
+
+	if !xReady {
+		return wrapError(errNotReady, "X-Chain is not ready")
+	}
+
+	return nil
 }
