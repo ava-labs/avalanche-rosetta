@@ -97,7 +97,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 	}
 
 	crosstx, terr := s.fetchCrossChainTransactions(ctx, block)
-	if err != nil {
+	if terr != nil {
 		return nil, terr
 	}
 
