@@ -17,7 +17,7 @@ request_funds(1){
     loaded_account = find_balance({
       "account_identifier": {{random_account.account_identifier}},
       "minimum_balance":{
-        "value": "10000000000000000",
+        "value": "9870000000000001",
         "currency": {{currency}}
       }
     });
@@ -53,7 +53,7 @@ transfer(10){
     });
 
     // Set the recipient_amount as some value <= sender.balance-max_fee
-    max_fee = "84000000000000";
+    max_fee = "9870000000000000";
     available_amount = {{sender.balance.value}} - {{max_fee}};
     recipient_amount = random_number({"minimum": "1", "maximum": {{available_amount}}});
     print_message({"recipient_amount":{{recipient_amount}}});
