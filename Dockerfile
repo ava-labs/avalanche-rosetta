@@ -75,6 +75,11 @@ COPY --from=rosetta \
   /go/src/github.com/figment-networks/avalanche-rosetta/docker/entrypoint.sh \
   /app/entrypoint.sh
 
+# Install jq
+RUN wget -q https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
+    chmod +x jq-linux64 && \
+    mv jq-linux64 /app/jq
+
 # Install rosetta CLI
 RUN wget -q https://github.com/coinbase/rosetta-cli/releases/download/v$ROSETTA_CLI_VERSION/rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \
     tar -xzf rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \

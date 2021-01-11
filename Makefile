@@ -30,7 +30,6 @@ dist:
 
 docker-build:
 	docker build \
-		--no-cache \
 		--build-arg AVALANCHE_VERSION=${AVALANCHE_VERSION} \
 		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
 		--build-arg ROSETTA_CLI_VERSION=${ROSETTA_CLI_VERSION} \
