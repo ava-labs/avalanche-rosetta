@@ -15,6 +15,7 @@ const (
 )
 
 type Client interface {
+	IsBootstrapped(context.Context, string) (bool, error)
 	ChainID(context.Context) (*big.Int, error)
 	BlockByHash(context.Context, ethcommon.Hash) (*ethtypes.Block, error)
 	BlockByNumber(context.Context, *big.Int) (*ethtypes.Block, error)
