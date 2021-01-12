@@ -10,7 +10,7 @@ DOCKER_ORG          ?= figmentnetworks
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.1.0
+AVALANCHE_VERSION   ?= v1.1.1
 ROSETTA_CLI_VERSION ?= 0.6.6
 
 build:
