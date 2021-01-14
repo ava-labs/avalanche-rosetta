@@ -107,9 +107,6 @@ func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.Co
 // this method will be sent to the /construction/submit endpoint by the caller.
 //
 func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
-	if s.config.IsOfflineMode() {
-		return nil, errUnavailableOffline
-	}
 	if req.UnsignedTransaction == "" {
 		return nil, wrapError(errInvalidInput, "transaction data is not provided")
 	}
