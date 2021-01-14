@@ -55,6 +55,8 @@ run-testnet:
 		-e AVALANCHE_NETWORK=Fuji \
 		-e AVALANCHE_CHAIN=43113 \
 		-e AVALANCHE_MODE=online \
+		-e ROSETTA_PREFUNDED_ACCOUNT_KEY \
+		-e ROSETTA_PREFUNDED_ACCOUNT_ADDRESS \
 		--name avalanche-testnet \
 		-p 8080:8080 \
 		-p 9650:9650 \
@@ -68,6 +70,8 @@ run-testnet-offline:
 		-e AVALANCHE_NETWORK=Fuji \
 		-e AVALANCHE_CHAIN=43113 \
 		-e AVALANCHE_MODE=offline \
+		-e ROSETTA_PREFUNDED_ACCOUNT_KEY \
+		-e ROSETTA_PREFUNDED_ACCOUNT_ADDRESS \
 		--name avalanche-testnet-offline \
 		-p 8080:8080 \
 		-p 9650:9650 \
@@ -82,6 +86,8 @@ run-mainnet:
 		-e AVALANCHE_NETWORK=Mainnet \
 		-e AVALANCHE_CHAIN=43114 \
 		-e AVALANCHE_MODE=online \
+		-e ROSETTA_PREFUNDED_ACCOUNT_KEY \
+		-e ROSETTA_PREFUNDED_ACCOUNT_ADDRESS \
 		--name avalanche-mainnet \
 		-p 8080:8080 \
 		-p 9650:9650 \
@@ -95,6 +101,8 @@ run-mainnet-offline:
 		-e AVALANCHE_NETWORK=Mainnet \
 		-e AVALANCHE_CHAIN=43114 \
 		-e AVALANCHE_MODE=offline \
+		-e ROSETTA_PREFUNDED_ACCOUNT_KEY \
+		-e ROSETTA_PREFUNDED_ACCOUNT_ADDRESS \
 		--name avalanche-mainnet-offline \
 		-p 8080:8080 \
 		-p 9650:9650 \

@@ -21,7 +21,8 @@
     "end_conditions": {
       "create_account": 10,
       "transfer": 10
-    }
+    },
+    "prefunded_accounts": []
   },
   "data": {
     "active_reconciliation_concurrency": 16,
