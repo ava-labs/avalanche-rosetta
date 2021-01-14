@@ -30,7 +30,6 @@ dist:
 
 docker-build:
 	docker build \
-		--no-cache \
 		--build-arg AVALANCHE_VERSION=${AVALANCHE_VERSION} \
 		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
 		--build-arg ROSETTA_CLI_VERSION=${ROSETTA_CLI_VERSION} \
@@ -40,7 +39,6 @@ docker-build:
 
 docker-build-standalone:
 	docker build \
-		--no-cache \
 		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
 		-t ${DOCKER_ORG}/${PROJECT}-server:${DOCKER_LABEL} \
 		-f Dockerfile.rosetta \
