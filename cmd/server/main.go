@@ -104,9 +104,10 @@ func main() {
 	}
 
 	serviceConfig := &service.Config{
-		Mode:      cfg.Mode,
-		ChainID:   big.NewInt(cfg.ChainID),
-		NetworkID: network,
+		Mode:             cfg.Mode,
+		ChainID:          big.NewInt(cfg.ChainID),
+		NetworkID:        network,
+		GenesisBlockHash: cfg.GenesisBlockHash,
 	}
 
 	handler := configureRouter(serviceConfig, asserter, apiClient)

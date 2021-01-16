@@ -9,9 +9,10 @@ import (
 
 // Config holds the service configuration
 type Config struct {
-	Mode      string
-	ChainID   *big.Int
-	NetworkID *types.NetworkIdentifier
+	Mode             string
+	ChainID          *big.Int
+	NetworkID        *types.NetworkIdentifier
+	GenesisBlockHash string
 }
 
 const (

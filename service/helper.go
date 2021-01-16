@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	genesisBlockHash = "0x0000000000000000000000000000000000000000000000000000000000000000"
 	transferGasLimit = uint64(21000)
 )
 
@@ -32,6 +31,20 @@ type unsignedTx struct {
 type txMetadata struct {
 	Nonce    uint64   `json:"nonce"`
 	GasPrice *big.Int `json:"gas_price"`
+}
+
+func makeGenesisBlock(hash string) *types.Block {
+	return &types.Block{
+		BlockIdentifier: &types.BlockIdentifier{
+			Index: 0,
+			Hash:  hash,
+		},
+		ParentBlockIdentifier: &types.BlockIdentifier{
+			Index: 0,
+			Hash:  hash,
+		},
+		Timestamp: 946713601000,
+	}
 }
 
 func blockHeaderFromInput(c client.Client, input *types.PartialBlockIdentifier) (*ethtypes.Header, *types.Error) {

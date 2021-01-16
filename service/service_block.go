@@ -21,17 +21,19 @@ type BlockService struct {
 	config *Config
 	client client.Client
 
-	assets     map[string]*client.Asset
-	assetsLock sync.Mutex
+	genesisBlock *types.Block
+	assets       map[string]*client.Asset
+	assetsLock   sync.Mutex
 }
 
 // NewBlockService returns a new block servicer
 func NewBlockService(config *Config, rcpClient client.Client) server.BlockAPIServicer {
 	return &BlockService{
-		config:     config,
-		client:     rcpClient,
-		assets:     map[string]*client.Asset{},
-		assetsLock: sync.Mutex{},
+		config:       config,
+		client:       rcpClient,
+		assets:       map[string]*client.Asset{},
+		assetsLock:   sync.Mutex{},
+		genesisBlock: makeGenesisBlock(config.GenesisBlockHash),
 	}
 }
 
@@ -46,6 +48,12 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 	}
 	if request.BlockIdentifier.Hash == nil && request.BlockIdentifier.Index == nil {
 		return nil, errBlockInvalidInput
+	}
+
+	if s.isGenesisBlockRequest(request.BlockIdentifier) {
+		return &types.BlockResponse{
+			Block: s.genesisBlock,
+		}, nil
 	}
 
 	var (
@@ -74,7 +82,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		Hash:  block.Hash().String(),
 	}
 
-	if block.ParentHash().String() != genesisBlockHash {
+	if block.ParentHash().String() != s.config.GenesisBlockHash {
 		parentBlock, err := s.client.HeaderByHash(context.Background(), block.ParentHash())
 		if err == nil {
 			parentBlockIdentifier = &types.BlockIdentifier{
@@ -85,10 +93,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 			return nil, wrapError(errClientError, err)
 		}
 	} else {
-		parentBlockIdentifier = &types.BlockIdentifier{
-			Index: 0,
-			Hash:  genesisBlockHash,
-		}
+		parentBlockIdentifier = s.genesisBlock.BlockIdentifier
 	}
 
 	transactions, terr := s.fetchTransactions(ctx, block)
@@ -237,4 +242,14 @@ func (s *BlockService) lookupAsset(ctx context.Context, id string) (*client.Asse
 	s.assetsLock.Unlock()
 
 	return asset, nil
+}
+
+func (s *BlockService) isGenesisBlockRequest(id *types.PartialBlockIdentifier) bool {
+	if number := id.Index; number != nil {
+		return *number == s.genesisBlock.BlockIdentifier.Index
+	}
+	if hash := id.Hash; hash != nil {
+		return *hash == s.genesisBlock.BlockIdentifier.Hash
+	}
+	return false
 }

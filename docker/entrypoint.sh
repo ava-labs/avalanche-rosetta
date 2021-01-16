@@ -2,7 +2,8 @@
 
 export AVALANCHE_NETWORK=${AVALANCHE_NETWORK:-testnet}
 export AVALANCHE_CHAIN=${AVALANCHE_CHAIN:-43113}
-export AVALANCHE_MODE=${AVALANCHE_MODE:online}
+export AVALANCHE_MODE=${AVALANCHE_MODE:-online}
+export AVALANCHE_GENESIS_HASH=${AVALANCHE_GENESIS_HASH:-"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b"}
 
 cat <<EOF > /app/avalanchego-config.json
 {
@@ -33,15 +34,15 @@ cat <<EOF > /app/rosetta-config.json
   "listen_addr": "0.0.0.0:8080",
   "network_id": 1,
   "network_name": "$AVALANCHE_NETWORK",
-  "chain_id": $AVALANCHE_CHAIN
+  "chain_id": $AVALANCHE_CHAIN,
+  "genesis_block_hash": "$AVALANCHE_GENESIS_HASH"
 }
 EOF
 
 # Configure prefunded account for Rosetta Construction check if running Testnet
 if [ "$AVALANCHE_CHAIN" -eq "43113" ]; then
   if ([ -n "$ROSETTA_PREFUNDED_ACCOUNT_KEY" ] && [ -n "$ROSETTA_PREFUNDED_ACCOUNT_ADDRESS" ]); then
-    query=".construction.prefunded_accounts += [{\"privkey\": \"$ROSETTA_PREFUNDED_ACCOUNT_KEY\",\"account_identifier\": {\"address\": \"$ROSETTA_PREFUNDED_ACCOUNT_ADDRESS\"},\"curve_type\": \"secp256k1\",\"currency\": {\"symbol\": \"AVAX\",\"decimals\": 18}}]"
-    cat <<< $(/app/jq $query ./rosetta-cli-conf/testnet/config.json) > ./rosetta-cli-conf/testnet/config.json
+    cat <<< $(/app/jq ".construction.prefunded_accounts += [{\"privkey\": \"$ROSETTA_PREFUNDED_ACCOUNT_KEY\",\"account_identifier\": {\"address\": \"$ROSETTA_PREFUNDED_ACCOUNT_ADDRESS\"},\"curve_type\": \"secp256k1\",\"currency\": {\"symbol\": \"AVAX\",\"decimals\": 18}}]" ./rosetta-cli-conf/testnet/config.json) > ./rosetta-cli-conf/testnet/config.json
   fi
 fi
 
