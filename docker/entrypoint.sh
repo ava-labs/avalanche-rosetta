@@ -42,8 +42,7 @@ EOF
 # Configure prefunded account for Rosetta Construction check if running Testnet
 if [ "$AVALANCHE_CHAIN" -eq "43113" ]; then
   if ([ -n "$ROSETTA_PREFUNDED_ACCOUNT_KEY" ] && [ -n "$ROSETTA_PREFUNDED_ACCOUNT_ADDRESS" ]); then
-    query=".construction.prefunded_accounts += [{\"privkey\": \"$ROSETTA_PREFUNDED_ACCOUNT_KEY\",\"account_identifier\": {\"address\": \"$ROSETTA_PREFUNDED_ACCOUNT_ADDRESS\"},\"curve_type\": \"secp256k1\",\"currency\": {\"symbol\": \"AVAX\",\"decimals\": 18}}]"
-    cat <<< $(/app/jq $query ./rosetta-cli-conf/testnet/config.json) > ./rosetta-cli-conf/testnet/config.json
+    cat <<< $(/app/jq ".construction.prefunded_accounts += [{\"privkey\": \"$ROSETTA_PREFUNDED_ACCOUNT_KEY\",\"account_identifier\": {\"address\": \"$ROSETTA_PREFUNDED_ACCOUNT_ADDRESS\"},\"curve_type\": \"secp256k1\",\"currency\": {\"symbol\": \"AVAX\",\"decimals\": 18}}]" ./rosetta-cli-conf/testnet/config.json) > ./rosetta-cli-conf/testnet/config.json
   fi
 fi
 
