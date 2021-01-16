@@ -9,17 +9,19 @@ import (
 )
 
 var (
-	errMissingRPC  = errors.New("avalanche rpc endpoint is not provided")
-	errInvalidMode = errors.New("invalid rosetta mode")
+	errMissingRPC           = errors.New("avalanche rpc endpoint is not provided")
+	errInvalidMode          = errors.New("invalid rosetta mode")
+	errGenesisBlockRequired = errors.New("genesis block hash is not provided")
 )
 
 type config struct {
-	Mode        string `json:"mode"`
-	RPCEndpoint string `json:"rpc_endpoint"`
-	ListenAddr  string `json:"listen_addr"`
-	NetworkName string `json:"network_name"`
-	ChainID     int64  `json:"chain_id"`
-	LogRequests bool   `json:"log_requests"`
+	Mode             string `json:"mode"`
+	RPCEndpoint      string `json:"rpc_endpoint"`
+	ListenAddr       string `json:"listen_addr"`
+	NetworkName      string `json:"network_name"`
+	ChainID          int64  `json:"chain_id"`
+	LogRequests      bool   `json:"log_requests"`
+	GenesisBlockHash string `json:"genesis_block_hash"`
 }
 
 func readConfig(path string) (*config, error) {
@@ -58,6 +60,10 @@ func (c *config) Validate() error {
 
 	if !(c.Mode == service.ModeOffline || c.Mode == service.ModeOnline) {
 		return errInvalidMode
+	}
+
+	if c.GenesisBlockHash == "" {
+		return errGenesisBlockRequired
 	}
 
 	return nil

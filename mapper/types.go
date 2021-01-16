@@ -22,6 +22,16 @@ const (
 )
 
 var (
+	StageBootstrap = &types.SyncStatus{
+		Synced: types.Bool(false),
+		Stage:  types.String("BOOTSTRAP"),
+	}
+
+	StageSynced = &types.SyncStatus{
+		Synced: types.Bool(true),
+		Stage:  types.String("SYNCED"),
+	}
+
 	AvaxCurrency = &types.Currency{
 		Symbol:   "AVAX",
 		Decimals: 18,

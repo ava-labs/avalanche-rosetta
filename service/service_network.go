@@ -13,15 +13,28 @@ import (
 
 // NetworkService implements all /network endpoints
 type NetworkService struct {
-	config *Config
-	client client.Client
+	config          *Config
+	client          client.Client
+	genesisBlock    *types.Block
+	bootstrapStatus *types.NetworkStatusResponse
 }
 
 // NewNetworkService returns a new network servicer
 func NewNetworkService(config *Config, client client.Client) server.NetworkAPIServicer {
+	genesisBlock := makeGenesisBlock(config.GenesisBlockHash)
+
+	bootstrapStatus := &types.NetworkStatusResponse{
+		CurrentBlockTimestamp:  genesisBlock.Timestamp,
+		CurrentBlockIdentifier: genesisBlock.BlockIdentifier,
+		GenesisBlockIdentifier: genesisBlock.BlockIdentifier,
+		SyncStatus:             mapper.StageBootstrap,
+	}
+
 	return &NetworkService{
-		config: config,
-		client: client,
+		config:          config,
+		client:          client,
+		genesisBlock:    genesisBlock,
+		bootstrapStatus: bootstrapStatus,
 	}
 }
 
@@ -42,6 +55,9 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 
 	// Check if all C/X chains are ready
 	if err := checkBoostrapStatus(ctx, s.client); err != nil {
+		if err.Code == errNotReady.Code {
+			return s.bootstrapStatus, nil
+		}
 		return nil, err
 	}
 
@@ -80,10 +96,8 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 			Index: genesisHeader.Number.Int64(),
 			Hash:  genesisHeader.Hash().String(),
 		},
-		SyncStatus: &types.SyncStatus{
-			Synced: types.Bool(true),
-		},
-		Peers: peers,
+		SyncStatus: mapper.StageBootstrap,
+		Peers:      peers,
 	}, nil
 }
 
