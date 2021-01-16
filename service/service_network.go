@@ -96,7 +96,7 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 			Index: genesisHeader.Number.Int64(),
 			Hash:  genesisHeader.Hash().String(),
 		},
-		SyncStatus: mapper.StageBootstrap,
+		SyncStatus: mapper.StageSynced,
 		Peers:      peers,
 	}, nil
 }
