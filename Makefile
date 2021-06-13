@@ -94,12 +94,12 @@ run-mainnet-offline:
 
 # Perform the Testnet data check
 check-testnet-data:
-	rosetta-cli check:data --configuration-file=/app/rosetta-cli-conf/testnet/config.json
+	rosetta-cli check:data --configuration-file=rosetta-cli-conf/testnet/config.json
 
 # Perform the Testnet construction check
 check-testnet-construction:
-	rosetta-cli check:construction --configuration-file=/app/rosetta-cli-conf/testnet/config.json
+	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/testnet/config.json
 
 # Perform the Mainnet data check
 check-mainnet-data:
-	rosetta-cli check:data --configuration-file=/app/rosetta-cli-conf/mainnet/config.json
+	rosetta-cli check:data --configuration-file=rosetta-cli-conf/mainnet/config.json
