@@ -23,7 +23,6 @@ require (
 	github.com/prometheus/client_golang v1.8.0 // indirect
 	github.com/prometheus/common v0.15.0 // indirect
 	github.com/shirou/gopsutil v3.20.12+incompatible // indirect
-	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	go.opencensus.io v0.22.5 // indirect
@@ -31,7 +30,6 @@ require (
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/sys v0.0.0-20210108172913-0df2131ae363 // indirect
-	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 )

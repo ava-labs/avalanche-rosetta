@@ -47,7 +47,10 @@ func makeGenesisBlock(hash string) *types.Block {
 	}
 }
 
-func blockHeaderFromInput(c client.Client, input *types.PartialBlockIdentifier) (*ethtypes.Header, *types.Error) {
+func blockHeaderFromInput(
+	c client.Client,
+	input *types.PartialBlockIdentifier,
+) (*ethtypes.Header, *types.Error) {
 	var (
 		header *ethtypes.Header
 		err    error
@@ -82,7 +85,11 @@ func txFromInput(input string) (*ethtypes.Transaction, error) {
 	return tx, nil
 }
 
-func txFromMatches(matches []*parser.Match, kv map[string]interface{}, chainID *big.Int) (*ethtypes.Transaction, *unsignedTx, error) {
+func txFromMatches(
+	matches []*parser.Match,
+	kv map[string]interface{},
+	chainID *big.Int,
+) (*ethtypes.Transaction, *unsignedTx, error) {
 	var metadata txMetadata
 	if err := unmarshalJSONMap(kv, &metadata); err != nil {
 		return nil, nil, err

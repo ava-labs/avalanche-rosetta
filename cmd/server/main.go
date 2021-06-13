@@ -129,7 +129,13 @@ func main() {
 
 	router := server.CorsMiddleware(handler)
 
-	log.Printf(`using avax (chain=%q chainid="%d" network=%q) rpc endpoint: %v`, service.BlockchainName, cfg.ChainID, cfg.NetworkName, cfg.RPCEndpoint)
+	log.Printf(
+		`using avax (chain=%q chainid="%d" network=%q) rpc endpoint: %v`,
+		service.BlockchainName,
+		cfg.ChainID,
+		cfg.NetworkName,
+		cfg.RPCEndpoint,
+	)
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
 	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))

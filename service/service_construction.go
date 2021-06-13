@@ -38,7 +38,10 @@ func NewConstructionService(config *Config, client client.Client) server.Constru
 // or even arbitrary chain state. The request used when calling this endpoint
 // is created by calling /construction/preprocess in an offline environment.
 //
-func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error) {
+func (s ConstructionService) ConstructionMetadata(
+	ctx context.Context,
+	req *types.ConstructionMetadataRequest,
+) (*types.ConstructionMetadataResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
@@ -83,7 +86,10 @@ func (s ConstructionService) ConstructionMetadata(ctx context.Context, req *type
 //
 // TransactionHash returns the network-specific transaction hash for a signed transaction.
 //
-func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
+func (s ConstructionService) ConstructionHash(
+	ctx context.Context,
+	req *types.ConstructionHashRequest,
+) (*types.TransactionIdentifierResponse, *types.Error) {
 	if req.SignedTransaction == "" {
 		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
 	}
@@ -106,7 +112,10 @@ func (s ConstructionService) ConstructionHash(ctx context.Context, req *types.Co
 // and an array of provided signatures. The signed transaction returned from
 // this method will be sent to the /construction/submit endpoint by the caller.
 //
-func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
+func (s ConstructionService) ConstructionCombine(
+	ctx context.Context,
+	req *types.ConstructionCombineRequest,
+) (*types.ConstructionCombineResponse, *types.Error) {
 	if req.UnsignedTransaction == "" {
 		return nil, wrapError(errInvalidInput, "transaction data is not provided")
 	}
@@ -128,7 +137,10 @@ func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types
 		tx.Input,
 	)
 
-	signedTx, err := ethTx.WithSignature(ethtypes.NewEIP155Signer(tx.ChainID), req.Signatures[0].Bytes)
+	signedTx, err := ethTx.WithSignature(
+		ethtypes.NewEIP155Signer(tx.ChainID),
+		req.Signatures[0].Bytes,
+	)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
@@ -148,7 +160,10 @@ func (s ConstructionService) ConstructionCombine(ctx context.Context, req *types
 // Derive returns the AccountIdentifier associated with a public key. Blockchains
 // that require an on-chain action to create an account should not implement this method.
 //
-func (s ConstructionService) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
+func (s ConstructionService) ConstructionDerive(
+	ctx context.Context,
+	req *types.ConstructionDeriveRequest,
+) (*types.ConstructionDeriveResponse, *types.Error) {
 	if req.PublicKey == nil {
 		return nil, wrapError(errInvalidInput, "public key is not provided")
 	}
@@ -171,7 +186,10 @@ func (s ConstructionService) ConstructionDerive(ctx context.Context, req *types.
 // intent of the formulated transaction. This is run as a sanity check before signing
 // (after /construction/payloads) and before broadcast (after /construction/combine).
 //
-func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
+func (s ConstructionService) ConstructionParse(
+	ctx context.Context,
+	req *types.ConstructionParseRequest,
+) (*types.ConstructionParseResponse, *types.Error) {
 	var tx unsignedTx
 
 	if !req.Signed {
@@ -271,7 +289,10 @@ func (s ConstructionService) ConstructionParse(ctx context.Context, req *types.C
 // transaction in the Data API (when it lands on chain) will contain a superset of
 // whatever operations were provided during construction.
 //
-func (s ConstructionService) ConstructionPayloads(ctx context.Context, req *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
+func (s ConstructionService) ConstructionPayloads(
+	ctx context.Context,
+	req *types.ConstructionPayloadsRequest,
+) (*types.ConstructionPayloadsResponse, *types.Error) {
 	descriptions := &parser.Descriptions{
 		OperationDescriptions: []*parser.OperationDescription{
 			{
@@ -334,7 +355,10 @@ func (s ConstructionService) ConstructionPayloads(ctx context.Context, req *type
 // Preprocess is called prior to /construction/payloads to construct a request for
 // any metadata that is needed for transaction construction given (i.e. account nonce).
 //
-func (s ConstructionService) ConstructionPreprocess(ctx context.Context, req *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error) {
+func (s ConstructionService) ConstructionPreprocess(
+	ctx context.Context,
+	req *types.ConstructionPreprocessRequest,
+) (*types.ConstructionPreprocessResponse, *types.Error) {
 	descriptions := &parser.Descriptions{
 		OperationDescriptions: []*parser.OperationDescription{
 			{
@@ -382,7 +406,10 @@ func (s ConstructionService) ConstructionPreprocess(ctx context.Context, req *ty
 //
 // Submit a pre-signed transaction to the node.
 //
-func (s ConstructionService) ConstructionSubmit(ctx context.Context, req *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error) {
+func (s ConstructionService) ConstructionSubmit(
+	ctx context.Context,
+	req *types.ConstructionSubmitRequest,
+) (*types.TransactionIdentifierResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}

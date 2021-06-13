@@ -77,7 +77,10 @@ func Transaction(
 	}, nil
 }
 
-func CrossChainTransactions(avaxAssetID string, block *ethtypes.Block) ([]*types.Transaction, error) {
+func CrossChainTransactions(
+	avaxAssetID string,
+	block *ethtypes.Block,
+) ([]*types.Transaction, error) {
 	transactions := []*types.Transaction{}
 
 	extra := block.ExtraData()

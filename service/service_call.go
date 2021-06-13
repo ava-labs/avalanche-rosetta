@@ -31,7 +31,10 @@ func NewCallService(config *Config, client client.Client) server.CallAPIServicer
 }
 
 // Call implements the /call endpoint.
-func (s CallService) Call(ctx context.Context, req *types.CallRequest) (*types.CallResponse, *types.Error) {
+func (s CallService) Call(
+	ctx context.Context,
+	req *types.CallRequest,
+) (*types.CallResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
@@ -44,7 +47,10 @@ func (s CallService) Call(ctx context.Context, req *types.CallRequest) (*types.C
 	}
 }
 
-func (s CallService) callGetTransactionReceipt(ctx context.Context, req *types.CallRequest) (*types.CallResponse, *types.Error) {
+func (s CallService) callGetTransactionReceipt(
+	ctx context.Context,
+	req *types.CallRequest,
+) (*types.CallResponse, *types.Error) {
 	var input GetTransactionReceiptInput
 	if err := types.UnmarshalMap(req.Parameters, &input); err != nil {
 		return nil, wrapError(errCallInvalidParams, err)

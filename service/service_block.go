@@ -33,7 +33,10 @@ func NewBlockService(config *Config, rcpClient client.Client) server.BlockAPISer
 }
 
 // Block implements the /block endpoint
-func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (*types.BlockResponse, *types.Error) {
+func (s *BlockService) Block(
+	ctx context.Context,
+	request *types.BlockRequest,
+) (*types.BlockResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
@@ -111,7 +114,10 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 }
 
 // BlockTransaction implements the /block/transaction endpoint.
-func (s *BlockService) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
+func (s *BlockService) BlockTransaction(
+	ctx context.Context,
+	request *types.BlockTransactionRequest,
+) (*types.BlockTransactionResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
@@ -144,7 +150,10 @@ func (s *BlockService) BlockTransaction(ctx context.Context, request *types.Bloc
 	}, nil
 }
 
-func (s *BlockService) fetchTransactions(ctx context.Context, block *corethTypes.Block) ([]*types.Transaction, *types.Error) {
+func (s *BlockService) fetchTransactions(
+	ctx context.Context,
+	block *corethTypes.Block,
+) ([]*types.Transaction, *types.Error) {
 	transactions := []*types.Transaction{}
 
 	for _, tx := range block.Transactions() {
@@ -158,7 +167,11 @@ func (s *BlockService) fetchTransactions(ctx context.Context, block *corethTypes
 	return transactions, nil
 }
 
-func (s *BlockService) fetchTransaction(ctx context.Context, tx *corethTypes.Transaction, header *corethTypes.Header) (*types.Transaction, *types.Error) {
+func (s *BlockService) fetchTransaction(
+	ctx context.Context,
+	tx *corethTypes.Transaction,
+	header *corethTypes.Header,
+) (*types.Transaction, *types.Error) {
 	msg, err := tx.AsMessage(s.config.Signer())
 	if err != nil {
 		return nil, wrapError(errClientError, err)
@@ -182,7 +195,10 @@ func (s *BlockService) fetchTransaction(ctx context.Context, tx *corethTypes.Tra
 	return transaction, nil
 }
 
-func (s *BlockService) fetchCrossChainTransactions(ctx context.Context, block *corethTypes.Block) ([]*types.Transaction, *types.Error) {
+func (s *BlockService) fetchCrossChainTransactions(
+	ctx context.Context,
+	block *corethTypes.Block,
+) ([]*types.Transaction, *types.Error) {
 	result := []*types.Transaction{}
 
 	crossTxs, err := mapper.CrossChainTransactions(s.config.AvaxAssetID, block)

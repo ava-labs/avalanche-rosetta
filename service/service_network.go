@@ -39,7 +39,10 @@ func NewNetworkService(config *Config, client client.Client) server.NetworkAPISe
 }
 
 // NetworkList implements the /network/list endpoint
-func (s *NetworkService) NetworkList(ctx context.Context, request *types.MetadataRequest) (*types.NetworkListResponse, *types.Error) {
+func (s *NetworkService) NetworkList(
+	ctx context.Context,
+	request *types.MetadataRequest,
+) (*types.NetworkListResponse, *types.Error) {
 	return &types.NetworkListResponse{
 		NetworkIdentifiers: []*types.NetworkIdentifier{
 			s.config.NetworkID,
@@ -48,7 +51,10 @@ func (s *NetworkService) NetworkList(ctx context.Context, request *types.Metadat
 }
 
 // NetworkStatus implements the /network/status endpoint
-func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
+func (s *NetworkService) NetworkStatus(
+	ctx context.Context,
+	request *types.NetworkRequest,
+) (*types.NetworkStatusResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
@@ -102,7 +108,10 @@ func (s *NetworkService) NetworkStatus(ctx context.Context, request *types.Netwo
 }
 
 // NetworkOptions implements the /network/options endpoint
-func (s *NetworkService) NetworkOptions(ctx context.Context, request *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
+func (s *NetworkService) NetworkOptions(
+	ctx context.Context,
+	request *types.NetworkRequest,
+) (*types.NetworkOptionsResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
