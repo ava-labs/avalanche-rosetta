@@ -11,7 +11,6 @@ DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
 AVALANCHE_VERSION   ?= v1.4.7
-ROSETTA_CLI_VERSION ?= 0.6.7
 
 build:
 	go build -o ./rosetta-server ./cmd/server
@@ -27,7 +26,6 @@ docker-build:
 	docker build \
 		--build-arg AVALANCHE_VERSION=${AVALANCHE_VERSION} \
 		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
-		--build-arg ROSETTA_CLI_VERSION=${ROSETTA_CLI_VERSION} \
 		-t ${DOCKER_TAG} \
 		-f Dockerfile \
 		.

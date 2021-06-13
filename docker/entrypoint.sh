@@ -12,14 +12,15 @@ cat <<EOF > /app/avalanchego-config.json
   "api-keystore-enabled": false,
   "api-admin-enabled": false,
   "api-ipcs-enabled": false,
+  "api-keystore-enabled": false,
   "coreth-config": {
-    "snowman-api-enabled": true,
-    "coreth-admin-api-enabled": true,
+    "snowman-api-enabled": false,
+    "coreth-admin-api-enabled": false,
     "net-api-enabled": true,
     "rpc-gas-cap": 2500000000,
     "rpc-tx-fee-cap": 100,
     "eth-api-enabled": true,
-    "personal-api-enabled": true,
+    "personal-api-enabled": false,
     "tx-pool-api-enabled": true,
     "debug-api-enabled": true,
     "web3-api-enabled": true
@@ -38,13 +39,6 @@ cat <<EOF > /app/rosetta-config.json
   "genesis_block_hash": "$AVALANCHE_GENESIS_HASH"
 }
 EOF
-
-# Configure prefunded account for Rosetta Construction check if running Testnet
-if [ "$AVALANCHE_CHAIN" -eq "43113" ]; then
-  if ([ -n "$ROSETTA_PREFUNDED_ACCOUNT_KEY" ] && [ -n "$ROSETTA_PREFUNDED_ACCOUNT_ADDRESS" ]); then
-    cat <<< $(/app/jq ".construction.prefunded_accounts += [{\"privkey\": \"$ROSETTA_PREFUNDED_ACCOUNT_KEY\",\"account_identifier\": {\"address\": \"$ROSETTA_PREFUNDED_ACCOUNT_ADDRESS\"},\"curve_type\": \"secp256k1\",\"currency\": {\"symbol\": \"AVAX\",\"decimals\": 18}}]" ./rosetta-cli-conf/testnet/config.json) > ./rosetta-cli-conf/testnet/config.json
-  fi
-fi
 
 # Execute a custom command instead of default on
 if [ -n "$@" ]; then

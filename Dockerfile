@@ -43,8 +43,6 @@ RUN \
 # ------------------------------------------------------------------------------
 FROM ubuntu:18.04
 
-ARG ROSETTA_CLI_VERSION
-
 # Install dependencies
 RUN apt-get update -y && \
     apt-get install -y wget
