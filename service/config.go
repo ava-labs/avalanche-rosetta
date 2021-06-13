@@ -13,6 +13,7 @@ type Config struct {
 	ChainID          *big.Int
 	NetworkID        *types.NetworkIdentifier
 	GenesisBlockHash string
+	AvaxAssetID      string
 }
 
 const (

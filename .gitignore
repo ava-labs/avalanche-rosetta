@@ -17,3 +17,4 @@ config/*.json
 bin/*
 rosetta-data
 .avalanchego
+*.swp

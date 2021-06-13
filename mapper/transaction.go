@@ -77,7 +77,7 @@ func Transaction(
 	}, nil
 }
 
-func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error) {
+func CrossChainTransactions(AvaxAssetID string, block *ethtypes.Block) ([]*types.Transaction, error) {
 	transactions := []*types.Transaction{}
 
 	extra := block.ExtraData()
@@ -91,18 +91,28 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 	}
 
 	var idx int64
-	var txID string
-
 	ops := []*types.Operation{}
 
 	switch t := tx.UnsignedTx.(type) {
 	case *evm.UnsignedImportTx:
+		// Create de-duplicated list of input
+		// transaction IDs
+		mTxIDs := map[string]struct{}{}
 		for _, in := range t.ImportedInputs {
-			txID = in.TxID.String()
-			break
+			mTxIDs[in.TxID.String()] = struct{}{}
+		}
+		i := 0
+		txIDs := make([]string, len(mTxIDs))
+		for txID := range mTxIDs {
+			txIDs[i] = txID
+			i++
 		}
 
 		for _, out := range t.Outs {
+			if out.AssetID.String() != AvaxAssetID {
+				continue
+			}
+
 			op := &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: idx,
@@ -113,13 +123,11 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 					Address: out.Address.Hex(),
 				},
 				Amount: &types.Amount{
-					Value: new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), x2crate).String(),
-					Currency: &types.Currency{
-						Symbol: out.AssetID.String(),
-					},
+					Value:    new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), x2crate).String(),
+					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
-					"tx_id":         txID,
+					"tx_ids":        txIDs,
 					"blockchain_id": t.BlockchainID.String(),
 					"network_id":    t.NetworkID,
 					"source_chain":  t.SourceChain.String(),
@@ -132,6 +140,10 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 		}
 	case *evm.UnsignedExportTx:
 		for _, in := range t.Ins {
+			if in.AssetID.String() != AvaxAssetID {
+				continue
+			}
+
 			op := &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: idx,
@@ -142,10 +154,8 @@ func CrossChainTransactions(block *ethtypes.Block) ([]*types.Transaction, error)
 					Address: in.Address.Hex(),
 				},
 				Amount: &types.Amount{
-					Value: new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(x2crate)).String(),
-					Currency: &types.Currency{
-						Symbol: in.AssetID.String(),
-					},
+					Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(x2crate)).String(),
+					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
 					"blockchain_id":     t.BlockchainID.String(),

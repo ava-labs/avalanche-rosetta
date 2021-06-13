@@ -10,6 +10,10 @@ import (
 	"github.com/gorilla/rpc/v2/json2"
 )
 
+const (
+	defaultTimeout = 180 * time.Second
+)
+
 // RPC is a generic client
 type RPC struct {
 	endpoint string
@@ -21,7 +25,7 @@ func Dial(endpoint string) *RPC {
 	return &RPC{
 		endpoint: endpoint,
 		client: &http.Client{
-			Timeout: time.Second * 10,
+			Timeout: defaultTimeout,
 		},
 	}
 }

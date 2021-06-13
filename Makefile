@@ -10,7 +10,7 @@ DOCKER_ORG          ?= figmentnetworks
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.3.0
+AVALANCHE_VERSION   ?= v1.4.7
 ROSETTA_CLI_VERSION ?= 0.6.7
 
 build:
@@ -50,7 +50,7 @@ docker-push:
 # Start the Testnet in ONLINE mode
 run-testnet:
 	docker run \
-		-d \
+		--rm \
 		-v ${WORKDIR}/.avalanchego:/root/.avalanchego \
 		-e AVALANCHE_NETWORK=Fuji \
 		-e AVALANCHE_CHAIN=43113 \
@@ -60,6 +60,7 @@ run-testnet:
 		--name avalanche-testnet \
 		-p 8080:8080 \
 		-p 9650:9650 \
+		-p 9651:9651 \
 		-it \
 		${DOCKER_TAG}
 

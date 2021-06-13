@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Build avalanche
 # ------------------------------------------------------------------------------
-FROM golang:1.15 AS avalanche
+FROM golang:1.16 AS avalanche
 
 ARG AVALANCHE_VERSION
 
@@ -16,11 +16,12 @@ RUN git checkout $AVALANCHE_VERSION && \
 # ------------------------------------------------------------------------------
 # Build avalanche rosetta
 # ------------------------------------------------------------------------------
-FROM golang:1.15 AS rosetta
+FROM golang:1.16 AS rosetta
 
 ARG ROSETTA_VERSION
 
-RUN git clone https://github.com/figment-networks/avalanche-rosetta.git \
+# RUN git clone https://github.com/figment-networks/avalanche-rosetta.git \
+COPY . \
   /go/src/github.com/figment-networks/avalanche-rosetta
 
 WORKDIR /go/src/github.com/figment-networks/avalanche-rosetta
@@ -50,15 +51,26 @@ RUN apt-get update -y && \
 
 WORKDIR /app
 
-# Install avalanche binaries
+# Install avalanche daemon
 COPY --from=avalanche \
   /go/src/github.com/ava-labs/avalanchego/build/avalanchego \
   /app/avalanchego
 
-# Install plugins
+# Install pre-upgrade binaries
 COPY --from=avalanche \
-  /go/src/github.com/ava-labs/avalanchego/build/plugins/* \
-  /app/plugins/
+  /go/src/github.com/ava-labs/avalanchego/build/avalanchego-preupgrade/avalanchego-process \
+  /app/avalanchego-preupgrade/avalanchego-process
+COPY --from=avalanche \
+  /go/src/github.com/ava-labs/avalanchego/build/avalanchego-preupgrade/plugins/evm \
+  /app/avalanchego-preupgrade/plugins/evm
+
+# Install latest binaries
+COPY --from=avalanche \
+  /go/src/github.com/ava-labs/avalanchego/build/avalanchego-latest/avalanchego-process \
+  /app/avalanchego-latest/avalanchego-process
+COPY --from=avalanche \
+  /go/src/github.com/ava-labs/avalanchego/build/avalanchego-latest/plugins/evm \
+  /app/avalanchego-latest/plugins/evm
 
 # Install rosetta server
 COPY --from=rosetta \
@@ -74,22 +86,6 @@ COPY --from=rosetta \
 COPY --from=rosetta \
   /go/src/github.com/figment-networks/avalanche-rosetta/docker/entrypoint.sh \
   /app/entrypoint.sh
-
-# Install jq
-RUN wget -q https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
-    chmod +x jq-linux64 && \
-    mv jq-linux64 /app/jq
-
-# Install rosetta CLI
-RUN wget -q https://github.com/coinbase/rosetta-cli/releases/download/v$ROSETTA_CLI_VERSION/rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \
-    tar -xzf rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64.tar.gz && \
-    mv rosetta-cli-$ROSETTA_CLI_VERSION-linux-amd64 rosetta-cli && \
-    rm *.tar.gz
-
-# Copy rosetta CLI configuration
-COPY --from=rosetta \
-  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-cli-conf \
-  /app/rosetta-cli-conf
 
 EXPOSE 9650
 EXPOSE 8080

@@ -73,6 +73,16 @@ func main() {
 		cfg.ChainID = chainID.Int64()
 	}
 
+	var assetID string
+	switch cfg.ChainID {
+	case mapper.MainnetChainID:
+		assetID = mapper.MainnetAssetID
+	case mapper.FujiChainID:
+		assetID = mapper.FujiAssetID
+	default:
+		log.Fatal("invalid ChainID:", cfg.ChainID)
+	}
+
 	if cfg.NetworkName == "" {
 		log.Println("network name is not provided, fetching from rpc...")
 
@@ -108,6 +118,7 @@ func main() {
 		ChainID:          big.NewInt(cfg.ChainID),
 		NetworkID:        network,
 		GenesisBlockHash: cfg.GenesisBlockHash,
+		AvaxAssetID:      assetID,
 	}
 
 	handler := configureRouter(serviceConfig, asserter, apiClient)

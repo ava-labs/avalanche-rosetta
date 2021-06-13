@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/big"
 	"strings"
-	"sync"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -22,8 +21,6 @@ type BlockService struct {
 	client client.Client
 
 	genesisBlock *types.Block
-	assets       map[string]*client.Asset
-	assetsLock   sync.Mutex
 }
 
 // NewBlockService returns a new block servicer
@@ -31,8 +28,6 @@ func NewBlockService(config *Config, rcpClient client.Client) server.BlockAPISer
 	return &BlockService{
 		config:       config,
 		client:       rcpClient,
-		assets:       map[string]*client.Asset{},
-		assetsLock:   sync.Mutex{},
 		genesisBlock: makeGenesisBlock(config.GenesisBlockHash),
 	}
 }
@@ -192,7 +187,7 @@ func (s *BlockService) fetchTransaction(ctx context.Context, tx *corethTypes.Tra
 func (s *BlockService) fetchCrossChainTransactions(ctx context.Context, block *corethTypes.Block) ([]*types.Transaction, *types.Error) {
 	result := []*types.Transaction{}
 
-	crossTxs, err := mapper.CrossChainTransactions(block)
+	crossTxs, err := mapper.CrossChainTransactions(s.config.AvaxAssetID, block)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
@@ -203,45 +198,10 @@ func (s *BlockService) fetchCrossChainTransactions(ctx context.Context, block *c
 			continue
 		}
 
-		selectedOps := []*types.Operation{}
-		for _, op := range tx.Operations {
-			// Determine currency symbol from the tx asset ID
-			asset, err := s.lookupAsset(ctx, op.Amount.Currency.Symbol)
-			if err != nil {
-				return nil, wrapError(errClientError, err)
-			}
-
-			// Select operations with AVAX currency
-			if asset.Symbol == mapper.AvaxCurrency.Symbol {
-				op.Amount.Currency = mapper.AvaxCurrency
-				selectedOps = append(selectedOps, op)
-			}
-		}
-
-		if len(selectedOps) > 0 {
-			tx.Operations = selectedOps
-			result = append(result, tx)
-		}
+		result = append(result, tx)
 	}
 
 	return result, nil
-}
-
-func (s *BlockService) lookupAsset(ctx context.Context, id string) (*client.Asset, error) {
-	if asset, ok := s.assets[id]; ok {
-		return asset, nil
-	}
-
-	asset, err := s.client.AssetDescription(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	s.assetsLock.Lock()
-	s.assets[id] = asset
-	s.assetsLock.Unlock()
-
-	return asset, nil
 }
 
 func (s *BlockService) isGenesisBlockRequest(id *types.PartialBlockIdentifier) bool {
