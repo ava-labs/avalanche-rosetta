@@ -93,7 +93,7 @@ func (s *NetworkService) NetworkStatus(
 	peers := mapper.Peers(infoPeers)
 
 	return &types.NetworkStatusResponse{
-		CurrentBlockTimestamp: int64(blockHeader.Time * 1000),
+		CurrentBlockTimestamp: int64(blockHeader.Time * seconds2milliseconds),
 		CurrentBlockIdentifier: &types.BlockIdentifier{
 			Index: blockHeader.Number.Int64(),
 			Hash:  blockHeader.Hash().String(),

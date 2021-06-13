@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	x2crate = big.NewInt(1000000000)
+	x2crate = big.NewInt(1000000000) //nolint:gomnd
 )
 
 func Transaction(

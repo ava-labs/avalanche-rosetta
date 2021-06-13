@@ -20,17 +20,17 @@ var (
 	}
 
 	// General errors
-	errNotReady           = makeError(1, "Node is not ready", true)
-	errNotImplemented     = makeError(2, "Endpoint is not implemented", false)
-	errNotSupported       = makeError(3, "Endpoint is not supported", false)
-	errUnavailableOffline = makeError(4, "Endpoint is not available offline", false)
-	errInternalError      = makeError(5, "Internal server error", true)
-	errInvalidInput       = makeError(6, "Invalid input", false)
-	errClientError        = makeError(7, "Client error", true)
-	errBlockInvalidInput  = makeError(8, "Block number or hash is required", false)
-	errBlockNotFound      = makeError(9, "Block was not found", false)
-	errCallInvalidMethod  = makeError(10, "Invalid call method", false)
-	errCallInvalidParams  = makeError(11, "invalid call params", false)
+	errNotReady           = makeError(1, "Node is not ready", true)                  //nolint:gomnd
+	errNotImplemented     = makeError(2, "Endpoint is not implemented", false)       //nolint:gomnd
+	errNotSupported       = makeError(3, "Endpoint is not supported", false)         //nolint:gomnd
+	errUnavailableOffline = makeError(4, "Endpoint is not available offline", false) //nolint:gomnd
+	errInternalError      = makeError(5, "Internal server error", true)              //nolint:gomnd
+	errInvalidInput       = makeError(6, "Invalid input", false)                     //nolint:gomnd
+	errClientError        = makeError(7, "Client error", true)                       //nolint:gomnd
+	errBlockInvalidInput  = makeError(8, "Block number or hash is required", false)  //nolint:gomnd
+	errBlockNotFound      = makeError(9, "Block was not found", true)                //nolint:gomnd
+	errCallInvalidMethod  = makeError(10, "Invalid call method", false)              //nolint:gomnd
+	errCallInvalidParams  = makeError(11, "invalid call params", false)              //nolint:gomnd
 )
 
 func makeError(code int32, message string, retriable bool) *types.Error {

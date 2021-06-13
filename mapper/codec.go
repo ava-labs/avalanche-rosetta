@@ -2,30 +2,28 @@ package mapper
 
 import (
 	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/codec/hierarchycodec"
 	"github.com/ava-labs/avalanchego/codec/linearcodec"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/coreth/plugin/evm"
 )
 
-var (
+const (
 	preApricotCodecVersion uint16 = 0
-	apricotCodecVersion    uint16 = 1
+	codecRegistrationSkip  int    = 3
+)
 
+var (
 	codecManager codec.Manager
 )
 
 func init() {
 	codecManager = codec.NewDefaultManager()
+
 	errs := wrappers.Errs{}
-
 	preApricotCodec := initPreApricotCodec(&errs)
-	apricotCodec := initApricotCodec(&errs)
-
 	errs.Add(
 		codecManager.RegisterCodec(preApricotCodecVersion, preApricotCodec),
-		codecManager.RegisterCodec(apricotCodecVersion, apricotCodec),
 	)
 
 	if errs.Errored() {
@@ -41,7 +39,7 @@ func initPreApricotCodec(errs *wrappers.Errs) linearcodec.Codec {
 		c.RegisterType(&evm.UnsignedExportTx{}),
 	)
 
-	c.SkipRegistrations(3)
+	c.SkipRegistrations(codecRegistrationSkip)
 
 	errs.Add(
 		c.RegisterType(&secp256k1fx.TransferInput{}),
@@ -54,9 +52,4 @@ func initPreApricotCodec(errs *wrappers.Errs) linearcodec.Codec {
 	)
 
 	return c
-}
-
-// TODO: fill in type registration when C-chain implements apricot codec
-func initApricotCodec(errs *wrappers.Errs) hierarchycodec.Codec {
-	return hierarchycodec.NewDefault()
 }

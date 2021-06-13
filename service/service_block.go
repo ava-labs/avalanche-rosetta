@@ -97,7 +97,7 @@ func (s *BlockService) Block(
 		return nil, terr
 	}
 
-	crosstx, terr := s.fetchCrossChainTransactions(ctx, block)
+	crosstx, terr := s.parseCrossChainTransactions(block)
 	if terr != nil {
 		return nil, terr
 	}
@@ -106,7 +106,7 @@ func (s *BlockService) Block(
 		Block: &types.Block{
 			BlockIdentifier:       blockIdentifier,
 			ParentBlockIdentifier: parentBlockIdentifier,
-			Timestamp:             int64(block.Time() * 1000),
+			Timestamp:             int64(block.Time() * seconds2milliseconds),
 			Transactions:          append(transactions, crosstx...),
 			Metadata:              mapper.BlockMetadata(block),
 		},
@@ -195,8 +195,7 @@ func (s *BlockService) fetchTransaction(
 	return transaction, nil
 }
 
-func (s *BlockService) fetchCrossChainTransactions(
-	ctx context.Context,
+func (s *BlockService) parseCrossChainTransactions(
 	block *corethTypes.Block,
 ) ([]*types.Transaction, *types.Error) {
 	result := []*types.Transaction{}

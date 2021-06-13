@@ -87,12 +87,10 @@ func startCommand(ctx context.Context, path string, opts ...string) (err error) 
 	cmd.Stderr = os.Stderr
 
 	go func() {
-		select {
-		case <-ctx.Done():
-			if cmd.Process != nil {
-				if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
-					panic(err)
-				}
+		<-ctx.Done()
+		if cmd.Process != nil {
+			if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+				panic(err)
 			}
 		}
 	}()

@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	transferGasLimit = uint64(21000)
+	transferGasLimit = uint64(21000) //nolint:gomnd
+	genesisTimestamp = 946713601000  // min allowable timestamp
 )
 
 type unsignedTx struct {
@@ -43,7 +44,7 @@ func makeGenesisBlock(hash string) *types.Block {
 			Index: 0,
 			Hash:  hash,
 		},
-		Timestamp: 946713601000,
+		Timestamp: genesisTimestamp,
 	}
 }
 

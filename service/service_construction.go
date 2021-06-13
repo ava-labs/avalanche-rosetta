@@ -23,7 +23,7 @@ type ConstructionService struct {
 	client client.Client
 }
 
-// NewConstructionService returns a new contruction servicer
+// NewConstructionService returns a new construction servicer
 func NewConstructionService(config *Config, client client.Client) server.ConstructionAPIServicer {
 	return &ConstructionService{
 		config: config,
