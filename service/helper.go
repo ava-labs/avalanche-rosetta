@@ -7,14 +7,15 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/figment-networks/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/client"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 const (
-	transferGasLimit = uint64(21000)
+	transferGasLimit = uint64(21000) //nolint:gomnd
+	genesisTimestamp = 946713601000  // min allowable timestamp
 )
 
 type unsignedTx struct {
@@ -43,11 +44,14 @@ func makeGenesisBlock(hash string) *types.Block {
 			Index: 0,
 			Hash:  hash,
 		},
-		Timestamp: 946713601000,
+		Timestamp: genesisTimestamp,
 	}
 }
 
-func blockHeaderFromInput(c client.Client, input *types.PartialBlockIdentifier) (*ethtypes.Header, *types.Error) {
+func blockHeaderFromInput(
+	c client.Client,
+	input *types.PartialBlockIdentifier,
+) (*ethtypes.Header, *types.Error) {
 	var (
 		header *ethtypes.Header
 		err    error
@@ -82,7 +86,11 @@ func txFromInput(input string) (*ethtypes.Transaction, error) {
 	return tx, nil
 }
 
-func txFromMatches(matches []*parser.Match, kv map[string]interface{}, chainID *big.Int) (*ethtypes.Transaction, *unsignedTx, error) {
+func txFromMatches(
+	matches []*parser.Match,
+	kv map[string]interface{},
+	chainID *big.Int,
+) (*ethtypes.Transaction, *unsignedTx, error) {
 	var metadata txMetadata
 	if err := unmarshalJSONMap(kv, &metadata); err != nil {
 		return nil, nil, err

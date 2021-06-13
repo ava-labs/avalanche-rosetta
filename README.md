@@ -1,3 +1,9 @@
+<div align="center">
+  <img src="resources/AvalancheLogoRed.png?raw=true">
+</div>
+
+---
+
 # Avalanche Rosetta
 
 [Rosetta][1] server implementation for [Avalanche][2] C-Chain.
@@ -10,7 +16,7 @@ In order to run the Avalanche Rosetta server you will need access to [Avalanche]
 services via RPC. More info in available APIs found [here][4].
 
 See AvalancheGo documentation on how to run the chain node locally. If you don't run
-the Avalanche node yourself you might use a hosted service like [Figment DataHub][5].
+the Avalanche node yourself you might use the [hosted API provided by Ava Labs][5].
 
 ## Installation
 
@@ -123,28 +129,21 @@ make run-testnet
 Wait until the node is done bootstrapping, then start the data check:
 
 ```bash
-rosetta-cli check:data --configuration-file=./rosetta-cli-conf/testnet/config.json
+make check-testnet-data
 ```
 
 Run the construction check:
 
 ```bash
-rosetta-cli check:construction --configuration-file=./rosetta-cli-conf/testnet/config.json
-```
-
-Alternatively, you can execute the checks in the node docker container:
-
-```bash
-make check-testnet-data
 make check-testnet-construction
 ```
 
 ## License
 
-Apache License v2.0
+BSD 3-Clause
 
 [1]: https://www.rosetta-api.org/
 [2]: https://www.avalabs.org/
 [3]: https://github.com/ava-labs/avalanchego
 [4]: https://docs.avax.network/build/avalanchego-apis
-[5]: https://figment.io/datahub/
+[5]: https://docs.avax.network/build/tools/public-api

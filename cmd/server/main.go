@@ -13,9 +13,9 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/figment-networks/avalanche-rosetta/client"
-	"github.com/figment-networks/avalanche-rosetta/mapper"
-	"github.com/figment-networks/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (
@@ -73,6 +73,16 @@ func main() {
 		cfg.ChainID = chainID.Int64()
 	}
 
+	var assetID string
+	switch cfg.ChainID {
+	case mapper.MainnetChainID:
+		assetID = mapper.MainnetAssetID
+	case mapper.FujiChainID:
+		assetID = mapper.FujiAssetID
+	default:
+		log.Fatal("invalid ChainID:", cfg.ChainID)
+	}
+
 	if cfg.NetworkName == "" {
 		log.Println("network name is not provided, fetching from rpc...")
 
@@ -108,6 +118,7 @@ func main() {
 		ChainID:          big.NewInt(cfg.ChainID),
 		NetworkID:        network,
 		GenesisBlockHash: cfg.GenesisBlockHash,
+		AvaxAssetID:      assetID,
 	}
 
 	handler := configureRouter(serviceConfig, asserter, apiClient)
@@ -118,7 +129,13 @@ func main() {
 
 	router := server.CorsMiddleware(handler)
 
-	log.Printf(`using avax (chain=%q chainid="%d" network=%q) rpc endpoint: %v`, service.BlockchainName, cfg.ChainID, cfg.NetworkName, cfg.RPCEndpoint)
+	log.Printf(
+		`using avax (chain=%q chainid="%d" network=%q) rpc endpoint: %v`,
+		service.BlockchainName,
+		cfg.ChainID,
+		cfg.NetworkName,
+		cfg.RPCEndpoint,
+	)
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
 	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))

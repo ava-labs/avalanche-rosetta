@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	tracerTimeout = "10s"
+	tracerTimeout = "180s"
 )
 
 // EthClient provides access to Coreth API

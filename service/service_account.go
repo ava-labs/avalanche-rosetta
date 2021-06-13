@@ -8,8 +8,8 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/figment-networks/avalanche-rosetta/client"
-	"github.com/figment-networks/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 // AccountService implements the /account/* endpoints
@@ -27,7 +27,10 @@ func NewAccountService(config *Config, client client.Client) server.AccountAPISe
 }
 
 // AccountBalance implements the /account/balance endpoint
-func (s AccountService) AccountBalance(ctx context.Context, req *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
+func (s AccountService) AccountBalance(
+	ctx context.Context,
+	req *types.AccountBalanceRequest,
+) (*types.AccountBalanceResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
@@ -61,7 +64,10 @@ func (s AccountService) AccountBalance(ctx context.Context, req *types.AccountBa
 }
 
 // AccountCoins implements the /account/coins endpoint
-func (s AccountService) AccountCoins(ctx context.Context, req *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error) {
+func (s AccountService) AccountCoins(
+	ctx context.Context,
+	req *types.AccountCoinsRequest,
+) (*types.AccountCoinsResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}

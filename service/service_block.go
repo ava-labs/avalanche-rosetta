@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/big"
 	"strings"
-	"sync"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -12,8 +11,8 @@ import (
 	corethTypes "github.com/ava-labs/coreth/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/figment-networks/avalanche-rosetta/client"
-	"github.com/figment-networks/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 // BlockService implements the /block/* endpoints
@@ -22,8 +21,6 @@ type BlockService struct {
 	client client.Client
 
 	genesisBlock *types.Block
-	assets       map[string]*client.Asset
-	assetsLock   sync.Mutex
 }
 
 // NewBlockService returns a new block servicer
@@ -31,14 +28,15 @@ func NewBlockService(config *Config, rcpClient client.Client) server.BlockAPISer
 	return &BlockService{
 		config:       config,
 		client:       rcpClient,
-		assets:       map[string]*client.Asset{},
-		assetsLock:   sync.Mutex{},
 		genesisBlock: makeGenesisBlock(config.GenesisBlockHash),
 	}
 }
 
 // Block implements the /block endpoint
-func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (*types.BlockResponse, *types.Error) {
+func (s *BlockService) Block(
+	ctx context.Context,
+	request *types.BlockRequest,
+) (*types.BlockResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
@@ -65,10 +63,8 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 
 	if hash := request.BlockIdentifier.Hash; hash != nil {
 		block, err = s.client.BlockByHash(context.Background(), ethcommon.HexToHash(*hash))
-	} else {
-		if index := request.BlockIdentifier.Index; block == nil && index != nil {
-			block, err = s.client.BlockByNumber(context.Background(), big.NewInt(*index))
-		}
+	} else if index := request.BlockIdentifier.Index; block == nil && index != nil {
+		block, err = s.client.BlockByNumber(context.Background(), big.NewInt(*index))
 	}
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -101,7 +97,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		return nil, terr
 	}
 
-	crosstx, terr := s.fetchCrossChainTransactions(ctx, block)
+	crosstx, terr := s.parseCrossChainTransactions(block)
 	if terr != nil {
 		return nil, terr
 	}
@@ -110,7 +106,7 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 		Block: &types.Block{
 			BlockIdentifier:       blockIdentifier,
 			ParentBlockIdentifier: parentBlockIdentifier,
-			Timestamp:             int64(block.Time() * 1000),
+			Timestamp:             int64(block.Time() * seconds2milliseconds),
 			Transactions:          append(transactions, crosstx...),
 			Metadata:              mapper.BlockMetadata(block),
 		},
@@ -118,7 +114,10 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 }
 
 // BlockTransaction implements the /block/transaction endpoint.
-func (s *BlockService) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
+func (s *BlockService) BlockTransaction(
+	ctx context.Context,
+	request *types.BlockTransactionRequest,
+) (*types.BlockTransactionResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
@@ -151,7 +150,10 @@ func (s *BlockService) BlockTransaction(ctx context.Context, request *types.Bloc
 	}, nil
 }
 
-func (s *BlockService) fetchTransactions(ctx context.Context, block *corethTypes.Block) ([]*types.Transaction, *types.Error) {
+func (s *BlockService) fetchTransactions(
+	ctx context.Context,
+	block *corethTypes.Block,
+) ([]*types.Transaction, *types.Error) {
 	transactions := []*types.Transaction{}
 
 	for _, tx := range block.Transactions() {
@@ -165,7 +167,11 @@ func (s *BlockService) fetchTransactions(ctx context.Context, block *corethTypes
 	return transactions, nil
 }
 
-func (s *BlockService) fetchTransaction(ctx context.Context, tx *corethTypes.Transaction, header *corethTypes.Header) (*types.Transaction, *types.Error) {
+func (s *BlockService) fetchTransaction(
+	ctx context.Context,
+	tx *corethTypes.Transaction,
+	header *corethTypes.Header,
+) (*types.Transaction, *types.Error) {
 	msg, err := tx.AsMessage(s.config.Signer())
 	if err != nil {
 		return nil, wrapError(errClientError, err)
@@ -189,10 +195,12 @@ func (s *BlockService) fetchTransaction(ctx context.Context, tx *corethTypes.Tra
 	return transaction, nil
 }
 
-func (s *BlockService) fetchCrossChainTransactions(ctx context.Context, block *corethTypes.Block) ([]*types.Transaction, *types.Error) {
+func (s *BlockService) parseCrossChainTransactions(
+	block *corethTypes.Block,
+) ([]*types.Transaction, *types.Error) {
 	result := []*types.Transaction{}
 
-	crossTxs, err := mapper.CrossChainTransactions(block)
+	crossTxs, err := mapper.CrossChainTransactions(s.config.AvaxAssetID, block)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
@@ -203,45 +211,10 @@ func (s *BlockService) fetchCrossChainTransactions(ctx context.Context, block *c
 			continue
 		}
 
-		selectedOps := []*types.Operation{}
-		for _, op := range tx.Operations {
-			// Determine currency symbol from the tx asset ID
-			asset, err := s.lookupAsset(ctx, op.Amount.Currency.Symbol)
-			if err != nil {
-				return nil, wrapError(errClientError, err)
-			}
-
-			// Select operations with AVAX currency
-			if asset.Symbol == mapper.AvaxCurrency.Symbol {
-				op.Amount.Currency = mapper.AvaxCurrency
-				selectedOps = append(selectedOps, op)
-			}
-		}
-
-		if len(selectedOps) > 0 {
-			tx.Operations = selectedOps
-			result = append(result, tx)
-		}
+		result = append(result, tx)
 	}
 
 	return result, nil
-}
-
-func (s *BlockService) lookupAsset(ctx context.Context, id string) (*client.Asset, error) {
-	if asset, ok := s.assets[id]; ok {
-		return asset, nil
-	}
-
-	asset, err := s.client.AssetDescription(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	s.assetsLock.Lock()
-	s.assets[id] = asset
-	s.assetsLock.Unlock()
-
-	return asset, nil
 }
 
 func (s *BlockService) isGenesisBlockRequest(id *types.PartialBlockIdentifier) bool {

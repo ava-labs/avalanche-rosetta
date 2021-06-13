@@ -7,7 +7,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/figment-networks/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/client"
 )
 
 // CallService implements /call/* endpoints
@@ -31,7 +31,10 @@ func NewCallService(config *Config, client client.Client) server.CallAPIServicer
 }
 
 // Call implements the /call endpoint.
-func (s CallService) Call(ctx context.Context, req *types.CallRequest) (*types.CallResponse, *types.Error) {
+func (s CallService) Call(
+	ctx context.Context,
+	req *types.CallRequest,
+) (*types.CallResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
 		return nil, errUnavailableOffline
 	}
@@ -44,7 +47,10 @@ func (s CallService) Call(ctx context.Context, req *types.CallRequest) (*types.C
 	}
 }
 
-func (s CallService) callGetTransactionReceipt(ctx context.Context, req *types.CallRequest) (*types.CallResponse, *types.Error) {
+func (s CallService) callGetTransactionReceipt(
+	ctx context.Context,
+	req *types.CallRequest,
+) (*types.CallResponse, *types.Error) {
 	var input GetTransactionReceiptInput
 	if err := types.UnmarshalMap(req.Parameters, &input); err != nil {
 		return nil, wrapError(errCallInvalidParams, err)
