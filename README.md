@@ -1,3 +1,9 @@
+<div align="center">
+  <img src="resources/AvalancheLogoRed.png?raw=true">
+</div>
+
+---
+
 # Avalanche Rosetta
 
 [Rosetta][1] server implementation for [Avalanche][2] C-Chain.
