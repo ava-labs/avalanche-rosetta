@@ -13,7 +13,7 @@
   "log_configuration": false,
   "compression_disabled": false,
   "memory_limit_disabled": false,
-  "data_directory": "rosetta-data",
+  "data_directory": ".rosetta-data",
   "construction": null,
   "data": {
     "active_reconciliation_concurrency": 5,
