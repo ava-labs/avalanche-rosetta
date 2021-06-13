@@ -13,8 +13,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/figment-networks/avalanche-rosetta/client"
-	"github.com/figment-networks/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 // ConstructionService implements /construction/* endpoints

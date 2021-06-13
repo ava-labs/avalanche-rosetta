@@ -5,7 +5,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/figment-networks/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (

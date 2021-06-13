@@ -10,7 +10,7 @@ import (
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/figment-networks/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/client"
 )
 
 var (

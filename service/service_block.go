@@ -11,8 +11,8 @@ import (
 	corethTypes "github.com/ava-labs/coreth/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/figment-networks/avalanche-rosetta/client"
-	"github.com/figment-networks/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 // BlockService implements the /block/* endpoints

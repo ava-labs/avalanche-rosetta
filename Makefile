@@ -32,13 +32,6 @@ docker-build:
 		-f Dockerfile \
 		.
 
-docker-build-standalone:
-	docker build \
-		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
-		-t ${DOCKER_ORG}/${PROJECT}-server:${DOCKER_LABEL} \
-		-f Dockerfile.rosetta \
-		.
-
 # Start the Testnet in ONLINE mode
 run-testnet:
 	docker run \

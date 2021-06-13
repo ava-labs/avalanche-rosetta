@@ -20,11 +20,11 @@ FROM golang:1.16 AS rosetta
 
 ARG ROSETTA_VERSION
 
-# RUN git clone https://github.com/figment-networks/avalanche-rosetta.git \
+# RUN git clone https://github.com/ava-labs/avalanche-rosetta.git \
 COPY . \
-  /go/src/github.com/figment-networks/avalanche-rosetta
+  /go/src/github.com/ava-labs/avalanche-rosetta
 
-WORKDIR /go/src/github.com/figment-networks/avalanche-rosetta
+WORKDIR /go/src/github.com/ava-labs/avalanche-rosetta
 
 ENV CGO_ENABLED=1
 ENV GOARCH=amd64
@@ -74,20 +74,21 @@ COPY --from=avalanche \
 
 # Install rosetta server
 COPY --from=rosetta \
-  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-server \
+  /go/src/github.com/ava-labs/avalanche-rosetta/rosetta-server \
   /app/rosetta-server
 
 # Install rosetta runner
 COPY --from=rosetta \
-  /go/src/github.com/figment-networks/avalanche-rosetta/rosetta-runner \
+  /go/src/github.com/ava-labs/avalanche-rosetta/rosetta-runner \
   /app/rosetta-runner
 
 # Install service start script
 COPY --from=rosetta \
-  /go/src/github.com/figment-networks/avalanche-rosetta/docker/entrypoint.sh \
+  /go/src/github.com/ava-labs/avalanche-rosetta/docker/entrypoint.sh \
   /app/entrypoint.sh
 
 EXPOSE 9650
+EXPOSE 9651
 EXPOSE 8080
 
 ENTRYPOINT ["/app/entrypoint.sh"]

@@ -7,7 +7,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/figment-networks/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/client"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
