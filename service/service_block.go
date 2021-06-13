@@ -60,10 +60,8 @@ func (s *BlockService) Block(ctx context.Context, request *types.BlockRequest) (
 
 	if hash := request.BlockIdentifier.Hash; hash != nil {
 		block, err = s.client.BlockByHash(context.Background(), ethcommon.HexToHash(*hash))
-	} else {
-		if index := request.BlockIdentifier.Index; block == nil && index != nil {
-			block, err = s.client.BlockByNumber(context.Background(), big.NewInt(*index))
-		}
+	} else if index := request.BlockIdentifier.Index; block == nil && index != nil {
+		block, err = s.client.BlockByNumber(context.Background(), big.NewInt(*index))
 	}
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {

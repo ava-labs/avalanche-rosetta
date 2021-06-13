@@ -23,8 +23,10 @@ func init() {
 	preApricotCodec := initPreApricotCodec(&errs)
 	apricotCodec := initApricotCodec(&errs)
 
-	codecManager.RegisterCodec(preApricotCodecVersion, preApricotCodec)
-	codecManager.RegisterCodec(apricotCodecVersion, apricotCodec)
+	errs.Add(
+		codecManager.RegisterCodec(preApricotCodecVersion, preApricotCodec),
+		codecManager.RegisterCodec(apricotCodecVersion, apricotCodec),
+	)
 
 	if errs.Errored() {
 		panic(errs.Err)

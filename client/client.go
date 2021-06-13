@@ -11,7 +11,6 @@ import (
 const (
 	prefixInfo = "/ext/info"
 	prefixEth  = "/ext/bc/C/rpc"
-	prefixAvm  = "/ext/bc/X"
 )
 
 type Client interface {

@@ -77,7 +77,7 @@ func Transaction(
 	}, nil
 }
 
-func CrossChainTransactions(AvaxAssetID string, block *ethtypes.Block) ([]*types.Transaction, error) {
+func CrossChainTransactions(avaxAssetID string, block *ethtypes.Block) ([]*types.Transaction, error) {
 	transactions := []*types.Transaction{}
 
 	extra := block.ExtraData()
@@ -109,7 +109,7 @@ func CrossChainTransactions(AvaxAssetID string, block *ethtypes.Block) ([]*types
 		}
 
 		for _, out := range t.Outs {
-			if out.AssetID.String() != AvaxAssetID {
+			if out.AssetID.String() != avaxAssetID {
 				continue
 			}
 
@@ -140,7 +140,7 @@ func CrossChainTransactions(AvaxAssetID string, block *ethtypes.Block) ([]*types
 		}
 	case *evm.UnsignedExportTx:
 		for _, in := range t.Ins {
-			if in.AssetID.String() != AvaxAssetID {
+			if in.AssetID.String() != avaxAssetID {
 				continue
 			}
 
@@ -183,7 +183,6 @@ func CrossChainTransactions(AvaxAssetID string, block *ethtypes.Block) ([]*types
 }
 
 // MempoolTransactionsIDs returns a list of transction IDs in the mempool
-// TODO: is not really needed but included for API completion
 func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.TransactionIdentifier {
 	result := []*types.TransactionIdentifier{}
 
@@ -201,6 +200,7 @@ func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.Transaction
 	return result
 }
 
+// nolint:gocognit
 func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 	var ops []*types.Operation
 	if len(calls) == 0 {

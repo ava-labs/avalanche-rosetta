@@ -12,6 +12,11 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const (
+	online  = "online"
+	offline = "offline"
+)
+
 var (
 	mode            string
 	avalancheBin    string
@@ -21,18 +26,18 @@ var (
 )
 
 func init() {
-	flag.StringVar(&mode, "mode", "online", "Operation mode (online/offline)")
+	flag.StringVar(&mode, "mode", online, "Operation mode (online/offline)")
 	flag.StringVar(&avalancheBin, "avalanche-bin", "", "Path to avalanche binary")
 	flag.StringVar(&avalancheConfig, "avalanche-config", "", "Path to avalanche config")
 	flag.StringVar(&rosettaBin, "rosetta-bin", "", "Path to rosetta binary")
 	flag.StringVar(&rosettaConfig, "rosetta-config", "", "Path to rosetta config")
 	flag.Parse()
 
-	if !(mode == "online" || mode == "offline") {
+	if !(mode == online || mode == offline) {
 		log.Fatal("invalid mode: " + mode)
 	}
 
-	if mode == "online" {
+	if mode == online {
 		if avalancheConfig == "" {
 			log.Fatal("avalanche config path is not provided")
 		}
@@ -55,7 +60,7 @@ func main() {
 
 	g, _ := errgroup.WithContext(context.Background())
 
-	if mode == "online" {
+	if mode == online {
 		g.Go(func() error {
 			defer cancel()
 			return startCommand(ctx, avalancheBin, "--config-file", avalancheConfig)
@@ -85,7 +90,9 @@ func startCommand(ctx context.Context, path string, opts ...string) (err error) 
 		select {
 		case <-ctx.Done():
 			if cmd.Process != nil {
-				cmd.Process.Signal(syscall.SIGTERM)
+				if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+					panic(err)
+				}
 			}
 		}
 	}()
