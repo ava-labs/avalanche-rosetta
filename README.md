@@ -8,8 +8,6 @@
 
 [Rosetta][1] server implementation for [Avalanche][2] C-Chain.
 
-*Under active development*
-
 ## Requirements
 
 In order to run the Avalanche Rosetta server you will need access to [Avalanche][3]
