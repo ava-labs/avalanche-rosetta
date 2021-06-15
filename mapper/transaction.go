@@ -83,7 +83,7 @@ func CrossChainTransactions(
 ) ([]*types.Transaction, error) {
 	transactions := []*types.Transaction{}
 
-	extra := block.ExtraData()
+	extra := block.ExtData()
 	if len(extra) == 0 {
 		return transactions, nil
 	}
@@ -96,7 +96,7 @@ func CrossChainTransactions(
 	var idx int64
 	ops := []*types.Operation{}
 
-	switch t := tx.UnsignedTx.(type) {
+	switch t := tx.UnsignedAtomicTx.(type) {
 	case *evm.UnsignedImportTx:
 		// Create de-duplicated list of input
 		// transaction IDs

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ava-labs/coreth/ethclient"
-	"github.com/ethereum/go-ethereum/eth"
+	"github.com/ethereum/go-ethereum/eth/tracers"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 type EthClient struct {
 	*ethclient.Client
 	rpc         *RPC
-	traceConfig *eth.TraceConfig
+	traceConfig *tracers.TraceConfig
 }
 
 // NewEthClient returns a new EVM client
@@ -33,7 +33,7 @@ func NewEthClient(endpoint string) (*EthClient, error) {
 	return &EthClient{
 		Client: c,
 		rpc:    raw,
-		traceConfig: &eth.TraceConfig{
+		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,
 			Tracer:  &jsTracer,
 		},
