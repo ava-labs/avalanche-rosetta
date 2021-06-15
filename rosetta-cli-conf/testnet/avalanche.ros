@@ -17,7 +17,7 @@ request_funds(1){
     loaded_account = find_balance({
       "account_identifier": {{random_account.account_identifier}},
       "minimum_balance":{
-        "value": "9870000000000001",
+        "value": "10000000000000000", // 0.01 AVAX
         "currency": {{currency}}
       }
     });
@@ -47,15 +47,15 @@ transfer(10){
     currency = {"symbol":"AVAX", "decimals":18};
     sender = find_balance({
       "minimum_balance":{
-        "value": "1000000000000000",
+        "value": "10000000000000000", // 0.01 AVAX
         "currency": {{currency}}
       }
     });
 
     // Set the recipient_amount as some value <= sender.balance-max_fee
-    max_fee = "9870000000000000";
+    max_fee = "4725000000000000"; // 0.004725 AVAX
     available_amount = {{sender.balance.value}} - {{max_fee}};
-    recipient_amount = random_number({"minimum": "1", "maximum": "2"});
+    recipient_amount = random_number({"minimum": "1", "maximum": {{available_amount}}});
     print_message({"recipient_amount":{{recipient_amount}}});
 
     // Find recipient and construct operations
