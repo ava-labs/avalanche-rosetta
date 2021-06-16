@@ -7,7 +7,7 @@
   "http_timeout": 500,
   "max_retries": 50,
   "retry_elapsed_time": 0,
-  "max_online_connections": 1000,
+  "max_online_connections": 500,
   "max_sync_concurrency": 50,
   "tip_delay": 3600,
   "log_configuration": false,

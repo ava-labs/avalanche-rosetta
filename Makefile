@@ -1,6 +1,7 @@
 .PHONY: build setup test docker-build \
 				run-testnet run-testnet-offline run-mainnet run-mainnet-offline \
-				check-testnet-data check-testnet-construction check-mainnet-data
+				check-testnet-data check-testnet-construction \
+				check-mainnet-data check-mainnet-construction
 
 PROJECT             ?= avalanche-rosetta
 GIT_COMMIT          ?= $(shell git rev-parse HEAD)
@@ -10,7 +11,7 @@ DOCKER_ORG          ?= avaplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.4.7
+AVALANCHE_VERSION   ?= v1.4.8
 
 build:
 	go build -o ./rosetta-server ./cmd/server
@@ -101,3 +102,7 @@ check-testnet-construction:
 # Perform the Mainnet data check
 check-mainnet-data:
 	rosetta-cli check:data --configuration-file=rosetta-cli-conf/mainnet/config.json
+
+# Perform the Mainnet construction check
+check-mainnet-construction:
+	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/mainnet/config.json

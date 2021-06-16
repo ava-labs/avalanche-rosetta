@@ -121,12 +121,10 @@ func (s *NetworkService) NetworkOptions(
 		return nil, wrapError(errClientError, nodeVersion)
 	}
 
-	middlewareVersion := MiddlewareVersion
-
 	resp := &types.NetworkOptionsResponse{
 		Version: &types.Version{
 			RosettaVersion:    types.RosettaAPIVersion,
-			MiddlewareVersion: &middlewareVersion,
+			MiddlewareVersion: types.String(MiddlewareVersion),
 			NodeVersion:       nodeVersion,
 		},
 		Allow: &types.Allow{
