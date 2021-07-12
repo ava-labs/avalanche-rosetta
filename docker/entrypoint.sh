@@ -13,18 +13,25 @@ cat <<EOF > /app/avalanchego-config.json
   "api-admin-enabled": false,
   "api-ipcs-enabled": false,
   "api-keystore-enabled": false,
-  "coreth-config": {
-    "snowman-api-enabled": false,
-    "coreth-admin-api-enabled": false,
-    "net-api-enabled": true,
-    "rpc-gas-cap": 2500000000,
-    "rpc-tx-fee-cap": 100,
-    "eth-api-enabled": true,
-    "personal-api-enabled": false,
-    "tx-pool-api-enabled": true,
-    "debug-api-enabled": true,
-    "web3-api-enabled": true
-  }
+  "chain-config-dir": "/app/configs"
+}
+EOF
+
+mkdir -p /app/configs/chains/C
+
+cat <<EOF > /app/configs/chains/C/config.json
+{
+  "snowman-api-enabled": false,
+  "coreth-admin-api-enabled": false,
+  "net-api-enabled": true,
+  "rpc-gas-cap": 2500000000,
+  "rpc-tx-fee-cap": 100,
+  "eth-api-enabled": true,
+  "personal-api-enabled": false,
+  "tx-pool-api-enabled": true,
+  "debug-api-enabled": true,
+  "web3-api-enabled": true,
+  "pruning-enabled": false
 }
 EOF
 
