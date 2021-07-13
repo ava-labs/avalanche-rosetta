@@ -4,8 +4,8 @@ go 1.15
 
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
-	github.com/ava-labs/avalanchego v1.4.8
-	github.com/ava-labs/coreth v0.5.4-rc.3
+	github.com/ava-labs/avalanchego v1.4.10
+	github.com/ava-labs/coreth v0.5.5-rc.1
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/decred/dcrd/dcrec/secp256k1/v3 v3.0.0 // indirect
 	github.com/ethereum/go-ethereum v1.10.3
@@ -18,5 +18,4 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	go.opencensus.io v0.22.5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/text v0.3.5 // indirect
 )

@@ -112,20 +112,11 @@ func (s *NetworkService) NetworkOptions(
 	ctx context.Context,
 	request *types.NetworkRequest,
 ) (*types.NetworkOptionsResponse, *types.Error) {
-	if s.config.IsOfflineMode() {
-		return nil, errUnavailableOffline
-	}
-
-	nodeVersion, err := s.client.NodeVersion(ctx)
-	if err != nil {
-		return nil, wrapError(errClientError, nodeVersion)
-	}
-
-	resp := &types.NetworkOptionsResponse{
+	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
 			RosettaVersion:    types.RosettaAPIVersion,
+			NodeVersion:       NodeVersion,
 			MiddlewareVersion: types.String(MiddlewareVersion),
-			NodeVersion:       nodeVersion,
 		},
 		Allow: &types.Allow{
 			OperationStatuses:       mapper.OperationStatuses,
@@ -134,9 +125,7 @@ func (s *NetworkService) NetworkOptions(
 			Errors:                  Errors,
 			HistoricalBalanceLookup: true,
 		},
-	}
-
-	return resp, nil
+	}, nil
 }
 
 func checkBoostrapStatus(ctx context.Context, client client.Client) *types.Error {
