@@ -14,8 +14,8 @@ DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
 AVALANCHE_VERSION   ?= v1.4.10
 
 build:
-	go build -o ./rosetta-server ./cmd/server
-	go build -o ./rosetta-runner ./cmd/runner
+	go build -ldflags "-X service.NodeVersion=${AVALANCHE_VERSION}" -o ./rosetta-server ./cmd/server
+	go build -ldflags "-X service.NodeVersion=${AVALANCHE_VERSION}" -o ./rosetta-runner ./cmd/runner
 
 setup:
 	go mod download

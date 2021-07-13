@@ -116,16 +116,11 @@ func (s *NetworkService) NetworkOptions(
 		return nil, errUnavailableOffline
 	}
 
-	nodeVersion, err := s.client.NodeVersion(ctx)
-	if err != nil {
-		return nil, wrapError(errClientError, err)
-	}
-
 	resp := &types.NetworkOptionsResponse{
 		Version: &types.Version{
 			RosettaVersion:    types.RosettaAPIVersion,
+			NodeVersion:       NodeVersion,
 			MiddlewareVersion: types.String(MiddlewareVersion),
-			NodeVersion:       nodeVersion,
 		},
 		Allow: &types.Allow{
 			OperationStatuses:       mapper.OperationStatuses,
