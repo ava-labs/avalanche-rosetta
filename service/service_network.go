@@ -118,7 +118,7 @@ func (s *NetworkService) NetworkOptions(
 
 	nodeVersion, err := s.client.NodeVersion(ctx)
 	if err != nil {
-		return nil, wrapError(errClientError, nodeVersion)
+		return nil, wrapError(errClientError, err)
 	}
 
 	resp := &types.NetworkOptionsResponse{
