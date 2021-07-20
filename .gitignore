@@ -18,3 +18,5 @@ bin/*
 .rosetta-data
 .avalanchego
 *.swp
+mainnet-data
+testnet-data
