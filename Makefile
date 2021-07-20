@@ -36,7 +36,7 @@ run-testnet:
 	docker run \
 		--rm \
 		-d \
-		-v ${WORKDIR}/testnet-data:/data \
+		-v ${WORKDIR}/data:/data \
 		-e AVALANCHE_NETWORK=Fuji \
 		-e AVALANCHE_CHAIN=43113 \
 		-e AVALANCHE_MODE=online \
@@ -66,7 +66,7 @@ run-mainnet:
 	docker run \
 		--rm \
 		-d \
-		-v ${WORKDIR}/mainnet-data:/data \
+		-v ${WORKDIR}/data:/data \
 		-e AVALANCHE_NETWORK=Mainnet \
 		-e AVALANCHE_CHAIN=43114 \
 		-e AVALANCHE_MODE=online \
