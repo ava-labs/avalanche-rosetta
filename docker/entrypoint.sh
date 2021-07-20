@@ -13,6 +13,7 @@ cat <<EOF > /app/avalanchego-config.json
   "api-admin-enabled": false,
   "api-ipcs-enabled": false,
   "api-keystore-enabled": false,
+  "db-dir": "/data",
   "chain-config-dir": "/app/configs/chains"
 }
 EOF
