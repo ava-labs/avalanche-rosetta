@@ -13,28 +13,19 @@ import (
 
 // NetworkService implements all /network endpoints
 type NetworkService struct {
-	config          *Config
-	client          client.Client
-	genesisBlock    *types.Block
-	bootstrapStatus *types.NetworkStatusResponse
+	config       *Config
+	client       client.Client
+	genesisBlock *types.Block
 }
 
 // NewNetworkService returns a new network servicer
 func NewNetworkService(config *Config, client client.Client) server.NetworkAPIServicer {
 	genesisBlock := makeGenesisBlock(config.GenesisBlockHash)
 
-	bootstrapStatus := &types.NetworkStatusResponse{
-		CurrentBlockTimestamp:  genesisBlock.Timestamp,
-		CurrentBlockIdentifier: genesisBlock.BlockIdentifier,
-		GenesisBlockIdentifier: genesisBlock.BlockIdentifier,
-		SyncStatus:             mapper.StageBootstrap,
-	}
-
 	return &NetworkService{
-		config:          config,
-		client:          client,
-		genesisBlock:    genesisBlock,
-		bootstrapStatus: bootstrapStatus,
+		config:       config,
+		client:       client,
+		genesisBlock: genesisBlock,
 	}
 }
 
@@ -59,10 +50,23 @@ func (s *NetworkService) NetworkStatus(
 		return nil, errUnavailableOffline
 	}
 
+	// Fetch peers
+	infoPeers, err := s.client.Peers(ctx)
+	if err != nil {
+		return nil, wrapError(errClientError, err)
+	}
+	peers := mapper.Peers(infoPeers)
+
 	// Check if all C/X chains are ready
 	if err := checkBoostrapStatus(ctx, s.client); err != nil {
 		if err.Code == errNotReady.Code {
-			return s.bootstrapStatus, nil
+			return &types.NetworkStatusResponse{
+				CurrentBlockTimestamp:  s.genesisBlock.Timestamp,
+				CurrentBlockIdentifier: s.genesisBlock.BlockIdentifier,
+				GenesisBlockIdentifier: s.genesisBlock.BlockIdentifier,
+				SyncStatus:             mapper.StageBootstrap,
+				Peers:                  peers,
+			}, nil
 		}
 		return nil, err
 	}
@@ -84,13 +88,6 @@ func (s *NetworkService) NetworkStatus(
 	if genesisHeader == nil {
 		return nil, wrapError(errClientError, "genesis block not found")
 	}
-
-	// Fetch peers
-	infoPeers, err := s.client.Peers(ctx)
-	if err != nil {
-		return nil, wrapError(errClientError, err)
-	}
-	peers := mapper.Peers(infoPeers)
 
 	return &types.NetworkStatusResponse{
 		CurrentBlockTimestamp: int64(blockHeader.Time * seconds2milliseconds),
