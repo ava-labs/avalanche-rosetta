@@ -74,11 +74,11 @@ github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
-github.com/ava-labs/avalanchego v1.4.10-rc.2.0.20210709143805-175525cb0570/go.mod h1:V9qJp9RYUApCmGASsfTlYt+/569tuDX8MrF4j3E+oT8=
-github.com/ava-labs/avalanchego v1.4.10 h1:YMtdyqGcrydyo0ss0ie0t0EtWAwca8FF5zLbqT8qN/8=
-github.com/ava-labs/avalanchego v1.4.10/go.mod h1:V9qJp9RYUApCmGASsfTlYt+/569tuDX8MrF4j3E+oT8=
-github.com/ava-labs/coreth v0.5.5-rc.1 h1:YgsF0VN9BNZNavZoV6yzj5ZLQAOdF910E1kNW6rKhtY=
-github.com/ava-labs/coreth v0.5.5-rc.1/go.mod h1:3wW2lo9EXmhRjv1jXmtISriH9BtWG7jYgVwmiLKtr8o=
+github.com/ava-labs/avalanchego v1.4.11-rc.0/go.mod h1:V9qJp9RYUApCmGASsfTlYt+/569tuDX8MrF4j3E+oT8=
+github.com/ava-labs/avalanchego v1.4.11 h1:bPj+Zj19owlGDfC4FiZ5oQj6v5xhg41qPRd7JYZG8ws=
+github.com/ava-labs/avalanchego v1.4.11/go.mod h1:aleAWKvMQ/mblB4dXWWvlbq8787TmwR7+3WizYtogTM=
+github.com/ava-labs/coreth v0.5.6-rc.6 h1:ORsn8SU0F174z62St7dTmBN9fOEn7cpIiN67hdkIWvY=
+github.com/ava-labs/coreth v0.5.6-rc.6/go.mod h1:OaNz0OsOhTtk4U4dVWstdRnOxbeY0IJZYk9vKh+FXFo=
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.25.48/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
@@ -250,6 +250,7 @@ github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7a
 github.com/gogo/protobuf v1.2.0/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.2.1/go.mod h1:hp+jE20tsWTFYpLwKvXlhS1hjn+gTNwPg2I6zVXpSg4=
 github.com/gogo/protobuf v1.3.1/go.mod h1:SlYgWuQ5SjCEi6WLHjHCa1yvBfUnHcTbrrZtXPKa29o=
+github.com/golang-jwt/jwt v3.2.1+incompatible/go.mod h1:8pz2t5EyA70fFQQSrl6XZXzqecmYZeUEB8OUGHkxJ+I=
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGwJL78qG/PmXZO1EjYhfJinVAhrmmHX6Z8B9k=
 github.com/golang/geo v0.0.0-20190916061304-5b978397cfec/go.mod h1:QZ0nwyI2jOfgRAoBvP+ab5aRr7c9x7lhGEJrKvBwjWI=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
