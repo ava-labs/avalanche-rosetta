@@ -55,7 +55,7 @@ type Asset struct {
 	Denomination string `json:"denomination"`
 }
 
-type Call struct {
+type Trace struct {
 	Type         string         `json:"type"`
 	From         common.Address `json:"from"`
 	To           common.Address `json:"to"`
@@ -63,10 +63,10 @@ type Call struct {
 	GasUsed      *hexutil.Big   `json:"gasUsed"`
 	Revert       bool           `json:"revert"`
 	ErrorMessage string         `json:"error,omitempty"`
-	Calls        []*Call        `json:"calls,omitempty"`
+	Calls        []*Trace       `json:"calls,omitempty"`
 }
 
-type FlatCall struct {
+type FlatTrace struct {
 	Type         string         `json:"type"`
 	From         common.Address `json:"from"`
 	To           common.Address `json:"to"`
@@ -76,8 +76,8 @@ type FlatCall struct {
 	ErrorMessage string         `json:"error,omitempty"`
 }
 
-func (t *Call) flatten() *FlatCall {
-	return &FlatCall{
+func (t *Trace) flatten() *FlatTrace {
+	return &FlatTrace{
 		Type:         t.Type,
 		From:         t.From,
 		To:           t.To,
@@ -88,7 +88,7 @@ func (t *Call) flatten() *FlatCall {
 	}
 }
 
-func (t *Call) Init() []*FlatCall {
+func (t *Trace) init() []*FlatTrace {
 	if t.Value == nil {
 		t.Value = new(hexutil.Big)
 	}
@@ -99,7 +99,7 @@ func (t *Call) Init() []*FlatCall {
 		t.Revert = true
 	}
 
-	results := []*FlatCall{t.flatten()}
+	results := []*FlatTrace{t.flatten()}
 	for _, child := range t.Calls {
 		// Ensure all children of a reverted call
 		// are also reverted!
@@ -113,7 +113,7 @@ func (t *Call) Init() []*FlatCall {
 			}
 		}
 
-		children := child.Init()
+		children := child.init()
 		results = append(results, children...)
 	}
 

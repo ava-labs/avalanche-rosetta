@@ -61,14 +61,14 @@ func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 }
 
 // TraceTransaction returns a transaction trace
-func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, []*FlatCall, error) {
-	result := &Call{}
+func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Trace, []*FlatTrace, error) {
+	result := &Trace{}
 	args := []interface{}{hash, c.traceConfig}
 
 	err := c.rpc.Call(context.Background(), "debug_traceTransaction", args, &result)
 	if err != nil {
 		return nil, nil, err
 	}
-	flattened := result.Init()
+	flattened := result.init()
 	return result, flattened, nil
 }

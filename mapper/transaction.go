@@ -22,8 +22,8 @@ func Transaction(
 	tx *ethtypes.Transaction,
 	msg *ethtypes.Message,
 	receipt *ethtypes.Receipt,
-	trace *client.Call,
-	flattenedTrace []*client.FlatCall,
+	trace *client.Trace,
+	flattenedTrace []*client.FlatTrace,
 ) (*types.Transaction, error) {
 	ops := []*types.Operation{}
 	sender := msg.From()
@@ -204,14 +204,14 @@ func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.Transaction
 }
 
 // nolint:gocognit
-func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
+func traceOps(traces []*client.FlatTrace, startIndex int) []*types.Operation {
 	var ops []*types.Operation
-	if len(calls) == 0 {
+	if len(traces) == 0 {
 		return ops
 	}
 
 	destroyedAccounts := map[string]*big.Int{}
-	for _, trace := range calls {
+	for _, trace := range traces {
 		// Handle partial transaction success
 		metadata := map[string]interface{}{}
 		opStatus := StatusSuccess
