@@ -310,7 +310,7 @@ func traceOps(traces []*client.FlatTrace, startIndex int) []*types.Operation {
 					Address: to,
 				},
 				Amount: &types.Amount{
-					Value:    trace.Value.String(),
+					Value:    trace.Value.ToInt().String(),
 					Currency: AvaxCurrency,
 				},
 				Metadata: metadata,
