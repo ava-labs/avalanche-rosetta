@@ -221,7 +221,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 		}
 
 		var zeroValue bool
-		if trace.Value.Sign() == 0 {
+		if trace.Value.ToInt().Sign() == 0 {
 			zeroValue = true
 		}
 
@@ -249,7 +249,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 					Address: from,
 				},
 				Amount: &types.Amount{
-					Value:    new(big.Int).Neg(trace.Value).String(),
+					Value:    new(big.Int).Neg(trace.Value.ToInt()).String(),
 					Currency: AvaxCurrency,
 				},
 				Metadata: metadata,
@@ -259,7 +259,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 			} else {
 				_, destroyed := destroyedAccounts[from]
 				if destroyed && opStatus == StatusSuccess {
-					destroyedAccounts[from] = new(big.Int).Sub(destroyedAccounts[from], trace.Value)
+					destroyedAccounts[from] = new(big.Int).Sub(destroyedAccounts[from], trace.Value.ToInt())
 				}
 			}
 
@@ -320,7 +320,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 			} else {
 				_, destroyed := destroyedAccounts[to]
 				if destroyed && opStatus == StatusSuccess {
-					destroyedAccounts[to] = new(big.Int).Add(destroyedAccounts[to], trace.Value)
+					destroyedAccounts[to] = new(big.Int).Add(destroyedAccounts[to], trace.Value.ToInt())
 				}
 			}
 

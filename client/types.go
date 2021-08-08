@@ -1,9 +1,6 @@
 package client
 
 import (
-	"encoding/json"
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -62,21 +59,21 @@ type Call struct {
 	Type         string         `json:"type"`
 	From         common.Address `json:"from"`
 	To           common.Address `json:"to"`
-	Value        *big.Int       `json:"value"`
-	GasUsed      *big.Int       `json:"gasUsed"`
-	Revert       bool
-	ErrorMessage string  `json:"error"`
-	Calls        []*Call `json:"calls"`
+	Value        *hexutil.Big   `json:"value"`
+	GasUsed      *hexutil.Big   `json:"gasUsed"`
+	Revert       bool           `json:"revert"`
+	ErrorMessage string         `json:"error,omitempty"`
+	Calls        []*Call        `json:"calls,omitempty"`
 }
 
 type FlatCall struct {
 	Type         string         `json:"type"`
 	From         common.Address `json:"from"`
 	To           common.Address `json:"to"`
-	Value        *big.Int       `json:"value"`
-	GasUsed      *big.Int       `json:"gasUsed"`
-	Revert       bool
-	ErrorMessage string `json:"error"`
+	Value        *hexutil.Big   `json:"value"`
+	GasUsed      *hexutil.Big   `json:"gasUsed"`
+	Revert       bool           `json:"revert"`
+	ErrorMessage string         `json:"error,omitempty"`
 }
 
 func (t *Call) Flatten() *FlatCall {
@@ -91,46 +88,17 @@ func (t *Call) Flatten() *FlatCall {
 	}
 }
 
-func (t *Call) UnmarshalJSON(input []byte) error {
-	type CustomTrace struct {
-		Type         string         `json:"type"`
-		From         common.Address `json:"from"`
-		To           common.Address `json:"to"`
-		Value        *hexutil.Big   `json:"value"`
-		GasUsed      *hexutil.Big   `json:"gasUsed"`
-		Revert       bool
-		ErrorMessage string  `json:"error"`
-		Calls        []*Call `json:"calls"`
-	}
-	var dec CustomTrace
-	if err := json.Unmarshal(input, &dec); err != nil {
-		return err
-	}
-
-	t.Type = dec.Type
-	t.From = dec.From
-	t.To = dec.To
-	if dec.Value != nil {
-		t.Value = (*big.Int)(dec.Value)
-	} else {
-		t.Value = new(big.Int)
-	}
-	if dec.GasUsed != nil {
-		t.GasUsed = (*big.Int)(dec.GasUsed)
-	} else {
-		t.GasUsed = new(big.Int)
-	}
-	if dec.ErrorMessage != "" {
-		// Any error surfaced by the decoder means that the transaction
-		// has reverted.
-		t.Revert = true
-	}
-	t.ErrorMessage = dec.ErrorMessage
-	t.Calls = dec.Calls
-	return nil
-}
-
 func FlattenTraces(data *Call, flattened []*FlatCall) []*FlatCall {
+	if data.Value == nil {
+		data.Value = new(hexutil.Big)
+	}
+	if data.GasUsed == nil {
+		data.GasUsed = new(hexutil.Big)
+	}
+	if len(data.ErrorMessage) > 0 {
+		data.Revert = true
+	}
+
 	results := append(flattened, data.Flatten())
 	for _, child := range data.Calls {
 		// Ensure all children of a reverted call
