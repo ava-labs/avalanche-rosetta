@@ -57,7 +57,7 @@ type Asset struct {
 	Denomination string `json:"denomination"`
 }
 
-type Trace struct {
+type Call struct {
 	Type    string         `json:"type"`
 	From    common.Address `json:"from"`
 	To      common.Address `json:"to"`
@@ -65,10 +65,10 @@ type Trace struct {
 	GasUsed *hexutil.Big   `json:"gasUsed"`
 	Revert  bool           `json:"revert"`
 	Error   string         `json:"error,omitempty"`
-	Calls   []*Trace       `json:"calls,omitempty"`
+	Calls   []*Call        `json:"calls,omitempty"`
 }
 
-type FlatTrace struct {
+type FlatCall struct {
 	Type    string         `json:"type"`
 	From    common.Address `json:"from"`
 	To      common.Address `json:"to"`
@@ -78,42 +78,42 @@ type FlatTrace struct {
 	Error   string         `json:"error,omitempty"`
 }
 
-func (t *Trace) flatten() *FlatTrace {
-	return &FlatTrace{
-		Type:    t.Type,
-		From:    t.From,
-		To:      t.To,
-		Value:   t.Value.ToInt(),
-		GasUsed: t.GasUsed.ToInt(),
-		Revert:  t.Revert,
-		Error:   t.Error,
+func (c *Call) flatten() *FlatCall {
+	return &FlatCall{
+		Type:    c.Type,
+		From:    c.From,
+		To:      c.To,
+		Value:   c.Value.ToInt(),
+		GasUsed: c.GasUsed.ToInt(),
+		Revert:  c.Revert,
+		Error:   c.Error,
 	}
 }
 
-func (t *Trace) init() []*FlatTrace {
-	if t.Value == nil {
-		t.Value = new(hexutil.Big)
+func (c *Call) init() []*FlatCall {
+	if c.Value == nil {
+		c.Value = new(hexutil.Big)
 	}
-	if t.GasUsed == nil {
-		t.GasUsed = new(hexutil.Big)
+	if c.GasUsed == nil {
+		c.GasUsed = new(hexutil.Big)
 	}
-	if len(t.Error) > 0 {
+	if len(c.Error) > 0 {
 		// Any error surfaced by the decoder means that the transaction
 		// has reverted.
-		t.Revert = true
+		c.Revert = true
 	}
 
-	results := []*FlatTrace{t.flatten()}
-	for _, child := range t.Calls {
+	results := []*FlatCall{c.flatten()}
+	for _, child := range c.Calls {
 		// Ensure all children of a reverted call
 		// are also reverted!
-		if t.Revert {
+		if c.Revert {
 			child.Revert = true
 
 			// Copy error message from parent
 			// if child does not have one
 			if len(child.Error) == 0 {
-				child.Error = t.Error
+				child.Error = c.Error
 			}
 		}
 
