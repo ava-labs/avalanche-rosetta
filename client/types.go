@@ -1,6 +1,8 @@
 package client
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -70,8 +72,8 @@ type FlatTrace struct {
 	Type    string         `json:"type"`
 	From    common.Address `json:"from"`
 	To      common.Address `json:"to"`
-	Value   *hexutil.Big   `json:"value"`
-	GasUsed *hexutil.Big   `json:"gasUsed"`
+	Value   *big.Int       `json:"value"`
+	GasUsed *big.Int       `json:"gasUsed"`
 	Revert  bool           `json:"revert"`
 	Error   string         `json:"error,omitempty"`
 }
@@ -81,8 +83,8 @@ func (t *Trace) flatten() *FlatTrace {
 		Type:    t.Type,
 		From:    t.From,
 		To:      t.To,
-		Value:   t.Value,
-		GasUsed: t.GasUsed,
+		Value:   t.Value.ToInt(),
+		GasUsed: t.GasUsed.ToInt(),
 		Revert:  t.Revert,
 		Error:   t.Error,
 	}
