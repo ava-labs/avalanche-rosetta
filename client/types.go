@@ -116,7 +116,7 @@ func (t *Call) UnmarshalJSON(input []byte) error {
 		t.Value = new(big.Int)
 	}
 	if dec.GasUsed != nil {
-		t.GasUsed = (*big.Int)(dec.Value)
+		t.GasUsed = (*big.Int)(dec.GasUsed)
 	} else {
 		t.GasUsed = new(big.Int)
 	}
