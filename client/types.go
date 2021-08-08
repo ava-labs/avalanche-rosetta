@@ -76,7 +76,7 @@ type FlatCall struct {
 	ErrorMessage string         `json:"error,omitempty"`
 }
 
-func (t *Call) Flatten() *FlatCall {
+func (t *Call) flatten() *FlatCall {
 	return &FlatCall{
 		Type:         t.Type,
 		From:         t.From,
@@ -88,33 +88,34 @@ func (t *Call) Flatten() *FlatCall {
 	}
 }
 
-func FlattenTraces(data *Call, flattened []*FlatCall) []*FlatCall {
-	if data.Value == nil {
-		data.Value = new(hexutil.Big)
+func (t *Call) Init() []*FlatCall {
+	if t.Value == nil {
+		t.Value = new(hexutil.Big)
 	}
-	if data.GasUsed == nil {
-		data.GasUsed = new(hexutil.Big)
+	if t.GasUsed == nil {
+		t.GasUsed = new(hexutil.Big)
 	}
-	if len(data.ErrorMessage) > 0 {
-		data.Revert = true
+	if len(t.ErrorMessage) > 0 {
+		t.Revert = true
 	}
 
-	results := append(flattened, data.Flatten())
-	for _, child := range data.Calls {
+	results := []*FlatCall{t.flatten()}
+	for _, child := range t.Calls {
 		// Ensure all children of a reverted call
 		// are also reverted!
-		if data.Revert {
+		if t.Revert {
 			child.Revert = true
 
 			// Copy error message from parent
 			// if child does not have one
 			if len(child.ErrorMessage) == 0 {
-				child.ErrorMessage = data.ErrorMessage
+				child.ErrorMessage = t.ErrorMessage
 			}
 		}
 
-		children := FlattenTraces(child, flattened)
+		children := child.Init()
 		results = append(results, children...)
 	}
+
 	return results
 }

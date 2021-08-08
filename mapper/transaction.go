@@ -23,6 +23,7 @@ func Transaction(
 	msg *ethtypes.Message,
 	receipt *ethtypes.Receipt,
 	trace *client.Call,
+	flattenedTrace []*client.FlatCall,
 ) (*types.Transaction, error) {
 	ops := []*types.Operation{}
 	sender := msg.From()
@@ -59,8 +60,7 @@ func Transaction(
 
 	ops = append(ops, feeOps...)
 
-	traces := client.FlattenTraces(trace, []*client.FlatCall{})
-	traceOps := traceOps(traces, len(feeOps))
+	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
 
 	return &types.Transaction{
