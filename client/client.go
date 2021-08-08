@@ -22,7 +22,7 @@ type Client interface {
 	HeaderByNumber(context.Context, *big.Int) (*ethtypes.Header, error)
 	TransactionByHash(context.Context, ethcommon.Hash) (*ethtypes.Transaction, bool, error)
 	TransactionReceipt(context.Context, ethcommon.Hash) (*ethtypes.Receipt, error)
-	TraceTransaction(context.Context, string) (*Call, error)
+	TraceTransaction(context.Context, string) (*Trace, []*FlatTrace, error)
 	SendTransaction(context.Context, *ethtypes.Transaction) error
 	BalanceAt(context.Context, ethcommon.Address, *big.Int) (*big.Int, error)
 	NonceAt(context.Context, ethcommon.Address, *big.Int) (uint64, error)

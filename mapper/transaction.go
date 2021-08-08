@@ -22,7 +22,8 @@ func Transaction(
 	tx *ethtypes.Transaction,
 	msg *ethtypes.Message,
 	receipt *ethtypes.Receipt,
-	trace *client.Call,
+	trace *client.Trace,
+	flattenedTrace []*client.FlatTrace,
 ) (*types.Transaction, error) {
 	ops := []*types.Operation{}
 	sender := msg.From()
@@ -59,8 +60,7 @@ func Transaction(
 
 	ops = append(ops, feeOps...)
 
-	traces := client.FlattenTraces(trace, []*client.FlatCall{})
-	traceOps := traceOps(traces, len(feeOps))
+	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
 
 	return &types.Transaction{
@@ -204,14 +204,14 @@ func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.Transaction
 }
 
 // nolint:gocognit
-func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
+func traceOps(traces []*client.FlatTrace, startIndex int) []*types.Operation {
 	var ops []*types.Operation
-	if len(calls) == 0 {
+	if len(traces) == 0 {
 		return ops
 	}
 
 	destroyedAccounts := map[string]*big.Int{}
-	for _, trace := range calls {
+	for _, trace := range traces {
 		// Handle partial transaction success
 		metadata := map[string]interface{}{}
 		opStatus := StatusSuccess
@@ -221,7 +221,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 		}
 
 		var zeroValue bool
-		if trace.Value.Sign() == 0 {
+		if trace.Value.ToInt().Sign() == 0 {
 			zeroValue = true
 		}
 
@@ -249,7 +249,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 					Address: from,
 				},
 				Amount: &types.Amount{
-					Value:    new(big.Int).Neg(trace.Value).String(),
+					Value:    new(big.Int).Neg(trace.Value.ToInt()).String(),
 					Currency: AvaxCurrency,
 				},
 				Metadata: metadata,
@@ -259,7 +259,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 			} else {
 				_, destroyed := destroyedAccounts[from]
 				if destroyed && opStatus == StatusSuccess {
-					destroyedAccounts[from] = new(big.Int).Sub(destroyedAccounts[from], trace.Value)
+					destroyedAccounts[from] = new(big.Int).Sub(destroyedAccounts[from], trace.Value.ToInt())
 				}
 			}
 
@@ -320,7 +320,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 			} else {
 				_, destroyed := destroyedAccounts[to]
 				if destroyed && opStatus == StatusSuccess {
-					destroyedAccounts[to] = new(big.Int).Add(destroyedAccounts[to], trace.Value)
+					destroyedAccounts[to] = new(big.Int).Add(destroyedAccounts[to], trace.Value.ToInt())
 				}
 			}
 

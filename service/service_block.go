@@ -182,12 +182,12 @@ func (s *BlockService) fetchTransaction(
 		return nil, wrapError(errClientError, err)
 	}
 
-	trace, err := s.client.TraceTransaction(ctx, tx.Hash().String())
+	trace, flattened, err := s.client.TraceTransaction(ctx, tx.Hash().String())
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
 
-	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace)
+	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace, flattened)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
