@@ -217,7 +217,7 @@ func traceOps(traces []*client.FlatTrace, startIndex int) []*types.Operation {
 		opStatus := StatusSuccess
 		if trace.Revert {
 			opStatus = StatusFailure
-			metadata["error"] = trace.ErrorMessage
+			metadata["error"] = trace.Error
 		}
 
 		var zeroValue bool

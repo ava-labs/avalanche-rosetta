@@ -56,35 +56,35 @@ type Asset struct {
 }
 
 type Trace struct {
-	Type         string         `json:"type"`
-	From         common.Address `json:"from"`
-	To           common.Address `json:"to"`
-	Value        *hexutil.Big   `json:"value"`
-	GasUsed      *hexutil.Big   `json:"gasUsed"`
-	Revert       bool           `json:"revert"`
-	ErrorMessage string         `json:"error,omitempty"`
-	Calls        []*Trace       `json:"calls,omitempty"`
+	Type    string         `json:"type"`
+	From    common.Address `json:"from"`
+	To      common.Address `json:"to"`
+	Value   *hexutil.Big   `json:"value"`
+	GasUsed *hexutil.Big   `json:"gasUsed"`
+	Revert  bool           `json:"revert"`
+	Error   string         `json:"error,omitempty"`
+	Calls   []*Trace       `json:"calls,omitempty"`
 }
 
 type FlatTrace struct {
-	Type         string         `json:"type"`
-	From         common.Address `json:"from"`
-	To           common.Address `json:"to"`
-	Value        *hexutil.Big   `json:"value"`
-	GasUsed      *hexutil.Big   `json:"gasUsed"`
-	Revert       bool           `json:"revert"`
-	ErrorMessage string         `json:"error,omitempty"`
+	Type    string         `json:"type"`
+	From    common.Address `json:"from"`
+	To      common.Address `json:"to"`
+	Value   *hexutil.Big   `json:"value"`
+	GasUsed *hexutil.Big   `json:"gasUsed"`
+	Revert  bool           `json:"revert"`
+	Error   string         `json:"error,omitempty"`
 }
 
 func (t *Trace) flatten() *FlatTrace {
 	return &FlatTrace{
-		Type:         t.Type,
-		From:         t.From,
-		To:           t.To,
-		Value:        t.Value,
-		GasUsed:      t.GasUsed,
-		Revert:       t.Revert,
-		ErrorMessage: t.ErrorMessage,
+		Type:    t.Type,
+		From:    t.From,
+		To:      t.To,
+		Value:   t.Value,
+		GasUsed: t.GasUsed,
+		Revert:  t.Revert,
+		Error:   t.Error,
 	}
 }
 
@@ -95,7 +95,9 @@ func (t *Trace) init() []*FlatTrace {
 	if t.GasUsed == nil {
 		t.GasUsed = new(hexutil.Big)
 	}
-	if len(t.ErrorMessage) > 0 {
+	if len(t.Error) > 0 {
+		// Any error surfaced by the decoder means that the transaction
+		// has reverted.
 		t.Revert = true
 	}
 
@@ -108,8 +110,8 @@ func (t *Trace) init() []*FlatTrace {
 
 			// Copy error message from parent
 			// if child does not have one
-			if len(child.ErrorMessage) == 0 {
-				child.ErrorMessage = t.ErrorMessage
+			if len(child.Error) == 0 {
+				child.Error = t.Error
 			}
 		}
 
