@@ -23,6 +23,7 @@ func Transaction(
 	msg *ethtypes.Message,
 	receipt *ethtypes.Receipt,
 	trace *client.Call,
+	flattenedTrace []*client.FlatCall,
 ) (*types.Transaction, error) {
 	ops := []*types.Operation{}
 	sender := msg.From()
@@ -59,8 +60,7 @@ func Transaction(
 
 	ops = append(ops, feeOps...)
 
-	traces := client.FlattenTraces(trace, []*client.FlatCall{})
-	traceOps := traceOps(traces, len(feeOps))
+	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
 
 	return &types.Transaction{
@@ -204,24 +204,24 @@ func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.Transaction
 }
 
 // nolint:gocognit
-func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
+func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
 	var ops []*types.Operation
-	if len(calls) == 0 {
+	if len(trace) == 0 {
 		return ops
 	}
 
 	destroyedAccounts := map[string]*big.Int{}
-	for _, trace := range calls {
+	for _, call := range trace {
 		// Handle partial transaction success
 		metadata := map[string]interface{}{}
 		opStatus := StatusSuccess
-		if trace.Revert {
+		if call.Revert {
 			opStatus = StatusFailure
-			metadata["error"] = trace.ErrorMessage
+			metadata["error"] = call.Error
 		}
 
 		var zeroValue bool
-		if trace.Value.Sign() == 0 {
+		if call.Value.Sign() == 0 {
 			zeroValue = true
 		}
 
@@ -230,26 +230,26 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 		// We can't continue here because we may need to adjust our destroyed
 		// accounts map if a CallTYpe operation resurrects an account.
 		shouldAdd := true
-		if zeroValue && CallType(trace.Type) {
+		if zeroValue && CallType(call.Type) {
 			shouldAdd = false
 		}
 
 		// Checksum addresses
-		from := trace.From.String()
-		to := trace.To.String()
+		from := call.From.String()
+		to := call.To.String()
 
 		if shouldAdd {
 			fromOp := &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: int64(len(ops) + startIndex),
 				},
-				Type:   trace.Type,
+				Type:   call.Type,
 				Status: types.String(opStatus),
 				Account: &types.AccountIdentifier{
 					Address: from,
 				},
 				Amount: &types.Amount{
-					Value:    new(big.Int).Neg(trace.Value).String(),
+					Value:    new(big.Int).Neg(call.Value).String(),
 					Currency: AvaxCurrency,
 				},
 				Metadata: metadata,
@@ -259,7 +259,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 			} else {
 				_, destroyed := destroyedAccounts[from]
 				if destroyed && opStatus == StatusSuccess {
-					destroyedAccounts[from] = new(big.Int).Sub(destroyedAccounts[from], trace.Value)
+					destroyedAccounts[from] = new(big.Int).Sub(destroyedAccounts[from], call.Value)
 				}
 			}
 
@@ -268,7 +268,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 
 		// Add to destroyed accounts if SELFDESTRUCT
 		// and overwrite existing balance.
-		if trace.Type == OpSelfDestruct {
+		if call.Type == OpSelfDestruct {
 			destroyedAccounts[from] = new(big.Int)
 
 			// If destination of of SELFDESTRUCT is self,
@@ -283,13 +283,13 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 		// Skip empty to addresses (this may not
 		// actually occur but leaving it as a
 		// sanity check)
-		if len(trace.To.String()) == 0 {
+		if len(call.To.String()) == 0 {
 			continue
 		}
 
 		// If the account is resurrected, we remove it from
 		// the destroyed accounts map.
-		if CreateType(trace.Type) {
+		if CreateType(call.Type) {
 			delete(destroyedAccounts, to)
 		}
 
@@ -304,13 +304,13 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 						Index: lastOpIndex,
 					},
 				},
-				Type:   trace.Type,
+				Type:   call.Type,
 				Status: types.String(opStatus),
 				Account: &types.AccountIdentifier{
 					Address: to,
 				},
 				Amount: &types.Amount{
-					Value:    trace.Value.String(),
+					Value:    call.Value.String(),
 					Currency: AvaxCurrency,
 				},
 				Metadata: metadata,
@@ -320,7 +320,7 @@ func traceOps(calls []*client.FlatCall, startIndex int) []*types.Operation {
 			} else {
 				_, destroyed := destroyedAccounts[to]
 				if destroyed && opStatus == StatusSuccess {
-					destroyedAccounts[to] = new(big.Int).Add(destroyedAccounts[to], trace.Value)
+					destroyedAccounts[to] = new(big.Int).Add(destroyedAccounts[to], call.Value)
 				}
 			}
 

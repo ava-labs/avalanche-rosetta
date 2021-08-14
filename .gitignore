@@ -15,7 +15,7 @@ tmp
 vendor/
 config/*.json
 bin/*
-.rosetta-data
+rosetta-data
 .avalanchego
 *.swp
 data
