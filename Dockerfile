@@ -54,21 +54,10 @@ COPY --from=avalanche \
   /go/src/github.com/ava-labs/avalanchego/build/avalanchego \
   /app/avalanchego
 
-# Install pre-upgrade binaries
+# Install evm plugin
 COPY --from=avalanche \
-  /go/src/github.com/ava-labs/avalanchego/build/avalanchego-preupgrade/avalanchego-process \
-  /app/avalanchego-preupgrade/avalanchego-process
-COPY --from=avalanche \
-  /go/src/github.com/ava-labs/avalanchego/build/avalanchego-preupgrade/plugins/evm \
-  /app/avalanchego-preupgrade/plugins/evm
-
-# Install latest binaries
-COPY --from=avalanche \
-  /go/src/github.com/ava-labs/avalanchego/build/avalanchego-latest/avalanchego-process \
-  /app/avalanchego-latest/avalanchego-process
-COPY --from=avalanche \
-  /go/src/github.com/ava-labs/avalanchego/build/avalanchego-latest/plugins/evm \
-  /app/avalanchego-latest/plugins/evm
+  /go/src/github.com/ava-labs/avalanchego/build/plugins/evm \
+  /app/plugins/evm
 
 # Install rosetta server
 COPY --from=rosetta \
