@@ -210,7 +210,7 @@ func (s ConstructionService) ConstructionParse(
 		tx.GasLimit = t.Gas()
 		tx.ChainID = s.config.ChainID
 
-		msg, err := t.AsMessage(s.config.Signer())
+		msg, err := t.AsMessage(s.config.Signer(), nil)
 		if err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}

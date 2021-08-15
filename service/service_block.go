@@ -172,7 +172,7 @@ func (s *BlockService) fetchTransaction(
 	tx *corethTypes.Transaction,
 	header *corethTypes.Header,
 ) (*types.Transaction, *types.Error) {
-	msg, err := tx.AsMessage(s.config.Signer())
+	msg, err := tx.AsMessage(s.config.Signer(), header.BaseFee)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
