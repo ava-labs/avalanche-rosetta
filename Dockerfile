@@ -20,8 +20,7 @@ FROM golang:1.16 AS rosetta
 
 ARG ROSETTA_VERSION
 
-# RUN git clone https://github.com/ava-labs/avalanche-rosetta.git \
-COPY . \
+RUN git clone https://github.com/ava-labs/avalanche-rosetta.git \
   /go/src/github.com/ava-labs/avalanche-rosetta
 
 WORKDIR /go/src/github.com/ava-labs/avalanche-rosetta
