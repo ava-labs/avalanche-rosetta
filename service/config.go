@@ -33,5 +33,5 @@ func (c Config) IsOnlineMode() bool {
 
 // Signer returns an eth signer object for a given chain
 func (c Config) Signer() ethtypes.Signer {
-	return ethtypes.NewEIP155Signer(c.ChainID)
+	return ethtypes.LatestSignerForChainID(c.ChainID)
 }

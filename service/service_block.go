@@ -177,7 +177,7 @@ func (s *BlockService) fetchTransaction(
 		return nil, wrapError(errClientError, err)
 	}
 
-	receipt, err := s.client.TransactionReceipt(context.Background(), tx.Hash())
+	receipt, err := s.client.TransactionReceipt(ctx, tx.Hash())
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
