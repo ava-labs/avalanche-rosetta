@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"strings"
 
@@ -175,12 +174,12 @@ func (s *BlockService) fetchTransaction(
 ) (*types.Transaction, *types.Error) {
 	msg, err := tx.AsMessage(s.config.Signer(), header.BaseFee)
 	if err != nil {
-		return nil, wrapError(errClientError, fmt.Errorf("tx as message: %w", err))
+		return nil, wrapError(errClientError, err)
 	}
 
 	receipt, err := s.client.TransactionReceipt(ctx, tx.Hash())
 	if err != nil {
-		return nil, wrapError(errClientError, fmt.Errorf("receipt: %w", err))
+		return nil, wrapError(errClientError, err)
 	}
 
 	trace, flattened, err := s.client.TraceTransaction(ctx, tx.Hash().String())
