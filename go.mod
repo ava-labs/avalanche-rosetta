@@ -4,11 +4,11 @@ go 1.15
 
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
-	github.com/ava-labs/avalanchego v1.4.12
-	github.com/ava-labs/coreth v0.5.7
+	github.com/ava-labs/avalanchego v1.4.13-rc.0.0.20210810160007-5bac885b4998
+	github.com/ava-labs/coreth v0.6.0-rc.0
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/decred/dcrd/dcrec/secp256k1/v3 v3.0.0 // indirect
-	github.com/ethereum/go-ethereum v1.10.3
+	github.com/ethereum/go-ethereum v1.10.6
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/gorilla/rpc v1.2.0
 	github.com/mitchellh/mapstructure v1.4.0 // indirect
