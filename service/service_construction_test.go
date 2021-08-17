@@ -369,6 +369,57 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		}, metadataResponse)
 	})
+
+	t.Run("custom nonce", func(t *testing.T) {
+		var ops []*types.Operation
+		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
+		multiplier := float64(1.1)
+		preprocessResponse, err := service.ConstructionPreprocess(
+			ctx,
+			&types.ConstructionPreprocessRequest{
+				NetworkIdentifier:      networkIdentifier,
+				Operations:             ops,
+				SuggestedFeeMultiplier: &multiplier,
+				Metadata: map[string]interface{}{
+					"nonce": "1",
+				},
+			},
+		)
+		assert.Nil(t, err)
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","suggested_fee_multiplier":1.1, "nonce":"0x1"}`
+		var opt options
+		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		assert.Equal(t, &types.ConstructionPreprocessResponse{
+			Options: forceMarshalMap(t, &opt),
+		}, preprocessResponse)
+
+		metadata := &metadata{
+			GasPrice: big.NewInt(1100000000),
+			Nonce:    1,
+		}
+
+		client.On(
+			"SuggestGasPrice",
+			ctx,
+		).Return(
+			big.NewInt(1000000000),
+			nil,
+		).Once()
+		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
+			NetworkIdentifier: networkIdentifier,
+			Options:           forceMarshalMap(t, &opt),
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, &types.ConstructionMetadataResponse{
+			Metadata: forceMarshalMap(t, metadata),
+			SuggestedFee: []*types.Amount{
+				{
+					Value:    "23100000000000",
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+		}, metadataResponse)
+	})
 }
 
 func TestConstructionService(t *testing.T) {
