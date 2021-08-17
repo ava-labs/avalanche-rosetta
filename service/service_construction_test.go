@@ -152,7 +152,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		config: &Config{Mode: ModeOnline},
 		client: client,
 	}
-	intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"AVAX","decimals":18}}}]` // nolint
+	intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"AVAX","decimals":18}}}]` //nolint
 
 	t.Run("basic flow", func(t *testing.T) {
 		var ops []*types.Operation
@@ -276,7 +276,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","gas_price":"0x4190ab00","suggested_fee_multiplier":1.1}`
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","gas_price":"0x4190ab00","suggested_fee_multiplier":1.1}` //nolint
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
