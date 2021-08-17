@@ -73,16 +73,16 @@ func (s ConstructionService) ConstructionMetadata(
 		if err != nil {
 			return nil, wrapError(errClientError, err)
 		}
+
+		if input.SuggestedFeeMultiplier != nil {
+			newGasPrice := new(big.Float).Mul(
+				big.NewFloat(*input.SuggestedFeeMultiplier),
+				new(big.Float).SetInt(gasPrice),
+			)
+			newGasPrice.Int(gasPrice)
+		}
 	} else {
 		gasPrice = input.GasPrice
-	}
-
-	if input.SuggestedFeeMultiplier != nil {
-		newGasPrice := new(big.Float).Mul(
-			big.NewFloat(*input.SuggestedFeeMultiplier),
-			new(big.Float).SetInt(gasPrice),
-		)
-		newGasPrice.Int(gasPrice)
 	}
 
 	metadata := &metadata{
