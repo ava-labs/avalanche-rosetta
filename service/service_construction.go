@@ -145,35 +145,33 @@ func (s ConstructionService) ConstructionCombine(
 		return nil, wrapError(errInvalidInput, "signature is not provided")
 	}
 
-	var tx unsignedTx
-	if err := json.Unmarshal([]byte(req.UnsignedTransaction), &tx); err != nil {
+	var unsignedTx transaction
+	if err := json.Unmarshal([]byte(req.UnsignedTransaction), &unsignedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
-	ethTx := ethtypes.NewTransaction(
-		tx.Nonce,
-		ethcommon.HexToAddress(tx.To),
-		tx.Value,
-		tx.GasLimit,
-		tx.GasPrice,
-		tx.Input,
+	ethTransaction := ethtypes.NewTransaction(
+		unsignedTx.Nonce,
+		ethcommon.HexToAddress(unsignedTx.To),
+		unsignedTx.Value,
+		unsignedTx.GasLimit,
+		unsignedTx.GasPrice,
+		unsignedTx.Data,
 	)
 
-	signedTx, err := ethTx.WithSignature(
-		ethtypes.NewEIP155Signer(tx.ChainID),
-		req.Signatures[0].Bytes,
-	)
+	signer := ethtypes.LatestSignerForChainID(unsignedTx.ChainID)
+	signedTx, err := ethTransaction.WithSignature(signer, req.Signatures[0].Bytes)
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, wrapError(errInvalidInput, err)
 	}
 
-	txData, err := signedTx.MarshalJSON()
+	signedTxJSON, err := signedTx.MarshalJSON()
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
 
 	return &types.ConstructionCombineResponse{
-		SignedTransaction: string(txData),
+		SignedTransaction: string(signedTxJSON),
 	}, nil
 }
 
@@ -212,7 +210,7 @@ func (s ConstructionService) ConstructionParse(
 	ctx context.Context,
 	req *types.ConstructionParseRequest,
 ) (*types.ConstructionParseResponse, *types.Error) {
-	var tx unsignedTx
+	var tx transaction
 
 	if !req.Signed {
 		if err := json.Unmarshal([]byte(req.Transaction), &tx); err != nil {
@@ -226,7 +224,7 @@ func (s ConstructionService) ConstructionParse(
 
 		tx.To = t.To().String()
 		tx.Value = t.Value()
-		tx.Input = t.Data()
+		tx.Data = t.Data()
 		tx.Nonce = t.Nonce()
 		tx.GasPrice = t.GasPrice()
 		tx.GasLimit = t.Gas()
@@ -239,6 +237,18 @@ func (s ConstructionService) ConstructionParse(
 		tx.From = msg.From().Hex()
 	}
 
+	// Ensure valid from address
+	checkFrom, ok := ChecksumAddress(tx.From)
+	if !ok {
+		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", tx.From))
+	}
+
+	// Ensure valid to address
+	checkTo, ok := ChecksumAddress(tx.To)
+	if !ok {
+		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
+	}
+
 	ops := []*types.Operation{
 		{
 			Type: mapper.OpCall,
@@ -246,7 +256,7 @@ func (s ConstructionService) ConstructionParse(
 				Index: 0,
 			},
 			Account: &types.AccountIdentifier{
-				Address: tx.From,
+				Address: checkFrom,
 			},
 			Amount: &types.Amount{
 				Value:    new(big.Int).Neg(tx.Value).String(),
@@ -264,7 +274,7 @@ func (s ConstructionService) ConstructionParse(
 				},
 			},
 			Account: &types.AccountIdentifier{
-				Address: tx.To,
+				Address: checkTo,
 			},
 			Amount: &types.Amount{
 				Value:    tx.Value.String(),
@@ -273,11 +283,14 @@ func (s ConstructionService) ConstructionParse(
 		},
 	}
 
-	metadata := map[string]interface{}{
-		"nonce":     tx.Nonce,
-		"gas_price": tx.GasPrice,
-		"gas_limit": tx.GasLimit,
-		"chain_id":  tx.ChainID,
+	metadata := &parseMetadata{
+		Nonce:    tx.Nonce,
+		GasPrice: tx.GasPrice,
+		ChainID:  tx.ChainID,
+	}
+	metaMap, err := marshalJSONMap(metadata)
+	if err != nil {
+		return nil, wrapError(errInternalError, err)
 	}
 
 	if req.Signed {
@@ -285,17 +298,17 @@ func (s ConstructionService) ConstructionParse(
 			Operations: ops,
 			AccountIdentifierSigners: []*types.AccountIdentifier{
 				{
-					Address: tx.From,
+					Address: checkFrom,
 				},
 			},
-			Metadata: metadata,
+			Metadata: metaMap,
 		}, nil
 	}
 
 	return &types.ConstructionParseResponse{
 		Operations:               ops,
 		AccountIdentifierSigners: []*types.AccountIdentifier{},
-		Metadata:                 metadata,
+		Metadata:                 metaMap,
 	}, nil
 }
 
