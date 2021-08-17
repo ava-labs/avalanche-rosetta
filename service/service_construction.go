@@ -86,10 +86,8 @@ func (s ConstructionService) ConstructionMetadata(
 	suggestedFee := gasPrice.Int64() * int64(transferGasLimit)
 	return &types.ConstructionMetadataResponse{
 		Metadata: map[string]interface{}{
-			"nonce":         nonce,
-			"gas_limit":     transferGasLimit,
-			"gas_price":     gasPrice,
-			"suggested_fee": suggestedFee,
+			"nonce":     nonce,
+			"gas_price": gasPrice,
 		},
 		SuggestedFee: []*types.Amount{
 			mapper.FeeAmount(suggestedFee),

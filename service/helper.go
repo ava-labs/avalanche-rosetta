@@ -143,6 +143,7 @@ func optionsFromInput(kv map[string]interface{}) (*txOptions, error) {
 	return &options, nil
 }
 
+// unmarshalJSONMap converts map[string]interface{} into a interface{}.
 func unmarshalJSONMap(m map[string]interface{}, i interface{}) error {
 	b, err := json.Marshal(m)
 	if err != nil {
@@ -151,3 +152,21 @@ func unmarshalJSONMap(m map[string]interface{}, i interface{}) error {
 
 	return json.Unmarshal(b, i)
 }
+
+// marshalJSONMap converts an interface into a map[string]interface{}.
+func marshalJSONMap(i interface{}) (map[string]interface{}, error) {
+	b, err := json.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
+// TODO: add marshal JSON Map
+// TODO: use mocks to test
