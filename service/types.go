@@ -45,6 +45,8 @@ func (o *options) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &ow); err != nil {
 		return err
 	}
+	o.From = ow.From
+	o.SuggestedFeeMultiplier = ow.SuggestedFeeMultiplier
 
 	if len(ow.Nonce) > 0 {
 		nonce, err := hexutil.DecodeBig(ow.Nonce)

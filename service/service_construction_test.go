@@ -166,13 +166,13 @@ func TestPreprocessMetadata(t *testing.T) {
 		)
 		assert.Nil(t, err)
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"}`
-		var options txOptions
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &options))
+		var opt options
+		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
-			Options: forceMarshalMap(t, options),
+			Options: forceMarshalMap(t, opt),
 		}, preprocessResponse)
 
-		metadata := &txMetadata{
+		metadata := &metadata{
 			GasPrice: big.NewInt(1000000000),
 			Nonce:    0,
 		}
@@ -195,14 +195,11 @@ func TestPreprocessMetadata(t *testing.T) {
 		).Once()
 		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
 			NetworkIdentifier: networkIdentifier,
-			Options:           forceMarshalMap(t, options),
+			Options:           forceMarshalMap(t, opt),
 		})
 		assert.Nil(t, err)
 		assert.Equal(t, &types.ConstructionMetadataResponse{
-			Metadata: map[string]interface{}{
-				"nonce":     uint64(0),
-				"gas_price": metadata.GasPrice,
-			}, // forceMarshalMap(t, metadata),
+			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "21000000000000",
