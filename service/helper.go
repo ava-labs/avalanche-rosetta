@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"math/big"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/ava-labs/avalanche-rosetta/client"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -27,6 +27,13 @@ type unsignedTx struct {
 	GasLimit uint64   `json:"gas"`
 	ChainID  *big.Int `json:"chain_id"`
 	Input    []byte   `json:"input"`
+}
+
+type txOptions struct {
+	From                   string   `json:"from"`
+	SuggestedFeeMultiplier *float64 `json:"suggested_fee_multiplier,omitempty"`
+	GasPrice               *big.Int `json:"gas_price,omitempty"`
+	Nonce                  *uint64  `json:"nonce,omitempty"`
 }
 
 type txMetadata struct {
@@ -125,6 +132,15 @@ func txFromMatches(
 	}
 
 	return tx, unTx, nil
+}
+
+func optionsFromInput(kv map[string]interface{}) (*txOptions, error) {
+	var options txOptions
+	if err := unmarshalJSONMap(kv, &options); err != nil {
+		return nil, err
+	}
+
+	return &options, nil
 }
 
 func unmarshalJSONMap(m map[string]interface{}, i interface{}) error {

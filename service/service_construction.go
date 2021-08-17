@@ -46,32 +46,47 @@ func (s ConstructionService) ConstructionMetadata(
 		return nil, errUnavailableOffline
 	}
 
-	from, ok := req.Options["from"].(string)
-	if !ok || from == "" {
+	options, err := optionsFromInput(req.Options)
+	if err != nil {
+		return nil, wrapError(errInvalidInput, "cannot unmarshal options")
+	}
+
+	if len(options.From) == 0 {
 		return nil, wrapError(errInvalidInput, "from address is not provided")
 	}
 
-	balance, err := s.client.BalanceAt(ctx, ethcommon.HexToAddress(from), nil)
-	if err != nil {
-		return nil, wrapError(errClientError, err)
+	var nonce uint64
+	if options.Nonce == nil {
+		nonce, err = s.client.NonceAt(ctx, ethcommon.HexToAddress(options.From), nil)
+		if err != nil {
+			return nil, wrapError(errClientError, err)
+		}
+	} else {
+		nonce = *options.Nonce
 	}
 
-	nonce, err := s.client.NonceAt(ctx, ethcommon.HexToAddress(from), nil)
-	if err != nil {
-		return nil, wrapError(errClientError, err)
+	var gasPrice *big.Int
+	if options.GasPrice == nil {
+		gasPrice, err = s.client.SuggestGasPrice(ctx)
+		if err != nil {
+			return nil, wrapError(errClientError, err)
+		}
+	} else {
+		gasPrice = options.GasPrice
 	}
 
-	gasPrice, err := s.client.SuggestGasPrice(ctx)
-	if err != nil {
-		return nil, wrapError(errClientError, err)
+	if options.SuggestedFeeMultiplier != nil {
+		newGasPrice := new(big.Float).Mul(
+			big.NewFloat(*options.SuggestedFeeMultiplier),
+			new(big.Float).SetInt(gasPrice),
+		)
+		newGasPrice.Int(gasPrice)
 	}
 
 	suggestedFee := gasPrice.Int64() * int64(transferGasLimit)
-
 	return &types.ConstructionMetadataResponse{
 		Metadata: map[string]interface{}{
 			"nonce":         nonce,
-			"balance":       balance,
 			"gas_limit":     transferGasLimit,
 			"gas_price":     gasPrice,
 			"suggested_fee": suggestedFee,
@@ -394,11 +409,20 @@ func (s ConstructionService) ConstructionPreprocess(
 
 	fromOp, _ := matches[0].First()
 	fromAddress := fromOp.Account.Address
-
+	options := map[string]interface{}{
+		"from": fromAddress,
+	}
+	if req.SuggestedFeeMultiplier != nil {
+		options["suggested_fee_multiplier"] = *req.SuggestedFeeMultiplier
+	}
+	if v, ok := req.Metadata["gas_price"]; ok {
+		options["gas_price"] = v
+	}
+	if v, ok := req.Metadata["nonce"]; ok {
+		options["nonce"] = v
+	}
 	return &types.ConstructionPreprocessResponse{
-		Options: map[string]interface{}{
-			"from": fromAddress,
-		},
+		Options: options,
 	}, nil
 }
 
