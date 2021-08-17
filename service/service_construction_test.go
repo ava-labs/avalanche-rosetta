@@ -421,36 +421,3 @@ func TestPreprocessMetadata(t *testing.T) {
 		}, metadataResponse)
 	})
 }
-
-func TestConstructionService(t *testing.T) {
-	// 	ctx := context.Background()
-	// 	client := &mocks.Client{}
-	// 	networkIdentifier := &types.NetworkIdentifier{
-	// 		Network:    "Fuji",
-	// 		Blockchain: "Avalanche",
-	// 	}
-	// 	service := ConstructionService{
-	// 		config: &Config{Mode: ModeOnline},
-	// 		client: client,
-	// 	}
-	//
-	// 	t.Run("basic flow", func(t *testing.T) {
-	// 		intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"AVAX","decimals":18}}}]` // nolint
-	// 		var ops []*types.Operation
-	// 		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
-	// 		preprocessResponse, err := service.ConstructionPreprocess(
-	// 			ctx,
-	// 			&types.ConstructionPreprocessRequest{
-	// 				NetworkIdentifier: networkIdentifier,
-	// 				Operations:        ops,
-	// 			},
-	// 		)
-	// 		assert.Nil(t, err)
-	// 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"}`
-	// 		var options txOptions
-	// 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &options))
-	// 		assert.Equal(t, &types.ConstructionPreprocessResponse{
-	// 			Options: forceMarshalMap(t, options),
-	// 		}, preprocessResponse)
-	// 	})
-}
