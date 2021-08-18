@@ -36,6 +36,6 @@ func TestConfig(t *testing.T) {
 		cfg := Config{
 			ChainID: big.NewInt(1),
 		}
-		assert.IsType(t, ethtypes.EIP155Signer{}, cfg.Signer())
+		assert.IsType(t, ethtypes.NewLondonSigner(big.NewInt(1)), cfg.Signer())
 	})
 }

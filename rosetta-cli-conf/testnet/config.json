@@ -16,7 +16,7 @@
   "data_directory": "rosetta-data",
   "construction": {
     "offline_url": "http://localhost:8080",
-    "stale_depth": 3,
+    "stale_depth": 5,
     "broadcast_limit": 5,
     "constructor_dsl_file": "./avalanche.ros",
     "end_conditions": {
