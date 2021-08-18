@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"math/big"
 
-	"github.com/coinbase/rosetta-sdk-go/parser"
-	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
@@ -17,22 +17,6 @@ const (
 	transferGasLimit = uint64(21000) //nolint:gomnd
 	genesisTimestamp = 946713601000  // min allowable timestamp
 )
-
-type unsignedTx struct {
-	Nonce    uint64   `json:"nonce"`
-	From     string   `json:"from"`
-	To       string   `json:"to"`
-	Value    *big.Int `json:"value"`
-	GasPrice *big.Int `json:"gas_price"`
-	GasLimit uint64   `json:"gas"`
-	ChainID  *big.Int `json:"chain_id"`
-	Input    []byte   `json:"input"`
-}
-
-type txMetadata struct {
-	Nonce    uint64   `json:"nonce"`
-	GasPrice *big.Int `json:"gas_price"`
-}
 
 func makeGenesisBlock(hash string) *types.Block {
 	return &types.Block{
@@ -78,55 +62,7 @@ func blockHeaderFromInput(
 	return header, nil
 }
 
-func txFromInput(input string) (*ethtypes.Transaction, error) {
-	tx := &ethtypes.Transaction{}
-	if err := tx.UnmarshalJSON([]byte(input)); err != nil {
-		return nil, err
-	}
-	return tx, nil
-}
-
-func txFromMatches(
-	matches []*parser.Match,
-	kv map[string]interface{},
-	chainID *big.Int,
-) (*ethtypes.Transaction, *unsignedTx, error) {
-	var metadata txMetadata
-	if err := unmarshalJSONMap(kv, &metadata); err != nil {
-		return nil, nil, err
-	}
-
-	fromOp, _ := matches[0].First()
-	fromAddress := fromOp.Account.Address
-	toOp, amount := matches[1].First()
-	toAddress := toOp.Account.Address
-	nonce := metadata.Nonce
-	gasPrice := metadata.GasPrice
-	transferData := []byte{}
-
-	tx := ethtypes.NewTransaction(
-		nonce,
-		ethcommon.HexToAddress(toAddress),
-		amount,
-		transferGasLimit,
-		gasPrice,
-		transferData,
-	)
-
-	unTx := &unsignedTx{
-		From:     fromAddress,
-		To:       toAddress,
-		Value:    amount,
-		Input:    tx.Data(),
-		Nonce:    tx.Nonce(),
-		GasPrice: gasPrice,
-		GasLimit: tx.Gas(),
-		ChainID:  chainID,
-	}
-
-	return tx, unTx, nil
-}
-
+// unmarshalJSONMap converts map[string]interface{} into a interface{}.
 func unmarshalJSONMap(m map[string]interface{}, i interface{}) error {
 	b, err := json.Marshal(m)
 	if err != nil {
@@ -134,4 +70,31 @@ func unmarshalJSONMap(m map[string]interface{}, i interface{}) error {
 	}
 
 	return json.Unmarshal(b, i)
+}
+
+// marshalJSONMap converts an interface into a map[string]interface{}.
+func marshalJSONMap(i interface{}) (map[string]interface{}, error) {
+	b, err := json.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
+// ChecksumAddress ensures an Ethereum hex address
+// is in Checksum Format. If the address cannot be converted,
+// it returns !ok.
+func ChecksumAddress(address string) (string, bool) {
+	addr, err := common.NewMixedcaseAddressFromString(address)
+	if err != nil {
+		return "", false
+	}
+
+	return addr.Address().Hex(), true
 }

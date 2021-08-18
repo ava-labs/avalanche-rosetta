@@ -1,4 +1,4 @@
-.PHONY: build setup test docker-build \
+.PHONY: mocks build setup test docker-build \
 				run-testnet run-testnet-offline run-mainnet run-mainnet-offline \
 				check-testnet-data check-testnet-construction \
 				check-mainnet-data check-mainnet-construction
@@ -11,7 +11,7 @@ DOCKER_ORG          ?= avaplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.5.0-fuji
+AVALANCHE_VERSION   ?= v1.5.0
 
 build:
 	go build -o ./rosetta-server ./cmd/server
@@ -106,3 +106,7 @@ check-mainnet-data:
 # Perform the Mainnet construction check
 check-mainnet-construction:
 	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/mainnet/config.json
+
+mocks:
+	rm -rf mocks;
+	mockery --dir client --all --case underscore --outpkg client --output mocks/client;
