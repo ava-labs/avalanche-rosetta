@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"math/big"
+	"strings"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -91,6 +92,10 @@ func marshalJSONMap(i interface{}) (map[string]interface{}, error) {
 // is in Checksum Format. If the address cannot be converted,
 // it returns !ok.
 func ChecksumAddress(address string) (string, bool) {
+	if !strings.HasPrefix(address, "0x") {
+		return "", false
+	}
+
 	addr, err := common.NewMixedcaseAddressFromString(address)
 	if err != nil {
 		return "", false
