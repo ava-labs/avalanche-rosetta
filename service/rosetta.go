@@ -1,7 +1,7 @@
 package service
 
 const (
-	NodeVersion       = "1.5.1-eth_call"
-	MiddlewareVersion = "0.0.8"
+	NodeVersion       = "1.5.2"
+	MiddlewareVersion = "0.0.9"
 	BlockchainName    = "Avalanche"
 )
