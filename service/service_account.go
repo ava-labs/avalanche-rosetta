@@ -50,6 +50,20 @@ func (s AccountService) AccountBalance(
 		return nil, wrapError(errInternalError, balanceErr)
 	}
 
+	nonce, nonceErr := s.client.NonceAt(ctx, address, header.Number)
+	if nonceErr != nil {
+		return nil, wrapError(errClientError, nonceErr)
+	}
+
+	metadata := &accountMetadata{
+		Nonce: nonce,
+	}
+
+	metadataMap, metadataErr := marshalJSONMap(metadata)
+	if err != nil {
+		return nil, wrapError(errInternalError, metadataErr)
+	}
+
 	resp := &types.AccountBalanceResponse{
 		BlockIdentifier: &types.BlockIdentifier{
 			Index: header.Number.Int64(),
@@ -58,6 +72,7 @@ func (s AccountService) AccountBalance(
 		Balances: []*types.Amount{
 			mapper.AvaxAmount(balance),
 		},
+		Metadata: metadataMap,
 	}
 
 	return resp, nil

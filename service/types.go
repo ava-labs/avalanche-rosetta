@@ -213,3 +213,34 @@ func (t *transaction) UnmarshalJSON(data []byte) error {
 	t.GasPrice = gasPrice
 	return nil
 }
+
+type accountMetadata struct {
+	Nonce uint64 `json:"nonce"`
+}
+
+type accountMetadataWire struct {
+	Nonce string `json:"nonce"`
+}
+
+func (m *accountMetadata) MarshalJSON() ([]byte, error) {
+	mw := &accountMetadataWire{
+		Nonce: hexutil.Uint64(m.Nonce).String(),
+	}
+
+	return json.Marshal(mw)
+}
+
+func (m *accountMetadata) UnmarshalJSON(data []byte) error {
+	var mw accountMetadataWire
+	if err := json.Unmarshal(data, &mw); err != nil {
+		return err
+	}
+
+	nonce, err := hexutil.DecodeUint64(mw.Nonce)
+	if err != nil {
+		return err
+	}
+
+	m.Nonce = nonce
+	return nil
+}
