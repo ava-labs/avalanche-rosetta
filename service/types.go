@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"math/big"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -224,7 +225,7 @@ type accountMetadataWire struct {
 
 func (m *accountMetadata) MarshalJSON() ([]byte, error) {
 	mw := &accountMetadataWire{
-		Nonce: hexutil.Uint64(m.Nonce).String(),
+		Nonce: strconv.FormatUint(m.Nonce, 10),
 	}
 
 	return json.Marshal(mw)
@@ -236,7 +237,7 @@ func (m *accountMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	nonce, err := hexutil.DecodeUint64(mw.Nonce)
+	nonce, err := strconv.ParseUint(mw.Nonce, 10, 64)
 	if err != nil {
 		return err
 	}
