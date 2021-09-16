@@ -78,8 +78,12 @@ github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6l
 github.com/ava-labs/avalanchego v1.5.3-rc.8/go.mod h1:Pg2pAvTXsyk8XQripaQ+HMwYIqFECLsXPapNk/3fFPw=
 github.com/ava-labs/avalanchego v1.5.3 h1:Gk4C9cH3p0SYRgRx8ky0DnjX6KKTMPqVX+j+dapBT4s=
 github.com/ava-labs/avalanchego v1.5.3/go.mod h1:mfsT8C6mfjCEAjE90q8aNh9BqGEFNBd2dgIr23RaePw=
+github.com/ava-labs/avalanchego v1.6.0-fuji h1:ua1inDnv/A2GQJ+lyyYYjfFiU9RfuonZjxESnBLqnVE=
+github.com/ava-labs/avalanchego v1.6.0-fuji/go.mod h1:SGp1fzgB9J51NPyyj+gdFc0oR5wP56RCHSwujweUhow=
 github.com/ava-labs/coreth v0.6.3-rc.1 h1:/KYxrndK9Hv0dHtlwrWAQEoHRgWqQYvE8Udgucs9BW0=
 github.com/ava-labs/coreth v0.6.3-rc.1/go.mod h1:Qm9s4/tTqKIF4cHWQQ5MOMyjGd/tC2oKFa1Fkumx9Ik=
+github.com/ava-labs/coreth v0.7.0-rc.10 h1:esECnmY9bpYdR6pdivbfJTjARsGifE3iyq3jtvoAKY4=
+github.com/ava-labs/coreth v0.7.0-rc.10/go.mod h1:PPTq4HZ79WuXAKg441JmiDCZGKfer3ULjDr1FwwcO88=
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.25.48/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
