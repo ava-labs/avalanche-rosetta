@@ -491,7 +491,7 @@ func (s ConstructionService) ConstructionPreprocess(
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas price string", v))
 		}
-		bigObj, ok := new(big.Int).SetString(stringObj, 10)
+		bigObj, ok := new(big.Int).SetString(stringObj, 10) //nolint:gomnd
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas price", v))
 		}
@@ -502,7 +502,7 @@ func (s ConstructionService) ConstructionPreprocess(
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid nonce string", v))
 		}
-		bigObj, ok := new(big.Int).SetString(stringObj, 10)
+		bigObj, ok := new(big.Int).SetString(stringObj, 10) //nolint:gomnd
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid nonce", v))
 		}
