@@ -225,7 +225,7 @@ type accountMetadataWire struct {
 
 func (m *accountMetadata) MarshalJSON() ([]byte, error) {
 	mw := &accountMetadataWire{
-		Nonce: strconv.FormatUint(m.Nonce, 10),
+		Nonce: strconv.FormatUint(m.Nonce, 10), //nolint:gomnd
 	}
 
 	return json.Marshal(mw)
@@ -237,7 +237,7 @@ func (m *accountMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	nonce, err := strconv.ParseUint(mw.Nonce, 10, 64)
+	nonce, err := strconv.ParseUint(mw.Nonce, 10, 64) //nolint:gomnd
 	if err != nil {
 		return err
 	}

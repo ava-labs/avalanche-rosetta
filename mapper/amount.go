@@ -19,7 +19,7 @@ func Amount(value *big.Int, currency *types.Currency) *types.Amount {
 
 func FeeAmount(value int64) *types.Amount {
 	return &types.Amount{
-		Value:    strconv.FormatInt(value, 10),
+		Value:    strconv.FormatInt(value, 10), //nolint:gomnd
 		Currency: AvaxCurrency,
 	}
 }
