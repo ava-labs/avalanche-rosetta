@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
-	github.com/ava-labs/avalanchego v1.6.0
+	github.com/ava-labs/avalanchego v1.6.1
 	github.com/ava-labs/coreth v0.7.0-rc.14
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/decred/dcrd/dcrec/secp256k1/v3 v3.0.0 // indirect
