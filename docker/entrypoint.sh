@@ -14,7 +14,8 @@ cat <<EOF > /app/avalanchego-config.json
   "api-ipcs-enabled": false,
   "api-keystore-enabled": false,
   "db-dir": "/data",
-  "chain-config-dir": "/app/configs/chains"
+  "chain-config-dir": "/app/configs/chains",
+  "network-require-validator-to-connect": true
 }
 EOF
 
