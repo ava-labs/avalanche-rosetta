@@ -20,5 +20,8 @@ func BlockMetadata(block *corethTypes.Block) map[string]interface{} {
 	if block.BlockGasCost() != nil {
 		meta["block_gas_cost"] = hexutil.EncodeBig(block.BlockGasCost())
 	}
+	if block.ExtDataGasUsed() != nil {
+		meta["ext_data_gas_used"] = hexutil.EncodeBig(block.ExtDataGasUsed())
+	}
 	return meta
 }
