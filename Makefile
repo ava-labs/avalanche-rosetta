@@ -11,7 +11,7 @@ DOCKER_ORG          ?= avaplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.6.2
+AVALANCHE_VERSION   ?= 5ab3afbcee49c5da005b00df4b57ee0b4cd63108
 
 build:
 	go build -o ./rosetta-server ./cmd/server
