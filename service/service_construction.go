@@ -85,9 +85,18 @@ func (s ConstructionService) ConstructionMetadata(
 		gasPrice = input.GasPrice
 	}
 
+	var gasLimit uint64
+	if input.GasLimit == nil {
+		// TODO: use dynamic gas limit suggestions
+		gasLimit = transferGasLimit
+	} else {
+		gasLimit = input.GasLimit.Uint64()
+	}
+
 	metadata := &metadata{
 		Nonce:    nonce,
 		GasPrice: gasPrice,
+		GasLimit: gasLimit,
 	}
 
 	metadataMap, err := marshalJSONMap(metadata)
@@ -95,7 +104,7 @@ func (s ConstructionService) ConstructionMetadata(
 		return nil, wrapError(errInternalError, err)
 	}
 
-	suggestedFee := gasPrice.Int64() * int64(transferGasLimit)
+	suggestedFee := gasPrice.Int64() * int64(gasLimit)
 	return &types.ConstructionMetadataResponse{
 		Metadata: metadataMap,
 		SuggestedFee: []*types.Amount{
@@ -286,6 +295,7 @@ func (s ConstructionService) ConstructionParse(
 	metadata := &parseMetadata{
 		Nonce:    tx.Nonce,
 		GasPrice: tx.GasPrice,
+		GasLimit: tx.GasLimit,
 		ChainID:  tx.ChainID,
 	}
 	metaMap, err := marshalJSONMap(metadata)
@@ -370,8 +380,8 @@ func (s ConstructionService) ConstructionPayloads(
 	toAddress := toOp.Account.Address
 	nonce := metadata.Nonce
 	gasPrice := metadata.GasPrice
+	gasLimit := metadata.GasLimit
 	chainID := s.config.ChainID
-	transferGasLimit := transferGasLimit
 	transferData := []byte{}
 
 	fromOp, _ := matches[0].First()
@@ -391,7 +401,7 @@ func (s ConstructionService) ConstructionPayloads(
 		nonce,
 		ethcommon.HexToAddress(checkTo),
 		amount,
-		transferGasLimit,
+		gasLimit,
 		gasPrice,
 		transferData,
 	)
