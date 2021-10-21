@@ -174,6 +174,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 		metadata := &metadata{
 			GasPrice: big.NewInt(1000000000),
+			GasLimit: 21_000,
 			Nonce:    0,
 		}
 
@@ -232,6 +233,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 		metadata := &metadata{
 			GasPrice: big.NewInt(1100000000),
+			GasLimit: 21_000,
 			Nonce:    0,
 		}
 
@@ -285,6 +287,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 		metadata := &metadata{
 			GasPrice: big.NewInt(1100000000),
+			GasLimit: 21_000,
 			Nonce:    0,
 		}
 
@@ -335,6 +338,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 		metadata := &metadata{
 			GasPrice: big.NewInt(1100000000),
+			GasLimit: 21_000,
 			Nonce:    0,
 		}
 
@@ -395,6 +399,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 		metadata := &metadata{
 			GasPrice: big.NewInt(1100000000),
+			GasLimit: 21_000,
 			Nonce:    1,
 		}
 
@@ -415,6 +420,67 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "23100000000000",
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+		}, metadataResponse)
+	})
+
+	t.Run("custom gas limit", func(t *testing.T) {
+		var ops []*types.Operation
+		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
+		multiplier := float64(1.1)
+		preprocessResponse, err := service.ConstructionPreprocess(
+			ctx,
+			&types.ConstructionPreprocessRequest{
+				NetworkIdentifier:      networkIdentifier,
+				Operations:             ops,
+				SuggestedFeeMultiplier: &multiplier,
+				Metadata: map[string]interface{}{
+					"gas_limit": "40000",
+				},
+			},
+		)
+		assert.Nil(t, err)
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","suggested_fee_multiplier":1.1,"gas_limit":"0x9c40"}`
+		var opt options
+		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		assert.Equal(t, &types.ConstructionPreprocessResponse{
+			Options: forceMarshalMap(t, &opt),
+		}, preprocessResponse)
+
+		metadata := &metadata{
+			GasPrice: big.NewInt(1100000000),
+			GasLimit: 40_000,
+			Nonce:    0,
+		}
+
+		client.On(
+			"SuggestGasPrice",
+			ctx,
+		).Return(
+			big.NewInt(1000000000),
+			nil,
+		).Once()
+		client.On(
+			"NonceAt",
+			ctx,
+			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+			(*big.Int)(nil),
+		).Return(
+			uint64(0),
+			nil,
+		).Once()
+		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
+			NetworkIdentifier: networkIdentifier,
+			Options:           forceMarshalMap(t, &opt),
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, &types.ConstructionMetadataResponse{
+			Metadata: forceMarshalMap(t, metadata),
+			SuggestedFee: []*types.Amount{
+				{
+					Value:    "44000000000000",
 					Currency: mapper.AvaxCurrency,
 				},
 			},
