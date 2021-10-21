@@ -87,7 +87,7 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		// TODO: use dynamic gas limit suggestions
+		// TODO: use dynamic gas limit suggestion
 		gasLimit = transferGasLimit
 	} else {
 		gasLimit = input.GasLimit.Uint64()
@@ -506,6 +506,17 @@ func (s ConstructionService) ConstructionPreprocess(
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas price", v))
 		}
 		preprocessOptions.GasPrice = bigObj
+	}
+	if v, ok := req.Metadata["gas_limit"]; ok {
+		stringObj, ok := v.(string)
+		if !ok {
+			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas limit string", v))
+		}
+		bigObj, ok := new(big.Int).SetString(stringObj, 10) //nolint:gomnd
+		if !ok {
+			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas limit", v))
+		}
+		preprocessOptions.GasLimit = bigObj
 	}
 	if v, ok := req.Metadata["nonce"]; ok {
 		stringObj, ok := v.(string)
