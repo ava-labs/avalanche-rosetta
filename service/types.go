@@ -15,8 +15,8 @@ const (
 type options struct {
 	From                   string   `json:"from"`
 	SuggestedFeeMultiplier *float64 `json:"suggested_fee_multiplier,omitempty"`
-	GasLimit               *big.Int `json:"gas_limit,omitempty"`
 	GasPrice               *big.Int `json:"gas_price,omitempty"`
+	GasLimit               *big.Int `json:"gas_limit,omitempty"`
 	Nonce                  *big.Int `json:"nonce,omitempty"`
 }
 
