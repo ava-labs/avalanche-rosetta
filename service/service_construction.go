@@ -89,14 +89,20 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		to := common.HexToAddress(input.To)
-		gasLimit, err = s.client.EstimateGas(ctx, interfaces.CallMsg{
-			From:  common.HexToAddress(input.From),
-			To:    &to,
-			Value: input.Value,
-		})
-		if err != nil {
-			return nil, wrapError(errClientError, err)
+		if len(input.To) == 0 || input.Value == nil {
+			// We guard against malformed inputs that may have been generated using
+			// a previous version of avalanche-rosetta.
+			gasLimit = transferGasLimit
+		} else {
+			to := common.HexToAddress(input.To)
+			gasLimit, err = s.client.EstimateGas(ctx, interfaces.CallMsg{
+				From:  common.HexToAddress(input.From),
+				To:    &to,
+				Value: input.Value,
+			})
+			if err != nil {
+				return nil, wrapError(errClientError, err)
+			}
 		}
 	} else {
 		gasLimit = input.GasLimit.Uint64()
