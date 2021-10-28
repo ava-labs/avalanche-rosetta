@@ -21,7 +21,8 @@
     "constructor_dsl_file": "./avalanche.ros",
     "end_conditions": {
       "create_account": 10,
-      "transfer": 10
+      "simple_transfer": 10,
+      "smart_contract_transfer": 10
     },
     "prefunded_accounts": []
   },

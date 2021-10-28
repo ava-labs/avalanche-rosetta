@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
@@ -27,6 +28,7 @@ type Client interface {
 	BalanceAt(context.Context, ethcommon.Address, *big.Int) (*big.Int, error)
 	NonceAt(context.Context, ethcommon.Address, *big.Int) (uint64, error)
 	SuggestGasPrice(context.Context) (*big.Int, error)
+	EstimateGas(ctx context.Context, msg interfaces.CallMsg) (uint64, error)
 	TxPoolStatus(context.Context) (*TxPoolStatus, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	NetworkName(context.Context) (string, error)

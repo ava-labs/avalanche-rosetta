@@ -10,6 +10,8 @@ import (
 
 	context "context"
 
+	interfaces "github.com/ava-labs/coreth/interfaces"
+
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/ava-labs/coreth/core/types"
@@ -105,6 +107,27 @@ func (_m *Client) ChainID(_a0 context.Context) (*big.Int, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EstimateGas provides a mock function with given fields: ctx, msg
+func (_m *Client) EstimateGas(ctx context.Context, msg interfaces.CallMsg) (uint64, error) {
+	ret := _m.Called(ctx, msg)
+
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context, interfaces.CallMsg) uint64); ok {
+		r0 = rf(ctx, msg)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, interfaces.CallMsg) error); ok {
+		r1 = rf(ctx, msg)
 	} else {
 		r1 = ret.Error(1)
 	}
