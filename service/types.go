@@ -14,6 +14,8 @@ const (
 
 type options struct {
 	From                   string   `json:"from"`
+	To                     string   `json:"to"`
+	Value                  *big.Int `json:"value"`
 	SuggestedFeeMultiplier *float64 `json:"suggested_fee_multiplier,omitempty"`
 	GasPrice               *big.Int `json:"gas_price,omitempty"`
 	GasLimit               *big.Int `json:"gas_limit,omitempty"`
@@ -22,6 +24,8 @@ type options struct {
 
 type optionsWire struct {
 	From                   string   `json:"from"`
+	To                     string   `json:"to"`
+	Value                  string   `json:"value"`
 	SuggestedFeeMultiplier *float64 `json:"suggested_fee_multiplier,omitempty"`
 	GasPrice               string   `json:"gas_price,omitempty"`
 	GasLimit               string   `json:"gas_limit,omitempty"`
@@ -31,7 +35,11 @@ type optionsWire struct {
 func (o *options) MarshalJSON() ([]byte, error) {
 	ow := &optionsWire{
 		From:                   o.From,
+		To:                     o.To,
 		SuggestedFeeMultiplier: o.SuggestedFeeMultiplier,
+	}
+	if o.Value != nil {
+		ow.Value = hexutil.EncodeBig(o.Value)
 	}
 	if o.GasPrice != nil {
 		ow.GasPrice = hexutil.EncodeBig(o.GasPrice)
@@ -51,7 +59,16 @@ func (o *options) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	o.From = ow.From
+	o.To = ow.To
 	o.SuggestedFeeMultiplier = ow.SuggestedFeeMultiplier
+
+	if len(ow.Value) > 0 {
+		value, err := hexutil.DecodeBig(ow.Value)
+		if err != nil {
+			return err
+		}
+		o.Value = value
+	}
 
 	if len(ow.GasPrice) > 0 {
 		gasPrice, err := hexutil.DecodeBig(ow.GasPrice)

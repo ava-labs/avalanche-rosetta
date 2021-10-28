@@ -12,6 +12,7 @@ import (
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
+	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
@@ -88,7 +89,12 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		gasLimit, err = s.client.EstimateGas(ctx, interfaces.CallMsg{})
+		to := common.HexToAddress(input.To)
+		gasLimit, err = s.client.EstimateGas(ctx, interfaces.CallMsg{
+			From:  common.HexToAddress(input.From),
+			To:    &to,
+			Value: input.Value,
+		})
 		if err != nil {
 			return nil, wrapError(errClientError, err)
 		}
@@ -483,20 +489,22 @@ func (s ConstructionService) ConstructionPreprocess(
 
 	fromOp, _ := matches[0].First()
 	fromAddress := fromOp.Account.Address
-	toOp, _ := matches[1].First()
+	toOp, amount := matches[1].First()
 	toAddress := toOp.Account.Address
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
 	}
-	_, ok = ChecksumAddress(toAddress)
+	checkTo, ok := ChecksumAddress(toAddress)
 	if !ok {
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
 	}
 
 	preprocessOptions := &options{
 		From:                   checkFrom,
+		To:                     checkTo,
+		Value:                  amount,
 		SuggestedFeeMultiplier: req.SuggestedFeeMultiplier,
 	}
 	if v, ok := req.Metadata["gas_price"]; ok {
