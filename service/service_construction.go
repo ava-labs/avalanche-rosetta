@@ -92,7 +92,6 @@ func (s ConstructionService) ConstructionMetadata(
 		if len(input.To) == 0 || input.Value == nil {
 			// We guard against malformed inputs that may have been generated using
 			// a previous version of avalanche-rosetta.
-			fmt.Println("skipping limit because values undefined")
 			gasLimit = transferGasLimit
 		} else {
 			to := common.HexToAddress(input.To)
