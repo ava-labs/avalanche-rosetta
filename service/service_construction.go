@@ -11,6 +11,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
@@ -87,8 +88,10 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		// TODO: use dynamic gas limit suggestion
-		gasLimit = transferGasLimit
+		gasLimit, err = s.client.EstimateGas(ctx, interfaces.CallMsg{})
+		if err != nil {
+			return nil, wrapError(errClientError, err)
+		}
 	} else {
 		gasLimit = input.GasLimit.Uint64()
 	}
