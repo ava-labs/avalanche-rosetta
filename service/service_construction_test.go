@@ -284,7 +284,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","gas_price":"0x4190ab00"}`
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","gas_price":"0x4190ab00"}` //nolint
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -297,6 +297,19 @@ func TestPreprocessMetadata(t *testing.T) {
 			Nonce:    0,
 		}
 
+		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
+		client.On(
+			"EstimateGas",
+			ctx,
+			interfaces.CallMsg{
+				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+				To:    &to,
+				Value: big.NewInt(42894881044106498),
+			},
+		).Return(
+			uint64(21000),
+			nil,
+		).Once()
 		client.On(
 			"NonceAt",
 			ctx,
@@ -338,7 +351,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","gas_price":"0x4190ab00","suggested_fee_multiplier":1.1}` //nolint
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","gas_price":"0x4190ab00","suggested_fee_multiplier":1.1}` //nolint
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -351,6 +364,19 @@ func TestPreprocessMetadata(t *testing.T) {
 			Nonce:    0,
 		}
 
+		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
+		client.On(
+			"EstimateGas",
+			ctx,
+			interfaces.CallMsg{
+				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+				To:    &to,
+				Value: big.NewInt(42894881044106498),
+			},
+		).Return(
+			uint64(21000),
+			nil,
+		).Once()
 		client.On(
 			"NonceAt",
 			ctx,
@@ -389,7 +415,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","suggested_fee_multiplier":1.1}`
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1}` //nolint
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -402,6 +428,19 @@ func TestPreprocessMetadata(t *testing.T) {
 			Nonce:    0,
 		}
 
+		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
+		client.On(
+			"EstimateGas",
+			ctx,
+			interfaces.CallMsg{
+				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+				To:    &to,
+				Value: big.NewInt(42894881044106498),
+			},
+		).Return(
+			uint64(21000),
+			nil,
+		).Once()
 		client.On(
 			"SuggestGasPrice",
 			ctx,
@@ -450,7 +489,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","suggested_fee_multiplier":1.1, "nonce":"0x1"}`
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1, "nonce":"0x1"}` //nolint
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -463,6 +502,19 @@ func TestPreprocessMetadata(t *testing.T) {
 			Nonce:    1,
 		}
 
+		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
+		client.On(
+			"EstimateGas",
+			ctx,
+			interfaces.CallMsg{
+				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+				To:    &to,
+				Value: big.NewInt(42894881044106498),
+			},
+		).Return(
+			uint64(21000),
+			nil,
+		).Once()
 		client.On(
 			"SuggestGasPrice",
 			ctx,
@@ -502,7 +554,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","suggested_fee_multiplier":1.1,"gas_limit":"0x9c40"}` //nolint:lll
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1,"gas_limit":"0x9c40"}` //nolint:lll
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
