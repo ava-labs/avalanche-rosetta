@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/ava-labs/coreth/core/types"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -24,6 +25,7 @@ type Client interface {
 	TransactionByHash(context.Context, ethcommon.Hash) (*ethtypes.Transaction, bool, error)
 	TransactionReceipt(context.Context, ethcommon.Hash) (*ethtypes.Receipt, error)
 	TraceTransaction(context.Context, string) (*Call, []*FlatCall, error)
+	FilterLogs(ctx context.Context, q interfaces.FilterQuery) ([]types.Log, error)
 	SendTransaction(context.Context, *ethtypes.Transaction) error
 	BalanceAt(context.Context, ethcommon.Address, *big.Int) (*big.Int, error)
 	NonceAt(context.Context, ethcommon.Address, *big.Int) (uint64, error)
