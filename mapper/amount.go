@@ -35,7 +35,7 @@ func Erc721Amount(indexHash common.Hash, contractAddress common.Address, isSende
 	if isSender {
 		index = new(big.Int).Neg(index)
 	}
-	var metadata map[string]interface{}
+	metadata := make(map[string]interface{})
 	metadata["TokenType"] = "ERC721"
 	metadata["contractAddress"] = contractAddress.String()
 	metadata["indexTransfered"] = index.String()
@@ -54,7 +54,7 @@ func Erc20Amount(data []byte, contractAddress common.Address, isSender bool) *ty
 	if isSender {
 		decimalValue = new(big.Int).Neg(decimalValue)
 	}
-	var metadata map[string]interface{}
+	metadata := make(map[string]interface{})
 	metadata["TokenType"] = "ERC20"
 	metadata["contractAddress"] = contractAddress.String()
 
