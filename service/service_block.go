@@ -189,7 +189,12 @@ func (s *BlockService) fetchTransaction(
 	//Get EVM Logs for the desired transaction. Filter only transfers and that transaction hash  Let's add caching layer
 	//Then pass them into mapper.Transaction.
 
-	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace, flattened)
+	transactionEvmLogs, err := s.client.EvmLogs(ctx, header.Hash(), tx.Hash())
+	if err != nil {
+		return nil, wrapError(errClientError, err)
+	}
+
+	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace, flattened, transactionEvmLogs)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}

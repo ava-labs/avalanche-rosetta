@@ -25,6 +25,7 @@ type Client interface {
 	TransactionByHash(context.Context, ethcommon.Hash) (*ethtypes.Transaction, bool, error)
 	TransactionReceipt(context.Context, ethcommon.Hash) (*ethtypes.Receipt, error)
 	TraceTransaction(context.Context, string) (*Call, []*FlatCall, error)
+	EvmLogs(ctx context.Context, blockHash ethcommon.Hash, transactionHash ethcommon.Hash) ([]types.Log, error)
 	FilterLogs(ctx context.Context, q interfaces.FilterQuery) ([]types.Log, error)
 	SendTransaction(context.Context, *ethtypes.Transaction) error
 	BalanceAt(context.Context, ethcommon.Address, *big.Int) (*big.Int, error)
@@ -41,6 +42,7 @@ type Client interface {
 type client struct {
 	*EthClient
 	*InfoClient
+	*EvmLogsClient
 }
 
 // NewClient returns a new client for Avalanche APIs
@@ -55,8 +57,14 @@ func NewClient(endpoint string) (Client, error) {
 		return nil, err
 	}
 
+	evmlogs, err := NewEvmLogsClient(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	return client{
-		EthClient:  eth,
-		InfoClient: info,
+		EthClient:     eth,
+		InfoClient:    info,
+		EvmLogsClient: evmlogs,
 	}, nil
 }

@@ -24,6 +24,7 @@ func Transaction(
 	receipt *ethtypes.Receipt,
 	trace *client.Call,
 	flattenedTrace []*client.FlatCall,
+	transferLogs []ethtypes.Log,
 ) (*types.Transaction, error) {
 	ops := []*types.Operation{}
 	sender := msg.From()
@@ -62,6 +63,18 @@ func Transaction(
 
 	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
+
+	//Let's go!
+	for _, transferLog := range transferLogs {
+
+		operation := types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: int64(len(ops)),
+			},
+			Status: types.String(StatusSuccess),
+		}
+		ops = append(ops, &operation)
+	}
 
 	return &types.Transaction{
 		TransactionIdentifier: &types.TransactionIdentifier{

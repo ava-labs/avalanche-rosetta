@@ -41,14 +41,14 @@ func NewEvmLogsClient(endpoint string) (*EvmLogsClient, error) {
 }
 
 // NewEthClient returns a new EVM client
-func (c *EvmLogsClient) GetEvmLogs(ctx context.Context, blockHash *common.Hash, transactionHash *common.Hash) ([]types.Log, error) {
+func (c *EvmLogsClient) EvmLogs(ctx context.Context, blockHash common.Hash, transactionHash common.Hash) ([]types.Log, error) {
 	blockLogs, isCached := c.cache.Get(blockHash.String())
 
 	if !isCached {
 		var err error
 		var topics [][]common.Hash = [][]common.Hash{{common.HexToHash(transferMethodHash)}}
 
-		var filter interfaces.FilterQuery = interfaces.FilterQuery{BlockHash: blockHash, Topics: topics}
+		var filter interfaces.FilterQuery = interfaces.FilterQuery{BlockHash: &blockHash, Topics: topics}
 		blockLogs, err = c.ethClient.FilterLogs(ctx, filter)
 
 		if err != nil {
@@ -60,7 +60,7 @@ func (c *EvmLogsClient) GetEvmLogs(ctx context.Context, blockHash *common.Hash, 
 	var filteredLogs []types.Log
 
 	for _, log := range blockLogs.([]types.Log) {
-		if log.TxHash == *transactionHash {
+		if log.TxHash == transactionHash {
 			filteredLogs = append(filteredLogs, log)
 		}
 	}
