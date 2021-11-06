@@ -19,3 +19,4 @@ rosetta-data
 .avalanchego
 *.swp
 data
+.vscode*
