@@ -64,16 +64,59 @@ func Transaction(
 	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
 
-	//Let's go!
 	for _, transferLog := range transferLogs {
+		//ERC721 index the value in the transfer event.  ERC20's do not
+		if len(transferLog.Topics) == 4 {
+			contractAddress := transferLog.Address
+			addressFrom := transferLog.Topics[1]
+			addressTo := transferLog.Topics[2]
+			erc721Index := transferLog.Topics[3] //Erc721 4th topic is the index.  Data is empty
+			receiptOp := types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: int64(len(ops)),
+				},
+				Status:  types.String(StatusSuccess),
+				Type:    OpCall,
+				Amount:  Erc721Amount(erc721Index, contractAddress, false),
+				Account: Account(ConvertHashToAddress(&addressTo)),
+			}
+			sendingOp := types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: int64(len(ops) + 1),
+				},
+				Status:  types.String(StatusSuccess),
+				Type:    OpCall,
+				Amount:  Erc721Amount(erc721Index, contractAddress, true),
+				Account: Account(ConvertHashToAddress(&addressFrom)),
+			}
 
-		operation := types.Operation{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: int64(len(ops)),
-			},
-			Status: types.String(StatusSuccess),
+			ops = append(ops, &receiptOp)
+			ops = append(ops, &sendingOp)
+		} else {
+			contractAddress := transferLog.Address
+			addressFrom := transferLog.Topics[1]
+			addressTo := transferLog.Topics[2]
+			receiptOp := types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: int64(len(ops)),
+				},
+				Status:  types.String(StatusSuccess),
+				Type:    OpCall,
+				Amount:  Erc20Amount(transferLog.Data, contractAddress, false),
+				Account: Account(ConvertHashToAddress(&addressTo)),
+			}
+			sendingOp := types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: int64(len(ops) + 1),
+				},
+				Status:  types.String(StatusSuccess),
+				Type:    OpCall,
+				Amount:  Erc20Amount(transferLog.Data, contractAddress, true),
+				Account: Account(ConvertHashToAddress(&addressFrom)),
+			}
+			ops = append(ops, &receiptOp)
+			ops = append(ops, &sendingOp)
 		}
-		ops = append(ops, &operation)
 	}
 
 	return &types.Transaction{
