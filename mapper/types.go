@@ -43,6 +43,16 @@ var (
 		Decimals: 18, //nolint:gomnd
 	}
 
+	Erc721DefaultCurrency = &types.Currency{
+		Symbol:   "ERC721",
+		Decimals: 0, //nolint:gomnd
+	}
+
+	Erc20DefaultCurrency = &types.Currency{
+		Symbol:   "ERC20",
+		Decimals: 0, //nolint:gomnd
+	}
+
 	OperationStatuses = []*types.OperationStatus{
 		{
 			Status:     StatusSuccess,
