@@ -35,7 +35,8 @@ Before you start running the server you need to create a configuration file:
 {
   "rpc_endpoint": "https://api.avax-test.network",
   "mode": "online",
-  "listen_addr": "0.0.0.0:8080"
+  "listen_addr": "0.0.0.0:8080",
+  "genesis_block_hash" :"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b",
 }
 ```
 
@@ -55,7 +56,8 @@ Full configuration example:
   "listen_addr": "0.0.0.0:8080",
   "network_name": "Fuji",
   "chain_id": 43113,
-  "log_requests": true
+  "log_requests": true,
+  "genesis_block_hash" :"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b",
 }
 ```
 
