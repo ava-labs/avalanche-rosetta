@@ -30,7 +30,7 @@ func AvaxAmount(value *big.Int) *types.Amount {
 	return Amount(value, AvaxCurrency)
 }
 
-func Erc721Amount(indexHash common.Hash, contractAddress common.Address, isSender bool) *types.Amount {
+func Erc721Amount(indexHash common.Hash, contractAddress common.Address, contractSymbol string, contractDecimal uint8, isSender bool) *types.Amount {
 	index := indexHash.Big()
 	if isSender {
 		index = new(big.Int).Neg(index)
@@ -41,13 +41,16 @@ func Erc721Amount(indexHash common.Hash, contractAddress common.Address, isSende
 	metadata["indexTransfered"] = index.String()
 
 	return &types.Amount{
-		Value:    index.String(),
-		Currency: Erc721DefaultCurrency,
-		Metadata: metadata,
+		Value: index.String(),
+		Currency: &types.Currency{
+			Symbol:   contractSymbol,
+			Decimals: int32(contractDecimal),
+			Metadata: metadata,
+		},
 	}
 }
 
-func Erc20Amount(data []byte, contractAddress common.Address, isSender bool) *types.Amount {
+func Erc20Amount(data []byte, contractAddress common.Address, contractSymbol string, contractDecimal uint8, isSender bool) *types.Amount {
 	value := common.Bytes2Hex(data)
 	decimalValue := hexutil.MustDecodeBig(value)
 
@@ -59,8 +62,11 @@ func Erc20Amount(data []byte, contractAddress common.Address, isSender bool) *ty
 	metadata["contractAddress"] = contractAddress.String()
 
 	return &types.Amount{
-		Value:    decimalValue.String(),
-		Currency: Erc20DefaultCurrency,
-		Metadata: metadata,
+		Value: decimalValue.String(),
+		Currency: &types.Currency{
+			Symbol:   contractSymbol,
+			Decimals: int32(contractDecimal),
+			Metadata: metadata,
+		},
 	}
 }
