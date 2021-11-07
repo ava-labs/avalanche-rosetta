@@ -37,12 +37,14 @@ type Client interface {
 	NetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]Peer, error)
 	NodeVersion(context.Context) (string, error)
+	ContractInfo(contractAddress ethcommon.Address, isErc20 bool) (*ContractInfo, error)
 }
 
 type client struct {
 	*EthClient
 	*InfoClient
 	*EvmLogsClient
+	*ContractClient
 }
 
 // NewClient returns a new client for Avalanche APIs
@@ -62,9 +64,15 @@ func NewClient(endpoint string) (Client, error) {
 		return nil, err
 	}
 
+	contract, err := NewContractClient(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	return client{
-		EthClient:     eth,
-		InfoClient:    info,
-		EvmLogsClient: evmlogs,
+		EthClient:      eth,
+		InfoClient:     info,
+		EvmLogsClient:  evmlogs,
+		ContractClient: contract,
 	}, nil
 }

@@ -25,6 +25,7 @@ func Transaction(
 	trace *client.Call,
 	flattenedTrace []*client.FlatCall,
 	transferLogs []ethtypes.Log,
+	client client.Client,
 ) (*types.Transaction, error) {
 	ops := []*types.Operation{}
 	sender := msg.From()
@@ -67,6 +68,11 @@ func Transaction(
 	for _, transferLog := range transferLogs {
 		//ERC721 index the value in the transfer event.  ERC20's do not
 		if len(transferLog.Topics) == 4 {
+
+			contractInfo, err := client.ContractInfo(transferLog.Address, false)
+			if err != nil {
+				return nil, err
+			}
 			contractAddress := transferLog.Address
 			addressFrom := transferLog.Topics[1]
 			addressTo := transferLog.Topics[2]
@@ -77,7 +83,7 @@ func Transaction(
 				},
 				Status:  types.String(StatusSuccess),
 				Type:    OpCall,
-				Amount:  Erc721Amount(erc721Index, contractAddress, false),
+				Amount:  Erc721Amount(erc721Index, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
 				Account: Account(ConvertHashToAddress(&addressTo)),
 			}
 			sendingOp := types.Operation{
@@ -86,13 +92,17 @@ func Transaction(
 				},
 				Status:  types.String(StatusSuccess),
 				Type:    OpCall,
-				Amount:  Erc721Amount(erc721Index, contractAddress, true),
+				Amount:  Erc721Amount(erc721Index, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
 				Account: Account(ConvertHashToAddress(&addressFrom)),
 			}
 
 			ops = append(ops, &receiptOp)
 			ops = append(ops, &sendingOp)
 		} else {
+			contractInfo, err := client.ContractInfo(transferLog.Address, true)
+			if err != nil {
+				return nil, err
+			}
 			contractAddress := transferLog.Address
 			addressFrom := transferLog.Topics[1]
 			addressTo := transferLog.Topics[2]
@@ -102,7 +112,7 @@ func Transaction(
 				},
 				Status:  types.String(StatusSuccess),
 				Type:    OpCall,
-				Amount:  Erc20Amount(transferLog.Data, contractAddress, false),
+				Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
 				Account: Account(ConvertHashToAddress(&addressTo)),
 			}
 			sendingOp := types.Operation{
@@ -111,7 +121,7 @@ func Transaction(
 				},
 				Status:  types.String(StatusSuccess),
 				Type:    OpCall,
-				Amount:  Erc20Amount(transferLog.Data, contractAddress, true),
+				Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
 				Account: Account(ConvertHashToAddress(&addressFrom)),
 			}
 			ops = append(ops, &receiptOp)

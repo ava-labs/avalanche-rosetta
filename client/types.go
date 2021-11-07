@@ -7,8 +7,20 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
+const (
+	ERC721DefaultSymbol   = "ERC721"
+	ERC721DefaultDecimals = 0
+	ERC20DefaultSymbol    = "ERC20"
+	ERC20DefaultDecimals  = 0
+)
+
 type infoPeersResponse struct {
 	Peers []Peer `json:"peers"`
+}
+
+type ContractInfo struct {
+	Symbol   string `json:"symbol"`
+	Decimals uint8  `json:"decimals"`
 }
 
 type Peer struct {
