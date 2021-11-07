@@ -13,6 +13,10 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 )
 
+const (
+	topicsInErc721Transfer = 4
+)
+
 var (
 	x2crate = big.NewInt(1000000000) //nolint:gomnd
 )
@@ -66,9 +70,8 @@ func Transaction(
 	ops = append(ops, traceOps...)
 
 	for _, transferLog := range transferLogs {
-		//ERC721 index the value in the transfer event.  ERC20's do not
-		if len(transferLog.Topics) == 4 {
-
+		// ERC721 index the value in the transfer event.  ERC20's do not
+		if len(transferLog.Topics) == topicsInErc721Transfer {
 			contractInfo, err := client.ContractInfo(transferLog.Address, false)
 			if err != nil {
 				return nil, err
@@ -76,7 +79,7 @@ func Transaction(
 			contractAddress := transferLog.Address
 			addressFrom := transferLog.Topics[1]
 			addressTo := transferLog.Topics[2]
-			erc721Index := transferLog.Topics[3] //Erc721 4th topic is the index.  Data is empty
+			erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
 			receiptOp := types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: int64(len(ops)),

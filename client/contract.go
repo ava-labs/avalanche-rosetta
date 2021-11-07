@@ -51,7 +51,7 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 	symbol, symbolErr := token.Symbol(nil)
 	decimals, decimalErr := token.Decimals(nil)
 
-	//Any of these indicate a failure to get complete information from contract
+	// Any of these indicate a failure to get complete information from contract
 	if symbolErr != nil || decimalErr != nil || symbol == "" || decimals == 0 {
 		if isErc20 {
 			symbol = ERC20DefaultSymbol
@@ -63,7 +63,7 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 	}
 	contractInfo := ContractInfo{Symbol: symbol, Decimals: decimals}
 
-	//Cache defaults for contract address to avoid unnecessary lookups
+	// Cache defaults for contract address to avoid unnecessary lookups
 	c.cache.Put(contractAddress, contractInfo)
 	return &contractInfo, nil
 }

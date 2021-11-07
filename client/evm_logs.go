@@ -41,9 +41,12 @@ func NewEvmLogsClient(endpoint string) (*EvmLogsClient, error) {
 }
 
 // NewEthClient returns a new EVM client
-func (c *EvmLogsClient) EvmLogs(ctx context.Context, blockHash common.Hash, transactionHash common.Hash) ([]types.Log, error) {
+func (c *EvmLogsClient) EvmLogs(
+	ctx context.Context,
+	blockHash common.Hash,
+	transactionHash common.Hash,
+) ([]types.Log, error) {
 	blockLogs, isCached := c.cache.Get(blockHash.String())
-
 	if !isCached {
 		var err error
 		var topics [][]common.Hash = [][]common.Hash{{common.HexToHash(transferMethodHash)}}
