@@ -82,7 +82,7 @@ func Transaction(
 					Index: int64(len(ops)),
 				},
 				Status:  types.String(StatusSuccess),
-				Type:    OpCall,
+				Type:    OpErc721,
 				Amount:  Erc721Amount(erc721Index, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
 				Account: Account(ConvertHashToAddress(&addressTo)),
 			}
@@ -91,7 +91,7 @@ func Transaction(
 					Index: int64(len(ops) + 1),
 				},
 				Status:  types.String(StatusSuccess),
-				Type:    OpCall,
+				Type:    OpErc721,
 				Amount:  Erc721Amount(erc721Index, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
 				Account: Account(ConvertHashToAddress(&addressFrom)),
 			}
@@ -111,7 +111,7 @@ func Transaction(
 					Index: int64(len(ops)),
 				},
 				Status:  types.String(StatusSuccess),
-				Type:    OpCall,
+				Type:    OpErc20,
 				Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
 				Account: Account(ConvertHashToAddress(&addressTo)),
 			}
@@ -120,7 +120,7 @@ func Transaction(
 					Index: int64(len(ops) + 1),
 				},
 				Status:  types.String(StatusSuccess),
-				Type:    OpCall,
+				Type:    OpErc20,
 				Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
 				Account: Account(ConvertHashToAddress(&addressFrom)),
 			}

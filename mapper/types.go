@@ -22,6 +22,8 @@ const (
 	OpDestruct     = "DESTRUCT"
 	OpImport       = "IMPORT"
 	OpExport       = "EXPORT"
+	OpErc20        = "ERC20"
+	OpErc721       = "ERC721"
 
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
