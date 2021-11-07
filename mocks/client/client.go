@@ -455,3 +455,54 @@ func (_m *Client) TxPoolStatus(_a0 context.Context) (*client.TxPoolStatus, error
 
 	return r0, r1
 }
+func (_m *Client) ContractInfo(_a0 common.Address, _a1 bool) (*client.ContractInfo, error) {
+	ret := _m.Called()
+
+	var r0 *client.ContractInfo
+	if rf, ok := ret.Get(0).(func(context.Context) *client.ContractInfo); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.ContractInfo)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+func (_m *Client) EvmLogs(_a0 context.Context, _a1 common.Hash, _a2 common.Hash) ([]types.Log, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *common.Hash
+	if rf, ok := ret.Get(0).(func(context.Context) *common.Hash); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*common.Hash)
+		}
+	}
+	var r1 *common.Hash
+	if rf, ok := ret.Get(0).(func(context.Context) *common.Hash); ok {
+		r1 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r1 = ret.Get(0).(*common.Hash)
+		}
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r2 = rf(_a0)
+	} else {
+		r2 = ret.Error(1)
+	}
+
+	return r0, r1, r2
+}
