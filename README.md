@@ -138,6 +138,12 @@ Run the construction check:
 make check-testnet-construction
 ```
 
+## Rebuild the ContractInfoToken.go autogen file.
+
+```bash
+abigen --abi contractInfo.abi --pkg main --type ContractInfoToken --out client/contractInfoToken.go
+```
+
 ## License
 
 BSD 3-Clause

@@ -17,13 +17,13 @@ const (
 	transferMethodHash = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 )
 
-// InfoClient is a client for the Info API
+// EvmLogsClient is a client for requesting evm logs
 type EvmLogsClient struct {
 	ethClient *ethclient.Client
 	cache     *cache.LRU
 }
 
-// NewEthClient returns a new EVM client
+// NewEvmLogsClient returns a new EVM Logs client
 func NewEvmLogsClient(endpoint string) (*EvmLogsClient, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
 
@@ -40,7 +40,7 @@ func NewEvmLogsClient(endpoint string) (*EvmLogsClient, error) {
 	}, nil
 }
 
-// NewEthClient returns a new EVM client
+// NewEvmLogsClient returns a new EVM Logs client
 func (c *EvmLogsClient) EvmLogs(
 	ctx context.Context,
 	blockHash common.Hash,

@@ -13,13 +13,13 @@ const (
 	contractCacheSize = 1000
 )
 
-// InfoClient is a client for the Info API
+// ContractClient is a client for the calling contract information
 type ContractClient struct {
 	ethClient *ethclient.Client
 	cache     *cache.LRU
 }
 
-// NewEthClient returns a new EVM client
+// NewContractClient returns a new ContractInfo client
 func NewContractClient(endpoint string) (*ContractClient, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
 
@@ -36,7 +36,7 @@ func NewContractClient(endpoint string) (*ContractClient, error) {
 	}, nil
 }
 
-// NewEthClient returns a new EVM client
+// ContractInfo returns the ContractInfo for a specific address
 func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bool) (*ContractInfo, error) {
 	cachedInfo, isCached := c.cache.Get(contractAddress)
 
