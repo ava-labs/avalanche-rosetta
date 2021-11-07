@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	defaultCacheSize   = 100
+	logCacheSize       = 100
 	transferMethodHash = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 )
 
@@ -32,7 +32,7 @@ func NewEvmLogsClient(endpoint string) (*EvmLogsClient, error) {
 		return nil, err
 	}
 
-	cache := &cache.LRU{Size: 100}
+	cache := &cache.LRU{Size: logCacheSize}
 
 	return &EvmLogsClient{
 		ethClient: c,

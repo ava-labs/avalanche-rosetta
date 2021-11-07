@@ -9,6 +9,10 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+const (
+	contractCacheSize = 1000
+)
+
 // InfoClient is a client for the Info API
 type ContractClient struct {
 	ethClient *ethclient.Client
@@ -24,7 +28,7 @@ func NewContractClient(endpoint string) (*ContractClient, error) {
 		return nil, err
 	}
 
-	cache := &cache.LRU{Size: 100}
+	cache := &cache.LRU{Size: contractCacheSize}
 
 	return &ContractClient{
 		ethClient: c,
