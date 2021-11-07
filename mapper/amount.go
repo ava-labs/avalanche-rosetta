@@ -30,7 +30,12 @@ func AvaxAmount(value *big.Int) *types.Amount {
 	return Amount(value, AvaxCurrency)
 }
 
-func Erc721Amount(indexHash common.Hash, contractAddress common.Address, contractSymbol string, contractDecimal uint8, isSender bool) *types.Amount {
+func Erc721Amount(
+	indexHash common.Hash,
+	contractAddress common.Address,
+	contractSymbol string,
+	contractDecimal uint8,
+	isSender bool) *types.Amount {
 	index := indexHash.Big()
 	if isSender {
 		index = new(big.Int).Neg(index)
@@ -50,7 +55,12 @@ func Erc721Amount(indexHash common.Hash, contractAddress common.Address, contrac
 	}
 }
 
-func Erc20Amount(data []byte, contractAddress common.Address, contractSymbol string, contractDecimal uint8, isSender bool) *types.Amount {
+func Erc20Amount(
+	data []byte,
+	contractAddress common.Address,
+	contractSymbol string,
+	contractDecimal uint8,
+	isSender bool) *types.Amount {
 	value := common.Bytes2Hex(data)
 	decimalValue := hexutil.MustDecodeBig(value)
 
