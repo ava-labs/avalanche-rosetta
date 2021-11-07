@@ -26,7 +26,6 @@ type Client interface {
 	TransactionReceipt(context.Context, ethcommon.Hash) (*ethtypes.Receipt, error)
 	TraceTransaction(context.Context, string) (*Call, []*FlatCall, error)
 	EvmLogs(ctx context.Context, blockHash ethcommon.Hash, transactionHash ethcommon.Hash) ([]types.Log, error)
-	FilterLogs(ctx context.Context, q interfaces.FilterQuery) ([]types.Log, error)
 	SendTransaction(context.Context, *ethtypes.Transaction) error
 	BalanceAt(context.Context, ethcommon.Address, *big.Int) (*big.Int, error)
 	NonceAt(context.Context, ethcommon.Address, *big.Int) (uint64, error)
