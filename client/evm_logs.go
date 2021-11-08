@@ -40,7 +40,7 @@ func NewEvmLogsClient(endpoint string) (*EvmLogsClient, error) {
 	}, nil
 }
 
-// NewEvmLogsClient returns a new EVM Logs client
+// EvmLogs returns a set of evm logs based on the requested block hash and transaction hash
 func (c *EvmLogsClient) EvmLogs(
 	ctx context.Context,
 	blockHash common.Hash,
