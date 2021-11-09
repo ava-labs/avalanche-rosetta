@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ava-labs/avalanche-rosetta/cache"
+	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/ethclient"
 	"github.com/ava-labs/coreth/interfaces"

@@ -36,17 +36,14 @@ func Erc721Amount(
 	contractSymbol string,
 	contractDecimal uint8,
 	isSender bool) *types.Amount {
+
 	index := indexHash.Big()
-	if isSender {
-		index = new(big.Int).Neg(index)
-	}
 	metadata := make(map[string]interface{})
 	metadata["tokenType"] = "ERC721"
 	metadata["contractAddress"] = contractAddress.String()
 	metadata["indexTransfered"] = index.String()
 
 	return &types.Amount{
-		Value: index.String(),
 		Currency: &types.Currency{
 			Symbol:   contractSymbol,
 			Decimals: int32(contractDecimal),
