@@ -15,13 +15,15 @@ var (
 )
 
 type config struct {
-	Mode             string `json:"mode"`
-	RPCEndpoint      string `json:"rpc_endpoint"`
-	ListenAddr       string `json:"listen_addr"`
-	NetworkName      string `json:"network_name"`
-	ChainID          int64  `json:"chain_id"`
-	LogRequests      bool   `json:"log_requests"`
-	GenesisBlockHash string `json:"genesis_block_hash"`
+	Mode                 string `json:"mode"`
+	RPCEndpoint          string `json:"rpc_endpoint"`
+	ListenAddr           string `json:"listen_addr"`
+	NetworkName          string `json:"network_name"`
+	ChainID              int64  `json:"chain_id"`
+	LogRequests          bool   `json:"log_requests"`
+	GenesisBlockHash     string `json:"genesis_block_hash"`
+	IndexErc721Transfers bool   `json:"index_erc721_transfers"`
+	IndexDefaultTokens   bool   `json:"index_default_tokens"`
 }
 
 func readConfig(path string) (*config, error) {

@@ -9,11 +9,13 @@ import (
 
 // Config holds the service configuration
 type Config struct {
-	Mode             string
-	ChainID          *big.Int
-	NetworkID        *types.NetworkIdentifier
-	GenesisBlockHash string
-	AvaxAssetID      string
+	Mode                 string
+	ChainID              *big.Int
+	NetworkID            *types.NetworkIdentifier
+	GenesisBlockHash     string
+	AvaxAssetID          string
+	IndexErc721Transfers bool
+	IndexDefaultTokens   bool
 }
 
 const (

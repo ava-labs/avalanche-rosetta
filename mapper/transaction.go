@@ -11,6 +11,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 )
 
 const (
@@ -30,6 +31,8 @@ func Transaction(
 	flattenedTrace []*client.FlatCall,
 	transferLogs []ethtypes.Log,
 	client client.Client,
+	parseErc721 bool,
+	includeUnknownTokens bool,
 ) (*types.Transaction, error) {
 	ops := []*types.Operation{}
 	sender := msg.From()
@@ -72,10 +75,22 @@ func Transaction(
 	for _, transferLog := range transferLogs {
 		// ERC721 index the value in the transfer event.  ERC20's do not
 		if len(transferLog.Topics) == topicsInErc721Transfer {
+
+			//Only parse Erc721 when setting is enabled
+			if !parseErc721 {
+				continue
+			}
+
 			contractInfo, err := client.ContractInfo(transferLog.Address, false)
 			if err != nil {
 				return nil, err
 			}
+
+			//Don't include default tokens if setting is not enabled
+			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.ERC721DefaultSymbol {
+				continue
+			}
+
 			contractAddress := transferLog.Address
 			addressFrom := transferLog.Topics[1]
 			addressTo := transferLog.Topics[2]
@@ -106,6 +121,12 @@ func Transaction(
 			if err != nil {
 				return nil, err
 			}
+
+			//Don't include default tokens if setting is not enabled
+			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.ERC20DefaultSymbol {
+				continue
+			}
+
 			contractAddress := transferLog.Address
 			addressFrom := transferLog.Topics[1]
 			addressTo := transferLog.Topics[2]
