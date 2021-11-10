@@ -9,6 +9,6 @@ func ConvertHashToAddress(hash *ethcommon.Hash) *ethcommon.Address {
 	if hash == nil {
 		return nil
 	}
-	address := ethcommon.BytesToAddress(hash[13:32])
+	address := ethcommon.BytesToAddress(hash[12:32])
 	return &address
 }
