@@ -2,7 +2,8 @@ name: Create and Push Image
 
 on:
   push:
-    branches: [ docker ]
+    tags:
+      - '*'
 
 jobs:
   CreateAndPush:
@@ -16,6 +17,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASS }}
+
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
