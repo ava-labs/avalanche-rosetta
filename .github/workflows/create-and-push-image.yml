@@ -5,7 +5,7 @@ on:
     branches: [ docker ]
 
 jobs:
-  Create Image:
+  CreateImage:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
