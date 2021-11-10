@@ -397,7 +397,7 @@ func (s ConstructionService) ConstructionPayloads(
 	gasPrice := metadata.GasPrice
 	gasLimit := metadata.GasLimit
 	chainID := s.config.ChainID
-	transferData := []byte{}
+	transferData := []byte(metadata.Data)
 
 	fromOp, _ := matches[0].First()
 	fromAddress := fromOp.Account.Address

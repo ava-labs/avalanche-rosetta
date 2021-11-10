@@ -29,7 +29,7 @@ func TestChecksumAddress(t *testing.T) {
 	})
 
 	t.Run("invalid length", func(t *testing.T) {
-		testAddr := "0x05da63494DfbfF6AA215E074D34aC9A25B"
+		testAddr := ""
 		addr, ok := ChecksumAddress(testAddr)
 		assert.False(t, ok)
 		assert.Equal(t, "", addr)
