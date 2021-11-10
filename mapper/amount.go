@@ -36,7 +36,6 @@ func Erc721Amount(
 	contractSymbol string,
 	contractDecimal uint8,
 	isSender bool) *types.Amount {
-
 	index := indexHash.Big()
 	metadata := make(map[string]interface{})
 	metadata["tokenType"] = "ERC721"
