@@ -6,7 +6,6 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 func Amount(value *big.Int, currency *types.Currency) *types.Amount {
@@ -57,8 +56,8 @@ func Erc20Amount(
 	contractSymbol string,
 	contractDecimal uint8,
 	isSender bool) *types.Amount {
-	value := common.Bytes2Hex(data)
-	decimalValue := hexutil.MustDecodeBig(value)
+	value := common.BytesToHash(data)
+	decimalValue := value.Big()
 
 	if isSender {
 		decimalValue = new(big.Int).Neg(decimalValue)

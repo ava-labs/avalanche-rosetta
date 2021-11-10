@@ -41,7 +41,8 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 	cachedInfo, isCached := c.cache.Get(contractAddress)
 
 	if isCached {
-		return cachedInfo.(*ContractInfo), nil
+		castCachedInfo := cachedInfo.(ContractInfo)
+		return &castCachedInfo, nil
 	}
 
 	token, err := NewContractInfoToken(contractAddress, c.ethClient)
