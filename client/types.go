@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	ERC721DefaultSymbol   = "ERC721"
-	ERC721DefaultDecimals = 0
-	ERC20DefaultSymbol    = "ERC20"
-	ERC20DefaultDecimals  = 0
+	UnknownERC20Symbol   = "ERC20"
+	UnknownERC20Decimals = 0
+
+	UnknownERC721Symbol   = "ERC721"
+	UnknownERC721Decimals = 0
 )
 
 type infoPeersResponse struct {

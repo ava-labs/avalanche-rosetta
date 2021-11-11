@@ -477,7 +477,7 @@ func (_m *Client) ContractInfo(_a0 common.Address, _a1 bool) (*client.ContractIn
 	return r0, r1
 }
 
-func (_m *Client) EvmLogs(_a0 context.Context, _a1 common.Hash, _a2 common.Hash) ([]types.Log, error) {
+func (_m *Client) EvmTransferLogs(_a0 context.Context, _a1 common.Hash, _a2 common.Hash) ([]types.Log, error) {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 []types.Log

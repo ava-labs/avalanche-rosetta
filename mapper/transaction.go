@@ -86,7 +86,7 @@ func Transaction(
 			}
 
 			// Don't include default tokens if setting is not enabled
-			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.ERC721DefaultSymbol {
+			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC721Symbol {
 				continue
 			}
 
@@ -99,7 +99,7 @@ func Transaction(
 					Index: int64(len(ops)),
 				},
 				Status:  types.String(StatusSuccess),
-				Type:    OpErc721,
+				Type:    OpErc721Transfer,
 				Amount:  Erc721Amount(erc721Index, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
 				Account: Account(ConvertHashToAddress(&addressTo)),
 			}
@@ -108,7 +108,7 @@ func Transaction(
 					Index: int64(len(ops) + 1),
 				},
 				Status:  types.String(StatusSuccess),
-				Type:    OpErc721,
+				Type:    OpErc721Transfer,
 				Amount:  Erc721Amount(erc721Index, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
 				Account: Account(ConvertHashToAddress(&addressFrom)),
 			}
@@ -122,7 +122,7 @@ func Transaction(
 			}
 
 			// Don't include default tokens if setting is not enabled
-			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.ERC20DefaultSymbol {
+			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC20Symbol {
 				continue
 			}
 
@@ -134,7 +134,7 @@ func Transaction(
 					Index: int64(len(ops)),
 				},
 				Status:  types.String(StatusSuccess),
-				Type:    OpErc20,
+				Type:    OpErc20Transfer,
 				Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
 				Account: Account(ConvertHashToAddress(&addressTo)),
 			}
@@ -143,7 +143,7 @@ func Transaction(
 					Index: int64(len(ops) + 1),
 				},
 				Status:  types.String(StatusSuccess),
-				Type:    OpErc20,
+				Type:    OpErc20Transfer,
 				Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
 				Account: Account(ConvertHashToAddress(&addressFrom)),
 			}
