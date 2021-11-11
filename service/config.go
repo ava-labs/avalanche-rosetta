@@ -16,6 +16,9 @@ type Config struct {
 	AvaxAssetID          string
 	IndexErc721Transfers bool
 	IndexDefaultTokens   bool
+
+	// Upgrade Times
+	AP5Activation uint64
 }
 
 const (

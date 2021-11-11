@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"github.com/ava-labs/coreth/params"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
@@ -34,6 +36,9 @@ const (
 )
 
 var (
+	MainnetAP5Activation = params.AvalancheMainnetChainConfig.ApricotPhase5BlockTimestamp
+	FujiAP5Activation    = params.AvalancheFujiChainConfig.ApricotPhase5BlockTimestamp
+
 	StageBootstrap = &types.SyncStatus{
 		Synced: types.Bool(false),
 		Stage:  types.String("BOOTSTRAP"),
