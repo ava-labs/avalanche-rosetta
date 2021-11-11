@@ -55,11 +55,11 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 	// Any of these indicate a failure to get complete information from contract
 	if symbolErr != nil || decimalErr != nil || symbol == "" || decimals == 0 {
 		if isErc20 {
-			symbol = ERC20DefaultSymbol
-			decimals = ERC20DefaultDecimals
+			symbol = UnknownERC20Symbol
+			decimals = UnknownERC20Decimals
 		} else {
-			symbol = ERC721DefaultSymbol
-			decimals = ERC721DefaultDecimals
+			symbol = UnknownERC721Symbol
+			decimals = UnknownERC721Decimals
 		}
 	}
 	contractInfo := ContractInfo{Symbol: symbol, Decimals: decimals}

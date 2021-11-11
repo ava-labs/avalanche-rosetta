@@ -187,7 +187,7 @@ func (s *BlockService) fetchTransaction(
 		return nil, wrapError(errClientError, err)
 	}
 
-	transactionEvmLogs, err := s.client.EvmLogs(ctx, header.Hash(), tx.Hash())
+	transactionEvmLogs, err := s.client.EvmTransferLogs(ctx, header.Hash(), tx.Hash())
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
