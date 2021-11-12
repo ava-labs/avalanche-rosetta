@@ -37,6 +37,7 @@ type Client interface {
 	Peers(context.Context) ([]Peer, error)
 	NodeVersion(context.Context) (string, error)
 	ContractInfo(contractAddress ethcommon.Address, isErc20 bool) (*ContractInfo, error)
+	CallContract(ctx context.Context, msg interfaces.CallMsg, blockNumber *big.Int) ([]byte, error)
 }
 
 type client struct {

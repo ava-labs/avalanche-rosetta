@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	seconds2milliseconds = 1000
+	seconds2milliseconds  = 1000
+	BalanceOfMethodPrefix = "0x70a08231000000000000000000000000"
 )
 
 type options struct {
