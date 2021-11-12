@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ava-labs/coreth/interfaces"
 )
 
 // AccountService implements the /account/* endpoints
@@ -45,10 +47,6 @@ func (s AccountService) AccountBalance(
 	}
 
 	address := ethcommon.HexToAddress(req.AccountIdentifier.Address)
-	balance, balanceErr := s.client.BalanceAt(context.Background(), address, header.Number)
-	if err != nil {
-		return nil, wrapError(errInternalError, balanceErr)
-	}
 
 	nonce, nonceErr := s.client.NonceAt(ctx, address, header.Number)
 	if nonceErr != nil {
@@ -64,14 +62,48 @@ func (s AccountService) AccountBalance(
 		return nil, wrapError(errInternalError, metadataErr)
 	}
 
+	avaxBalance, balanceErr := s.client.BalanceAt(context.Background(), address, header.Number)
+	if balanceErr != nil {
+		return nil, wrapError(errInternalError, balanceErr)
+	}
+
+	balances := make([]*types.Amount, len(req.Currencies)+1)
+	balances = append(balances, mapper.AvaxAmount(avaxBalance))
+
+	for _, currency := range req.Currencies {
+		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
+		if !ok {
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies must have contractAddress in metadata field"))
+		}
+		data := BalanceOfMethodPrefix + req.AccountIdentifier.Address
+		contractAddress := ethcommon.HexToAddress(value.(string))
+		callMsg := interfaces.CallMsg{To: &contractAddress, Data: []byte(data)}
+		response, err := s.client.CallContract(ctx, callMsg, header.Number)
+		if err != nil {
+			return nil, wrapError(errInternalError, err)
+		}
+
+		contractInfo, err := s.client.ContractInfo(contractAddress, true)
+		if err != nil {
+			return nil, wrapError(errInternalError, err)
+		} else if contractInfo.Symbol == client.UnknownERC20Symbol {
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("unable to pull contract info for %s", contractAddress.String()))
+		}
+
+		amount := mapper.Erc20Amount(response, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false)
+		balances = append(balances, amount)
+
+		if err != nil {
+			return nil, wrapError(errInternalError, err)
+		}
+	}
+
 	resp := &types.AccountBalanceResponse{
 		BlockIdentifier: &types.BlockIdentifier{
 			Index: header.Number.Int64(),
 			Hash:  header.Hash().String(),
 		},
-		Balances: []*types.Amount{
-			mapper.AvaxAmount(balance),
-		},
+		Balances: balances,
 		Metadata: metadataMap,
 	}
 
