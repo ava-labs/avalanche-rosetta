@@ -87,7 +87,8 @@ func (s AccountService) AccountBalance(
 		if err != nil {
 			return nil, wrapError(errInternalError, err)
 		} else if contractInfo.Symbol == client.UnknownERC20Symbol {
-			return nil, wrapError(errCallInvalidParams, fmt.Errorf("unable to pull contract info for %s", contractAddress.String()))
+			return nil, wrapError(errCallInvalidParams,
+				fmt.Errorf("unable to pull contract info for %s", contractAddress.String()))
 		}
 
 		amount := mapper.Erc20Amount(response, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false)
