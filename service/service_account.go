@@ -8,6 +8,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -67,17 +68,25 @@ func (s AccountService) AccountBalance(
 		return nil, wrapError(errInternalError, balanceErr)
 	}
 
-	balances := make([]*types.Amount, len(req.Currencies)+1)
-	balances = append(balances, mapper.AvaxAmount(avaxBalance))
+	var balances []*types.Amount
 
 	for _, currency := range req.Currencies {
 		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
 		if !ok {
 			return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies must have contractAddress in metadata field"))
 		}
-		data := BalanceOfMethodPrefix + req.AccountIdentifier.Address
+		identifierAddress := req.AccountIdentifier.Address
+		if has0xPrefix(identifierAddress) {
+			identifierAddress = identifierAddress[2:42]
+		}
+
+		data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
+		if err != nil {
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("failed to decode contractAddress in metadata field"))
+		}
+
 		contractAddress := ethcommon.HexToAddress(value.(string))
-		callMsg := interfaces.CallMsg{To: &contractAddress, Data: []byte(data)}
+		callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
 		response, err := s.client.CallContract(ctx, callMsg, header.Number)
 		if err != nil {
 			return nil, wrapError(errInternalError, err)
@@ -98,6 +107,8 @@ func (s AccountService) AccountBalance(
 			return nil, wrapError(errInternalError, err)
 		}
 	}
+
+	balances = append(balances, mapper.AvaxAmount(avaxBalance))
 
 	resp := &types.AccountBalanceResponse{
 		BlockIdentifier: &types.BlockIdentifier{
