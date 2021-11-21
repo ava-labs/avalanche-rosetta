@@ -5,11 +5,13 @@ import (
 )
 
 const (
-	MainnetChainID = 43114
-	MainnetAssetID = "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
+	MainnetChainID       = 43114
+	MainnetAssetID       = "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
+	MainnetAP5Activation = 2000000000 // TODO: SET!!
 
-	FujiChainID = 43113
-	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
+	FujiChainID       = 43113
+	FujiAssetID       = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
+	FujiAP5Activation = 1637690400 // 11/23/21 6PM UTC
 
 	OpCall         = "CALL"
 	OpFee          = "FEE"

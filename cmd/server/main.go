@@ -78,10 +78,10 @@ func main() {
 	switch cfg.ChainID {
 	case mapper.MainnetChainID:
 		assetID = mapper.MainnetAssetID
-		AP5Activation = 2000000000 // TODO: SET!!
+		AP5Activation = mapper.MainnetAP5Activation
 	case mapper.FujiChainID:
 		assetID = mapper.FujiAssetID
-		AP5Activation = 1637690400 // 11/23/21 6PM UTC
+		AP5Activation = mapper.FujiAP5Activation
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
 	}
