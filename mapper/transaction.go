@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"fmt"
 	"log"
 	"math/big"
 	"reflect"
@@ -88,9 +89,13 @@ func CrossChainTransactions(
 		return transactions, nil
 	}
 
+	// Initialize Atomic Transaction
 	tx := &evm.Tx{}
 	if _, err := codecManager.Unmarshal(extra, tx); err != nil {
-		return transactions, err
+		return nil, err
+	}
+	if err := tx.Sign(codecManager, nil); err != nil {
+		return nil, err
 	}
 
 	var idx int64
@@ -172,7 +177,7 @@ func CrossChainTransactions(
 			idx++
 		}
 	default:
-		panic("Unsupported transaction:" + reflect.TypeOf(t).String())
+		return nil, fmt.Errorf("Unsupported transaction: %s", reflect.TypeOf(t).String())
 	}
 
 	transactions = append(transactions, &types.Transaction{
