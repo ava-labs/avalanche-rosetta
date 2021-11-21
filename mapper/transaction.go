@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"reflect"
 	"strings"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
@@ -171,7 +170,7 @@ func crossChainTransaction(
 			idx++
 		}
 	default:
-		return nil, fmt.Errorf("Unsupported transaction: %s", reflect.TypeOf(t).String())
+		return nil, fmt.Errorf("Unsupported transaction: %T", t)
 	}
 	return ops, nil
 }
@@ -179,7 +178,7 @@ func crossChainTransaction(
 func CrossChainTransactions(
 	avaxAssetID string,
 	block *ethtypes.Block,
-	AP5Activation uint64,
+	ap5Activation uint64,
 ) ([]*types.Transaction, error) {
 	transactions := []*types.Transaction{}
 
@@ -189,15 +188,15 @@ func CrossChainTransactions(
 	}
 
 	// Initialize Atomic Transactions
-	atomicTxs := make([]*evm.Tx, 0)
-	if block.Time() < AP5Activation {
+	var atomicTxs []*evm.Tx
+	if block.Time() < ap5Activation {
 		// Prior to Apricot Phase 5, there was only one atomic transaction per
 		// block.
 		tx := new(evm.Tx)
 		if _, err := codecManager.Unmarshal(extra, tx); err != nil {
 			return nil, err
 		}
-		atomicTxs = append(atomicTxs, tx)
+		atomicTxs = []*evm.Tx{tx}
 	} else {
 		if _, err := codecManager.Unmarshal(extra, &atomicTxs); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal atomic tx (AP5) due to %w", err)
@@ -215,6 +214,9 @@ func CrossChainTransactions(
 
 	// TODO: migrate to using atomic transaction ID instead of marking as a block
 	// transaction
+	//
+	// NOTE: We need to be very careful about this because it will require
+	// integrators to re-index the chain to get the new result.
 	transactions = append(transactions, &types.Transaction{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: block.Hash().String(),
