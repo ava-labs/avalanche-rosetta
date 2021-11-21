@@ -14,6 +14,9 @@ type Config struct {
 	NetworkID        *types.NetworkIdentifier
 	GenesisBlockHash string
 	AvaxAssetID      string
+
+	// Upgrade Times
+	AP5Activation uint64
 }
 
 const (
