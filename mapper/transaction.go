@@ -78,6 +78,104 @@ func Transaction(
 	}, nil
 }
 
+func crossChainTransaction(
+	rawIdx int,
+	avaxAssetID string,
+	tx *evm.Tx,
+) ([]*types.Operation, error) {
+	var (
+		ops = []*types.Operation{}
+		idx = int64(rawIdx)
+	)
+
+	// Prepare transaction for ID calcuation
+	if err := tx.Sign(codecManager, nil); err != nil {
+		return nil, err
+	}
+
+	switch t := tx.UnsignedAtomicTx.(type) {
+	case *evm.UnsignedImportTx:
+		// Create de-duplicated list of input
+		// transaction IDs
+		mTxIDs := map[string]struct{}{}
+		for _, in := range t.ImportedInputs {
+			mTxIDs[in.TxID.String()] = struct{}{}
+		}
+		i := 0
+		txIDs := make([]string, len(mTxIDs))
+		for txID := range mTxIDs {
+			txIDs[i] = txID
+			i++
+		}
+
+		for _, out := range t.Outs {
+			if out.AssetID.String() != avaxAssetID {
+				continue
+			}
+
+			op := &types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: idx,
+				},
+				Type:   OpImport,
+				Status: types.String(StatusSuccess),
+				Account: &types.AccountIdentifier{
+					Address: out.Address.Hex(),
+				},
+				Amount: &types.Amount{
+					Value:    new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), x2crate).String(),
+					Currency: AvaxCurrency,
+				},
+				Metadata: map[string]interface{}{
+					"tx":            t.ID().String(),
+					"tx_ids":        txIDs,
+					"blockchain_id": t.BlockchainID.String(),
+					"network_id":    t.NetworkID,
+					"source_chain":  t.SourceChain.String(),
+					"meta":          t.Metadata,
+					"asset_id":      out.AssetID.String(),
+				},
+			}
+			ops = append(ops, op)
+			idx++
+		}
+	case *evm.UnsignedExportTx:
+		for _, in := range t.Ins {
+			if in.AssetID.String() != avaxAssetID {
+				continue
+			}
+
+			op := &types.Operation{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: idx,
+				},
+				Type:   OpExport,
+				Status: types.String(StatusSuccess),
+				Account: &types.AccountIdentifier{
+					Address: in.Address.Hex(),
+				},
+				Amount: &types.Amount{
+					Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(x2crate)).String(),
+					Currency: AvaxCurrency,
+				},
+				Metadata: map[string]interface{}{
+					"tx":                t.ID().String(),
+					"blockchain_id":     t.BlockchainID.String(),
+					"network_id":        t.NetworkID,
+					"destination_chain": t.DestinationChain.String(),
+					"meta":              t.Metadata,
+					"asset_id":          in.AssetID.String(),
+				},
+			}
+			ops = append(ops, op)
+			idx++
+		}
+	default:
+		return nil, fmt.Errorf("Unsupported transaction: %s", reflect.TypeOf(t).String())
+	}
+	return ops, nil
+}
+
 func CrossChainTransactions(
 	avaxAssetID string,
 	block *ethtypes.Block,
@@ -106,94 +204,13 @@ func CrossChainTransactions(
 		}
 	}
 
-	var idx int64
 	ops := []*types.Operation{}
 	for _, tx := range atomicTxs {
-		// Prepare transaction for ID calcuation
-		if err := tx.Sign(codecManager, nil); err != nil {
+		txOps, err := crossChainTransaction(len(ops), avaxAssetID, tx)
+		if err != nil {
 			return nil, err
 		}
-
-		switch t := tx.UnsignedAtomicTx.(type) {
-		case *evm.UnsignedImportTx:
-			// Create de-duplicated list of input
-			// transaction IDs
-			mTxIDs := map[string]struct{}{}
-			for _, in := range t.ImportedInputs {
-				mTxIDs[in.TxID.String()] = struct{}{}
-			}
-			i := 0
-			txIDs := make([]string, len(mTxIDs))
-			for txID := range mTxIDs {
-				txIDs[i] = txID
-				i++
-			}
-
-			for _, out := range t.Outs {
-				if out.AssetID.String() != avaxAssetID {
-					continue
-				}
-
-				op := &types.Operation{
-					OperationIdentifier: &types.OperationIdentifier{
-						Index: idx,
-					},
-					Type:   OpImport,
-					Status: types.String(StatusSuccess),
-					Account: &types.AccountIdentifier{
-						Address: out.Address.Hex(),
-					},
-					Amount: &types.Amount{
-						Value:    new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), x2crate).String(),
-						Currency: AvaxCurrency,
-					},
-					Metadata: map[string]interface{}{
-						"tx":            t.ID().String(),
-						"tx_ids":        txIDs,
-						"blockchain_id": t.BlockchainID.String(),
-						"network_id":    t.NetworkID,
-						"source_chain":  t.SourceChain.String(),
-						"meta":          t.Metadata,
-						"asset_id":      out.AssetID.String(),
-					},
-				}
-				ops = append(ops, op)
-				idx++
-			}
-		case *evm.UnsignedExportTx:
-			for _, in := range t.Ins {
-				if in.AssetID.String() != avaxAssetID {
-					continue
-				}
-
-				op := &types.Operation{
-					OperationIdentifier: &types.OperationIdentifier{
-						Index: idx,
-					},
-					Type:   OpExport,
-					Status: types.String(StatusSuccess),
-					Account: &types.AccountIdentifier{
-						Address: in.Address.Hex(),
-					},
-					Amount: &types.Amount{
-						Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(x2crate)).String(),
-						Currency: AvaxCurrency,
-					},
-					Metadata: map[string]interface{}{
-						"tx":                t.ID().String(),
-						"blockchain_id":     t.BlockchainID.String(),
-						"network_id":        t.NetworkID,
-						"destination_chain": t.DestinationChain.String(),
-						"meta":              t.Metadata,
-						"asset_id":          in.AssetID.String(),
-					},
-				}
-				ops = append(ops, op)
-				idx++
-			}
-		default:
-			return nil, fmt.Errorf("Unsupported transaction: %s", reflect.TypeOf(t).String())
-		}
+		ops = append(ops, txOps...)
 	}
 
 	// TODO: migrate to using atomic transaction ID instead of marking as a block
