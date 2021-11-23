@@ -75,11 +75,11 @@ github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
-github.com/ava-labs/avalanchego v1.6.4/go.mod h1:DzxlGkF8hj3GiwRoQfHq9gJfyt4EyeIpAsdfBOBg6mI=
-github.com/ava-labs/avalanchego v1.6.5 h1:xzta2OGAjF7ka06Cl1IoB4jtrqhAuxjI1onVDGWwdsk=
-github.com/ava-labs/avalanchego v1.6.5/go.mod h1:M21LNXMX5AcvUfQ0x1wKewOEgJjOcq8W08m3gmnGJAU=
-github.com/ava-labs/coreth v0.7.4-rc.1 h1:d2UAV+f1Ku3Ngu//tctGH5c45g38sZh1Re47QNW/Xi8=
-github.com/ava-labs/coreth v0.7.4-rc.1/go.mod h1:Tfx58OW7evspvjd69fM/cQ9UyPtYGTfUkGBsP5PtAK8=
+github.com/ava-labs/avalanchego v1.6.6-0.20211122023205-994831adda9b/go.mod h1:jwfTpP+SB9AZVnHBuh3/d2WNbsIgGwUpqOfOgtEkelk=
+github.com/ava-labs/avalanchego v1.7.0-fuji h1:26ClTT8iJFo9f5EZPJPXV1nzt3G4pz5vhH4DB53IJuI=
+github.com/ava-labs/avalanchego v1.7.0-fuji/go.mod h1:jwfTpP+SB9AZVnHBuh3/d2WNbsIgGwUpqOfOgtEkelk=
+github.com/ava-labs/coreth v0.8.0-rc.2 h1:6E4WKaz7lczH9JcnDecc5nRjPF97ctHAafOnmPw+SAg=
+github.com/ava-labs/coreth v0.8.0-rc.2/go.mod h1:rxTZLwjo6dfyPRkf5WfLEFP3C6Tn21lCjjLUH5XqeqM=
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.25.48/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
