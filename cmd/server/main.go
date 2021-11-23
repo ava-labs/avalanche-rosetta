@@ -78,10 +78,10 @@ func main() {
 	switch cfg.ChainID {
 	case mapper.MainnetChainID:
 		assetID = mapper.MainnetAssetID
-		AP5Activation = mapper.MainnetAP5Activation
+		AP5Activation = mapper.MainnetAP5Activation.Uint64()
 	case mapper.FujiChainID:
 		assetID = mapper.FujiAssetID
-		AP5Activation = mapper.FujiAP5Activation
+		AP5Activation = mapper.FujiAP5Activation.Uint64()
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
 	}
