@@ -1,9 +1,9 @@
 package mapper
 
 import (
+	"fmt"
 	"log"
 	"math/big"
-	"reflect"
 	"strings"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
@@ -166,24 +166,20 @@ func Transaction(
 	}, nil
 }
 
-func CrossChainTransactions(
+func crossChainTransaction(
+	rawIdx int,
 	avaxAssetID string,
-	block *ethtypes.Block,
-) ([]*types.Transaction, error) {
-	transactions := []*types.Transaction{}
+	tx *evm.Tx,
+) ([]*types.Operation, error) {
+	var (
+		ops = []*types.Operation{}
+		idx = int64(rawIdx)
+	)
 
-	extra := block.ExtData()
-	if len(extra) == 0 {
-		return transactions, nil
+	// Prepare transaction for ID calcuation
+	if err := tx.Sign(codecManager, nil); err != nil {
+		return nil, err
 	}
-
-	tx := &evm.Tx{}
-	if _, err := codecManager.Unmarshal(extra, tx); err != nil {
-		return transactions, err
-	}
-
-	var idx int64
-	ops := []*types.Operation{}
 
 	switch t := tx.UnsignedAtomicTx.(type) {
 	case *evm.UnsignedImportTx:
@@ -219,6 +215,7 @@ func CrossChainTransactions(
 					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
+					"tx":            t.ID().String(),
 					"tx_ids":        txIDs,
 					"blockchain_id": t.BlockchainID.String(),
 					"network_id":    t.NetworkID,
@@ -250,6 +247,7 @@ func CrossChainTransactions(
 					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
+					"tx":                t.ID().String(),
 					"blockchain_id":     t.BlockchainID.String(),
 					"network_id":        t.NetworkID,
 					"destination_chain": t.DestinationChain.String(),
@@ -261,9 +259,53 @@ func CrossChainTransactions(
 			idx++
 		}
 	default:
-		panic("Unsupported transaction:" + reflect.TypeOf(t).String())
+		return nil, fmt.Errorf("Unsupported transaction: %T", t)
+	}
+	return ops, nil
+}
+
+func CrossChainTransactions(
+	avaxAssetID string,
+	block *ethtypes.Block,
+	ap5Activation uint64,
+) ([]*types.Transaction, error) {
+	transactions := []*types.Transaction{}
+
+	extra := block.ExtData()
+	if len(extra) == 0 {
+		return transactions, nil
 	}
 
+	// Initialize Atomic Transactions
+	var atomicTxs []*evm.Tx
+	if block.Time() < ap5Activation {
+		// Prior to Apricot Phase 5, there was only one atomic transaction per
+		// block.
+		tx := new(evm.Tx)
+		if _, err := codecManager.Unmarshal(extra, tx); err != nil {
+			return nil, err
+		}
+		atomicTxs = []*evm.Tx{tx}
+	} else {
+		if _, err := codecManager.Unmarshal(extra, &atomicTxs); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal atomic tx (AP5) due to %w", err)
+		}
+	}
+
+	ops := []*types.Operation{}
+	for _, tx := range atomicTxs {
+		txOps, err := crossChainTransaction(len(ops), avaxAssetID, tx)
+		if err != nil {
+			return nil, err
+		}
+		ops = append(ops, txOps...)
+	}
+
+	// TODO: migrate to using atomic transaction ID instead of marking as a block
+	// transaction
+	//
+	// NOTE: We need to be very careful about this because it will require
+	// integrators to re-index the chain to get the new result.
 	transactions = append(transactions, &types.Transaction{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: block.Hash().String(),
