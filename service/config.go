@@ -9,13 +9,14 @@ import (
 
 // Config holds the service configuration
 type Config struct {
-	Mode                 string
-	ChainID              *big.Int
-	NetworkID            *types.NetworkIdentifier
-	GenesisBlockHash     string
-	AvaxAssetID          string
-	IndexErc721Transfers bool
-	IndexDefaultTokens   bool
+	Mode               string
+	ChainID            *big.Int
+	NetworkID          *types.NetworkIdentifier
+	GenesisBlockHash   string
+	AvaxAssetID        string
+	EnableErc20        bool
+	EnableErc721       bool
+	IndexDefaultTokens bool
 
 	// Upgrade Times
 	AP5Activation uint64
