@@ -102,7 +102,6 @@ type metadata struct {
 	Nonce    uint64   `json:"nonce"`
 	GasPrice *big.Int `json:"gas_price"`
 	GasLimit uint64   `json:"gas_limit"`
-	Data     string   `json:"tx_data"`
 }
 
 type metadataWire struct {
