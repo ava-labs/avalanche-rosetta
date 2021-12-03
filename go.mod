@@ -7,7 +7,6 @@ require (
 	github.com/ava-labs/avalanchego v1.7.1
 	github.com/ava-labs/coreth v0.8.1-rc.0
 	github.com/coinbase/rosetta-sdk-go v0.6.5
-	github.com/coreos/etcd v3.3.13+incompatible
 	github.com/decred/dcrd/dcrec/secp256k1/v3 v3.0.0 // indirect
 	github.com/ethereum/go-ethereum v1.10.12
 	github.com/go-ole/go-ole v1.2.4 // indirect
@@ -15,7 +14,6 @@ require (
 	github.com/prometheus/client_golang v1.8.0 // indirect
 	github.com/prometheus/common v0.15.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	go.opencensus.io v0.22.5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
