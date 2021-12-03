@@ -31,6 +31,7 @@ func Transaction(
 	flattenedTrace []*client.FlatCall,
 	transferLogs []ethtypes.Log,
 	client client.Client,
+	parseErc20 bool,
 	parseErc721 bool,
 	includeUnknownTokens bool,
 ) (*types.Transaction, error) {
@@ -116,6 +117,10 @@ func Transaction(
 			ops = append(ops, &receiptOp)
 			ops = append(ops, &sendingOp)
 		} else {
+			// Only parse Erc20 when setting is enabled
+			if !parseErc20 {
+				continue
+			}
 			contractInfo, err := client.ContractInfo(transferLog.Address, true)
 			if err != nil {
 				return nil, err

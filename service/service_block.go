@@ -193,7 +193,7 @@ func (s *BlockService) fetchTransaction(
 	}
 
 	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace, flattened,
-		transactionEvmLogs, s.client, s.config.IndexErc721Transfers, s.config.IndexDefaultTokens)
+		transactionEvmLogs, s.client, s.config.EnableErc20, s.config.EnableErc721, s.config.IndexDefaultTokens)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
