@@ -103,6 +103,11 @@ func Transaction(
 				Type:    OpErc721Transfer,
 				Amount:  Erc721Amount(erc721Index, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
 				Account: Account(ConvertHashToAddress(&addressTo)),
+				RelatedOperations: []*types.OperationIdentifier{
+					{
+						Index: int64(len(ops) + 1),
+					},
+				},
 			}
 			sendingOp := types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
@@ -112,6 +117,11 @@ func Transaction(
 				Type:    OpErc721Transfer,
 				Amount:  Erc721Amount(erc721Index, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
 				Account: Account(ConvertHashToAddress(&addressFrom)),
+				RelatedOperations: []*types.OperationIdentifier{
+					{
+						Index: int64(len(ops)),
+					},
+				},
 			}
 
 			ops = append(ops, &receiptOp)
@@ -142,6 +152,11 @@ func Transaction(
 				Type:    OpErc20Transfer,
 				Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
 				Account: Account(ConvertHashToAddress(&addressTo)),
+				RelatedOperations: []*types.OperationIdentifier{
+					{
+						Index: int64(len(ops) + 1),
+					},
+				},
 			}
 			sendingOp := types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
@@ -151,6 +166,11 @@ func Transaction(
 				Type:    OpErc20Transfer,
 				Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
 				Account: Account(ConvertHashToAddress(&addressFrom)),
+				RelatedOperations: []*types.OperationIdentifier{
+					{
+						Index: int64(len(ops)),
+					},
+				},
 			}
 			ops = append(ops, &receiptOp)
 			ops = append(ops, &sendingOp)

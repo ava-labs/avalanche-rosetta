@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	contractCacheSize = 1000
+	contractCacheSize = 1024
 )
 
 // ContractClient is a client for the calling contract information

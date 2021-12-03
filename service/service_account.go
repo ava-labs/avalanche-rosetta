@@ -69,46 +69,46 @@ func (s AccountService) AccountBalance(
 	}
 
 	var balances []*types.Amount
+	balances = append(balances, mapper.AvaxAmount(avaxBalance))
+	if s.config.EnableErc20 {
+		for _, currency := range req.Currencies {
+			value, ok := currency.Metadata[mapper.ContractAddressMetadata]
+			if !ok {
+				return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies must have contractAddress in metadata field"))
+			}
+			identifierAddress := req.AccountIdentifier.Address
+			if has0xPrefix(identifierAddress) {
+				identifierAddress = identifierAddress[2:42]
+			}
 
-	for _, currency := range req.Currencies {
-		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
-		if !ok {
-			return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies must have contractAddress in metadata field"))
-		}
-		identifierAddress := req.AccountIdentifier.Address
-		if has0xPrefix(identifierAddress) {
-			identifierAddress = identifierAddress[2:42]
-		}
+			data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
+			if err != nil {
+				return nil, wrapError(errCallInvalidParams, fmt.Errorf("failed to decode contractAddress in metadata field"))
+			}
 
-		data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
-		if err != nil {
-			return nil, wrapError(errCallInvalidParams, fmt.Errorf("failed to decode contractAddress in metadata field"))
-		}
+			contractAddress := ethcommon.HexToAddress(value.(string))
+			callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
+			response, err := s.client.CallContract(ctx, callMsg, header.Number)
+			if err != nil {
+				return nil, wrapError(errInternalError, err)
+			}
 
-		contractAddress := ethcommon.HexToAddress(value.(string))
-		callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
-		response, err := s.client.CallContract(ctx, callMsg, header.Number)
-		if err != nil {
-			return nil, wrapError(errInternalError, err)
-		}
+			contractInfo, err := s.client.ContractInfo(contractAddress, true)
+			if err != nil {
+				return nil, wrapError(errInternalError, err)
+			} else if contractInfo.Symbol == client.UnknownERC20Symbol {
+				return nil, wrapError(errCallInvalidParams,
+					fmt.Errorf("unable to pull contract info for %s", contractAddress.String()))
+			}
 
-		contractInfo, err := s.client.ContractInfo(contractAddress, true)
-		if err != nil {
-			return nil, wrapError(errInternalError, err)
-		} else if contractInfo.Symbol == client.UnknownERC20Symbol {
-			return nil, wrapError(errCallInvalidParams,
-				fmt.Errorf("unable to pull contract info for %s", contractAddress.String()))
-		}
+			amount := mapper.Erc20Amount(response, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false)
+			balances = append(balances, amount)
 
-		amount := mapper.Erc20Amount(response, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false)
-		balances = append(balances, amount)
-
-		if err != nil {
-			return nil, wrapError(errInternalError, err)
+			if err != nil {
+				return nil, wrapError(errInternalError, err)
+			}
 		}
 	}
-
-	balances = append(balances, mapper.AvaxAmount(avaxBalance))
 
 	resp := &types.AccountBalanceResponse{
 		BlockIdentifier: &types.BlockIdentifier{
