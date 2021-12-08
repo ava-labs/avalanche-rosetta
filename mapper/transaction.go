@@ -513,7 +513,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Burn,
 			Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
-			Account: Account(ConvertHashToAddress(&addressTo)),
+			Account: Account(ConvertHashToAddress(&addressFrom)),
 		}
 		ops = append(ops, &burnOp)
 	} else {
