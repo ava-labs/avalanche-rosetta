@@ -22,7 +22,7 @@ type config struct {
 	ChainID            int64  `json:"chain_id"`
 	LogRequests        bool   `json:"log_requests"`
 	GenesisBlockHash   string `json:"genesis_block_hash"`
-	EnableErc20        bool   `json:"index_erc20"`
+	EnableErc20        bool   `json:"enable_erc20"`
 	EnableErc721       bool   `json:"enable_erc721"`
 	IndexDefaultTokens bool   `json:"index_default_tokens"`
 }
