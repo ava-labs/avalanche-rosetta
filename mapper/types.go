@@ -80,6 +80,11 @@ var (
 		OpDestruct,
 		OpImport,
 		OpExport,
+		OpErc20Burn,
+		OpErc20Mint,
+		OpErc20Transfer,
+		OpErc721TransferRecipent,
+		OpErc721TransferSender,
 	}
 
 	CallMethods = []string{

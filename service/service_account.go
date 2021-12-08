@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -74,6 +75,9 @@ func (s AccountService) AccountBalance(
 		for _, currency := range req.Currencies {
 			value, ok := currency.Metadata[mapper.ContractAddressMetadata]
 			if !ok {
+				if currency.Decimals == 18 && strings.ToLower(currency.Symbol) == "avax" {
+					continue
+				}
 				return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies must have contractAddress in metadata field"))
 			}
 			identifierAddress := req.AccountIdentifier.Address
@@ -94,14 +98,15 @@ func (s AccountService) AccountBalance(
 			}
 
 			contractInfo, err := s.client.ContractInfo(contractAddress, true)
+			var amount *types.Amount
 			if err != nil {
 				return nil, wrapError(errInternalError, err)
 			} else if contractInfo.Symbol == client.UnknownERC20Symbol {
-				return nil, wrapError(errCallInvalidParams,
-					fmt.Errorf("unable to pull contract info for %s", contractAddress.String()))
+				amount = mapper.Erc20Amount(response, contractAddress, client.UnknownERC20Symbol, client.UnknownERC20Decimals, false)
+			} else {
+				amount = mapper.Erc20Amount(response, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false)
 			}
 
-			amount := mapper.Erc20Amount(response, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false)
 			balances = append(balances, amount)
 
 			if err != nil {
