@@ -73,6 +73,7 @@ func Transaction(
 			"gas_price": tx.GasPrice().String(),
 			"receipt":   receipt,
 			"trace":     trace,
+			"type":      tx.Type(),
 		},
 	}, nil
 }
