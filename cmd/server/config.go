@@ -22,6 +22,7 @@ type config struct {
 	ChainID            int64  `json:"chain_id"`
 	LogRequests        bool   `json:"log_requests"`
 	GenesisBlockHash   string `json:"genesis_block_hash"`
+	IngestionMode      string `json:"ingestion_mode"`
 	EnableErc20        bool   `json:"enable_erc20"`
 	EnableErc721       bool   `json:"enable_erc721"`
 	IndexDefaultTokens bool   `json:"index_default_tokens"`
@@ -42,7 +43,11 @@ func readConfig(path string) (*config, error) {
 
 func (c *config) ApplyDefaults() {
 	if c.Mode == "" {
-		c.Mode = "online"
+		c.Mode = service.ModeOnline
+	}
+
+	if c.IngestionMode == "" {
+		c.IngestionMode = service.StandardIngestion
 	}
 
 	if c.RPCEndpoint == "" {
