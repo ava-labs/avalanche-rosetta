@@ -76,7 +76,7 @@ func Transaction(
 	if isAnalyticsMode || len(standardModeWhiteList) != 0 {
 		for _, transferLog := range transferLogs {
 			// If in standard mode, token address must be whitelisted
-			if !isAnalyticsMode && !Contains(standardModeWhiteList, transferLog.Address.String()) {
+			if !isAnalyticsMode && !ContainsNoCaseCheck(standardModeWhiteList, transferLog.Address.String()) {
 				continue
 			}
 
