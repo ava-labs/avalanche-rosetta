@@ -86,7 +86,7 @@ func (c *config) Validate() error {
 	}
 
 	if !(c.IngestionMode == service.AnalyticsIngestion || c.IngestionMode == service.StandardIngestion) {
-		return errInvalidMode
+		return errInvalidIngestionMode
 	}
 
 	return nil
