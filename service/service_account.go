@@ -71,15 +71,20 @@ func (s AccountService) AccountBalance(
 
 	var balances []*types.Amount
 	balances = append(balances, mapper.AvaxAmount(avaxBalance))
-	if s.config.EnableErc20 {
+	if s.config.IsAnalyticsMode() || !s.config.IsTokenListEmpty() {
 		for _, currency := range req.Currencies {
 			value, ok := currency.Metadata[mapper.ContractAddressMetadata]
 			if !ok {
 				if currency.Decimals == 18 && strings.ToLower(currency.Symbol) == "avax" {
 					continue
 				}
-				return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies must have contractAddress in metadata field"))
+				return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies outside of avax must have contractAddress in metadata field"))
 			}
+
+			if s.config.IsStandardMode() && !mapper.Contains(s.config.StandardModeTokenWhitelist, value.(string)) {
+				return nil, wrapError(errCallInvalidParams, fmt.Errorf("only addresses contained in token whitelist are supported"))
+			}
+
 			identifierAddress := req.AccountIdentifier.Address
 			if has0xPrefix(identifierAddress) {
 				identifierAddress = identifierAddress[2:42]

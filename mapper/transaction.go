@@ -32,8 +32,8 @@ func Transaction(
 	flattenedTrace []*client.FlatCall,
 	transferLogs []ethtypes.Log,
 	client client.Client,
-	parseErc20 bool,
-	parseErc721 bool,
+	isAnalyticsMode bool,
+	standardModeWhiteList []string,
 	includeUnknownTokens bool,
 ) (*types.Transaction, error) {
 	ops := []*types.Operation{}
@@ -73,78 +73,75 @@ func Transaction(
 
 	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
-
-	for _, transferLog := range transferLogs {
-		// ERC721 index the value in the transfer event.  ERC20's do not
-		if len(transferLog.Topics) == topicsInErc721Transfer {
-			// Only parse Erc721 when setting is enabled
-			if !parseErc721 {
+	if isAnalyticsMode || len(standardModeWhiteList) != 0 {
+		for _, transferLog := range transferLogs {
+			// If in standard mode, token address must be whitelisted
+			if !isAnalyticsMode && !Contains(standardModeWhiteList, transferLog.Address.String()) {
 				continue
 			}
 
-			contractInfo, err := client.ContractInfo(transferLog.Address, false)
-			if err != nil {
-				return nil, err
-			}
+			// ERC721 index the value in the transfer event.  ERC20's do not
+			if len(transferLog.Topics) == topicsInErc721Transfer {
+				contractInfo, err := client.ContractInfo(transferLog.Address, false)
+				if err != nil {
+					return nil, err
+				}
 
-			// Don't include default tokens if setting is not enabled
-			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC721Symbol {
-				continue
-			}
+				// Don't include default tokens if setting is not enabled
+				if !includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC721Symbol {
+					continue
+				}
 
-			contractAddress := transferLog.Address
-			addressFrom := transferLog.Topics[1]
-			addressTo := transferLog.Topics[2]
-			erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
-			metadata := make(map[string]interface{})
+				contractAddress := transferLog.Address
+				addressFrom := transferLog.Topics[1]
+				addressTo := transferLog.Topics[2]
+				erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
+				metadata := make(map[string]interface{})
 
-			metadata[TokenTypeMetadata] = "ERC721"
-			metadata[ContractAddressMetadata] = contractAddress.String()
-			metadata[IndexTransferedMetadata] = erc721Index.String()
+				metadata[TokenTypeMetadata] = "ERC721"
+				metadata[ContractAddressMetadata] = contractAddress.String()
+				metadata[IndexTransferedMetadata] = erc721Index.String()
 
-			receiptOp := types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: int64(len(ops)),
-				},
-				Status:   types.String(StatusSuccess),
-				Type:     OpErc721TransferRecipent,
-				Account:  Account(ConvertHashToAddress(&addressTo)),
-				Metadata: metadata,
-			}
-			sendingOp := types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: int64(len(ops) + 1),
-				},
-				Status:   types.String(StatusSuccess),
-				Type:     OpErc721TransferSender,
-				Account:  Account(ConvertHashToAddress(&addressFrom)),
-				Metadata: metadata,
-				RelatedOperations: []*types.OperationIdentifier{
-					{
+				receiptOp := types.Operation{
+					OperationIdentifier: &types.OperationIdentifier{
 						Index: int64(len(ops)),
 					},
-				},
-			}
+					Status:   types.String(StatusSuccess),
+					Type:     OpErc721TransferRecipent,
+					Account:  Account(ConvertHashToAddress(&addressTo)),
+					Metadata: metadata,
+				}
+				sendingOp := types.Operation{
+					OperationIdentifier: &types.OperationIdentifier{
+						Index: int64(len(ops) + 1),
+					},
+					Status:   types.String(StatusSuccess),
+					Type:     OpErc721TransferSender,
+					Account:  Account(ConvertHashToAddress(&addressFrom)),
+					Metadata: metadata,
+					RelatedOperations: []*types.OperationIdentifier{
+						{
+							Index: int64(len(ops)),
+						},
+					},
+				}
 
-			ops = append(ops, &receiptOp)
-			ops = append(ops, &sendingOp)
-		} else {
-			// Only parse Erc20 when setting is enabled
-			if !parseErc20 {
-				continue
-			}
-			contractInfo, err := client.ContractInfo(transferLog.Address, true)
-			if err != nil {
-				return nil, err
-			}
+				ops = append(ops, &receiptOp)
+				ops = append(ops, &sendingOp)
+			} else {
+				contractInfo, err := client.ContractInfo(transferLog.Address, true)
+				if err != nil {
+					return nil, err
+				}
 
-			// Don't include default tokens if setting is not enabled
-			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC20Symbol {
-				continue
-			}
+				// Don't include default tokens if setting is not enabled
+				if !includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC20Symbol {
+					continue
+				}
 
-			erc20Ops := parseErc20Txs(transferLog, contractInfo, int64(len(ops)))
-			ops = append(ops, erc20Ops...)
+				erc20Ops := parseErc20Txs(transferLog, contractInfo, int64(len(ops)))
+				ops = append(ops, erc20Ops...)
+			}
 		}
 	}
 
