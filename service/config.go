@@ -14,6 +14,7 @@ type Config struct {
 	NetworkID          *types.NetworkIdentifier
 	GenesisBlockHash   string
 	AvaxAssetID        string
+	IngestionMode      string
 	EnableErc20        bool
 	EnableErc721       bool
 	IndexDefaultTokens bool
@@ -23,8 +24,10 @@ type Config struct {
 }
 
 const (
-	ModeOffline = "offline"
-	ModeOnline  = "online"
+	ModeOffline        = "offline"
+	ModeOnline         = "online"
+	StandardIngestion  = "standard"
+	AnalyticsIngestion = "analytics"
 )
 
 // IsOfflineMode returns true if running in offline mode
@@ -35,6 +38,16 @@ func (c Config) IsOfflineMode() bool {
 // IsOnlineMode returns true if running in online mode
 func (c Config) IsOnlineMode() bool {
 	return c.Mode == ModeOnline
+}
+
+// IsAnalyticsMode returns true if running in analytics ingestion mode
+func (c Config) IsAnalyticsMode() bool {
+	return c.IngestionMode == AnalyticsIngestion
+}
+
+// IsStandardMode returns true if running in standard ingestion mode
+func (c Config) IsStandardMode() bool {
+	return c.IngestionMode == StandardIngestion
 }
 
 // Signer returns an eth signer object for a given chain
