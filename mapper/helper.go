@@ -2,10 +2,10 @@ package mapper
 
 import "strings"
 
-//ContainsNoCaseCheck checks if the array contains the string regardless of casing
-func ContainsNoCaseCheck(arr []string, str string) bool {
+//EqualFoldContains checks if the array contains the string regardless of casing
+func EqualFoldContains(arr []string, str string) bool {
 	for _, a := range arr {
-		if strings.ToLower(a) == strings.ToLower(str) {
+		if strings.EqualFold(a, str) {
 			return true
 		}
 	}
