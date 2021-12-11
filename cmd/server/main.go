@@ -123,8 +123,6 @@ func main() {
 		GenesisBlockHash:   cfg.GenesisBlockHash,
 		AvaxAssetID:        assetID,
 		AP5Activation:      AP5Activation,
-		EnableErc20:        cfg.EnableErc20,
-		EnableErc721:       cfg.EnableErc721,
 		IndexDefaultTokens: cfg.IndexDefaultTokens,
 	}
 
