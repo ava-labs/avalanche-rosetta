@@ -103,3 +103,12 @@ func ChecksumAddress(address string) (string, bool) {
 
 	return addr.Address().Hex(), true
 }
+
+func Contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
+}

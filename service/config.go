@@ -15,6 +15,7 @@ type Config struct {
 	GenesisBlockHash   string
 	AvaxAssetID        string
 	IngestionMode      string
+	TokenAddresses     []string
 	EnableErc20        bool
 	EnableErc721       bool
 	IndexDefaultTokens bool
@@ -48,6 +49,16 @@ func (c Config) IsAnalyticsMode() bool {
 // IsStandardMode returns true if running in standard ingestion mode
 func (c Config) IsStandardMode() bool {
 	return c.IngestionMode == StandardIngestion
+}
+
+// TokenListContains returns true if the token addresses list contain the provided address
+func (c Config) TokenListContains(contractAddress string) bool {
+	return Contains(c.TokenAddresses, contractAddress)
+}
+
+// IsTokenListEmpty returns true if the token addresses list is empty
+func (c Config) IsTokenListEmpty() bool {
+	return len(c.TokenAddresses) == 0
 }
 
 // Signer returns an eth signer object for a given chain
