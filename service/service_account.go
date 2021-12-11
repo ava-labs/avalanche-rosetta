@@ -71,53 +71,50 @@ func (s AccountService) AccountBalance(
 
 	var balances []*types.Amount
 	balances = append(balances, mapper.AvaxAmount(avaxBalance))
-	if s.config.IsAnalyticsMode() || !s.config.IsTokenListEmpty() {
-		for _, currency := range req.Currencies {
-			value, ok := currency.Metadata[mapper.ContractAddressMetadata]
-			if !ok {
-				if currency.Decimals == 18 && strings.ToLower(currency.Symbol) == "avax" {
-					continue
-				}
-				return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies outside of avax must have contractAddress in metadata field"))
+	for _, currency := range req.Currencies {
+		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
+		if !ok {
+			if currency.Decimals == 18 && strings.ToLower(currency.Symbol) == "avax" {
+				continue
 			}
-
-			if s.config.IsStandardMode() && !mapper.EqualFoldContains(s.config.StandardModeTokenWhitelist, value.(string)) {
-				return nil, wrapError(errCallInvalidParams, fmt.Errorf("only addresses contained in token whitelist are supported"))
-			}
-
-			identifierAddress := req.AccountIdentifier.Address
-			if has0xPrefix(identifierAddress) {
-				identifierAddress = identifierAddress[2:42]
-			}
-
-			data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
-			if err != nil {
-				return nil, wrapError(errCallInvalidParams, fmt.Errorf("failed to decode contractAddress in metadata field"))
-			}
-
-			contractAddress := ethcommon.HexToAddress(value.(string))
-			callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
-			response, err := s.client.CallContract(ctx, callMsg, header.Number)
-			if err != nil {
-				return nil, wrapError(errInternalError, err)
-			}
-
-			contractInfo, err := s.client.ContractInfo(contractAddress, true)
-			var amount *types.Amount
-			if err != nil {
-				return nil, wrapError(errInternalError, err)
-			} else if contractInfo.Symbol == client.UnknownERC20Symbol {
-				amount = mapper.Erc20Amount(response, contractAddress, client.UnknownERC20Symbol, client.UnknownERC20Decimals, false)
-			} else {
-				amount = mapper.Erc20Amount(response, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false)
-			}
-
-			balances = append(balances, amount)
-
-			if err != nil {
-				return nil, wrapError(errInternalError, err)
-			}
+			return nil, wrapError(errCallInvalidParams,
+				fmt.Errorf("currencies outside of avax must have contractAddress in metadata field"))
 		}
+
+		if s.config.IsStandardMode() && !mapper.EqualFoldContains(s.config.StandardModeTokenWhitelist, value.(string)) {
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("only addresses contained in token whitelist are supported"))
+		}
+
+		identifierAddress := req.AccountIdentifier.Address
+		if has0xPrefix(identifierAddress) {
+			identifierAddress = identifierAddress[2:42]
+		}
+
+		data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
+		if err != nil {
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("failed to decode contractAddress in metadata field"))
+		}
+
+		contractAddress := ethcommon.HexToAddress(value.(string))
+		callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
+		response, err := s.client.CallContract(ctx, callMsg, header.Number)
+		if err != nil {
+			return nil, wrapError(errInternalError, err)
+		}
+
+		contractInfo, err := s.client.ContractInfo(contractAddress, true)
+		var amount *types.Amount
+		if err != nil {
+			return nil, wrapError(errInternalError, err)
+		}
+
+		if contractInfo.Symbol == client.UnknownERC20Symbol {
+			amount = mapper.Erc20Amount(response, contractAddress, client.UnknownERC20Symbol, client.UnknownERC20Decimals, false)
+		} else {
+			amount = mapper.Erc20Amount(response, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false)
+		}
+
+		balances = append(balances, amount)
 	}
 
 	resp := &types.AccountBalanceResponse{
