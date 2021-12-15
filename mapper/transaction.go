@@ -188,20 +188,10 @@ func CrossChainTransactions(
 		return transactions, nil
 	}
 
-	// Initialize Atomic Transactions
-	var atomicTxs []*evm.Tx
-	if block.Time() < ap5Activation {
-		// Prior to Apricot Phase 5, there was only one atomic transaction per
-		// block.
-		tx := new(evm.Tx)
-		if _, err := codecManager.Unmarshal(extra, tx); err != nil {
-			return nil, err
-		}
-		atomicTxs = []*evm.Tx{tx}
-	} else {
-		if _, err := codecManager.Unmarshal(extra, &atomicTxs); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal atomic tx (AP5) due to %w", err)
-		}
+	atomicTxs, err := evm.ExtractAtomicTxs(extra, block.Time() >= ap5Activation)
+
+	if err != nil {
+		return nil, err
 	}
 
 	ops := []*types.Operation{}
