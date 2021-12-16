@@ -93,42 +93,8 @@ func Transaction(
 				continue
 			}
 
-			contractAddress := transferLog.Address
-			addressFrom := transferLog.Topics[1]
-			addressTo := transferLog.Topics[2]
-			erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
-			metadata := make(map[string]interface{})
-
-			metadata[TokenTypeMetadata] = "ERC721"
-			metadata[ContractAddressMetadata] = contractAddress.String()
-			metadata[IndexTransferedMetadata] = erc721Index.String()
-
-			receiptOp := types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: int64(len(ops)),
-				},
-				Status:   types.String(StatusSuccess),
-				Type:     OpErc721TransferRecipent,
-				Account:  Account(ConvertEVMTopicHashToAddress(&addressTo)),
-				Metadata: metadata,
-			}
-			sendingOp := types.Operation{
-				OperationIdentifier: &types.OperationIdentifier{
-					Index: int64(len(ops) + 1),
-				},
-				Status:   types.String(StatusSuccess),
-				Type:     OpErc721TransferSender,
-				Account:  Account(ConvertEVMTopicHashToAddress(&addressFrom)),
-				Metadata: metadata,
-				RelatedOperations: []*types.OperationIdentifier{
-					{
-						Index: int64(len(ops)),
-					},
-				},
-			}
-
-			ops = append(ops, &receiptOp)
-			ops = append(ops, &sendingOp)
+			erc721txs := parseErc721Txs(transferLog, contractInfo, int64(len(ops)))
+			ops = append(ops, erc721txs...)
 		} else {
 			contractInfo, err := client.ContractInfo(transferLog.Address, true)
 			if err != nil {
@@ -141,8 +107,8 @@ func Transaction(
 				continue
 			}
 
-			erc20Ops := parseErc20Txs(transferLog, contractInfo, int64(len(ops)))
-			ops = append(ops, erc20Ops...)
+			erc20txs := parseErc20Txs(transferLog, contractInfo, int64(len(ops)))
+			ops = append(ops, erc20txs...)
 		}
 	}
 	return &types.Transaction{
@@ -253,7 +219,7 @@ func crossChainTransaction(
 			idx++
 		}
 	default:
-		return nil, fmt.Errorf("Unsupported transaction: %T", t)
+		return nil, fmt.Errorf("unsupported transaction: %T", t)
 	}
 	return ops, nil
 }
@@ -541,8 +507,76 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 			},
 		},
 	}
-	ops = append(ops, &receiptOp)
 	ops = append(ops, &sendingOp)
+	ops = append(ops, &receiptOp)
 
+	return ops
+}
+
+func parseErc721Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractInfo, opsLen int64) []*types.Operation {
+	ops := []*types.Operation{}
+
+	contractAddress := transferLog.Address
+	addressFrom := transferLog.Topics[1]
+	addressTo := transferLog.Topics[2]
+	erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
+	metadata := make(map[string]interface{})
+	metadata[TokenTypeMetadata] = "ERC721"
+	metadata[ContractAddressMetadata] = contractAddress.String()
+	metadata[IndexTransferedMetadata] = erc721Index.String()
+
+	if addressFrom.Hex() == zeroAddress {
+		mintOp := types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opsLen,
+			},
+			Status:   types.String(StatusSuccess),
+			Type:     OpErc721Mint,
+			Account:  Account(ConvertEVMTopicHashToAddress(&addressTo)),
+			Metadata: metadata,
+		}
+		ops = append(ops, &mintOp)
+		return ops
+	}
+
+	if addressTo.Hex() == zeroAddress {
+		burnOp := types.Operation{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opsLen,
+			},
+			Status:   types.String(StatusSuccess),
+			Type:     OpErc721Burn,
+			Account:  Account(ConvertEVMTopicHashToAddress(&addressFrom)),
+			Metadata: metadata,
+		}
+		ops = append(ops, &burnOp)
+		return ops
+	}
+
+	receiptOp := types.Operation{
+		OperationIdentifier: &types.OperationIdentifier{
+			Index: opsLen,
+		},
+		Status:   types.String(StatusSuccess),
+		Type:     OpErc721TransferRecipent,
+		Account:  Account(ConvertEVMTopicHashToAddress(&addressTo)),
+		Metadata: metadata,
+	}
+	sendingOp := types.Operation{
+		OperationIdentifier: &types.OperationIdentifier{
+			Index: opsLen + 1,
+		},
+		Status:   types.String(StatusSuccess),
+		Type:     OpErc721TransferSender,
+		Account:  Account(ConvertEVMTopicHashToAddress(&addressFrom)),
+		Metadata: metadata,
+		RelatedOperations: []*types.OperationIdentifier{
+			{
+				Index: opsLen,
+			},
+		},
+	}
+	ops = append(ops, &sendingOp)
+	ops = append(ops, &receiptOp)
 	return ops
 }
