@@ -93,7 +93,7 @@ func Transaction(
 				continue
 			}
 
-			erc721txs := parseErc721Txs(transferLog, contractInfo, int64(len(ops)))
+			erc721txs := parseErc721Txs(transferLog, int64(len(ops)))
 			ops = append(ops, erc721txs...)
 		} else {
 			contractInfo, err := client.ContractInfo(transferLog.Address, true)
@@ -513,7 +513,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 	return ops
 }
 
-func parseErc721Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractInfo, opsLen int64) []*types.Operation {
+func parseErc721Txs(transferLog ethtypes.Log, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
