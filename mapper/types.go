@@ -34,6 +34,8 @@ const (
 
 	OpErc721TransferSender   = "ERC721_SENDER"
 	OpErc721TransferRecipent = "ERC721_RECIPENT"
+	OpErc721Mint             = "ERC721_MINT"
+	OpErc721Burn             = "ERC721_BURN"
 
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
@@ -86,6 +88,8 @@ var (
 		OpErc20Transfer,
 		OpErc721TransferRecipent,
 		OpErc721TransferSender,
+		OpErc721Burn,
+		OpErc721Burn,
 	}
 
 	CallMethods = []string{
