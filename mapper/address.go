@@ -4,8 +4,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-// ConvertHashToAddress uses the last 20 bytes of a common.Hash to create a common.Address
-func ConvertHashToAddress(hash *ethcommon.Hash) *ethcommon.Address {
+// ConvertEVMTopicHashToAddress uses the last 20 bytes of a common.Hash to create a common.Address
+func ConvertEVMTopicHashToAddress(hash *ethcommon.Hash) *ethcommon.Address {
 	if hash == nil {
 		return nil
 	}

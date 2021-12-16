@@ -9,10 +9,10 @@ import (
 )
 
 func TestAdress(t *testing.T) {
-	t.Run("ConvertHashToAddress", func(t *testing.T) {
+	t.Run("ConvertEVMTopicHashToAddress", func(t *testing.T) {
 		addressString := "0x54761841b2005ee456ba5a5a46ee78dded90b16d"
 		hash := ethcommon.HexToHash(addressString)
-		convertedAddress := ConvertHashToAddress(&hash)
+		convertedAddress := ConvertEVMTopicHashToAddress(&hash)
 
 		assert.Equal(t, strings.ToLower(addressString), strings.ToLower(convertedAddress.String()))
 	})
