@@ -16,6 +16,7 @@ import (
 
 const (
 	topicsInErc721Transfer = 4
+	topicsInErc20Transfer  = 3
 	zeroAddress            = "0x0000000000000000000000000000000000000000000000000000000000000000"
 )
 
@@ -73,6 +74,7 @@ func Transaction(
 
 	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
+	// Logs will be empty if in standard mode and token whitelist is empty
 	for _, transferLog := range transferLogs {
 		// If in standard mode, token address must be whitelisted
 		if !isAnalyticsMode && !EqualFoldContains(standardModeWhiteList, transferLog.Address.String()) {
@@ -134,7 +136,8 @@ func Transaction(
 			}
 
 			// Don't include default tokens if setting is not enabled
-			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC20Symbol {
+			if (!includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC20Symbol) ||
+				(len(transferLog.Topics) == topicsInErc20Transfer) {
 				continue
 			}
 
@@ -486,8 +489,6 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 	contractAddress := transferLog.Address
 	addressFrom := transferLog.Topics[1]
 	addressTo := transferLog.Topics[2]
-	log.Println(addressFrom.Hex())
-	log.Println(addressTo.Hex())
 
 	if addressFrom.Hex() == zeroAddress {
 		mintOp := types.Operation{

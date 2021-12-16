@@ -29,27 +29,6 @@ func AvaxAmount(value *big.Int) *types.Amount {
 	return Amount(value, AvaxCurrency)
 }
 
-func Erc721Amount(
-	indexHash common.Hash,
-	contractAddress common.Address,
-	contractSymbol string,
-	contractDecimal uint8,
-	isSender bool) *types.Amount {
-	index := indexHash.Big()
-	metadata := make(map[string]interface{})
-	metadata[TokenTypeMetadata] = "ERC721"
-	metadata[ContractAddressMetadata] = contractAddress.String()
-	metadata[IndexTransferedMetadata] = index.String()
-
-	return &types.Amount{
-		Currency: &types.Currency{
-			Symbol:   contractSymbol,
-			Decimals: int32(contractDecimal),
-			Metadata: metadata,
-		},
-	}
-}
-
 func Erc20Amount(
 	data []byte,
 	contractAddress common.Address,
