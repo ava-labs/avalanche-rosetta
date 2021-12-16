@@ -41,8 +41,8 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 	cachedInfo, isCached := c.cache.Get(contractAddress)
 
 	if isCached {
-		castCachedInfo := cachedInfo.(ContractInfo)
-		return &castCachedInfo, nil
+		castCachedInfo := cachedInfo.(*ContractInfo)
+		return castCachedInfo, nil
 	}
 
 	token, err := NewContractInfoToken(contractAddress, c.ethClient)
@@ -62,9 +62,9 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 			decimals = UnknownERC721Decimals
 		}
 	}
-	contractInfo := ContractInfo{Symbol: symbol, Decimals: decimals}
+	contractInfo := &ContractInfo{Symbol: symbol, Decimals: decimals}
 
 	// Cache defaults for contract address to avoid unnecessary lookups
 	c.cache.Put(contractAddress, contractInfo)
-	return &contractInfo, nil
+	return contractInfo, nil
 }
