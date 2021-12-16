@@ -16,7 +16,7 @@ type Config struct {
 	AvaxAssetID        string
 	IngestionMode      string
 	TokenWhiteList     []string
-	IndexDefaultTokens bool
+	IndexUnknownTokens bool
 
 	// Upgrade Times
 	AP5Activation uint64
