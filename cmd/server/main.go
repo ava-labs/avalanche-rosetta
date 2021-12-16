@@ -123,7 +123,7 @@ func main() {
 		GenesisBlockHash:   cfg.GenesisBlockHash,
 		AvaxAssetID:        assetID,
 		AP5Activation:      AP5Activation,
-		IndexDefaultTokens: cfg.IndexDefaultTokens,
+		IndexUnknownTokens: cfg.IndexUnknownTokens,
 		IngestionMode:      cfg.IngestionMode,
 		TokenWhiteList:     cfg.TokenWhiteList,
 	}

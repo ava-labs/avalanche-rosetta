@@ -28,7 +28,7 @@ type config struct {
 
 	IngestionMode      string   `json:"ingestion_mode"`
 	TokenWhiteList     []string `json:"token_whitelist"`
-	IndexDefaultTokens bool     `json:"index_default_tokens"`
+	IndexUnknownTokens bool     `json:"index_unknown_tokens"`
 }
 
 func readConfig(path string) (*config, error) {
