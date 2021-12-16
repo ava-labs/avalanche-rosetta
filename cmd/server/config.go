@@ -18,17 +18,17 @@ var (
 )
 
 type config struct {
-	Mode                       string   `json:"mode"`
-	RPCEndpoint                string   `json:"rpc_endpoint"`
-	ListenAddr                 string   `json:"listen_addr"`
-	NetworkName                string   `json:"network_name"`
-	ChainID                    int64    `json:"chain_id"`
-	LogRequests                bool     `json:"log_requests"`
-	GenesisBlockHash           string   `json:"genesis_block_hash"`
-	IngestionMode              string   `json:"ingestion_mode"`
-	StandardModeTokenWhitelist []string `json:"standard_token_addresses"`
+	Mode             string `json:"mode"`
+	RPCEndpoint      string `json:"rpc_endpoint"`
+	ListenAddr       string `json:"listen_addr"`
+	NetworkName      string `json:"network_name"`
+	ChainID          int64  `json:"chain_id"`
+	LogRequests      bool   `json:"log_requests"`
+	GenesisBlockHash string `json:"genesis_block_hash"`
 
-	IndexDefaultTokens bool `json:"index_default_tokens"`
+	IngestionMode      string   `json:"ingestion_mode"`
+	TokenWhiteList     []string `json:"token_whitelist"`
+	IndexDefaultTokens bool     `json:"index_default_tokens"`
 }
 
 func readConfig(path string) (*config, error) {
@@ -77,8 +77,8 @@ func (c *config) Validate() error {
 		return errGenesisBlockRequired
 	}
 
-	if len(c.StandardModeTokenWhitelist) != 0 {
-		for _, token := range c.StandardModeTokenWhitelist {
+	if len(c.TokenWhiteList) != 0 {
+		for _, token := range c.TokenWhiteList {
 			if !ethcommon.IsHexAddress(token) {
 				return errInvalidTokenAddress
 			}

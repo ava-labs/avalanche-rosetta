@@ -117,15 +117,15 @@ func main() {
 	}
 
 	serviceConfig := &service.Config{
-		Mode:                       cfg.Mode,
-		ChainID:                    big.NewInt(cfg.ChainID),
-		NetworkID:                  network,
-		GenesisBlockHash:           cfg.GenesisBlockHash,
-		AvaxAssetID:                assetID,
-		AP5Activation:              AP5Activation,
-		IndexDefaultTokens:         cfg.IndexDefaultTokens,
-		IngestionMode:              cfg.IngestionMode,
-		StandardModeTokenWhitelist: cfg.StandardModeTokenWhitelist,
+		Mode:               cfg.Mode,
+		ChainID:            big.NewInt(cfg.ChainID),
+		NetworkID:          network,
+		GenesisBlockHash:   cfg.GenesisBlockHash,
+		AvaxAssetID:        assetID,
+		AP5Activation:      AP5Activation,
+		IndexDefaultTokens: cfg.IndexDefaultTokens,
+		IngestionMode:      cfg.IngestionMode,
+		TokenWhiteList:     cfg.TokenWhiteList,
 	}
 
 	handler := configureRouter(serviceConfig, asserter, apiClient)

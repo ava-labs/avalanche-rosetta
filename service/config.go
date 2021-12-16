@@ -9,14 +9,14 @@ import (
 
 // Config holds the service configuration
 type Config struct {
-	Mode                       string
-	ChainID                    *big.Int
-	NetworkID                  *types.NetworkIdentifier
-	GenesisBlockHash           string
-	AvaxAssetID                string
-	IngestionMode              string
-	StandardModeTokenWhitelist []string
-	IndexDefaultTokens         bool
+	Mode               string
+	ChainID            *big.Int
+	NetworkID          *types.NetworkIdentifier
+	GenesisBlockHash   string
+	AvaxAssetID        string
+	IngestionMode      string
+	TokenWhiteList     []string
+	IndexDefaultTokens bool
 
 	// Upgrade Times
 	AP5Activation uint64
@@ -51,7 +51,7 @@ func (c Config) IsStandardMode() bool {
 
 // IsTokenListEmpty returns true if the token addresses list is empty
 func (c Config) IsTokenListEmpty() bool {
-	return len(c.StandardModeTokenWhitelist) == 0
+	return len(c.TokenWhiteList) == 0
 }
 
 // Signer returns an eth signer object for a given chain
