@@ -107,7 +107,7 @@ func Transaction(
 				},
 				Status:   types.String(StatusSuccess),
 				Type:     OpErc721TransferRecipent,
-				Account:  Account(ConvertHashToAddress(&addressTo)),
+				Account:  Account(ConvertEVMTopicHashToAddress(&addressTo)),
 				Metadata: metadata,
 			}
 			sendingOp := types.Operation{
@@ -116,7 +116,7 @@ func Transaction(
 				},
 				Status:   types.String(StatusSuccess),
 				Type:     OpErc721TransferSender,
-				Account:  Account(ConvertHashToAddress(&addressFrom)),
+				Account:  Account(ConvertEVMTopicHashToAddress(&addressFrom)),
 				Metadata: metadata,
 				RelatedOperations: []*types.OperationIdentifier{
 					{
@@ -497,7 +497,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Mint,
 			Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
-			Account: Account(ConvertHashToAddress(&addressTo)),
+			Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
 		}
 		ops = append(ops, &mintOp)
 		return ops
@@ -511,7 +511,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Burn,
 			Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
-			Account: Account(ConvertHashToAddress(&addressFrom)),
+			Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
 		}
 		ops = append(ops, &burnOp)
 		return ops
@@ -524,7 +524,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
 		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
-		Account: Account(ConvertHashToAddress(&addressTo)),
+		Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
 	}
 	sendingOp := types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
@@ -533,7 +533,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
 		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
-		Account: Account(ConvertHashToAddress(&addressFrom)),
+		Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
 		RelatedOperations: []*types.OperationIdentifier{
 			{
 				Index: opsLen,
