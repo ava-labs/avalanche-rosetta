@@ -11,6 +11,8 @@ import (
 const (
 	seconds2milliseconds  = 1000
 	BalanceOfMethodPrefix = "0x70a08231000000000000000000000000"
+	AvaxSymbolLower       = "avax"
+	AvaxDecimals          = 18
 )
 
 type options struct {

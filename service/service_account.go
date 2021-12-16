@@ -74,7 +74,7 @@ func (s AccountService) AccountBalance(
 	for _, currency := range req.Currencies {
 		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
 		if !ok {
-			if currency.Decimals == 18 && strings.ToLower(currency.Symbol) == "avax" {
+			if currency.Decimals == AvaxDecimals && strings.ToLower(currency.Symbol) == AvaxSymbolLower {
 				continue
 			}
 			return nil, wrapError(errCallInvalidParams,
@@ -102,17 +102,7 @@ func (s AccountService) AccountBalance(
 			return nil, wrapError(errInternalError, err)
 		}
 
-		contractInfo, err := s.client.ContractInfo(contractAddress, true)
-		var amount *types.Amount
-		if err != nil {
-			return nil, wrapError(errInternalError, err)
-		}
-
-		if contractInfo.Symbol == client.UnknownERC20Symbol {
-			amount = mapper.Erc20Amount(response, contractAddress, client.UnknownERC20Symbol, client.UnknownERC20Decimals, false)
-		} else {
-			amount = mapper.Erc20Amount(response, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false)
-		}
+		amount := mapper.Erc20Amount(response, contractAddress, currency.Symbol, uint8(currency.Decimals), false)
 
 		balances = append(balances, amount)
 	}
