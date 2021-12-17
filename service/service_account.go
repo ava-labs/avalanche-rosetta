@@ -69,6 +69,10 @@ func (s AccountService) AccountBalance(
 	}
 
 	var balances []*types.Amount
+	if len(req.Currencies) == 0 {
+		balances = append(balances, mapper.AvaxAmount(avaxBalance))
+	}
+
 	for _, currency := range req.Currencies {
 		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
 		if !ok {
