@@ -16,6 +16,7 @@ const (
 	TokenTypeMetadata       = "tokenType"
 	ContractAddressMetadata = "contractAddress"
 	IndexTransferedMetadata = "indexTransfered"
+	TokenSymbol             = "tokenSymbol"
 
 	OpCall          = "CALL"
 	OpFee           = "FEE"
@@ -32,10 +33,10 @@ const (
 	OpErc20Mint     = "ERC20_MINT"
 	OpErc20Burn     = "ERC20_BURN"
 
-	OpErc721TransferSender   = "ERC721_SENDER"
-	OpErc721TransferRecipent = "ERC721_RECIPENT"
-	OpErc721Mint             = "ERC721_MINT"
-	OpErc721Burn             = "ERC721_BURN"
+	OpErc721TransferSender  = "ERC721_SENDER"
+	OpErc721TransferReceive = "ERC721_RECEIVE"
+	OpErc721Mint            = "ERC721_MINT"
+	OpErc721Burn            = "ERC721_BURN"
 
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
@@ -86,9 +87,9 @@ var (
 		OpErc20Burn,
 		OpErc20Mint,
 		OpErc20Transfer,
-		OpErc721TransferRecipent,
+		OpErc721TransferReceive,
 		OpErc721TransferSender,
-		OpErc721Burn,
+		OpErc721Mint,
 		OpErc721Burn,
 	}
 

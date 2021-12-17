@@ -567,7 +567,7 @@ func parseErc721Txs(transferLog ethtypes.Log, opsLen int64) []*types.Operation {
 			Index: opsLen + 1,
 		},
 		Status:   types.String(StatusSuccess),
-		Type:     OpErc721TransferRecipent,
+		Type:     OpErc721TransferReceive,
 		Account:  Account(ConvertEVMTopicHashToAddress(&addressTo)),
 		Metadata: metadata,
 		RelatedOperations: []*types.OperationIdentifier{
