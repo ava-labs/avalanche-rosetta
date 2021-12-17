@@ -103,7 +103,7 @@ func Transaction(
 
 			// Don't include default tokens if setting is not enabled
 			if (!includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC20Symbol) ||
-				(len(transferLog.Topics) == topicsInErc20Transfer) {
+				(len(transferLog.Topics) != topicsInErc20Transfer) {
 				continue
 			}
 
