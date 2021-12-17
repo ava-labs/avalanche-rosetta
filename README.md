@@ -71,9 +71,12 @@ Where:
 | mode          | string  | `online` | Mode of operations. One of: `online`, `offline`
 | rpc_endpoint  | string  | `http://localhost:9650` | Avalanche RPC endpoint
 | listen_addr   | string  | `http://localhost:8080` | Rosetta server listen address (host/port)
-| network_name  | string  | - | Avalanche network name
-| chain_id      | integer | - | Avalanche C-Chain ID
-| log_requests  | bool    | `false` | Enable request body logging
+| network_name  | string  | -       | Avalanche network name
+| chain_id      | integer | -       | Avalanche C-Chain ID
+| genesis_block_hash    | string  | -         | The block hash for the genesis block
+| index_unknown_tokens  | bool    | `false`   | Enables ingesting tokens that don't have a public symbol or decimal variable=
+| ingestion_mode        | string  | `standard`| Toggles between standard and analytics ingesting modes
+| token_whitelist       |[]string | []        | Enables ingesting for the provided ERC20 contract addresses in standard mode
 
 ### RPC Endpoints
 
