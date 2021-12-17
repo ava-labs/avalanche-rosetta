@@ -291,6 +291,7 @@ func (m *accountMetadata) UnmarshalJSON(data []byte) error {
 }
 
 // has0xPrefix validates str begins with '0x' or '0X'.
+// Copied from the go-ethereum hextuil.go library https://github.com/ethereum/go-ethereum/blob/0ba0b81e54483978ab823665afb627ab4999db06/common/hexutil/hexutil.go#L189-L191
 func has0xPrefix(str string) bool {
 	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
 }
