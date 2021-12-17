@@ -13,17 +13,30 @@ const (
 	FujiChainID = 43113
 	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
 
-	OpCall         = "CALL"
-	OpFee          = "FEE"
-	OpCreate       = "CREATE"
-	OpCreate2      = "CREATE2"
-	OpSelfDestruct = "SELFDESTRUCT"
-	OpCallCode     = "CALLCODE"
-	OpDelegateCall = "DELEGATECALL"
-	OpStaticCall   = "STATICCALL"
-	OpDestruct     = "DESTRUCT"
-	OpImport       = "IMPORT"
-	OpExport       = "EXPORT"
+	TokenTypeMetadata       = "tokenType"
+	ContractAddressMetadata = "contractAddress"
+	IndexTransferedMetadata = "indexTransfered"
+	TokenSymbol             = "tokenSymbol"
+
+	OpCall          = "CALL"
+	OpFee           = "FEE"
+	OpCreate        = "CREATE"
+	OpCreate2       = "CREATE2"
+	OpSelfDestruct  = "SELFDESTRUCT"
+	OpCallCode      = "CALLCODE"
+	OpDelegateCall  = "DELEGATECALL"
+	OpStaticCall    = "STATICCALL"
+	OpDestruct      = "DESTRUCT"
+	OpImport        = "IMPORT"
+	OpExport        = "EXPORT"
+	OpErc20Transfer = "ERC20_TRANSFER"
+	OpErc20Mint     = "ERC20_MINT"
+	OpErc20Burn     = "ERC20_BURN"
+
+	OpErc721TransferSender  = "ERC721_SENDER"
+	OpErc721TransferReceive = "ERC721_RECEIVE"
+	OpErc721Mint            = "ERC721_MINT"
+	OpErc721Burn            = "ERC721_BURN"
 
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
@@ -71,6 +84,13 @@ var (
 		OpDestruct,
 		OpImport,
 		OpExport,
+		OpErc20Burn,
+		OpErc20Mint,
+		OpErc20Transfer,
+		OpErc721TransferReceive,
+		OpErc721TransferSender,
+		OpErc721Mint,
+		OpErc721Burn,
 	}
 
 	CallMethods = []string{

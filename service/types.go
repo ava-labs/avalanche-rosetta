@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	seconds2milliseconds = 1000
+	seconds2milliseconds  = 1000
+	BalanceOfMethodPrefix = "0x70a08231000000000000000000000000"
 )
 
 type options struct {
@@ -285,4 +286,10 @@ func (m *accountMetadata) UnmarshalJSON(data []byte) error {
 
 	m.Nonce = nonce
 	return nil
+}
+
+// has0xPrefix validates str begins with '0x' or '0X'.
+// Copied from the go-ethereum hextuil.go library
+func has0xPrefix(str string) bool {
+	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
 }

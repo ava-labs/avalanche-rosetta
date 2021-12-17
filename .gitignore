@@ -19,3 +19,5 @@ rosetta-data
 .avalanchego
 *.swp
 data
+.vscode*
+__debug_bin*

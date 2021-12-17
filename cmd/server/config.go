@@ -6,12 +6,15 @@ import (
 	"os"
 
 	"github.com/ava-labs/avalanche-rosetta/service"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 var (
 	errMissingRPC           = errors.New("avalanche rpc endpoint is not provided")
 	errInvalidMode          = errors.New("invalid rosetta mode")
 	errGenesisBlockRequired = errors.New("genesis block hash is not provided")
+	errInvalidTokenAddress  = errors.New("invalid token address provided")
+	errInvalidIngestionMode = errors.New("invalid rosetta ingestion mode")
 )
 
 type config struct {
@@ -22,6 +25,10 @@ type config struct {
 	ChainID          int64  `json:"chain_id"`
 	LogRequests      bool   `json:"log_requests"`
 	GenesisBlockHash string `json:"genesis_block_hash"`
+
+	IngestionMode      string   `json:"ingestion_mode"`
+	TokenWhiteList     []string `json:"token_whitelist"`
+	IndexUnknownTokens bool     `json:"index_unknown_tokens"`
 }
 
 func readConfig(path string) (*config, error) {
@@ -39,7 +46,11 @@ func readConfig(path string) (*config, error) {
 
 func (c *config) ApplyDefaults() {
 	if c.Mode == "" {
-		c.Mode = "online"
+		c.Mode = service.ModeOnline
+	}
+
+	if c.IngestionMode == "" {
+		c.IngestionMode = service.StandardIngestion
 	}
 
 	if c.RPCEndpoint == "" {
@@ -64,6 +75,18 @@ func (c *config) Validate() error {
 
 	if c.GenesisBlockHash == "" {
 		return errGenesisBlockRequired
+	}
+
+	if len(c.TokenWhiteList) != 0 {
+		for _, token := range c.TokenWhiteList {
+			if !ethcommon.IsHexAddress(token) {
+				return errInvalidTokenAddress
+			}
+		}
+	}
+
+	if !(c.IngestionMode == service.AnalyticsIngestion || c.IngestionMode == service.StandardIngestion) {
+		return errInvalidIngestionMode
 	}
 
 	return nil

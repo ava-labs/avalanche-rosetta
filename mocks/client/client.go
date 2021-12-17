@@ -455,3 +455,68 @@ func (_m *Client) TxPoolStatus(_a0 context.Context) (*client.TxPoolStatus, error
 
 	return r0, r1
 }
+func (_m *Client) ContractInfo(_a0 common.Address, _a1 bool) (*client.ContractInfo, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *client.ContractInfo
+	if rf, ok := ret.Get(0).(func(common.Address, bool) *client.ContractInfo); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.ContractInfo)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(common.Address, bool) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+func (_m *Client) EvmTransferLogs(_a0 context.Context, _a1 common.Hash, _a2 common.Hash) ([]types.Log, error) {
+	ret := _m.Called(_a0, _a1, _a2)
+
+	var r0 []types.Log
+	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, common.Hash) []types.Log); ok {
+		r0 = rf(_a0, _a1, _a2)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]types.Log)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, common.Hash, common.Hash) error); ok {
+		r1 = rf(_a0, _a1, _a2)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+func (_m *Client) CallContract(_a0 context.Context, _a1 interfaces.CallMsg, _a2 *big.Int) ([]byte, error) {
+	ret := _m.Called(_a0, _a1, _a2)
+
+	var r0 []byte
+	if rf, ok := ret.Get(0).(func(context.Context, interfaces.CallMsg, *big.Int) []byte); ok {
+		r0 = rf(_a0, _a1, _a2)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, interfaces.CallMsg, *big.Int) error); ok {
+		r1 = rf(_a0, _a1, _a2)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

@@ -35,7 +35,8 @@ Before you start running the server you need to create a configuration file:
 {
   "rpc_endpoint": "https://api.avax-test.network",
   "mode": "online",
-  "listen_addr": "0.0.0.0:8080"
+  "listen_addr": "0.0.0.0:8080",
+  "genesis_block_hash" :"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b",
 }
 ```
 
@@ -55,7 +56,11 @@ Full configuration example:
   "listen_addr": "0.0.0.0:8080",
   "network_name": "Fuji",
   "chain_id": 43113,
-  "log_requests": true
+  "log_requests": true,
+  "genesis_block_hash" :"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b",
+  "index_unknown_tokens": false,
+  "ingestion_mode" : "standard",
+  "token_whitelist" : []
 }
 ```
 
@@ -66,9 +71,14 @@ Where:
 | mode          | string  | `online` | Mode of operations. One of: `online`, `offline`
 | rpc_endpoint  | string  | `http://localhost:9650` | Avalanche RPC endpoint
 | listen_addr   | string  | `http://localhost:8080` | Rosetta server listen address (host/port)
-| network_name  | string  | - | Avalanche network name
-| chain_id      | integer | - | Avalanche C-Chain ID
-| log_requests  | bool    | `false` | Enable request body logging
+| network_name  | string  | -       | Avalanche network name
+| chain_id      | integer | -       | Avalanche C-Chain ID
+| genesis_block_hash    | string  | -         | The block hash for the genesis block
+| index_unknown_tokens  | bool    | `false`   | Enables ingesting tokens that don't have a public symbol or decimal variable=
+| ingestion_mode        | string  | `standard`| Toggles between standard and analytics ingesting modes
+| token_whitelist       |[]string | []        | Enables ingesting for the provided ERC20 contract addresses in standard mode.  
+
+The token whitelist only supports tokens that emit evm transfer logs for all minting (from should be 0x000---), burning (to address should be 0x0000) and transfer events are supported.  All other tokens will break cause ingestion to fail.
 
 ### RPC Endpoints
 
@@ -134,6 +144,12 @@ Run the construction check:
 
 ```bash
 make check-testnet-construction
+```
+
+## Rebuild the ContractInfoToken.go autogen file.
+
+```bash
+abigen --abi contractInfo.abi --pkg main --type ContractInfoToken --out client/contractInfoToken.go
 ```
 
 ## License

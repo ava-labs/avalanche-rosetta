@@ -2,14 +2,17 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ava-labs/coreth/interfaces"
 )
 
 // AccountService implements the /account/* endpoints
@@ -45,10 +48,6 @@ func (s AccountService) AccountBalance(
 	}
 
 	address := ethcommon.HexToAddress(req.AccountIdentifier.Address)
-	balance, balanceErr := s.client.BalanceAt(context.Background(), address, header.Number)
-	if err != nil {
-		return nil, wrapError(errInternalError, balanceErr)
-	}
 
 	nonce, nonceErr := s.client.NonceAt(ctx, address, header.Number)
 	if nonceErr != nil {
@@ -64,14 +63,59 @@ func (s AccountService) AccountBalance(
 		return nil, wrapError(errInternalError, metadataErr)
 	}
 
+	avaxBalance, balanceErr := s.client.BalanceAt(context.Background(), address, header.Number)
+	if balanceErr != nil {
+		return nil, wrapError(errInternalError, balanceErr)
+	}
+
+	var balances []*types.Amount
+	if len(req.Currencies) == 0 {
+		balances = append(balances, mapper.AvaxAmount(avaxBalance))
+	}
+
+	for _, currency := range req.Currencies {
+		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
+		if !ok {
+			if types.Hash(currency) == types.Hash(mapper.AvaxCurrency) {
+				balances = append(balances, mapper.AvaxAmount(avaxBalance))
+				continue
+			}
+			return nil, wrapError(errCallInvalidParams,
+				fmt.Errorf("currencies outside of avax must have contractAddress in metadata field"))
+		}
+
+		if s.config.IsStandardMode() && !mapper.EqualFoldContains(s.config.TokenWhiteList, value.(string)) {
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("only addresses contained in token whitelist are supported"))
+		}
+
+		identifierAddress := req.AccountIdentifier.Address
+		if has0xPrefix(identifierAddress) {
+			identifierAddress = identifierAddress[2:42]
+		}
+
+		data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
+		if err != nil {
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("failed to decode contractAddress in metadata field"))
+		}
+
+		contractAddress := ethcommon.HexToAddress(value.(string))
+		callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
+		response, err := s.client.CallContract(ctx, callMsg, header.Number)
+		if err != nil {
+			return nil, wrapError(errInternalError, err)
+		}
+
+		amount := mapper.Erc20Amount(response, contractAddress, currency.Symbol, uint8(currency.Decimals), false)
+
+		balances = append(balances, amount)
+	}
+
 	resp := &types.AccountBalanceResponse{
 		BlockIdentifier: &types.BlockIdentifier{
 			Index: header.Number.Int64(),
 			Hash:  header.Hash().String(),
 		},
-		Balances: []*types.Amount{
-			mapper.AvaxAmount(balance),
-		},
+		Balances: balances,
 		Metadata: metadataMap,
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/ava-labs/coreth/core/types"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -24,6 +25,7 @@ type Client interface {
 	TransactionByHash(context.Context, ethcommon.Hash) (*ethtypes.Transaction, bool, error)
 	TransactionReceipt(context.Context, ethcommon.Hash) (*ethtypes.Receipt, error)
 	TraceTransaction(context.Context, string) (*Call, []*FlatCall, error)
+	EvmTransferLogs(ctx context.Context, blockHash ethcommon.Hash, transactionHash ethcommon.Hash) ([]types.Log, error)
 	SendTransaction(context.Context, *ethtypes.Transaction) error
 	BalanceAt(context.Context, ethcommon.Address, *big.Int) (*big.Int, error)
 	NonceAt(context.Context, ethcommon.Address, *big.Int) (uint64, error)
@@ -34,11 +36,15 @@ type Client interface {
 	NetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]Peer, error)
 	NodeVersion(context.Context) (string, error)
+	ContractInfo(contractAddress ethcommon.Address, isErc20 bool) (*ContractInfo, error)
+	CallContract(ctx context.Context, msg interfaces.CallMsg, blockNumber *big.Int) ([]byte, error)
 }
 
 type client struct {
 	*EthClient
 	*InfoClient
+	*EvmLogsClient
+	*ContractClient
 }
 
 // NewClient returns a new client for Avalanche APIs
@@ -53,8 +59,20 @@ func NewClient(endpoint string) (Client, error) {
 		return nil, err
 	}
 
+	evmlogs, err := NewEvmLogsClient(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	contract, err := NewContractClient(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	return client{
-		EthClient:  eth,
-		InfoClient: info,
+		EthClient:      eth,
+		InfoClient:     info,
+		EvmLogsClient:  evmlogs,
+		ContractClient: contract,
 	}, nil
 }

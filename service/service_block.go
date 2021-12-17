@@ -186,8 +186,18 @@ func (s *BlockService) fetchTransaction(
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
+	var transactionEvmLogs []corethTypes.Log
+	// Only pull EVM logs if we're in analytics mode or we have tokens care about in standard mode
+	if s.config.IsAnalyticsMode() || !s.config.IsTokenListEmpty() {
+		transactionEvmLogs, err = s.client.EvmTransferLogs(ctx, header.Hash(), tx.Hash())
+		if err != nil {
+			return nil, wrapError(errClientError, err)
+		}
+	}
 
-	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace, flattened)
+	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace, flattened,
+		transactionEvmLogs, s.client, s.config.IsAnalyticsMode(), s.config.TokenWhiteList,
+		s.config.IndexUnknownTokens)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
