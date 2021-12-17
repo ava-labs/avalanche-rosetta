@@ -484,23 +484,23 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 		return ops
 	}
 
-	receiptOp := types.Operation{
+	sendingOp := types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen,
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
-		Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
+		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
+		Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
 	}
-	sendingOp := types.Operation{
+	receiptOp := types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen + 1,
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
-		Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
+		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
+		Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
 		RelatedOperations: []*types.OperationIdentifier{
 			{
 				Index: opsLen,
@@ -553,22 +553,22 @@ func parseErc721Txs(transferLog ethtypes.Log, opsLen int64) []*types.Operation {
 		return ops
 	}
 
-	receiptOp := types.Operation{
+	sendingOp := types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen,
 		},
 		Status:   types.String(StatusSuccess),
-		Type:     OpErc721TransferRecipent,
-		Account:  Account(ConvertEVMTopicHashToAddress(&addressTo)),
+		Type:     OpErc721TransferSender,
+		Account:  Account(ConvertEVMTopicHashToAddress(&addressFrom)),
 		Metadata: metadata,
 	}
-	sendingOp := types.Operation{
+	receiptOp := types.Operation{
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen + 1,
 		},
 		Status:   types.String(StatusSuccess),
-		Type:     OpErc721TransferSender,
-		Account:  Account(ConvertEVMTopicHashToAddress(&addressFrom)),
+		Type:     OpErc721TransferRecipent,
+		Account:  Account(ConvertEVMTopicHashToAddress(&addressTo)),
 		Metadata: metadata,
 		RelatedOperations: []*types.OperationIdentifier{
 			{
