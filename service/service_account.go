@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -70,11 +69,11 @@ func (s AccountService) AccountBalance(
 	}
 
 	var balances []*types.Amount
-	balances = append(balances, mapper.AvaxAmount(avaxBalance))
 	for _, currency := range req.Currencies {
 		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
 		if !ok {
-			if currency.Decimals == AvaxDecimals && strings.ToLower(currency.Symbol) == AvaxSymbolLower {
+			if types.Hash(currency) == types.Hash(&types.Currency{Symbol: AvaxSymbol, Decimals: AvaxDecimals}) {
+				balances = append(balances, mapper.AvaxAmount(avaxBalance))
 				continue
 			}
 			return nil, wrapError(errCallInvalidParams,
