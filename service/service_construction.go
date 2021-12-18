@@ -590,5 +590,22 @@ func (s ConstructionService) ConstructionSubmit(
 }
 
 func (s ConstructionService) CreateOperationDescription() {
-	descriptions := make([]*parser.OperationDescription, len(s.config.TokenWhiteList)+2)
+	description_len := (2 * len(s.config.TokenWhiteList)) + 2 //send + recieve for each ERC20 plus 2 for avax native
+	descriptions := make([]*parser.OperationDescription, description_len)
+
+	for _, address := range s.config.TokenWhiteList {
+		contractInfo := s.client.ContractInfo(address, true)
+		send := parser.OperationDescription{
+			Type: mapper.OpErc20Transfer,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.NegativeAmountSign,
+				Currency: mapper.Erc20Currency(),
+			},
+		}
+
+	}
 }
