@@ -42,7 +42,6 @@ func Erc20Amount(
 		decimalValue = new(big.Int).Neg(decimalValue)
 	}
 	metadata := make(map[string]interface{})
-	metadata[TokenTypeMetadata] = "ERC20"
 	metadata[ContractAddressMetadata] = contractAddress.String()
 
 	return &types.Amount{
