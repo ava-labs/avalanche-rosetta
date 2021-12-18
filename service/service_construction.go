@@ -593,11 +593,36 @@ func (s ConstructionService) CreateOperationDescription() ([]*parser.OperationDe
 	description_len := (2 * len(s.config.TokenWhiteList)) + 2 //send + recieve for each ERC20 plus 2 for avax native
 	descriptions := make([]*parser.OperationDescription, description_len)
 
+	nativeSend := parser.OperationDescription{
+		Type: mapper.OpCall,
+		Account: &parser.AccountDescription{
+			Exists: true,
+		},
+		Amount: &parser.AmountDescription{
+			Exists:   true,
+			Sign:     parser.NegativeAmountSign,
+			Currency: mapper.AvaxCurrency,
+		},
+	}
+	nativeRecieve := parser.OperationDescription{
+		Type: mapper.OpCall,
+		Account: &parser.AccountDescription{
+			Exists: true,
+		},
+		Amount: &parser.AmountDescription{
+			Exists:   true,
+			Sign:     parser.PositiveAmountSign,
+			Currency: mapper.AvaxCurrency,
+		},
+	}
+	descriptions = append(descriptions, &nativeSend)
+	descriptions = append(descriptions, &nativeRecieve)
+
 	for _, address := range s.config.TokenWhiteList {
 		ethAdress := ethcommon.HexToAddress(address)
 		contractInfo, err := s.client.ContractInfo(ethAdress, true)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		send := parser.OperationDescription{
 			Type: mapper.OpErc20Transfer,
@@ -611,5 +636,20 @@ func (s ConstructionService) CreateOperationDescription() ([]*parser.OperationDe
 			},
 		}
 
+		receive := parser.OperationDescription{
+			Type: mapper.OpErc20Transfer,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.PositiveAmountSign,
+				Currency: mapper.Erc20Currency(contractInfo.Symbol, int32(contractInfo.Decimals), address),
+			},
+		}
+		descriptions = append(descriptions, &send)
+		descriptions = append(descriptions, &receive)
 	}
+
+	return descriptions, nil
 }
