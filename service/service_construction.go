@@ -588,3 +588,7 @@ func (s ConstructionService) ConstructionSubmit(
 		},
 	}, nil
 }
+
+func (s ConstructionService) CreateOperationDescription() {
+	descriptions := make([]*parser.OperationDescription, len(s.config.TokenWhiteList)+2)
+}

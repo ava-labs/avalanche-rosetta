@@ -21,6 +21,7 @@ type options struct {
 	GasPrice               *big.Int `json:"gas_price,omitempty"`
 	GasLimit               *big.Int `json:"gas_limit,omitempty"`
 	Nonce                  *big.Int `json:"nonce,omitempty"`
+	ContractAddress        string   `json:"contract_address, omitempty"`
 }
 
 type optionsWire struct {
