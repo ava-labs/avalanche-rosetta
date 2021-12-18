@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
@@ -21,7 +22,7 @@ type options struct {
 	GasPrice               *big.Int `json:"gas_price,omitempty"`
 	GasLimit               *big.Int `json:"gas_limit,omitempty"`
 	Nonce                  *big.Int `json:"nonce,omitempty"`
-	ContractAddress        string   `json:"contract_address, omitempty"`
+	Currency               *types.Currency
 }
 
 type optionsWire struct {

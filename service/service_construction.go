@@ -460,32 +460,16 @@ func (s ConstructionService) ConstructionPreprocess(
 	ctx context.Context,
 	req *types.ConstructionPreprocessRequest,
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
+
+	operationDescriptions, err := s.CreateOperationDescription()
+
+	if err != nil {
+		return nil, wrapError(errInternalError, err)
+	}
+
 	descriptions := &parser.Descriptions{
-		OperationDescriptions: []*parser.OperationDescription{
-			{
-				Type: mapper.OpCall,
-				Account: &parser.AccountDescription{
-					Exists: true,
-				},
-				Amount: &parser.AmountDescription{
-					Exists:   true,
-					Sign:     parser.NegativeAmountSign,
-					Currency: mapper.AvaxCurrency,
-				},
-			},
-			{
-				Type: mapper.OpCall,
-				Account: &parser.AccountDescription{
-					Exists: true,
-				},
-				Amount: &parser.AmountDescription{
-					Exists:   true,
-					Sign:     parser.PositiveAmountSign,
-					Currency: mapper.AvaxCurrency,
-				},
-			},
-		},
-		ErrUnmatched: true,
+		OperationDescriptions: operationDescriptions,
+		ErrUnmatched:          true,
 	}
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
@@ -497,6 +481,13 @@ func (s ConstructionService) ConstructionPreprocess(
 	fromAddress := fromOp.Account.Address
 	toOp, amount := matches[1].First()
 	toAddress := toOp.Account.Address
+
+	fromCurrency := fromOp.Amount.Currency
+	toCurrency := fromOp.Amount.Currency
+
+	if types.Hash(fromCurrency) != types.Hash(toCurrency) {
+		return nil, wrapError(errInternalError, "currency info doesn't match between from and to operation")
+	}
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
@@ -512,7 +503,9 @@ func (s ConstructionService) ConstructionPreprocess(
 		To:                     checkTo,
 		Value:                  amount,
 		SuggestedFeeMultiplier: req.SuggestedFeeMultiplier,
+		Currency:               fromCurrency,
 	}
+
 	if v, ok := req.Metadata["gas_price"]; ok {
 		stringObj, ok := v.(string)
 		if !ok {
