@@ -353,32 +353,15 @@ func (s ConstructionService) ConstructionPayloads(
 	ctx context.Context,
 	req *types.ConstructionPayloadsRequest,
 ) (*types.ConstructionPayloadsResponse, *types.Error) {
+
+	operationDescriptions, err := s.CreateOperationDescription()
+	if err != nil {
+		return nil, wrapError(errInternalError, err)
+	}
+
 	descriptions := &parser.Descriptions{
-		OperationDescriptions: []*parser.OperationDescription{
-			{
-				Type: mapper.OpCall,
-				Account: &parser.AccountDescription{
-					Exists: true,
-				},
-				Amount: &parser.AmountDescription{
-					Exists:   true,
-					Sign:     parser.NegativeAmountSign,
-					Currency: mapper.AvaxCurrency,
-				},
-			},
-			{
-				Type: mapper.OpCall,
-				Account: &parser.AccountDescription{
-					Exists: true,
-				},
-				Amount: &parser.AmountDescription{
-					Exists:   true,
-					Sign:     parser.PositiveAmountSign,
-					Currency: mapper.AvaxCurrency,
-				},
-			},
-		},
-		ErrUnmatched: true,
+		OperationDescriptions: operationDescriptions,
+		ErrUnmatched:          true,
 	}
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
