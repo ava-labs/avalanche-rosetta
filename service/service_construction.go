@@ -651,19 +651,34 @@ func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAdd
 	} else {
 		//ToAddress for erc20 transfers is the contract address
 		contractAddress := common.HexToAddress(contractAddress.(string))
-		to := common.HexToAddress(toAddress)
-		transferFnSignature := []byte("transfer(address,uint256)") // do not include spaces in the string
-		hash := sha3.NewLegacyKeccak256()
-		hash.Write(transferFnSignature)
-		paddedAddress := common.LeftPadBytes(to.Bytes(), 32)
+		data := generateErc20TransferData(toAddress, fromAddress, value)
 		gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
 			From:  common.HexToAddress(fromAddress),
 			To:    &contractAddress,
 			Value: value,
+			Data:  data,
 		})
 		if err != nil {
 			return 0, err
 		}
 		return gasLimit, nil
 	}
+}
+
+func generateErc20TransferData(toAddress string, fromAddress string, value *big.Int) []byte {
+	to := common.HexToAddress(toAddress)
+	transferFnSignature := []byte("transfer(address,uint256)") // do not include spaces in the string
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(transferFnSignature)
+	methodID := hash.Sum(nil)[:4]
+
+	paddedAddress := common.LeftPadBytes(to.Bytes(), 32)
+	paddedAmount := common.LeftPadBytes(value.Bytes(), 32)
+
+	var data []byte
+	data = append(data, methodID...)
+	data = append(data, paddedAddress...)
+	data = append(data, paddedAmount...)
+
+	return data
 }
