@@ -15,5 +15,6 @@ require (
 	github.com/prometheus/common v0.15.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	go.opencensus.io v0.22.5 // indirect
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )

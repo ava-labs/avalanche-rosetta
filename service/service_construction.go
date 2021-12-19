@@ -350,7 +350,6 @@ func (s ConstructionService) ConstructionPayloads(
 	ctx context.Context,
 	req *types.ConstructionPayloadsRequest,
 ) (*types.ConstructionPayloadsResponse, *types.Error) {
-
 	operationDescriptions, err := s.CreateOperationDescription()
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
@@ -440,7 +439,6 @@ func (s ConstructionService) ConstructionPreprocess(
 	ctx context.Context,
 	req *types.ConstructionPreprocessRequest,
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
-
 	operationDescriptions, err := s.CreateOperationDescription()
 
 	if err != nil {
@@ -563,8 +561,8 @@ func (s ConstructionService) ConstructionSubmit(
 }
 
 func (s ConstructionService) CreateOperationDescription() ([]*parser.OperationDescription, error) {
-	description_len := (2 * len(s.config.TokenWhiteList)) + 2 //send + recieve for each ERC20 plus 2 for avax native
-	descriptions := make([]*parser.OperationDescription, description_len)
+	descriptionLen := (2 * len(s.config.TokenWhiteList)) + 2 // send + receive for each ERC20 plus 2 for avax native
+	descriptions := make([]*parser.OperationDescription, descriptionLen)
 
 	nativeSend := parser.OperationDescription{
 		Type: mapper.OpCall,
@@ -627,55 +625,56 @@ func (s ConstructionService) CreateOperationDescription() ([]*parser.OperationDe
 	return descriptions, nil
 }
 
-func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAddress string, fromAddress string, value *big.Int) (uint64, error) {
+func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAddress string,
+	fromAddress string, value *big.Int) (uint64, error) {
 	if len(toAddress) == 0 || value == nil {
 		// We guard against malformed inputs that may have been generated using
 		// a previous version of avalanche-rosetta.
 		return nativeTransferGasLimit, nil
-	} else {
-		to := common.HexToAddress(toAddress)
-		gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-			From:  common.HexToAddress(fromAddress),
-			To:    &to,
-			Value: value,
-		})
-		if err != nil {
-			return 0, err
-		}
-		return gasLimit, nil
 	}
+	to := common.HexToAddress(toAddress)
+	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+		From:  common.HexToAddress(fromAddress),
+		To:    &to,
+		Value: value,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return gasLimit, nil
 }
 
-func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAddress string, fromAddress string, value *big.Int, currency *types.Currency) (uint64, error) {
-	contractAddress, ok := currency.Metadata[mapper.ContractAddressMetadata]
+func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAddress string,
+	fromAddress string, value *big.Int, currency *types.Currency) (uint64, error) {
+	contract, ok := currency.Metadata[mapper.ContractAddressMetadata]
 
 	if len(toAddress) == 0 || value == nil || !ok {
 		return erc20TransferGasLimit, nil
-	} else {
-		//ToAddress for erc20 transfers is the contract address
-		contractAddress := common.HexToAddress(contractAddress.(string))
-		data := generateErc20TransferData(toAddress, fromAddress, value)
-		gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-			From: common.HexToAddress(fromAddress),
-			To:   &contractAddress,
-			Data: data,
-		})
-		if err != nil {
-			return 0, err
-		}
-		return gasLimit, nil
 	}
+	// ToAddress for erc20 transfers is the contract address
+	contractAddress := common.HexToAddress(contract.(string))
+	data := generateErc20TransferData(toAddress, value)
+	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+		From: common.HexToAddress(fromAddress),
+		To:   &contractAddress,
+		Data: data,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return gasLimit, nil
 }
 
-func generateErc20TransferData(toAddress string, fromAddress string, value *big.Int) []byte {
+func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	to := common.HexToAddress(toAddress)
 	transferFnSignature := []byte("transfer(address,uint256)") // do not include spaces in the string
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(transferFnSignature)
 	methodID := hash.Sum(nil)[:4]
 
-	paddedAddress := common.LeftPadBytes(to.Bytes(), 32)
-	paddedAmount := common.LeftPadBytes(value.Bytes(), 32)
+	requiredPaddingBytes := 32
+	paddedAddress := common.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
+	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
 
 	var data []byte
 	data = append(data, methodID...)
