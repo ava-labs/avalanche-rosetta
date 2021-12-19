@@ -376,10 +376,15 @@ func (s ConstructionService) ConstructionPayloads(
 	gasPrice := metadata.GasPrice
 	gasLimit := metadata.GasLimit
 	chainID := s.config.ChainID
-	transferData := []byte{}
 
 	fromOp, _ := matches[0].First()
 	fromAddress := fromOp.Account.Address
+	fromCurrency := fromOp.Amount.Currency
+	toCurrency := fromOp.Amount.Currency
+
+	if types.Hash(fromCurrency) != types.Hash(toCurrency) {
+		return nil, wrapError(errInternalError, "currency info doesn't match between from and to operation")
+	}
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
@@ -391,14 +396,34 @@ func (s ConstructionService) ConstructionPayloads(
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
 	}
 
-	tx := ethtypes.NewTransaction(
-		nonce,
-		ethcommon.HexToAddress(checkTo),
-		amount,
-		gasLimit,
-		gasPrice,
-		transferData,
-	)
+	var tx *ethtypes.Transaction
+	if types.Hash(fromCurrency) == types.Hash(mapper.AvaxCurrency) {
+		transferData := []byte{}
+		tx = ethtypes.NewTransaction(
+			nonce,
+			ethcommon.HexToAddress(checkTo),
+			amount,
+			gasLimit,
+			gasPrice,
+			transferData,
+		)
+	} else {
+		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata]
+
+		if !ok {
+			return nil, wrapError(errInvalidInput, fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
+		}
+
+		transferData := generateErc20TransferData(toAddress, amount)
+		tx = ethtypes.NewTransaction(
+			nonce,
+			ethcommon.HexToAddress(contract.(string)),
+			amount,
+			gasLimit,
+			gasPrice,
+			transferData,
+		)
+	}
 
 	unsignedTx := &transaction{
 		From:     checkFrom,
