@@ -51,7 +51,6 @@ func Erc20Amount(
 
 func Erc20Currency(symbol string, decimals int32, contractAddress string) *types.Currency {
 	metadata := make(map[string]interface{})
-	metadata[TokenTypeMetadata] = "ERC20"
 	metadata[ContractAddressMetadata] = contractAddress
 
 	return &types.Currency{
