@@ -96,7 +96,10 @@ func (s ConstructionService) ConstructionMetadata(
 				return nil, wrapError(errClientError, err)
 			}
 		} else {
-
+			gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
+			if err != nil {
+				return nil, wrapError(errClientError, err)
+			}
 		}
 	} else {
 		gasLimit = input.GasLimit.Uint64()
@@ -653,10 +656,9 @@ func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAdd
 		contractAddress := common.HexToAddress(contractAddress.(string))
 		data := generateErc20TransferData(toAddress, fromAddress, value)
 		gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-			From:  common.HexToAddress(fromAddress),
-			To:    &contractAddress,
-			Value: value,
-			Data:  data,
+			From: common.HexToAddress(fromAddress),
+			To:   &contractAddress,
+			Data: data,
 		})
 		if err != nil {
 			return 0, err
