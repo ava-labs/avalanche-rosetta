@@ -15,10 +15,11 @@ import (
 	"github.com/ava-labs/coreth/interfaces"
 	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
 // ConstructionService implements /construction/* endpoints
@@ -269,10 +270,33 @@ func (s ConstructionService) ConstructionParse(
 	if !ok {
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
 	}
+	//Erc20 transfer
+	var opCall string
+	var currency *types.Currency
+	var value *big.Int
+	if len(tx.Data) != 0 {
+		if !mapper.EqualFoldContains(s.config.TokenWhiteList, tx.To) {
+			return nil, wrapError(errInvalidInput, "unsupported contract address associated with transaction")
+		}
+
+		toAddress, amountSent, err := parseErc20TransferData(tx.Data)
+		if err != nil {
+			return nil, wrapError(errInvalidInput, err)
+		}
+
+		contractInfo, err := s.client.ContractInfo(*toAddress, true)
+		if err != nil {
+			return nil, wrapError(errInvalidInput, err)
+
+		}
+		currency = mapper.Erc20Currency()
+	} else {
+
+	}
 
 	ops := []*types.Operation{
 		{
-			Type: mapper.OpCall,
+			Type: opCall,
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 0,
 			},
@@ -280,12 +304,12 @@ func (s ConstructionService) ConstructionParse(
 				Address: checkFrom,
 			},
 			Amount: &types.Amount{
-				Value:    new(big.Int).Neg(tx.Value).String(),
-				Currency: mapper.AvaxCurrency,
+				Value:    new(big.Int).Neg(value).String(),
+				Currency: currency,
 			},
 		},
 		{
-			Type: mapper.OpCall,
+			Type: opCall,
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 1,
 			},
@@ -298,8 +322,8 @@ func (s ConstructionService) ConstructionParse(
 				Address: checkTo,
 			},
 			Amount: &types.Amount{
-				Value:    tx.Value.String(),
-				Currency: mapper.AvaxCurrency,
+				Value:    value.String(),
+				Currency: currency,
 			},
 		},
 	}
@@ -693,10 +717,7 @@ func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAdd
 
 func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	to := common.HexToAddress(toAddress)
-	transferFnSignature := []byte("transfer(address,uint256)") // do not include spaces in the string
-	hash := sha3.NewLegacyKeccak256()
-	hash.Write(transferFnSignature)
-	methodID := hash.Sum(nil)[:4]
+	methodID := getTransferMethodId()
 
 	requiredPaddingBytes := 32
 	paddedAddress := common.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
@@ -708,4 +729,27 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	data = append(data, paddedAmount...)
 
 	return data
+}
+
+func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
+	if len(data) != 69 {
+		return nil, nil, fmt.Errorf("incorrect length for data array")
+	}
+	methodID := getTransferMethodId()
+	if hexutil.Encode(data[:4]) != hexutil.Encode(methodID) {
+		return nil, nil, fmt.Errorf("incorrect methodID signature")
+	}
+
+	address := ethcommon.BytesToAddress(data[5:36])
+	amount := new(big.Int)
+	amount.SetBytes(data[37:])
+	return &address, amount, nil
+}
+
+func getTransferMethodId() []byte {
+	transferFnSignature := []byte("transfer(address,uint256)") // do not include spaces in the string
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(transferFnSignature)
+	methodID := hash.Sum(nil)[:4]
+	return methodID
 }
