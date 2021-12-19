@@ -9,6 +9,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"golang.org/x/crypto/sha3"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
@@ -89,20 +90,13 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		if len(input.To) == 0 || input.Value == nil {
-			// We guard against malformed inputs that may have been generated using
-			// a previous version of avalanche-rosetta.
-			gasLimit = transferGasLimit
-		} else {
-			to := common.HexToAddress(input.To)
-			gasLimit, err = s.client.EstimateGas(ctx, interfaces.CallMsg{
-				From:  common.HexToAddress(input.From),
-				To:    &to,
-				Value: input.Value,
-			})
+		if types.Hash(input.Currency) == types.Hash(mapper.AvaxCurrency) {
+			gasLimit, err = s.getNativeTransferGasLimit(ctx, input.To, input.From, input.Value)
 			if err != nil {
 				return nil, wrapError(errClientError, err)
 			}
+		} else {
+
 		}
 	} else {
 		gasLimit = input.GasLimit.Uint64()
@@ -628,4 +622,48 @@ func (s ConstructionService) CreateOperationDescription() ([]*parser.OperationDe
 	}
 
 	return descriptions, nil
+}
+
+func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAddress string, fromAddress string, value *big.Int) (uint64, error) {
+	if len(toAddress) == 0 || value == nil {
+		// We guard against malformed inputs that may have been generated using
+		// a previous version of avalanche-rosetta.
+		return nativeTransferGasLimit, nil
+	} else {
+		to := common.HexToAddress(toAddress)
+		gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+			From:  common.HexToAddress(fromAddress),
+			To:    &to,
+			Value: value,
+		})
+		if err != nil {
+			return 0, err
+		}
+		return gasLimit, nil
+	}
+}
+
+func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAddress string, fromAddress string, value *big.Int, currency *types.Currency) (uint64, error) {
+	contractAddress, ok := currency.Metadata[mapper.ContractAddressMetadata]
+
+	if len(toAddress) == 0 || value == nil || !ok {
+		return erc20TransferGasLimit, nil
+	} else {
+		//ToAddress for erc20 transfers is the contract address
+		contractAddress := common.HexToAddress(contractAddress.(string))
+		to := common.HexToAddress(toAddress)
+		transferFnSignature := []byte("transfer(address,uint256)") // do not include spaces in the string
+		hash := sha3.NewLegacyKeccak256()
+		hash.Write(transferFnSignature)
+		paddedAddress := common.LeftPadBytes(to.Bytes(), 32)
+		gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+			From:  common.HexToAddress(fromAddress),
+			To:    &contractAddress,
+			Value: value,
+		})
+		if err != nil {
+			return 0, err
+		}
+		return gasLimit, nil
+	}
 }

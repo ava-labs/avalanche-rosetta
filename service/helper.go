@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	transferGasLimit = uint64(21000) //nolint:gomnd
-	genesisTimestamp = 946713601000  // min allowable timestamp
+	nativeTransferGasLimit = uint64(21000) //nolint:gomnd
+	erc20TransferGasLimit  = uint64(42000)
+	genesisTimestamp       = 946713601000 // min allowable timestamp
 )
 
 func makeGenesisBlock(hash string) *types.Block {
