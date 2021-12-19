@@ -561,7 +561,8 @@ func (s ConstructionService) ConstructionSubmit(
 }
 
 func (s ConstructionService) CreateOperationDescription() ([]*parser.OperationDescription, error) {
-	descriptionLen := (2 * len(s.config.TokenWhiteList)) + 2 // send + receive for each ERC20 plus 2 for avax native
+	// send + receive for each ERC20 plus 2 for avax native
+	descriptionLen := (2 * len(s.config.TokenWhiteList)) + 2 //nolint:gomnd
 	descriptions := make([]*parser.OperationDescription, descriptionLen)
 
 	nativeSend := parser.OperationDescription{
