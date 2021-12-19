@@ -270,10 +270,10 @@ func (s ConstructionService) ConstructionParse(
 	if !ok {
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
 	}
-	//Erc20 transfer
 	var opMethod string
 	var currency *types.Currency
 	var value *big.Int
+	// Erc20 transfer
 	if len(tx.Data) != 0 {
 		if !mapper.EqualFoldContains(s.config.TokenWhiteList, tx.To) {
 			return nil, wrapError(errInvalidInput, "unsupported contract address associated with transaction")
@@ -439,7 +439,8 @@ func (s ConstructionService) ConstructionPayloads(
 		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata]
 
 		if !ok {
-			return nil, wrapError(errInvalidInput, fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
+			return nil, wrapError(errInvalidInput,
+				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
 		}
 
 		transferData := generateErc20TransferData(toAddress, amount)
@@ -721,7 +722,7 @@ func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAdd
 
 func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	to := common.HexToAddress(toAddress)
-	methodID := getTransferMethodId()
+	methodID := getTransferMethodID()
 
 	requiredPaddingBytes := 32
 	paddedAddress := common.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
@@ -736,10 +737,11 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 }
 
 func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
-	if len(data) != 69 {
+	genericTransferBytesLength := 69
+	if len(data) != genericTransferBytesLength {
 		return nil, nil, fmt.Errorf("incorrect length for data array")
 	}
-	methodID := getTransferMethodId()
+	methodID := getTransferMethodID()
 	if hexutil.Encode(data[:4]) != hexutil.Encode(methodID) {
 		return nil, nil, fmt.Errorf("incorrect methodID signature")
 	}
@@ -750,7 +752,7 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 	return &address, amount, nil
 }
 
-func getTransferMethodId() []byte {
+func getTransferMethodID() []byte {
 	transferFnSignature := []byte("transfer(address,uint256)") // do not include spaces in the string
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(transferFnSignature)
