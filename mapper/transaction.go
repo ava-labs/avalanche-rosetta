@@ -236,8 +236,7 @@ func CrossChainTransactions(
 		return transactions, nil
 	}
 
-	atomicTxs, err := evm.ExtractAtomicTxs(extra, block.Time() >= ap5Activation)
-
+	atomicTxs, err := evm.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, codecManager)
 	if err != nil {
 		return nil, err
 	}
