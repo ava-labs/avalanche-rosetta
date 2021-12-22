@@ -91,7 +91,7 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		if types.Hash(input.Currency) == types.Hash(mapper.AvaxCurrency) {
+		if input.Currency == nil || types.Hash(input.Currency) == types.Hash(mapper.AvaxCurrency) {
 			gasLimit, err = s.getNativeTransferGasLimit(ctx, input.To, input.From, input.Value)
 			if err != nil {
 				return nil, wrapError(errClientError, err)
@@ -615,9 +615,7 @@ func (s ConstructionService) ConstructionSubmit(
 }
 
 func (s ConstructionService) CreateOperationDescription() ([]*parser.OperationDescription, error) {
-	// send + receive for each ERC20 plus 2 for avax native
-	descriptionLen := (2 * len(s.config.TokenWhiteList)) + 2 //nolint:gomnd
-	descriptions := make([]*parser.OperationDescription, descriptionLen)
+	var descriptions []*parser.OperationDescription
 
 	nativeSend := parser.OperationDescription{
 		Type: mapper.OpCall,
