@@ -252,20 +252,20 @@ func (_m *Client) HeaderByNumber(_a0 context.Context, _a1 *big.Int) (*types.Head
 	return r0, r1
 }
 
-// IsBootstrapped provides a mock function with given fields: _a0
-func (_m *Client) IsBootstrapped(_a0 string) (bool, error) {
-	ret := _m.Called(_a0)
+// IsBootstrapped provides a mock function with given fields: _a0, _a1
+func (_m *Client) IsBootstrapped(_a0 context.Context, _a1 string) (bool, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(string) bool); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, string) bool); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -273,20 +273,20 @@ func (_m *Client) IsBootstrapped(_a0 string) (bool, error) {
 	return r0, r1
 }
 
-// NetworkName provides a mock function with given fields:
-func (_m *Client) NetworkName() (string, error) {
-	ret := _m.Called()
+// NetworkName provides a mock function with given fields: _a0
+func (_m *Client) NetworkName(_a0 context.Context) (string, error) {
+	ret := _m.Called(_a0)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context) string); ok {
+		r0 = rf(_a0)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -315,13 +315,13 @@ func (_m *Client) NonceAt(_a0 context.Context, _a1 common.Address, _a2 *big.Int)
 	return r0, r1
 }
 
-// Peers provides a mock function with given fields:
-func (_m *Client) Peers() ([]network.PeerInfo, error) {
-	ret := _m.Called()
+// Peers provides a mock function with given fields: _a0
+func (_m *Client) Peers(_a0 context.Context) ([]network.PeerInfo, error) {
+	ret := _m.Called(_a0)
 
 	var r0 []network.PeerInfo
-	if rf, ok := ret.Get(0).(func() []network.PeerInfo); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context) []network.PeerInfo); ok {
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]network.PeerInfo)
@@ -329,8 +329,8 @@ func (_m *Client) Peers() ([]network.PeerInfo, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}

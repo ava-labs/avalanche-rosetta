@@ -1,6 +1,8 @@
 package client
 
 import (
+	"context"
+
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/network"
 )
@@ -15,14 +17,14 @@ func NewInfoClient(endpoint string) (*InfoClient, error) {
 	}, nil
 }
 
-func (i *InfoClient) IsBootstrapped(chain string) (bool, error) {
+func (i *InfoClient) IsBootstrapped(ctx context.Context, chain string) (bool, error) {
 	return i.Client.IsBootstrapped(chain)
 }
 
-func (i *InfoClient) NetworkName() (string, error) {
+func (i *InfoClient) NetworkName(ctx context.Context) (string, error) {
 	return i.Client.GetNetworkName()
 }
 
-func (i *InfoClient) Peers() ([]network.PeerInfo, error) {
+func (i *InfoClient) Peers(ctx context.Context) ([]network.PeerInfo, error) {
 	return i.Client.Peers()
 }

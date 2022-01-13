@@ -18,7 +18,7 @@ const (
 )
 
 type Client interface {
-	IsBootstrapped(string) (bool, error)
+	IsBootstrapped(context.Context, string) (bool, error)
 	ChainID(context.Context) (*big.Int, error)
 	BlockByHash(context.Context, ethcommon.Hash) (*ethtypes.Block, error)
 	BlockByNumber(context.Context, *big.Int) (*ethtypes.Block, error)
@@ -35,8 +35,8 @@ type Client interface {
 	EstimateGas(ctx context.Context, msg interfaces.CallMsg) (uint64, error)
 	TxPoolStatus(context.Context) (*TxPoolStatus, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
-	NetworkName() (string, error)
-	Peers() ([]network.PeerInfo, error)
+	NetworkName(context.Context) (string, error)
+	Peers(context.Context) ([]network.PeerInfo, error)
 	ContractInfo(contractAddress ethcommon.Address, isErc20 bool) (*ContractInfo, error)
 	CallContract(ctx context.Context, msg interfaces.CallMsg, blockNumber *big.Int) ([]byte, error)
 }
