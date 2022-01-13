@@ -31,25 +31,24 @@ func AvaxAmount(value *big.Int) *types.Amount {
 
 func Erc20Amount(
 	data []byte,
-	contractAddress common.Address,
-	contractSymbol string,
-	contractDecimal uint8,
-	isSender bool) *types.Amount {
-	value := common.BytesToHash(data)
-	decimalValue := value.Big()
+	addr common.Address,
+	symbol string,
+	decimals uint8,
+	sender bool) *types.Amount {
+	value := common.BytesToHash(data).Big()
 
-	if isSender {
-		decimalValue = new(big.Int).Neg(decimalValue)
+	if sender {
+		value = new(big.Int).Neg(value)
 	}
-	metadata := make(map[string]interface{})
-	metadata[ContractAddressMetadata] = contractAddress.String()
 
 	return &types.Amount{
-		Value: decimalValue.String(),
+		Value: value.String(),
 		Currency: &types.Currency{
-			Symbol:   contractSymbol,
-			Decimals: int32(contractDecimal),
-			Metadata: metadata,
+			Symbol:   symbol,
+			Decimals: int32(decimals),
+			Metadata: map[string]interface{}{
+				ContractAddressMetadata: addr.String(),
+			},
 		},
 	}
 }
