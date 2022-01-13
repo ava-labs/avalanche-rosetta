@@ -11,15 +11,15 @@ import (
 
 func Peers(peers []network.PeerInfo) []*types.Peer {
 	var errs wrappers.Errs
-
 	result := make([]*types.Peer, len(peers))
 
-	var metadata map[string]interface{}
-	j, err := json.Marshal(metadata)
-	errs.Add(err)
-	errs.Add(json.Unmarshal(j, &metadata))
-
 	for idx, peer := range peers {
+		var metadata map[string]interface{}
+		j, err := json.Marshal(peer)
+		errs.Add(err)
+		errs.Add(json.Unmarshal(j, &metadata))
+		delete(metadata, "nodeID")
+
 		result[idx] = &types.Peer{
 			PeerID:   peer.ID,
 			Metadata: metadata,
@@ -29,6 +29,5 @@ func Peers(peers []network.PeerInfo) []*types.Peer {
 	if errs.Err != nil {
 		return []*types.Peer{}
 	}
-
 	return result
 }
