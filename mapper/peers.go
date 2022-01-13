@@ -1,33 +1,28 @@
 package mapper
 
 import (
-	"encoding/json"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanchego/network"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
 )
 
 func Peers(peers []network.PeerInfo) []*types.Peer {
-	var errs wrappers.Errs
 	result := make([]*types.Peer, len(peers))
 
 	for idx, peer := range peers {
-		var metadata map[string]interface{}
-		j, err := json.Marshal(peer)
-		errs.Add(err)
-		errs.Add(json.Unmarshal(j, &metadata))
-		delete(metadata, "nodeID")
-
 		result[idx] = &types.Peer{
-			PeerID:   peer.ID,
-			Metadata: metadata,
+			PeerID: peer.ID,
+			Metadata: map[string]interface{}{
+				"ip":              peer.IP,
+				"public_ip":       peer.PublicIP,
+				"version":         peer.Version,
+				"last_sent":       peer.LastSent,
+				"last_received":   peer.LastReceived,
+				"benched":         peer.Benched,
+				"observed_uptime": peer.ObservedUptime,
+			},
 		}
 	}
 
-	if errs.Err != nil {
-		return []*types.Peer{}
-	}
 	return result
 }
