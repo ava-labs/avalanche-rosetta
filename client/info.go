@@ -12,8 +12,9 @@ type InfoClient struct {
 }
 
 func NewInfoClient(endpoint string) (*InfoClient, error) {
-	c := info.NewClient(endpoint, apiTimeout)
-	return &InfoClient{c}, nil
+	return &InfoClient{
+		info.NewClient(endpoint, apiTimeout),
+	}, nil
 }
 
 func (i *InfoClient) IsBootstrapped(_ context.Context, chain string) (bool, error) {
