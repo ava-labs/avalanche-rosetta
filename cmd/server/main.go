@@ -93,7 +93,7 @@ func main() {
 			log.Fatal("cant fetch network name in offline mode")
 		}
 
-		networkName, err := apiClient.NetworkName(context.Background())
+		networkName, err := apiClient.NetworkName()
 		if err != nil {
 			log.Fatal("cant fetch network name:", err)
 		}
