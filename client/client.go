@@ -3,7 +3,9 @@ package client
 import (
 	"context"
 	"math/big"
+	"time"
 
+	"github.com/ava-labs/avalanchego/network"
 	"github.com/ava-labs/coreth/core/types"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
@@ -11,8 +13,8 @@ import (
 )
 
 const (
-	prefixInfo = "/ext/info"
 	prefixEth  = "/ext/bc/C/rpc"
+	apiTimeout = 10 * time.Second
 )
 
 type Client interface {
@@ -34,8 +36,7 @@ type Client interface {
 	TxPoolStatus(context.Context) (*TxPoolStatus, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	NetworkName(context.Context) (string, error)
-	Peers(context.Context) ([]Peer, error)
-	NodeVersion(context.Context) (string, error)
+	Peers(context.Context) ([]network.PeerInfo, error)
 	ContractInfo(contractAddress ethcommon.Address, isErc20 bool) (*ContractInfo, error)
 	CallContract(ctx context.Context, msg interfaces.CallMsg, blockNumber *big.Int) ([]byte, error)
 }
