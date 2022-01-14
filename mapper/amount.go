@@ -30,12 +30,12 @@ func AvaxAmount(value *big.Int) *types.Amount {
 }
 
 func Erc20Amount(
-	data []byte,
+	bytes []byte,
 	addr common.Address,
 	symbol string,
 	decimals uint8,
 	sender bool) *types.Amount {
-	value := common.BytesToHash(data).Big()
+	value := common.BytesToHash(bytes).Big()
 
 	if sender {
 		value = new(big.Int).Neg(value)
