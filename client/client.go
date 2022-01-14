@@ -36,7 +36,7 @@ type Client interface {
 	NetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]Peer, error)
 	NodeVersion(context.Context) (string, error)
-	ContractCurrency(contractAddress ethcommon.Address, isErc20 bool) (*types.Currency, error)
+	ContractCurrency(ethcommon.Address, bool) (*types.Currency, error)
 	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
 }
 
