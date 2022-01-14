@@ -438,7 +438,7 @@ func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
 	return ops
 }
 
-func parseErc20Txs(transferLog ethtypes.Log, contractInfo *types.Currency, opsLen int64) []*types.Operation {
+func parseErc20Txs(transferLog ethtypes.Log, currency *types.Currency, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
@@ -452,7 +452,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *types.Currency, opsLe
 			},
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Mint,
-			Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
+			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
 			Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
 		}
 		ops = append(ops, &mintOp)
@@ -466,7 +466,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *types.Currency, opsLe
 			},
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Burn,
-			Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
+			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
 			Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
 		}
 		ops = append(ops, &burnOp)
@@ -479,7 +479,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *types.Currency, opsLe
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
+		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
 		Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
 	}
 	receiptOp := types.Operation{
@@ -488,7 +488,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *types.Currency, opsLe
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
+		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
 		Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
 		RelatedOperations: []*types.OperationIdentifier{
 			{
