@@ -62,12 +62,12 @@ func (c *ContractClient) ContractCurrency(addr common.Address, erc20 bool) (*typ
 		}
 	}
 
-	currency := types.Currency{
+	currency := &types.Currency{
 		Symbol:   symbol,
 		Decimals: int32(decimals),
 	}
 
 	// Cache defaults for contract address to avoid unnecessary lookups
-	c.cache.Put(addr, &currency)
-	return &currency, nil
+	c.cache.Put(addr, currency)
+	return currency, nil
 }
