@@ -13,18 +13,18 @@ type InfoClient struct {
 
 func NewInfoClient(endpoint string) (*InfoClient, error) {
 	return &InfoClient{
-		info.NewClient(endpoint, apiTimeout),
+		info.NewClient(endpoint),
 	}, nil
 }
 
 func (i *InfoClient) IsBootstrapped(ctx context.Context, chain string) (bool, error) {
-	return i.Client.IsBootstrapped(chain)
+	return i.Client.IsBootstrapped(ctx, chain)
 }
 
 func (i *InfoClient) NetworkName(ctx context.Context) (string, error) {
-	return i.Client.GetNetworkName()
+	return i.Client.GetNetworkName(ctx)
 }
 
 func (i *InfoClient) Peers(ctx context.Context) ([]network.PeerInfo, error) {
-	return i.Client.Peers()
+	return i.Client.Peers(ctx)
 }
