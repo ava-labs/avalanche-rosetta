@@ -438,7 +438,7 @@ func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
 	return ops
 }
 
-func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractInfo, opsLen int64) []*types.Operation {
+func parseErc20Txs(transferLog ethtypes.Log, contractInfo *types.Currency, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address

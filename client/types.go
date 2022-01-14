@@ -19,11 +19,6 @@ type infoPeersResponse struct {
 	Peers []Peer `json:"peers"`
 }
 
-type ContractInfo struct {
-	Symbol   string `json:"symbol"`
-	Decimals int32  `json:"decimals"`
-}
-
 type Peer struct {
 	ID           string `json:"nodeID"`
 	IP           string `json:"ip"`

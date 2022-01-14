@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/cache"
+	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -37,12 +38,11 @@ func NewContractClient(endpoint string) (*ContractClient, error) {
 }
 
 // ContractInfo returns the ContractInfo for a specific address
-func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bool) (*ContractInfo, error) {
+func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bool) (*types.Currency, error) {
 	cachedInfo, isCached := c.cache.Get(contractAddress)
 
 	if isCached {
-		castCachedInfo := cachedInfo.(*ContractInfo)
-		return castCachedInfo, nil
+		return cachedInfo.(*types.Currency), nil
 	}
 
 	token, err := NewContractInfoToken(contractAddress, c.ethClient)
@@ -62,9 +62,13 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 			decimals = UnknownERC721Decimals
 		}
 	}
-	contractInfo := &ContractInfo{Symbol: symbol, Decimals: int32(decimals)}
+
+	contractInfo := types.Currency{
+		Symbol:   symbol,
+		Decimals: int32(decimals),
+	}
 
 	// Cache defaults for contract address to avoid unnecessary lookups
-	c.cache.Put(contractAddress, contractInfo)
-	return contractInfo, nil
+	c.cache.Put(contractAddress, &contractInfo)
+	return &contractInfo, nil
 }
