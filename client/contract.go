@@ -62,7 +62,7 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 			decimals = UnknownERC721Decimals
 		}
 	}
-	contractInfo := &ContractInfo{Symbol: symbol, Decimals: decimals}
+	contractInfo := &ContractInfo{Symbol: symbol, Decimals: int32(decimals)}
 
 	// Cache defaults for contract address to avoid unnecessary lookups
 	c.cache.Put(contractAddress, contractInfo)

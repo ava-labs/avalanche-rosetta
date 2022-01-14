@@ -21,7 +21,7 @@ type infoPeersResponse struct {
 
 type ContractInfo struct {
 	Symbol   string `json:"symbol"`
-	Decimals uint8  `json:"decimals"`
+	Decimals int32  `json:"decimals"`
 }
 
 type Peer struct {

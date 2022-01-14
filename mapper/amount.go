@@ -33,7 +33,7 @@ func Erc20Amount(
 	bytes []byte,
 	addr common.Address,
 	symbol string,
-	decimals uint8,
+	decimals int32,
 	sender bool) *types.Amount {
 	value := common.BytesToHash(bytes).Big()
 
@@ -45,7 +45,7 @@ func Erc20Amount(
 		Value: value.String(),
 		Currency: &types.Currency{
 			Symbol:   symbol,
-			Decimals: int32(decimals),
+			Decimals: decimals,
 			Metadata: map[string]interface{}{
 				ContractAddressMetadata: addr.String(),
 			},
