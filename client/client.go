@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"math/big"
-	"time"
 
 	"github.com/ava-labs/avalanchego/network"
 	"github.com/ava-labs/coreth/core/types"
@@ -12,10 +11,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-const (
-	prefixEth  = "/ext/bc/C/rpc"
-	apiTimeout = 10 * time.Second
-)
+const prefixEth = "/ext/bc/C/rpc"
 
 type Client interface {
 	IsBootstrapped(context.Context, string) (bool, error)
