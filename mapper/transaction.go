@@ -83,31 +83,31 @@ func Transaction(
 
 		// ERC721 index the value in the transfer event.  ERC20's do not
 		if len(transferLog.Topics) == topicsInErc721Transfer {
-			contractInfo, err := client.ContractInfo(transferLog.Address, false)
+			currency, err := client.ContractCurrency(transferLog.Address, false)
 			if err != nil {
 				return nil, err
 			}
 
 			// Don't include default tokens if setting is not enabled
-			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC721Symbol {
+			if !includeUnknownTokens && currency.Symbol == clientTypes.UnknownERC721Symbol {
 				continue
 			}
 
 			erc721txs := parseErc721Txs(transferLog, int64(len(ops)))
 			ops = append(ops, erc721txs...)
 		} else {
-			contractInfo, err := client.ContractInfo(transferLog.Address, true)
+			currency, err := client.ContractCurrency(transferLog.Address, true)
 			if err != nil {
 				return nil, err
 			}
 
 			// Don't include default tokens if setting is not enabled
-			if (!includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC20Symbol) ||
+			if (!includeUnknownTokens && currency.Symbol == clientTypes.UnknownERC20Symbol) ||
 				(len(transferLog.Topics) != topicsInErc20Transfer) {
 				continue
 			}
 
-			erc20txs := parseErc20Txs(transferLog, contractInfo, int64(len(ops)))
+			erc20txs := parseErc20Txs(transferLog, currency, int64(len(ops)))
 			ops = append(ops, erc20txs...)
 		}
 	}

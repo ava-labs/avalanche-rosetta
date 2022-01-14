@@ -37,24 +37,23 @@ func NewContractClient(endpoint string) (*ContractClient, error) {
 	}, nil
 }
 
-// ContractInfo returns the ContractInfo for a specific address
-func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bool) (*types.Currency, error) {
-	cachedInfo, isCached := c.cache.Get(contractAddress)
-
-	if isCached {
-		return cachedInfo.(*types.Currency), nil
+// ContractCurrency returns the currency for a specific address
+func (c *ContractClient) ContractCurrency(addr common.Address, erc20 bool) (*types.Currency, error) {
+	if currency, cached := c.cache.Get(addr); cached {
+		return currency.(*types.Currency), nil
 	}
 
-	token, err := NewContractInfoToken(contractAddress, c.ethClient)
+	token, err := NewContractInfoToken(addr, c.ethClient)
 	if err != nil {
 		return nil, err
 	}
+
 	symbol, symbolErr := token.Symbol(nil)
 	decimals, decimalErr := token.Decimals(nil)
 
 	// Any of these indicate a failure to get complete information from contract
 	if symbolErr != nil || decimalErr != nil || symbol == "" || decimals == 0 {
-		if isErc20 {
+		if erc20 {
 			symbol = UnknownERC20Symbol
 			decimals = UnknownERC20Decimals
 		} else {
@@ -63,12 +62,12 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 		}
 	}
 
-	contractInfo := types.Currency{
+	currency := types.Currency{
 		Symbol:   symbol,
 		Decimals: int32(decimals),
 	}
 
 	// Cache defaults for contract address to avoid unnecessary lookups
-	c.cache.Put(contractAddress, &contractInfo)
-	return &contractInfo, nil
+	c.cache.Put(addr, &currency)
+	return &currency, nil
 }

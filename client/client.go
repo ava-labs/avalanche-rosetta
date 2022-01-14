@@ -25,19 +25,19 @@ type Client interface {
 	TransactionByHash(context.Context, ethcommon.Hash) (*ethtypes.Transaction, bool, error)
 	TransactionReceipt(context.Context, ethcommon.Hash) (*ethtypes.Receipt, error)
 	TraceTransaction(context.Context, string) (*Call, []*FlatCall, error)
-	EvmTransferLogs(ctx context.Context, blockHash ethcommon.Hash, transactionHash ethcommon.Hash) ([]ethtypes.Log, error)
+	EvmTransferLogs(context.Context, ethcommon.Hash, ethcommon.Hash) ([]ethtypes.Log, error)
 	SendTransaction(context.Context, *ethtypes.Transaction) error
 	BalanceAt(context.Context, ethcommon.Address, *big.Int) (*big.Int, error)
 	NonceAt(context.Context, ethcommon.Address, *big.Int) (uint64, error)
 	SuggestGasPrice(context.Context) (*big.Int, error)
-	EstimateGas(ctx context.Context, msg interfaces.CallMsg) (uint64, error)
+	EstimateGas(context.Context, interfaces.CallMsg) (uint64, error)
 	TxPoolStatus(context.Context) (*TxPoolStatus, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	NetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]Peer, error)
 	NodeVersion(context.Context) (string, error)
-	ContractInfo(contractAddress ethcommon.Address, isErc20 bool) (*types.Currency, error)
-	CallContract(ctx context.Context, msg interfaces.CallMsg, blockNumber *big.Int) ([]byte, error)
+	ContractCurrency(contractAddress ethcommon.Address, isErc20 bool) (*types.Currency, error)
+	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
 }
 
 type client struct {
