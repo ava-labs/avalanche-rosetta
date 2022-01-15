@@ -13,10 +13,10 @@ const (
 	FujiChainID = 43113
 	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
 
-	TokenTypeMetadata       = "tokenType"
-	ContractAddressMetadata = "contractAddress"
-	IndexTransferedMetadata = "indexTransfered"
-	TokenSymbol             = "tokenSymbol"
+	TokenTypeMetadata        = "tokenType"
+	ContractAddressMetadata  = "contractAddress"
+	IndexTransferredMetadata = "indexTransferred"
+	TokenSymbol              = "tokenSymbol"
 
 	OpCall          = "CALL"
 	OpFee           = "FEE"

@@ -510,8 +510,8 @@ func parseErc721Txs(transferLog ethtypes.Log, opsLen int64) []*types.Operation {
 	addressTo := transferLog.Topics[2]
 	erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
 	metadata := map[string]interface{}{
-		ContractAddressMetadata: contractAddress.String(),
-		IndexTransferedMetadata: erc721Index.String(),
+		ContractAddressMetadata:  contractAddress.String(),
+		IndexTransferredMetadata: erc721Index.String(),
 	}
 
 	if addressFrom.Hex() == zeroAddress {
