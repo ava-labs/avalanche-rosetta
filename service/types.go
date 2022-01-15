@@ -15,24 +15,25 @@ const (
 )
 
 type options struct {
-	From                   string   `json:"from"`
-	To                     string   `json:"to"`
-	Value                  *big.Int `json:"value"`
-	SuggestedFeeMultiplier *float64 `json:"suggested_fee_multiplier,omitempty"`
-	GasPrice               *big.Int `json:"gas_price,omitempty"`
-	GasLimit               *big.Int `json:"gas_limit,omitempty"`
-	Nonce                  *big.Int `json:"nonce,omitempty"`
-	Currency               *types.Currency
+	From                   string          `json:"from"`
+	To                     string          `json:"to"`
+	Value                  *big.Int        `json:"value"`
+	SuggestedFeeMultiplier *float64        `json:"suggested_fee_multiplier,omitempty"`
+	GasPrice               *big.Int        `json:"gas_price,omitempty"`
+	GasLimit               *big.Int        `json:"gas_limit,omitempty"`
+	Nonce                  *big.Int        `json:"nonce,omitempty"`
+	Currency               *types.Currency `json:"currency,omitempty"`
 }
 
 type optionsWire struct {
-	From                   string   `json:"from"`
-	To                     string   `json:"to"`
-	Value                  string   `json:"value"`
-	SuggestedFeeMultiplier *float64 `json:"suggested_fee_multiplier,omitempty"`
-	GasPrice               string   `json:"gas_price,omitempty"`
-	GasLimit               string   `json:"gas_limit,omitempty"`
-	Nonce                  string   `json:"nonce,omitempty"`
+	From                   string          `json:"from"`
+	To                     string          `json:"to"`
+	Value                  string          `json:"value"`
+	SuggestedFeeMultiplier *float64        `json:"suggested_fee_multiplier,omitempty"`
+	GasPrice               string          `json:"gas_price,omitempty"`
+	GasLimit               string          `json:"gas_limit,omitempty"`
+	Nonce                  string          `json:"nonce,omitempty"`
+	Currency               *types.Currency `json:"currency,omitempty"`
 }
 
 func (o *options) MarshalJSON() ([]byte, error) {
@@ -40,6 +41,7 @@ func (o *options) MarshalJSON() ([]byte, error) {
 		From:                   o.From,
 		To:                     o.To,
 		SuggestedFeeMultiplier: o.SuggestedFeeMultiplier,
+		Currency:               o.Currency,
 	}
 	if o.Value != nil {
 		ow.Value = hexutil.EncodeBig(o.Value)
@@ -53,6 +55,7 @@ func (o *options) MarshalJSON() ([]byte, error) {
 	if o.Nonce != nil {
 		ow.Nonce = hexutil.EncodeBig(o.Nonce)
 	}
+
 	return json.Marshal(ow)
 }
 
@@ -64,6 +67,7 @@ func (o *options) UnmarshalJSON(data []byte) error {
 	o.From = ow.From
 	o.To = ow.To
 	o.SuggestedFeeMultiplier = ow.SuggestedFeeMultiplier
+	o.Currency = ow.Currency
 
 	if len(ow.Value) > 0 {
 		value, err := hexutil.DecodeBig(ow.Value)

@@ -22,8 +22,14 @@ type InfoClient struct {
 }
 
 // NewInfoClient returns a new client to Info API
-func NewInfoClient(endpoint string) (*InfoClient, error) {
-	c := Dial(fmt.Sprintf("%s%s", endpoint, prefixInfo))
+func NewInfoClient(endpoint string, token string) (*InfoClient, error) {
+	endpoint = strings.TrimSuffix(endpoint, "/")
+	endpointUrl := fmt.Sprintf("%s%s", endpoint, prefixEth)
+	if token != "" {
+		endpointUrl = fmt.Sprintf("%s%s%s%s", endpoint, prefixInfo, "?token=", token)
+	}
+
+	c := Dial(endpointUrl)
 	return &InfoClient{rpc: c}, nil
 }
 

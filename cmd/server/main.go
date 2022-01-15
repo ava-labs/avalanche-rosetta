@@ -52,7 +52,7 @@ func main() {
 		log.Fatal("config validation error:", err)
 	}
 
-	apiClient, err := client.NewClient(cfg.RPCEndpoint)
+	apiClient, err := client.NewClient(cfg.RPCEndpoint, cfg.RPCToken)
 	if err != nil {
 		log.Fatal("client init error:", err)
 	}

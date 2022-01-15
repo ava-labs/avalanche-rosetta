@@ -18,7 +18,13 @@ func Amount(value *big.Int, currency *types.Currency) *types.Amount {
 	}
 }
 
-func FeeAmount(value int64) *types.Amount {
+func FeeAmount(value int64, currency *types.Currency) *types.Amount {
+	if currency != nil {
+		return &types.Amount{
+			Value:    strconv.FormatInt(value, 10), //nolint:gomnd
+			Currency: currency,
+		}
+	}
 	return &types.Amount{
 		Value:    strconv.FormatInt(value, 10), //nolint:gomnd
 		Currency: AvaxCurrency,

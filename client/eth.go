@@ -21,14 +21,17 @@ type EthClient struct {
 }
 
 // NewEthClient returns a new EVM client
-func NewEthClient(endpoint string) (*EthClient, error) {
+func NewEthClient(endpoint string, token string) (*EthClient, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
-
-	c, err := ethclient.Dial(fmt.Sprintf("%s%s", endpoint, prefixEth))
+	endpointUrl := fmt.Sprintf("%s%s", endpoint, prefixEth)
+	if token != "" {
+		endpointUrl = fmt.Sprintf("%s%s%s%s", endpoint, prefixEth, "?token=", token)
+	}
+	c, err := ethclient.Dial(endpointUrl)
 	if err != nil {
 		return nil, err
 	}
-	raw := Dial(fmt.Sprintf("%s%s", endpoint, prefixEth))
+	raw := Dial(endpointUrl)
 
 	return &EthClient{
 		Client: c,

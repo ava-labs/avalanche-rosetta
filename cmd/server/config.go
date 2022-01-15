@@ -22,6 +22,7 @@ var (
 type config struct {
 	Mode             string `json:"mode"`
 	RPCEndpoint      string `json:"rpc_endpoint"`
+	RPCToken         string `json:"rpc_token"`
 	ListenAddr       string `json:"listen_addr"`
 	NetworkName      string `json:"network_name"`
 	ChainID          int64  `json:"chain_id"`

@@ -121,7 +121,7 @@ func (s ConstructionService) ConstructionMetadata(
 	return &types.ConstructionMetadataResponse{
 		Metadata: metadataMap,
 		SuggestedFee: []*types.Amount{
-			mapper.FeeAmount(suggestedFee),
+			mapper.FeeAmount(suggestedFee, input.Currency),
 		},
 	}, nil
 }
@@ -408,7 +408,7 @@ func (s ConstructionService) ConstructionPayloads(
 	fromOp, _ := matches[0].First()
 	fromAddress := fromOp.Account.Address
 	fromCurrency := fromOp.Amount.Currency
-	toCurrency := fromOp.Amount.Currency
+	toCurrency := toOp.Amount.Currency
 
 	if types.Hash(fromCurrency) != types.Hash(toCurrency) {
 		return nil, wrapError(errInternalError, "currency info doesn't match between from and to operation")
@@ -515,7 +515,7 @@ func (s ConstructionService) ConstructionPreprocess(
 	toAddress := toOp.Account.Address
 
 	fromCurrency := fromOp.Amount.Currency
-	toCurrency := fromOp.Amount.Currency
+	toCurrency := toOp.Amount.Currency
 
 	if types.Hash(fromCurrency) != types.Hash(toCurrency) {
 		return nil, wrapError(errInternalError, "currency info doesn't match between from and to operation")
@@ -730,7 +730,6 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	data = append(data, methodID...)
 	data = append(data, paddedAddress...)
 	data = append(data, paddedAmount...)
-
 	return data
 }
 

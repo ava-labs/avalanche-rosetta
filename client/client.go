@@ -48,23 +48,23 @@ type client struct {
 }
 
 // NewClient returns a new client for Avalanche APIs
-func NewClient(endpoint string) (Client, error) {
-	eth, err := NewEthClient(endpoint)
+func NewClient(endpoint string, token string) (Client, error) {
+	eth, err := NewEthClient(endpoint, token)
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := NewInfoClient(endpoint)
+	info, err := NewInfoClient(endpoint, token)
 	if err != nil {
 		return nil, err
 	}
 
-	evmlogs, err := NewEvmLogsClient(endpoint)
+	evmlogs, err := NewEvmLogsClient(endpoint, token)
 	if err != nil {
 		return nil, err
 	}
 
-	contract, err := NewContractClient(endpoint)
+	contract, err := NewContractClient(endpoint, token)
 	if err != nil {
 		return nil, err
 	}
