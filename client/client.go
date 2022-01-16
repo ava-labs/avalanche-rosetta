@@ -4,12 +4,16 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/network"
 	"github.com/ava-labs/coreth/core/types"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
+
+// Interface compliance
+var _ Client = &client{}
 
 const prefixEth = "/ext/bc/C/rpc"
 
@@ -31,15 +35,15 @@ type Client interface {
 	EstimateGas(ctx context.Context, msg interfaces.CallMsg) (uint64, error)
 	TxPoolStatus(context.Context) (*TxPoolStatus, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
-	NetworkName(context.Context) (string, error)
+	GetNetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]network.PeerInfo, error)
 	ContractInfo(contractAddress ethcommon.Address, isErc20 bool) (*ContractInfo, error)
 	CallContract(ctx context.Context, msg interfaces.CallMsg, blockNumber *big.Int) ([]byte, error)
 }
 
 type client struct {
+	info.Client
 	*EthClient
-	*InfoClient
 	*EvmLogsClient
 	*ContractClient
 }
@@ -47,11 +51,6 @@ type client struct {
 // NewClient returns a new client for Avalanche APIs
 func NewClient(endpoint string) (Client, error) {
 	eth, err := NewEthClient(endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	info, err := NewInfoClient(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +66,8 @@ func NewClient(endpoint string) (Client, error) {
 	}
 
 	return client{
+		Client:         info.NewClient(endpoint),
 		EthClient:      eth,
-		InfoClient:     info,
 		EvmLogsClient:  evmlogs,
 		ContractClient: contract,
 	}, nil
