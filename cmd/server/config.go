@@ -96,16 +96,17 @@ func (c *config) Validate() error {
 }
 
 func (c *config) ValidateWhitelistOnlyValidErc20s(cli client.Client) error {
-	if len(c.TokenWhiteList) != 0 {
-		for _, token := range c.TokenWhiteList {
-			ethAdress := ethcommon.HexToAddress(token)
-			contractInfo, err := cli.ContractInfo(ethAdress, true)
-			if err != nil {
-				return err
-			}
-			if contractInfo.Decimals == client.UnknownERC20Decimals && contractInfo.Symbol == client.UnknownERC20Symbol {
-				return errInvalidErc20Address
-			}
+	if len(c.TokenWhiteList) == 0 {
+		return nil
+	}
+	for _, token := range c.TokenWhiteList {
+		ethAdress := ethcommon.HexToAddress(token)
+		contractInfo, err := cli.ContractInfo(ethAdress, true)
+		if err != nil {
+			return err
+		}
+		if contractInfo.Decimals == client.UnknownERC20Decimals && contractInfo.Symbol == client.UnknownERC20Symbol {
+			return errInvalidErc20Address
 		}
 	}
 	return nil
