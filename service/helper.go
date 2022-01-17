@@ -16,7 +16,7 @@ import (
 
 const (
 	nativeTransferGasLimit = uint64(21000) //nolint:gomnd
-	erc20TransferGasLimit  = uint64(42000)
+	erc20TransferGasLimit  = uint64(100000)
 	genesisTimestamp       = 946713601000 // min allowable timestamp
 )
 
