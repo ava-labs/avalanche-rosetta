@@ -281,7 +281,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		client: client,
 	}
 	intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"AVAX","decimals":18}}}]` //nolint
-	t.Run("unclear intent", func(t *testing.T) {
+	t.Run("currency info doesn't match between the operations", func(t *testing.T) {
 		unclear_intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"NOAX","decimals":18}}}]` //nolint
 
 		var ops []*types.Operation
@@ -294,7 +294,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, preprocessResponse)
-		assert.Equal(t, "unclear intent", err.Details["error"])
+		assert.Equal(t, "currency info doesn't match between the operations", err.Details["error"])
 	})
 	t.Run("basic flow", func(t *testing.T) {
 		var ops []*types.Operation
@@ -743,6 +743,7 @@ func TestPreprocessMetadata(t *testing.T) {
 	t.Run("basic erc20 flow", func(t *testing.T) {
 		erc20_intent := `[{"operation_identifier":{"index":0},"type":"ERC20_TRANSFER","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}},{"operation_identifier":{"index":1},"type":"ERC20_TRANSFER","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}}]` //nolint
 		tokenList := []string{defaultContractAddress}
+
 		service := ConstructionService{
 			config: &Config{Mode: ModeOnline, TokenWhiteList: tokenList},
 			client: client,
@@ -786,14 +787,14 @@ func TestPreprocessMetadata(t *testing.T) {
 			big.NewInt(1000000000),
 			nil,
 		).Once()
-		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
+		contractAddress := common.HexToAddress(defaultContractAddress)
 		client.On(
 			"EstimateGas",
 			ctx,
 			interfaces.CallMsg{
-				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
-				To:    &to,
-				Value: big.NewInt(42894881044106498),
+				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+				To:   &contractAddress,
+				Data: common.Hex2Bytes("a9059cbb00000000000000000000000057B414a0332B5CaB885a451c2a28a07d1e9b8a8d000000000000000000000000000000000000000000000000009864aac3510d02"), //nolint:gomnd
 			},
 		).Return(
 			uint64(21001),
@@ -819,7 +820,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "21001000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: mapper.Erc20Currency(defaultSymbol, defaultDecimals, defaultContractAddress),
 				},
 			},
 		}, metadataResponse)
