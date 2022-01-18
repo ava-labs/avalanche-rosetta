@@ -1,16 +1,4 @@
 #!/bin/bash
- 
- dhrubabasu 19 days ago Member
-
-Why was this file deleted?
-
- 
- patrick-ogrady 15 days ago Member
-
-I think this had to be an accident
-
-	Reply…
-Resolve conversation
 
 export AVALANCHE_NETWORK=${AVALANCHE_NETWORK:-testnet}
 export AVALANCHE_CHAIN=${AVALANCHE_CHAIN:-43113}
