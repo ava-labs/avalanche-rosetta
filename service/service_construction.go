@@ -192,8 +192,15 @@ func (s ConstructionService) ConstructionCombine(
 		return nil, wrapError(errInternalError, err)
 	}
 
+	wrappedSignedTx := signedTransactionWrapper{SignedTransaction: string(signedTxJSON), Currency: unsignedTx.Currency}
+
+	wrappedSignedTxJSON, err := wrappedSignedTx.MarshalJSON()
+	if err != nil {
+		return nil, wrapError(errInternalError, err)
+	}
+
 	return &types.ConstructionCombineResponse{
-		SignedTransaction: string(signedTxJSON),
+		SignedTransaction: string(wrappedSignedTxJSON),
 	}, nil
 }
 
@@ -239,8 +246,13 @@ func (s ConstructionService) ConstructionParse(
 			return nil, wrapError(errInvalidInput, err)
 		}
 	} else {
+		wrappedTx := new(signedTransactionWrapper)
+		if err := wrappedTx.UnmarshalJSON([]byte(req.Transaction)); err != nil {
+			return nil, wrapError(errInvalidInput, err)
+		}
+
 		t := new(ethtypes.Transaction)
-		if err := t.UnmarshalJSON([]byte(req.Transaction)); err != nil {
+		if err := t.UnmarshalJSON([]byte(wrappedTx.SignedTransaction)); err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
 
@@ -251,6 +263,7 @@ func (s ConstructionService) ConstructionParse(
 		tx.GasPrice = t.GasPrice()
 		tx.GasLimit = t.Gas()
 		tx.ChainID = s.config.ChainID
+		tx.Currency = wrappedTx.Currency
 
 		msg, err := t.AsMessage(s.config.Signer(), nil)
 		if err != nil {

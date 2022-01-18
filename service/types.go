@@ -303,3 +303,33 @@ func (m *accountMetadata) UnmarshalJSON(data []byte) error {
 func has0xPrefix(str string) bool {
 	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
 }
+
+type signedTransactionWrapper struct {
+	SignedTransaction string          `json:"signed_tx"`
+	Currency          *types.Currency `json:"currency,omitempty"`
+}
+
+type signedTransactionWrapperWire struct {
+	SignedTransaction string          `json:"signed_tx"`
+	Currency          *types.Currency `json:"currency,omitempty"`
+}
+
+func (m *signedTransactionWrapper) MarshalJSON() ([]byte, error) {
+	mw := &signedTransactionWrapperWire{
+		SignedTransaction: m.SignedTransaction,
+		Currency:          m.Currency,
+	}
+
+	return json.Marshal(mw)
+}
+
+func (m *signedTransactionWrapper) UnmarshalJSON(data []byte) error {
+	var mw signedTransactionWrapperWire
+	if err := json.Unmarshal(data, &mw); err != nil {
+		return err
+	}
+
+	m.SignedTransaction = mw.SignedTransaction
+	m.Currency = mw.Currency
+	return nil
+}
