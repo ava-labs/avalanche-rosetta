@@ -62,9 +62,9 @@ func (s *BlockService) Block(
 	)
 
 	if hash := request.BlockIdentifier.Hash; hash != nil {
-		block, err = s.client.BlockByHash(context.Background(), ethcommon.HexToHash(*hash))
+		block, err = s.client.BlockByHash(ctx, ethcommon.HexToHash(*hash))
 	} else if index := request.BlockIdentifier.Index; block == nil && index != nil {
-		block, err = s.client.BlockByNumber(context.Background(), big.NewInt(*index))
+		block, err = s.client.BlockByNumber(ctx, big.NewInt(*index))
 	}
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -79,7 +79,7 @@ func (s *BlockService) Block(
 	}
 
 	if block.ParentHash().String() != s.config.GenesisBlockHash {
-		parentBlock, err := s.client.HeaderByHash(context.Background(), block.ParentHash())
+		parentBlock, err := s.client.HeaderByHash(ctx, block.ParentHash())
 		if err == nil {
 			parentBlockIdentifier = &types.BlockIdentifier{
 				Index: parentBlock.Number.Int64(),
@@ -132,7 +132,7 @@ func (s *BlockService) BlockTransaction(
 	}
 
 	hash := ethcommon.HexToHash(request.TransactionIdentifier.Hash)
-	tx, pending, err := s.client.TransactionByHash(context.Background(), hash)
+	tx, pending, err := s.client.TransactionByHash(ctx, hash)
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
