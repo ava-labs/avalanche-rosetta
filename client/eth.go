@@ -23,15 +23,15 @@ type EthClient struct {
 // NewEthClient returns a new EVM client
 func NewEthClient(endpoint string, token string) (*EthClient, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
-	endpointUrl := fmt.Sprintf("%s%s", endpoint, prefixEth)
+	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 	if token != "" {
-		endpointUrl = fmt.Sprintf("%s%s%s%s", endpoint, prefixEth, "?token=", token)
+		endpointURL = fmt.Sprintf("%s%s%s%s", endpoint, prefixEth, "?token=", token)
 	}
-	c, err := ethclient.Dial(endpointUrl)
+	c, err := ethclient.Dial(endpointURL)
 	if err != nil {
 		return nil, err
 	}
-	raw := Dial(endpointUrl)
+	raw := Dial(endpointURL)
 
 	return &EthClient{
 		Client: c,

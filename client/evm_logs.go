@@ -26,12 +26,12 @@ type EvmLogsClient struct {
 // NewEvmLogsClient returns a new EVM Logs client
 func NewEvmLogsClient(endpoint string, token string) (*EvmLogsClient, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
-	endpointUrl := fmt.Sprintf("%s%s", endpoint, prefixEth)
+	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 	if token != "" {
-		endpointUrl = fmt.Sprintf("%s%s%s%s", endpoint, prefixEth, "?token=", token)
+		endpointURL = fmt.Sprintf("%s%s%s%s", endpoint, prefixEth, "?token=", token)
 	}
 
-	c, err := ethclient.Dial(endpointUrl)
+	c, err := ethclient.Dial(endpointURL)
 	if err != nil {
 		return nil, err
 	}

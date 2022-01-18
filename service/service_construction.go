@@ -620,8 +620,10 @@ func (s ConstructionService) ConstructionSubmit(
 	}, nil
 }
 
-func (s ConstructionService) CreateOperationDescription(operations []*types.Operation) ([]*parser.OperationDescription, error) {
-	if len(operations) != 2 {
+func (s ConstructionService) CreateOperationDescription(
+	operations []*types.Operation,
+) ([]*parser.OperationDescription, error) {
+	if len(operations) != 2 { //nolint:gomnd
 		return nil, fmt.Errorf("invalid number of operations")
 	}
 
@@ -639,8 +641,9 @@ func (s ConstructionService) CreateOperationDescription(operations []*types.Oper
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
 		return s.createOperationDescriptionNative(), nil
 	}
-	//Not Native Avax, we require contractInfo in metadata
-	if firstCurrency.Metadata[mapper.ContractAddressMetadata] == nil || secondCurrency.Metadata[mapper.ContractAddressMetadata] == nil {
+	// Not Native Avax, we require contractInfo in metadata
+	if firstCurrency.Metadata[mapper.ContractAddressMetadata] == nil ||
+		secondCurrency.Metadata[mapper.ContractAddressMetadata] == nil {
 		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
 	}
 
@@ -676,10 +679,11 @@ func (s ConstructionService) createOperationDescriptionNative() []*parser.Operat
 	descriptions = append(descriptions, &nativeSend)
 	descriptions = append(descriptions, &nativeRecieve)
 	return descriptions
-
 }
 
-func (s ConstructionService) createOperationDescriptionERC20(contractAddress string, currencyInfo *types.Currency) []*parser.OperationDescription {
+func (s ConstructionService) createOperationDescriptionERC20(
+	contractAddress string,
+	currencyInfo *types.Currency) []*parser.OperationDescription {
 	var descriptions []*parser.OperationDescription
 
 	send := parser.OperationDescription{
@@ -690,10 +694,9 @@ func (s ConstructionService) createOperationDescriptionERC20(contractAddress str
 		Amount: &parser.AmountDescription{
 			Exists:   true,
 			Sign:     parser.NegativeAmountSign,
-			Currency: mapper.Erc20Currency(currencyInfo.Symbol, int32(currencyInfo.Decimals), contractAddress),
+			Currency: mapper.Erc20Currency(currencyInfo.Symbol, currencyInfo.Decimals, contractAddress),
 		},
 	}
-
 	receive := parser.OperationDescription{
 		Type: mapper.OpErc20Transfer,
 		Account: &parser.AccountDescription{
@@ -702,7 +705,7 @@ func (s ConstructionService) createOperationDescriptionERC20(contractAddress str
 		Amount: &parser.AmountDescription{
 			Exists:   true,
 			Sign:     parser.PositiveAmountSign,
-			Currency: mapper.Erc20Currency(currencyInfo.Symbol, int32(currencyInfo.Decimals), contractAddress),
+			Currency: mapper.Erc20Currency(currencyInfo.Symbol, currencyInfo.Decimals, contractAddress),
 		},
 	}
 	descriptions = append(descriptions, &send)

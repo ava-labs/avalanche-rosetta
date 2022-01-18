@@ -57,7 +57,7 @@ func main() {
 		log.Fatal("client init error:", err)
 	}
 
-	//Token Address Validation requires online mode
+	// Token Address Validation requires online mode
 	if cfg.Mode == service.ModeOnline {
 		if err := cfg.ValidateWhitelistOnlyValidErc20s(apiClient); err != nil {
 			log.Fatal("token whitelist validation error:", err)

@@ -22,11 +22,11 @@ type ContractClient struct {
 // NewContractClient returns a new ContractInfo client
 func NewContractClient(endpoint string, token string) (*ContractClient, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
-	endpointUrl := fmt.Sprintf("%s%s", endpoint, prefixEth)
+	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 	if token != "" {
-		endpointUrl = fmt.Sprintf("%s%s%s%s", endpoint, prefixEth, "?token=", token)
+		endpointURL = fmt.Sprintf("%s%s%s%s", endpoint, prefixEth, "?token=", token)
 	}
-	c, err := ethclient.Dial(endpointUrl)
+	c, err := ethclient.Dial(endpointURL)
 	if err != nil {
 		return nil, err
 	}

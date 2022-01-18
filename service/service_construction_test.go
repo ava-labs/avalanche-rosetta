@@ -88,7 +88,7 @@ func TestConstructionMetadata(t *testing.T) {
 			uint64(21001),
 			nil,
 		).Once()
-		var input = map[string]interface{}{"from": "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309", "to": "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d", "value": "0x9864aac3510d02"}
+		var input = map[string]interface{}{"from": "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309", "to": "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d", "value": "0x9864aac3510d02"} //nolint:lll
 		resp, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -135,7 +135,7 @@ func TestConstructionMetadata(t *testing.T) {
 			interfaces.CallMsg{
 				From: common.HexToAddress(defaultFromAddress),
 				To:   &contractAddress,
-				Data: common.Hex2Bytes("a9059cbb000000000000000000000000920eb8ca79f07eb3bfc39c324c8113948ed3104c00000000000000000000000000000000000000000000000000000000b4d360e3"), //nolint:gomnd
+				Data: common.Hex2Bytes("a9059cbb000000000000000000000000920eb8ca79f07eb3bfc39c324c8113948ed3104c00000000000000000000000000000000000000000000000000000000b4d360e3"), //nolint:lll
 			},
 		).Return(
 			uint64(21001),
@@ -149,7 +149,7 @@ func TestConstructionMetadata(t *testing.T) {
 			"decimals": defaultDecimals,
 			"metadata": currencyMetadata,
 		}
-		var input = map[string]interface{}{"from": defaultFromAddress, "to": "0x920eb8ca79f07eb3bfc39c324c8113948ed3104c", "value": "0xb4d360e3", "currency": currency}
+		var input = map[string]interface{}{"from": defaultFromAddress, "to": "0x920eb8ca79f07eb3bfc39c324c8113948ed3104c", "value": "0xb4d360e3", "currency": currency} //nolint:lll
 		resp, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -794,7 +794,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			interfaces.CallMsg{
 				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 				To:   &contractAddress,
-				Data: common.Hex2Bytes("a9059cbb00000000000000000000000057B414a0332B5CaB885a451c2a28a07d1e9b8a8d000000000000000000000000000000000000000000000000009864aac3510d02"), //nolint:gomnd
+				Data: common.Hex2Bytes("a9059cbb00000000000000000000000057B414a0332B5CaB885a451c2a28a07d1e9b8a8d000000000000000000000000000000000000000000000000009864aac3510d02"), //nolint:lll
 			},
 		).Return(
 			uint64(21001),
