@@ -2,42 +2,34 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: 
+      - master
   pull_request:
-    branches: [ master ]
+
+env:
+  go_version: 1.17
 
 jobs:
-  build:
-    name: build
+  Build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup
-        uses: actions/setup-go@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
         with:
-          go-version: 1.16
-      - name: Build
-        run: make build
-  tests:
-    name: tests
+          go-version: ${{ env.go_version }}
+      - run: make build
+  Test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup
-        uses: actions/setup-go@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
         with:
-          go-version: 1.16
-      - name: Test
-        run: make test
-  lint:
-    name: lint
+          go-version: ${{ env.go_version }}
+      - run: make test
+  Lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+      - uses: actions/checkout@v2
+      - uses: golangci/golangci-lint-action@v2
         with:
-          args: --timeout 2m0s -v -E golint,misspell,gocyclo,gocritic,whitespace,goconst,gocognit,bodyclose,unconvert,lll,unparam,gomnd
+          version: latest
