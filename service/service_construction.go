@@ -284,7 +284,6 @@ func (s ConstructionService) ConstructionParse(
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
 	}
 	var opMethod string
-	var currency *types.Currency
 	var value *big.Int
 	// Erc20 transfer
 	if len(tx.Data) != 0 {
@@ -292,21 +291,14 @@ func (s ConstructionService) ConstructionParse(
 			return nil, wrapError(errInvalidInput, "unsupported contract address associated with transaction")
 		}
 
-		toAddress, amountSent, err := parseErc20TransferData(tx.Data)
+		_, amountSent, err := parseErc20TransferData(tx.Data)
 		if err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
 
-		contractInfo, err := s.client.ContractInfo(*toAddress, true)
-		if err != nil {
-			return nil, wrapError(errInvalidInput, err)
-		}
-
-		currency = mapper.Erc20Currency(contractInfo.Symbol, int32(contractInfo.Decimals), tx.To)
 		value = amountSent
 		opMethod = mapper.OpErc20Transfer
 	} else {
-		currency = mapper.AvaxCurrency
 		value = tx.Value
 		opMethod = mapper.OpCall
 	}
@@ -322,7 +314,7 @@ func (s ConstructionService) ConstructionParse(
 			},
 			Amount: &types.Amount{
 				Value:    new(big.Int).Neg(value).String(),
-				Currency: currency,
+				Currency: tx.Currency,
 			},
 		},
 		{
@@ -340,7 +332,7 @@ func (s ConstructionService) ConstructionParse(
 			},
 			Amount: &types.Amount{
 				Value:    value.String(),
-				Currency: currency,
+				Currency: tx.Currency,
 			},
 		},
 	}
