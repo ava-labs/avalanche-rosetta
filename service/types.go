@@ -179,25 +179,27 @@ func (p *parseMetadata) MarshalJSON() ([]byte, error) {
 }
 
 type transaction struct {
-	From     string   `json:"from"`
-	To       string   `json:"to"`
-	Value    *big.Int `json:"value"`
-	Data     []byte   `json:"data"`
-	Nonce    uint64   `json:"nonce"`
-	GasPrice *big.Int `json:"gas_price"`
-	GasLimit uint64   `json:"gas"`
-	ChainID  *big.Int `json:"chain_id"`
+	From     string          `json:"from"`
+	To       string          `json:"to"`
+	Value    *big.Int        `json:"value"`
+	Data     []byte          `json:"data"`
+	Nonce    uint64          `json:"nonce"`
+	GasPrice *big.Int        `json:"gas_price"`
+	GasLimit uint64          `json:"gas"`
+	ChainID  *big.Int        `json:"chain_id"`
+	Currency *types.Currency `json:"currency,omitempty"`
 }
 
 type transactionWire struct {
-	From     string `json:"from"`
-	To       string `json:"to"`
-	Value    string `json:"value"`
-	Data     string `json:"data"`
-	Nonce    string `json:"nonce"`
-	GasPrice string `json:"gas_price"`
-	GasLimit string `json:"gas"`
-	ChainID  string `json:"chain_id"`
+	From     string          `json:"from"`
+	To       string          `json:"to"`
+	Value    string          `json:"value"`
+	Data     string          `json:"data"`
+	Nonce    string          `json:"nonce"`
+	GasPrice string          `json:"gas_price"`
+	GasLimit string          `json:"gas"`
+	ChainID  string          `json:"chain_id"`
+	Currency *types.Currency `json:"currency,omitempty"`
 }
 
 func (t *transaction) MarshalJSON() ([]byte, error) {
@@ -210,6 +212,7 @@ func (t *transaction) MarshalJSON() ([]byte, error) {
 		GasPrice: hexutil.EncodeBig(t.GasPrice),
 		GasLimit: hexutil.EncodeUint64(t.GasLimit),
 		ChainID:  hexutil.EncodeBig(t.ChainID),
+		Currency: t.Currency,
 	}
 
 	return json.Marshal(tw)
@@ -260,6 +263,7 @@ func (t *transaction) UnmarshalJSON(data []byte) error {
 	t.GasLimit = gasLimit
 	t.ChainID = chainID
 	t.GasPrice = gasPrice
+	t.Currency = tw.Currency
 	return nil
 }
 

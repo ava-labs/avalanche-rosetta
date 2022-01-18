@@ -100,8 +100,8 @@ func (c *config) ValidateWhitelistOnlyValidErc20s(cli client.Client) error {
 		return nil
 	}
 	for _, token := range c.TokenWhiteList {
-		ethAdress := ethcommon.HexToAddress(token)
-		contractInfo, err := cli.ContractInfo(ethAdress, true)
+		ethAddress := ethcommon.HexToAddress(token)
+		contractInfo, err := cli.ContractInfo(ethAddress, true)
 		if err != nil {
 			return err
 		}
