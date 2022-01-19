@@ -671,7 +671,7 @@ func (s ConstructionService) createOperationDescriptionERC20(
 	contractAddress string,
 	currencyInfo *types.Currency) []*parser.OperationDescription {
 	var descriptions []*parser.OperationDescription
-
+	currency := mapper.Erc20Currency(currencyInfo.Symbol, currencyInfo.Decimals, contractAddress)
 	send := parser.OperationDescription{
 		Type: mapper.OpErc20Transfer,
 		Account: &parser.AccountDescription{
@@ -680,7 +680,7 @@ func (s ConstructionService) createOperationDescriptionERC20(
 		Amount: &parser.AmountDescription{
 			Exists:   true,
 			Sign:     parser.NegativeAmountSign,
-			Currency: mapper.Erc20Currency(currencyInfo.Symbol, currencyInfo.Decimals, contractAddress),
+			Currency: currency,
 		},
 	}
 	receive := parser.OperationDescription{
@@ -691,7 +691,7 @@ func (s ConstructionService) createOperationDescriptionERC20(
 		Amount: &parser.AmountDescription{
 			Exists:   true,
 			Sign:     parser.PositiveAmountSign,
-			Currency: mapper.Erc20Currency(currencyInfo.Symbol, currencyInfo.Decimals, contractAddress),
+			Currency: currency,
 		},
 	}
 	descriptions = append(descriptions, &send)
