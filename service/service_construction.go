@@ -426,18 +426,11 @@ func (s ConstructionService) ConstructionPayloads(
 	if !ok {
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
 	}
-
-	var tx *ethtypes.Transaction
+	var transferData []byte
+	var sendToAddress ethcommon.Address
 	if types.Hash(fromCurrency) == types.Hash(mapper.AvaxCurrency) {
-		transferData := []byte{}
-		tx = ethtypes.NewTransaction(
-			nonce,
-			ethcommon.HexToAddress(checkTo),
-			amount,
-			gasLimit,
-			gasPrice,
-			transferData,
-		)
+		transferData = []byte{}
+		sendToAddress = ethcommon.HexToAddress(checkTo)
 	} else {
 		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 		if !ok {
@@ -445,16 +438,17 @@ func (s ConstructionService) ConstructionPayloads(
 				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
 		}
 
-		transferData := generateErc20TransferData(toAddress, amount)
-		tx = ethtypes.NewTransaction(
-			nonce,
-			ethcommon.HexToAddress(contract),
-			amount,
-			gasLimit,
-			gasPrice,
-			transferData,
-		)
+		transferData = generateErc20TransferData(toAddress, amount)
+		sendToAddress = ethcommon.HexToAddress(contract)
 	}
+	tx := ethtypes.NewTransaction(
+		nonce,
+		sendToAddress,
+		amount,
+		gasLimit,
+		gasPrice,
+		transferData,
+	)
 
 	unsignedTx := &transaction{
 		From:     checkFrom,
