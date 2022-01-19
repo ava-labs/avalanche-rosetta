@@ -2,8 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/coreth/core/types"
@@ -24,13 +22,7 @@ type EvmLogsClient struct {
 }
 
 // NewEvmLogsClient returns a new EVM Logs client
-func NewEvmLogsClient(endpoint string, token string) (*EvmLogsClient, error) {
-	endpoint = strings.TrimSuffix(endpoint, "/")
-	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
-	if token != "" {
-		endpointURL = fmt.Sprintf("%s%s%s%s", endpoint, prefixEth, "?token=", token)
-	}
-
+func NewEvmLogsClient(endpointURL string) (*EvmLogsClient, error) {
 	c, err := ethclient.Dial(endpointURL)
 	if err != nil {
 		return nil, err
