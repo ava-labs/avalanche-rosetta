@@ -14,6 +14,8 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
+	network "github.com/ava-labs/avalanchego/network"
+
 	rosetta_sdk_gotypes "github.com/coinbase/rosetta-sdk-go/types"
 
 	types "github.com/ava-labs/coreth/core/types"
@@ -206,6 +208,27 @@ func (_m *Client) EvmTransferLogs(_a0 context.Context, _a1 common.Hash, _a2 comm
 	return r0, r1
 }
 
+// GetNetworkName provides a mock function with given fields: _a0
+func (_m *Client) GetNetworkName(_a0 context.Context) (string, error) {
+	ret := _m.Called(_a0)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(context.Context) string); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // HeaderByHash provides a mock function with given fields: _a0, _a1
 func (_m *Client) HeaderByHash(_a0 context.Context, _a1 common.Hash) (*types.Header, error) {
 	ret := _m.Called(_a0, _a1)
@@ -273,48 +296,6 @@ func (_m *Client) IsBootstrapped(_a0 context.Context, _a1 string) (bool, error) 
 	return r0, r1
 }
 
-// NetworkName provides a mock function with given fields: _a0
-func (_m *Client) NetworkName(_a0 context.Context) (string, error) {
-	ret := _m.Called(_a0)
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func(context.Context) string); ok {
-		r0 = rf(_a0)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(_a0)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// NodeVersion provides a mock function with given fields: _a0
-func (_m *Client) NodeVersion(_a0 context.Context) (string, error) {
-	ret := _m.Called(_a0)
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func(context.Context) string); ok {
-		r0 = rf(_a0)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(_a0)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // NonceAt provides a mock function with given fields: _a0, _a1, _a2
 func (_m *Client) NonceAt(_a0 context.Context, _a1 common.Address, _a2 *big.Int) (uint64, error) {
 	ret := _m.Called(_a0, _a1, _a2)
@@ -337,15 +318,15 @@ func (_m *Client) NonceAt(_a0 context.Context, _a1 common.Address, _a2 *big.Int)
 }
 
 // Peers provides a mock function with given fields: _a0
-func (_m *Client) Peers(_a0 context.Context) ([]client.Peer, error) {
+func (_m *Client) Peers(_a0 context.Context) ([]network.PeerInfo, error) {
 	ret := _m.Called(_a0)
 
-	var r0 []client.Peer
-	if rf, ok := ret.Get(0).(func(context.Context) []client.Peer); ok {
+	var r0 []network.PeerInfo
+	if rf, ok := ret.Get(0).(func(context.Context) []network.PeerInfo); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]client.Peer)
+			r0 = ret.Get(0).([]network.PeerInfo)
 		}
 	}
 
