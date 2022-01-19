@@ -658,7 +658,7 @@ func (s ConstructionService) createOperationDescriptionNative() []*parser.Operat
 			Currency: mapper.AvaxCurrency,
 		},
 	}
-	nativeRecieve := parser.OperationDescription{
+	nativeReceive := parser.OperationDescription{
 		Type: mapper.OpCall,
 		Account: &parser.AccountDescription{
 			Exists: true,
@@ -670,7 +670,7 @@ func (s ConstructionService) createOperationDescriptionNative() []*parser.Operat
 		},
 	}
 	descriptions = append(descriptions, &nativeSend)
-	descriptions = append(descriptions, &nativeRecieve)
+	descriptions = append(descriptions, &nativeReceive)
 	return descriptions
 }
 
