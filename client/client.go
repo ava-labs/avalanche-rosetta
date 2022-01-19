@@ -33,7 +33,6 @@ type Client interface {
 	NonceAt(context.Context, ethcommon.Address, *big.Int) (uint64, error)
 	SuggestGasPrice(context.Context) (*big.Int, error)
 	EstimateGas(context.Context, interfaces.CallMsg) (uint64, error)
-	TxPoolStatus(context.Context) (*TxPoolStatus, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	GetNetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]network.PeerInfo, error)
