@@ -1,7 +1,19 @@
 package service
 
+import (
+	"fmt"
+
+	"github.com/ava-labs/avalanchego/version"
+)
+
+var NodeVersion = fmt.Sprintf(
+	"%d.%d.%d",
+	version.Current.Major(),
+	version.Current.Minor(),
+	version.Current.Patch(),
+)
+
 const (
-	NodeVersion       = "1.7.2"
-	MiddlewareVersion = "0.0.25"
+	MiddlewareVersion = "0.0.29"
 	BlockchainName    = "Avalanche"
 )

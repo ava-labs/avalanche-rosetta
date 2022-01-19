@@ -15,7 +15,7 @@ var (
 
 // EthClient provides access to Coreth API
 type EthClient struct {
-	*ethclient.Client
+	ethclient.Client
 	rpc         *RPC
 	traceConfig *tracers.TraceConfig
 }
@@ -68,7 +68,7 @@ func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, [
 	result := &Call{}
 	args := []interface{}{hash, c.traceConfig}
 
-	err := c.rpc.Call(context.Background(), "debug_traceTransaction", args, &result)
+	err := c.rpc.Call(ctx, "debug_traceTransaction", args, &result)
 	if err != nil {
 		return nil, nil, err
 	}

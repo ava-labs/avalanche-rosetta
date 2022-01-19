@@ -58,18 +58,18 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	handleSignals([]context.CancelFunc{cancel})
 
-	g, _ := errgroup.WithContext(context.Background())
+	g, gctx := errgroup.WithContext(ctx)
 
 	if mode == online {
 		g.Go(func() error {
 			defer cancel()
-			return startCommand(ctx, avalancheBin, "--config-file", avalancheConfig)
+			return startCommand(gctx, avalancheBin, "--config-file", avalancheConfig)
 		})
 	}
 
 	g.Go(func() error {
 		defer cancel()
-		return startCommand(ctx, rosettaBin, "-config", rosettaConfig)
+		return startCommand(gctx, rosettaBin, "-config", rosettaConfig)
 	})
 
 	if err := g.Wait(); err != nil {

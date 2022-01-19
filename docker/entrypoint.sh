@@ -25,14 +25,9 @@ cat <<EOF > /app/configs/chains/C/config.json
 {
   "snowman-api-enabled": false,
   "coreth-admin-api-enabled": false,
-  "net-api-enabled": true,
   "rpc-gas-cap": 2500000000,
   "rpc-tx-fee-cap": 100,
-  "eth-api-enabled": true,
-  "personal-api-enabled": false,
-  "tx-pool-api-enabled": true,
-  "debug-api-enabled": true,
-  "web3-api-enabled": true,
+  "eth-apis": ["internal-public-eth","internal-public-blockchain","internal-public-transaction-pool","internal-public-tx-pool","internal-public-debug","internal-private-debug","debug-tracer","web3","public-eth","public-eth-filter","public-debug","private-debug","net"],
   "pruning-enabled": false
 }
 EOF

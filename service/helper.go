@@ -35,6 +35,7 @@ func makeGenesisBlock(hash string) *types.Block {
 }
 
 func blockHeaderFromInput(
+	ctx context.Context,
 	c client.Client,
 	input *types.PartialBlockIdentifier,
 ) (*ethtypes.Header, *types.Error) {
@@ -44,16 +45,16 @@ func blockHeaderFromInput(
 	)
 
 	if input == nil {
-		header, err = c.HeaderByNumber(context.Background(), nil)
+		header, err = c.HeaderByNumber(ctx, nil)
 	} else {
 		if input.Hash == nil && input.Index == nil {
 			return nil, errInvalidInput
 		}
 
 		if input.Index != nil {
-			header, err = c.HeaderByNumber(context.Background(), big.NewInt(*input.Index))
+			header, err = c.HeaderByNumber(ctx, big.NewInt(*input.Index))
 		} else {
-			header, err = c.HeaderByHash(context.Background(), ethcommon.HexToHash(*input.Hash))
+			header, err = c.HeaderByHash(ctx, ethcommon.HexToHash(*input.Hash))
 		}
 	}
 

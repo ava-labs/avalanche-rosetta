@@ -19,7 +19,7 @@ const (
 
 // EvmLogsClient is a client for requesting evm logs
 type EvmLogsClient struct {
-	ethClient *ethclient.Client
+	ethClient ethclient.Client
 	cache     *cache.LRU
 }
 
