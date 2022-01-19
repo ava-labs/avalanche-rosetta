@@ -42,7 +42,7 @@ func (s AccountService) AccountBalance(
 		return nil, wrapError(errInvalidInput, "account identifier is not provided")
 	}
 
-	header, err := blockHeaderFromInput(s.client, req.BlockIdentifier)
+	header, err := blockHeaderFromInput(ctx, s.client, req.BlockIdentifier)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
@@ -63,7 +63,7 @@ func (s AccountService) AccountBalance(
 		return nil, wrapError(errInternalError, metadataErr)
 	}
 
-	avaxBalance, balanceErr := s.client.BalanceAt(context.Background(), address, header.Number)
+	avaxBalance, balanceErr := s.client.BalanceAt(ctx, address, header.Number)
 	if balanceErr != nil {
 		return nil, wrapError(errInternalError, balanceErr)
 	}
