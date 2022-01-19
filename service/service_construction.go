@@ -22,6 +22,13 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
+const (
+	genericTransferBytesLength = 69
+	requiredPaddingBytes       = 32
+	transferFnSignature        = "transfer(address,uint256)" // do not include spaces in the string
+
+)
+
 // ConstructionService implements /construction/* endpoints
 type ConstructionService struct {
 	config *Config
@@ -722,7 +729,6 @@ func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAd
 func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAddress string,
 	fromAddress string, value *big.Int, currency *types.Currency) (uint64, error) {
 	contract, ok := currency.Metadata[mapper.ContractAddressMetadata]
-
 	if len(toAddress) == 0 || value == nil || !ok {
 		return erc20TransferGasLimit, nil
 	}
@@ -744,7 +750,6 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	to := common.HexToAddress(toAddress)
 	methodID := getTransferMethodID()
 
-	requiredPaddingBytes := 32
 	paddedAddress := common.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
 	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
 
@@ -756,7 +761,6 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 }
 
 func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
-	genericTransferBytesLength := 69
 	if len(data) != genericTransferBytesLength {
 		return nil, nil, fmt.Errorf("incorrect length for data array")
 	}
@@ -772,9 +776,9 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 }
 
 func getTransferMethodID() []byte {
-	transferFnSignature := []byte("transfer(address,uint256)") // do not include spaces in the string
+	transferSignature := []byte(transferFnSignature) // do not include spaces in the string
 	hash := sha3.NewLegacyKeccak256()
-	hash.Write(transferFnSignature)
+	hash.Write(transferSignature)
 	methodID := hash.Sum(nil)[:4]
 	return methodID
 }
