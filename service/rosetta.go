@@ -14,6 +14,6 @@ var NodeVersion = fmt.Sprintf(
 )
 
 const (
-	MiddlewareVersion = "0.0.26"
+	MiddlewareVersion = "0.0.29"
 	BlockchainName    = "Avalanche"
 )
