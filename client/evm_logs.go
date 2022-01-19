@@ -35,23 +35,21 @@ func (c *EvmLogsClient) EvmTransferLogs(
 	blockHash common.Hash,
 	transactionHash common.Hash,
 ) ([]types.Log, error) {
-	blockLogs, isCached := c.cache.Get(blockHash.String())
-	if !isCached {
-		var err error
-		var topics [][]common.Hash = [][]common.Hash{{common.HexToHash(transferMethodHash)}}
-
-		var filter interfaces.FilterQuery = interfaces.FilterQuery{BlockHash: &blockHash, Topics: topics}
-		blockLogs, err = c.ethClient.FilterLogs(ctx, filter)
-
+	logs, cached := c.cache.Get(blockHash.String())
+	if !cached {
+		topics := [][]common.Hash{{common.HexToHash(transferMethodHash)}}
+		filter := interfaces.FilterQuery{BlockHash: &blockHash, Topics: topics}
+		logs, err := c.ethClient.FilterLogs(ctx, filter)
 		if err != nil {
 			return nil, err
 		}
-		c.cache.Put(blockHash.String(), blockLogs)
+
+		c.cache.Put(blockHash.String(), logs)
 	}
 
 	var filteredLogs []types.Log
 
-	for _, log := range blockLogs.([]types.Log) {
+	for _, log := range logs.([]types.Log) {
 		if log.TxHash == transactionHash {
 			filteredLogs = append(filteredLogs, log)
 		}
