@@ -121,7 +121,7 @@ func (s ConstructionService) ConstructionMetadata(
 	return &types.ConstructionMetadataResponse{
 		Metadata: metadataMap,
 		SuggestedFee: []*types.Amount{
-			mapper.FeeAmount(suggestedFee, input.Currency),
+			mapper.FeeAmount(suggestedFee, input.Currency), //TODO: LOOK AT!
 		},
 	}, nil
 }
@@ -287,10 +287,6 @@ func (s ConstructionService) ConstructionParse(
 	var value *big.Int
 	// Erc20 transfer
 	if len(tx.Data) != 0 {
-		if !mapper.EqualFoldContains(s.config.TokenWhiteList, tx.To) {
-			return nil, wrapError(errInvalidInput, "unsupported contract address associated with transaction")
-		}
-
 		_, amountSent, err := parseErc20TransferData(tx.Data)
 		if err != nil {
 			return nil, wrapError(errInvalidInput, err)
@@ -413,11 +409,6 @@ func (s ConstructionService) ConstructionPayloads(
 	fromOp, _ := matches[0].First()
 	fromAddress := fromOp.Account.Address
 	fromCurrency := fromOp.Amount.Currency
-	toCurrency := toOp.Amount.Currency
-
-	if types.Hash(fromCurrency) != types.Hash(toCurrency) {
-		return nil, wrapError(errInternalError, "currency info doesn't match between from and to operation")
-	}
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
@@ -441,8 +432,7 @@ func (s ConstructionService) ConstructionPayloads(
 			transferData,
 		)
 	} else {
-		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata]
-
+		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 		if !ok {
 			return nil, wrapError(errInvalidInput,
 				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
@@ -451,7 +441,7 @@ func (s ConstructionService) ConstructionPayloads(
 		transferData := generateErc20TransferData(toAddress, amount)
 		tx = ethtypes.NewTransaction(
 			nonce,
-			ethcommon.HexToAddress(contract.(string)),
+			ethcommon.HexToAddress(contract),
 			amount,
 			gasLimit,
 			gasPrice,
@@ -521,11 +511,6 @@ func (s ConstructionService) ConstructionPreprocess(
 	toAddress := toOp.Account.Address
 
 	fromCurrency := fromOp.Amount.Currency
-	toCurrency := toOp.Amount.Currency
-
-	if types.Hash(fromCurrency) != types.Hash(toCurrency) {
-		return nil, wrapError(errInternalError, "currency info doesn't match between from and to operation")
-	}
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
@@ -641,14 +626,15 @@ func (s ConstructionService) CreateOperationDescription(
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
 		return s.createOperationDescriptionNative(), nil
 	}
+	firstContract, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
+	_, secondOk := secondCurrency.Metadata[mapper.ContractAddressMetadata].(string)
+
 	// Not Native Avax, we require contractInfo in metadata
-	if firstCurrency.Metadata[mapper.ContractAddressMetadata] == nil ||
-		secondCurrency.Metadata[mapper.ContractAddressMetadata] == nil {
+	if !firstOk || !secondOk {
 		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
 	}
 
-	contractAddress := firstCurrency.Metadata[mapper.ContractAddressMetadata]
-	return s.createOperationDescriptionERC20(contractAddress.(string), firstCurrency), nil
+	return s.createOperationDescriptionERC20(firstContract, firstCurrency), nil
 }
 
 func (s ConstructionService) createOperationDescriptionNative() []*parser.OperationDescription {

@@ -51,12 +51,9 @@ type client struct {
 }
 
 // NewClient returns a new client for Avalanche APIs
-func NewClient(endpoint string, token string) (Client, error) {
+func NewClient(endpoint string) (Client, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
 	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
-	if token != "" {
-		endpointURL = fmt.Sprintf("%s%s%s%s", endpoint, prefixEth, "?token=", token)
-	}
 
 	eth, err := NewEthClient(endpointURL)
 	if err != nil {
