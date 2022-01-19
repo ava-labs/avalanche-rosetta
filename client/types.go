@@ -15,32 +15,9 @@ const (
 	UnknownERC721Decimals = 0
 )
 
-type infoPeersResponse struct {
-	Peers []Peer `json:"peers"`
-}
-
 type ContractInfo struct {
 	Symbol   string `json:"symbol"`
 	Decimals uint8  `json:"decimals"`
-}
-
-type Peer struct {
-	ID           string `json:"nodeID"`
-	IP           string `json:"ip"`
-	PublicIP     string `json:"publicIP"`
-	Version      string `json:"version"`
-	LastSent     string `json:"lastSent"`
-	LastReceived string `json:"lastReceived"`
-}
-
-func (p Peer) Metadata() map[string]interface{} {
-	return map[string]interface{}{
-		"ip":            p.IP,
-		"public_ip":     p.PublicIP,
-		"version":       p.Version,
-		"last_sent":     p.LastSent,
-		"last_received": p.LastReceived,
-	}
 }
 
 type Blockchain struct {

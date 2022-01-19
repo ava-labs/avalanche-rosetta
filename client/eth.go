@@ -15,7 +15,7 @@ var (
 
 // EthClient provides access to Coreth API
 type EthClient struct {
-	*ethclient.Client
+	ethclient.Client
 	rpc         *RPC
 	traceConfig *tracers.TraceConfig
 }

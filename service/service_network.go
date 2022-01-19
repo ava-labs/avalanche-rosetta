@@ -58,7 +58,7 @@ func (s *NetworkService) NetworkStatus(
 	peers := mapper.Peers(infoPeers)
 
 	// Check if all C/X chains are ready
-	if err := checkBoostrapStatus(ctx, s.client); err != nil {
+	if err := checkBootstrapStatus(ctx, s.client); err != nil {
 		if err.Code == errNotReady.Code {
 			return &types.NetworkStatusResponse{
 				CurrentBlockTimestamp:  s.genesisBlock.Timestamp,
@@ -125,7 +125,7 @@ func (s *NetworkService) NetworkOptions(
 	}, nil
 }
 
-func checkBoostrapStatus(ctx context.Context, client client.Client) *types.Error {
+func checkBootstrapStatus(ctx context.Context, client client.Client) *types.Error {
 	cReady, err := client.IsBootstrapped(ctx, "C")
 	if err != nil {
 		return wrapError(errClientError, err)
