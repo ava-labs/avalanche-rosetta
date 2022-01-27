@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/ava-labs/coreth/eth/tracers"
 	"github.com/ava-labs/coreth/ethclient"
-	"github.com/ethereum/go-ethereum/eth/tracers"
 )
 
 var (
