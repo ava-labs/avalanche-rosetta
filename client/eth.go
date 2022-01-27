@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	tracerTimeout = "180s"
-	prefixEth     = "/ext/bc/C/rpc"
+	tracer    = "callTracer"
+	prefixEth = "/ext/bc/C/rpc"
 )
 
 // EthClient provides access to Coreth API
@@ -35,7 +35,7 @@ func NewEthClient(endpoint string) (*EthClient, error) {
 		rpc:    rpc.NewRPCRequester(endpoint),
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,
-			Tracer:  &jsTracer,
+			Tracer:  &tracer,
 		},
 	}, nil
 }
