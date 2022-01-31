@@ -18,11 +18,10 @@
     "offline_url": "http://localhost:8080",
     "stale_depth": 5,
     "broadcast_limit": 5,
-    "constructor_dsl_file": "./avalanche.ros",
+    "constructor_dsl_file": "./avalanche_erc20.ros",
     "end_conditions": {
-      "create_account": 10,
-      "simple_transfer": 10,
-      "smart_contract_transfer": 10
+      "create_account": 1,
+      "simple_transfer_erc20": 1
     },
     "prefunded_accounts": []
   },

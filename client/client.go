@@ -71,7 +71,7 @@ func NewClient(endpoint string) (Client, error) {
 	}
 
 	return client{
-		Client:         info.NewClient(endpointURL),
+		Client:         info.NewClient(endpoint),
 		EthClient:      eth,
 		EvmLogsClient:  evmlogs,
 		ContractClient: contract,

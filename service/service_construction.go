@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	genericTransferBytesLength = 69
+	genericTransferBytesLength = 68
 	requiredPaddingBytes       = 32
 	transferFnSignature        = "transfer(address,uint256)" // do not include spaces in the string
 
@@ -188,7 +188,7 @@ func (s ConstructionService) ConstructionCombine(
 		unsignedTx.Data,
 	)
 
-	signer := ethtypes.LatestSignerForChainID(unsignedTx.ChainID)
+	signer := s.config.Signer()
 	signedTx, err := ethTransaction.WithSignature(signer, req.Signatures[0].Bytes)
 	if err != nil {
 		return nil, wrapError(errInvalidInput, err)
