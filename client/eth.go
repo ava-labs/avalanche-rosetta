@@ -2,8 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/ava-labs/coreth/ethclient"
 	"github.com/ethereum/go-ethereum/eth/tracers"
@@ -21,14 +19,12 @@ type EthClient struct {
 }
 
 // NewEthClient returns a new EVM client
-func NewEthClient(endpoint string) (*EthClient, error) {
-	endpoint = strings.TrimSuffix(endpoint, "/")
-
-	c, err := ethclient.Dial(fmt.Sprintf("%s%s", endpoint, prefixEth))
+func NewEthClient(endpointURL string) (*EthClient, error) {
+	c, err := ethclient.Dial(endpointURL)
 	if err != nil {
 		return nil, err
 	}
-	raw := Dial(fmt.Sprintf("%s%s", endpoint, prefixEth))
+	raw := Dial(endpointURL)
 
 	return &EthClient{
 		Client: c,

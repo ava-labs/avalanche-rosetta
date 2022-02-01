@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
@@ -14,23 +15,25 @@ const (
 )
 
 type options struct {
-	From                   string   `json:"from"`
-	To                     string   `json:"to"`
-	Value                  *big.Int `json:"value"`
-	SuggestedFeeMultiplier *float64 `json:"suggested_fee_multiplier,omitempty"`
-	GasPrice               *big.Int `json:"gas_price,omitempty"`
-	GasLimit               *big.Int `json:"gas_limit,omitempty"`
-	Nonce                  *big.Int `json:"nonce,omitempty"`
+	From                   string          `json:"from"`
+	To                     string          `json:"to"`
+	Value                  *big.Int        `json:"value"`
+	SuggestedFeeMultiplier *float64        `json:"suggested_fee_multiplier,omitempty"`
+	GasPrice               *big.Int        `json:"gas_price,omitempty"`
+	GasLimit               *big.Int        `json:"gas_limit,omitempty"`
+	Nonce                  *big.Int        `json:"nonce,omitempty"`
+	Currency               *types.Currency `json:"currency,omitempty"`
 }
 
 type optionsWire struct {
-	From                   string   `json:"from"`
-	To                     string   `json:"to"`
-	Value                  string   `json:"value"`
-	SuggestedFeeMultiplier *float64 `json:"suggested_fee_multiplier,omitempty"`
-	GasPrice               string   `json:"gas_price,omitempty"`
-	GasLimit               string   `json:"gas_limit,omitempty"`
-	Nonce                  string   `json:"nonce,omitempty"`
+	From                   string          `json:"from"`
+	To                     string          `json:"to"`
+	Value                  string          `json:"value"`
+	SuggestedFeeMultiplier *float64        `json:"suggested_fee_multiplier,omitempty"`
+	GasPrice               string          `json:"gas_price,omitempty"`
+	GasLimit               string          `json:"gas_limit,omitempty"`
+	Nonce                  string          `json:"nonce,omitempty"`
+	Currency               *types.Currency `json:"currency,omitempty"`
 }
 
 func (o *options) MarshalJSON() ([]byte, error) {
@@ -38,6 +41,7 @@ func (o *options) MarshalJSON() ([]byte, error) {
 		From:                   o.From,
 		To:                     o.To,
 		SuggestedFeeMultiplier: o.SuggestedFeeMultiplier,
+		Currency:               o.Currency,
 	}
 	if o.Value != nil {
 		ow.Value = hexutil.EncodeBig(o.Value)
@@ -51,6 +55,7 @@ func (o *options) MarshalJSON() ([]byte, error) {
 	if o.Nonce != nil {
 		ow.Nonce = hexutil.EncodeBig(o.Nonce)
 	}
+
 	return json.Marshal(ow)
 }
 
@@ -62,6 +67,7 @@ func (o *options) UnmarshalJSON(data []byte) error {
 	o.From = ow.From
 	o.To = ow.To
 	o.SuggestedFeeMultiplier = ow.SuggestedFeeMultiplier
+	o.Currency = ow.Currency
 
 	if len(ow.Value) > 0 {
 		value, err := hexutil.DecodeBig(ow.Value)
@@ -173,25 +179,27 @@ func (p *parseMetadata) MarshalJSON() ([]byte, error) {
 }
 
 type transaction struct {
-	From     string   `json:"from"`
-	To       string   `json:"to"`
-	Value    *big.Int `json:"value"`
-	Data     []byte   `json:"data"`
-	Nonce    uint64   `json:"nonce"`
-	GasPrice *big.Int `json:"gas_price"`
-	GasLimit uint64   `json:"gas"`
-	ChainID  *big.Int `json:"chain_id"`
+	From     string          `json:"from"`
+	To       string          `json:"to"`
+	Value    *big.Int        `json:"value"`
+	Data     []byte          `json:"data"`
+	Nonce    uint64          `json:"nonce"`
+	GasPrice *big.Int        `json:"gas_price"`
+	GasLimit uint64          `json:"gas"`
+	ChainID  *big.Int        `json:"chain_id"`
+	Currency *types.Currency `json:"currency,omitempty"`
 }
 
 type transactionWire struct {
-	From     string `json:"from"`
-	To       string `json:"to"`
-	Value    string `json:"value"`
-	Data     string `json:"data"`
-	Nonce    string `json:"nonce"`
-	GasPrice string `json:"gas_price"`
-	GasLimit string `json:"gas"`
-	ChainID  string `json:"chain_id"`
+	From     string          `json:"from"`
+	To       string          `json:"to"`
+	Value    string          `json:"value"`
+	Data     string          `json:"data"`
+	Nonce    string          `json:"nonce"`
+	GasPrice string          `json:"gas_price"`
+	GasLimit string          `json:"gas"`
+	ChainID  string          `json:"chain_id"`
+	Currency *types.Currency `json:"currency,omitempty"`
 }
 
 func (t *transaction) MarshalJSON() ([]byte, error) {
@@ -204,6 +212,7 @@ func (t *transaction) MarshalJSON() ([]byte, error) {
 		GasPrice: hexutil.EncodeBig(t.GasPrice),
 		GasLimit: hexutil.EncodeUint64(t.GasLimit),
 		ChainID:  hexutil.EncodeBig(t.ChainID),
+		Currency: t.Currency,
 	}
 
 	return json.Marshal(tw)
@@ -254,6 +263,7 @@ func (t *transaction) UnmarshalJSON(data []byte) error {
 	t.GasLimit = gasLimit
 	t.ChainID = chainID
 	t.GasPrice = gasPrice
+	t.Currency = tw.Currency
 	return nil
 }
 
@@ -292,4 +302,9 @@ func (m *accountMetadata) UnmarshalJSON(data []byte) error {
 // Copied from the go-ethereum hextuil.go library
 func has0xPrefix(str string) bool {
 	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
+}
+
+type signedTransactionWrapper struct {
+	SignedTransaction []byte          `json:"signed_tx"`
+	Currency          *types.Currency `json:"currency,omitempty"`
 }
