@@ -53,7 +53,7 @@ func NewClient(endpoint string) (Client, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
 	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 
-	eth, err := NewEthClient(endpoint)
+	eth, err := NewEthClient(endpointURL)
 	if err != nil {
 		return nil, err
 	}
