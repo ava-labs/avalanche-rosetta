@@ -37,9 +37,11 @@ func (c *EvmLogsClient) EvmTransferLogs(
 ) ([]types.Log, error) {
 	logs, cached := c.cache.Get(blockHash.String())
 	if !cached {
+		var err error
+
 		topics := [][]common.Hash{{common.HexToHash(transferMethodHash)}}
 		filter := interfaces.FilterQuery{BlockHash: &blockHash, Topics: topics}
-		logs, err := c.ethClient.FilterLogs(ctx, filter)
+		logs, err = c.ethClient.FilterLogs(ctx, filter)
 		if err != nil {
 			return nil, err
 		}
