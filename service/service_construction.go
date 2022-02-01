@@ -145,8 +145,13 @@ func (s ConstructionService) ConstructionHash(
 		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
 	}
 
+	wrappedTx := new(signedTransactionWrapper)
+	if err := wrappedTx.UnmarshalJSON([]byte(req.SignedTransaction)); err != nil {
+		return nil, wrapError(errInvalidInput, err)
+	}
+
 	var signedTx ethtypes.Transaction
-	if err := signedTx.UnmarshalJSON([]byte(req.SignedTransaction)); err != nil {
+	if err := signedTx.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
@@ -279,6 +284,25 @@ func (s ConstructionService) ConstructionParse(
 		tx.From = msg.From().Hex()
 	}
 
+	var opMethod string
+	var value *big.Int
+	var toAddressHex string
+	// Erc20 transfer
+	if len(tx.Data) != 0 {
+		toAddress, amountSent, err := parseErc20TransferData(tx.Data)
+		if err != nil {
+			return nil, wrapError(errInvalidInput, err)
+		}
+
+		value = amountSent
+		opMethod = mapper.OpErc20Transfer
+		toAddressHex = toAddress.Hex()
+	} else {
+		value = tx.Value
+		opMethod = mapper.OpCall
+		toAddressHex = tx.To
+	}
+
 	// Ensure valid from address
 	checkFrom, ok := ChecksumAddress(tx.From)
 	if !ok {
@@ -286,24 +310,9 @@ func (s ConstructionService) ConstructionParse(
 	}
 
 	// Ensure valid to address
-	checkTo, ok := ChecksumAddress(tx.To)
+	checkTo, ok := ChecksumAddress(toAddressHex)
 	if !ok {
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
-	}
-	var opMethod string
-	var value *big.Int
-	// Erc20 transfer
-	if len(tx.Data) != 0 {
-		_, amountSent, err := parseErc20TransferData(tx.Data)
-		if err != nil {
-			return nil, wrapError(errInvalidInput, err)
-		}
-
-		value = amountSent
-		opMethod = mapper.OpErc20Transfer
-	} else {
-		value = tx.Value
-		opMethod = mapper.OpCall
 	}
 
 	ops := []*types.Operation{
@@ -440,7 +449,9 @@ func (s ConstructionService) ConstructionPayloads(
 
 		transferData = generateErc20TransferData(toAddress, amount)
 		sendToAddress = ethcommon.HexToAddress(contract)
+		amount = big.NewInt(0)
 	}
+
 	tx := ethtypes.NewTransaction(
 		nonce,
 		sendToAddress,
@@ -452,7 +463,7 @@ func (s ConstructionService) ConstructionPayloads(
 
 	unsignedTx := &transaction{
 		From:     checkFrom,
-		To:       checkTo,
+		To:       sendToAddress.Hex(),
 		Value:    amount,
 		Data:     tx.Data(),
 		Nonce:    tx.Nonce(),
@@ -464,6 +475,7 @@ func (s ConstructionService) ConstructionPayloads(
 
 	// Construct SigningPayload
 	signer := ethtypes.LatestSignerForChainID(s.config.ChainID)
+
 	payload := &types.SigningPayload{
 		AccountIdentifier: &types.AccountIdentifier{Address: checkFrom},
 		Bytes:             signer.Hash(tx).Bytes(),
@@ -590,8 +602,13 @@ func (s ConstructionService) ConstructionSubmit(
 		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
 	}
 
+	wrappedTx := new(signedTransactionWrapper)
+	if err := wrappedTx.UnmarshalJSON([]byte(req.SignedTransaction)); err != nil {
+		return nil, wrapError(errInvalidInput, err)
+	}
+
 	var signedTx ethtypes.Transaction
-	if err := signedTx.UnmarshalJSON([]byte(req.SignedTransaction)); err != nil {
+	if err := signedTx.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
