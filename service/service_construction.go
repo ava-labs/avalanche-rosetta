@@ -145,7 +145,7 @@ func (s ConstructionService) ConstructionHash(
 		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
 	}
 
-	wrappedTx := new(signedTransactionWrapper)
+	var wrappedTx signedTransactionWrapper
 	if err := json.Unmarshal([]byte(req.SignedTransaction), wrappedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
@@ -179,7 +179,7 @@ func (s ConstructionService) ConstructionCombine(
 		return nil, wrapError(errInvalidInput, "signature is not provided")
 	}
 
-	unsignedTx := new(transaction)
+	var unsignedTx transaction
 	if err := json.Unmarshal([]byte(req.UnsignedTransaction), unsignedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
@@ -258,7 +258,7 @@ func (s ConstructionService) ConstructionParse(
 			return nil, wrapError(errInvalidInput, err)
 		}
 	} else {
-		wrappedTx := new(signedTransactionWrapper)
+		var wrappedTx signedTransactionWrapper
 		if err := json.Unmarshal([]byte(req.Transaction), wrappedTx); err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
@@ -601,7 +601,7 @@ func (s ConstructionService) ConstructionSubmit(
 		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
 	}
 
-	wrappedTx := new(signedTransactionWrapper)
+	var wrappedTx signedTransactionWrapper
 	if err := json.Unmarshal([]byte(req.SignedTransaction), wrappedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
@@ -633,7 +633,7 @@ func (s ConstructionService) CreateOperationDescription(
 	secondCurrency := operations[1].Amount.Currency
 
 	if firstCurrency == nil || secondCurrency == nil {
-		return nil, fmt.Errorf("invalid currency on opeartion")
+		return nil, fmt.Errorf("invalid currency on operation")
 	}
 
 	if types.Hash(firstCurrency) != types.Hash(secondCurrency) {
@@ -782,9 +782,9 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 	}
 
 	address := ethcommon.BytesToAddress(data[5:36])
-	amount := new(big.Int)
+	var amount big.Int
 	amount.SetBytes(data[37:])
-	return &address, amount, nil
+	return &address, &amount, nil
 }
 
 func getTransferMethodID() []byte {
