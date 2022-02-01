@@ -33,7 +33,7 @@ func Erc20Amount(
 		value = new(big.Int).Neg(value)
 	}
 
-	currency := Erc20Currency(symbol, int32(decimals), addr.String())
+	currency := Erc20Currency(symbol, decimals, addr.String())
 	return &types.Amount{
 		Value:    value.String(),
 		Currency: currency,
