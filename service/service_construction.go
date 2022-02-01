@@ -146,7 +146,7 @@ func (s ConstructionService) ConstructionHash(
 	}
 
 	var wrappedTx signedTransactionWrapper
-	if err := json.Unmarshal([]byte(req.SignedTransaction), wrappedTx); err != nil {
+	if err := json.Unmarshal([]byte(req.SignedTransaction), &wrappedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
@@ -180,7 +180,7 @@ func (s ConstructionService) ConstructionCombine(
 	}
 
 	var unsignedTx transaction
-	if err := json.Unmarshal([]byte(req.UnsignedTransaction), unsignedTx); err != nil {
+	if err := json.Unmarshal([]byte(req.UnsignedTransaction), &unsignedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
@@ -259,7 +259,7 @@ func (s ConstructionService) ConstructionParse(
 		}
 	} else {
 		var wrappedTx signedTransactionWrapper
-		if err := json.Unmarshal([]byte(req.Transaction), wrappedTx); err != nil {
+		if err := json.Unmarshal([]byte(req.Transaction), &wrappedTx); err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
 
@@ -782,9 +782,8 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 	}
 
 	address := ethcommon.BytesToAddress(data[5:36])
-	var amount big.Int
-	amount.SetBytes(data[37:])
-	return &address, &amount, nil
+	amount := new(big.Int).SetBytes(data[37:])
+	return &address, amount, nil
 }
 
 func getTransferMethodID() []byte {
