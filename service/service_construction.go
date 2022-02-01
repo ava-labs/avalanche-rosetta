@@ -199,7 +199,7 @@ func (s ConstructionService) ConstructionCombine(
 		return nil, wrapError(errInternalError, err)
 	}
 
-	wrappedSignedTx := signedTransactionWrapper{SignedTransaction: string(signedTxJSON), Currency: unsignedTx.Currency}
+	wrappedSignedTx := signedTransactionWrapper{SignedTransaction: signedTxJSON, Currency: unsignedTx.Currency}
 
 	wrappedSignedTxJSON, err := wrappedSignedTx.MarshalJSON()
 	if err != nil {

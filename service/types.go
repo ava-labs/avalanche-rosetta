@@ -305,12 +305,12 @@ func has0xPrefix(str string) bool {
 }
 
 type signedTransactionWrapper struct {
-	SignedTransaction string          `json:"signed_tx"`
+	SignedTransaction []byte          `json:"signed_tx"`
 	Currency          *types.Currency `json:"currency,omitempty"`
 }
 
 type signedTransactionWrapperWire struct {
-	SignedTransaction string          `json:"signed_tx"`
+	SignedTransaction []byte          `json:"signed_tx"`
 	Currency          *types.Currency `json:"currency,omitempty"`
 }
 
