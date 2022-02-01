@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"math/big"
-	"strconv"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -14,19 +13,6 @@ func Amount(value *big.Int, currency *types.Currency) *types.Amount {
 	}
 	return &types.Amount{
 		Value:    value.String(),
-		Currency: AvaxCurrency,
-	}
-}
-
-func FeeAmount(value int64, currency *types.Currency) *types.Amount {
-	if currency != nil {
-		return &types.Amount{
-			Value:    strconv.FormatInt(value, 10), //nolint:gomnd
-			Currency: currency,
-		}
-	}
-	return &types.Amount{
-		Value:    strconv.FormatInt(value, 10), //nolint:gomnd
 		Currency: AvaxCurrency,
 	}
 }
@@ -56,12 +42,11 @@ func Erc20Amount(
 }
 
 func Erc20Currency(symbol string, decimals int32, contractAddress string) *types.Currency {
-	metadata := make(map[string]interface{})
-	metadata[ContractAddressMetadata] = contractAddress
-
 	return &types.Currency{
 		Symbol:   symbol,
 		Decimals: decimals,
-		Metadata: metadata,
+		Metadata: map[string]interface{}{
+			ContractAddressMetadata: contractAddress,
+		},
 	}
 }

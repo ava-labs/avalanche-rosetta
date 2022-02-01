@@ -146,6 +146,12 @@ Run the construction check:
 make check-testnet-construction
 ```
 
+Run the construction check for ERC-20s:
+
+```bash
+make check-testnet-construction-erc20
+```
+
 ## Rebuild the ContractInfoToken.go autogen file.
 
 ```bash
