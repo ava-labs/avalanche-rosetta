@@ -58,15 +58,10 @@ func NewClient(endpoint string) (Client, error) {
 		return nil, err
 	}
 
-	contract, err := NewContractClient(endpointURL)
-	if err != nil {
-		return nil, err
-	}
-
 	return client{
 		Client:         info.NewClient(endpoint),
 		EthClient:      eth,
 		EvmLogsClient:  NewEvmLogsClient(eth.Client),
-		ContractClient: contract,
+		ContractClient: NewContractClient(eth.Client),
 	}, nil
 }

@@ -2,8 +2,8 @@ package client
 
 import (
 	"github.com/ava-labs/avalanchego/cache"
+	"github.com/ava-labs/coreth/ethclient"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 const (
@@ -12,23 +12,16 @@ const (
 
 // ContractClient is a client for the calling contract information
 type ContractClient struct {
-	ethClient *ethclient.Client
+	ethClient ethclient.Client
 	cache     *cache.LRU
 }
 
 // NewContractClient returns a new ContractInfo client
-func NewContractClient(endpointURL string) (*ContractClient, error) {
-	c, err := ethclient.Dial(endpointURL)
-	if err != nil {
-		return nil, err
-	}
-
-	cache := &cache.LRU{Size: contractCacheSize}
-
+func NewContractClient(c ethclient.Client) *ContractClient {
 	return &ContractClient{
 		ethClient: c,
-		cache:     cache,
-	}, nil
+		cache:     &cache.LRU{Size: contractCacheSize},
+	}
 }
 
 // GetContractCurrency returns the currency for a specific address
