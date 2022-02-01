@@ -114,6 +114,18 @@ smart_contract_transfer(10){
     sender_amount = 0 - {{recipient_amount}};
     recipient = {"address":"0x3b60cABB2C0e9ADe3e364b1F9752342A5D6079e2"};
 
+    // Create unused recipient so we still randomly generate addresses
+    // (otherwise simple_transfer will never be invoked)
+    urecipient = find_balance({
+      "not_account_identifier":[{{sender.account_identifier}}],
+      "minimum_balance":{
+        "value": "0",
+        "currency": {{currency}}
+      },
+      "create_limit": 100,
+      "create_probability": 50
+    });
+
     transfer.confirmation_depth = "1";
     transfer.operations = [
       {
