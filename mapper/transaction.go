@@ -83,7 +83,7 @@ func Transaction(
 
 		// ERC721 index the value in the transfer event.  ERC20's do not
 		if len(transferLog.Topics) == topicsInErc721Transfer {
-			currency, err := client.ContractCurrency(transferLog.Address, false)
+			currency, err := client.GetContractCurrency(transferLog.Address, false)
 			if err != nil {
 				return nil, err
 			}
@@ -96,7 +96,7 @@ func Transaction(
 			erc721txs := parseErc721Txs(transferLog, int64(len(ops)))
 			ops = append(ops, erc721txs...)
 		} else {
-			currency, err := client.ContractCurrency(transferLog.Address, true)
+			currency, err := client.GetContractCurrency(transferLog.Address, true)
 			if err != nil {
 				return nil, err
 			}
@@ -438,7 +438,7 @@ func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
 	return ops
 }
 
-func parseErc20Txs(transferLog ethtypes.Log, currency *types.Currency, opsLen int64) []*types.Operation {
+func parseErc20Txs(transferLog ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address

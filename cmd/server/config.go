@@ -101,7 +101,7 @@ func (c *config) Validate() error {
 func (c *config) ValidateWhitelistOnlyValidErc20s(cli client.Client) error {
 	for _, token := range c.TokenWhiteList {
 		ethAddress := ethcommon.HexToAddress(token)
-		currency, err := cli.ContractCurrency(ethAddress, true)
+		currency, err := cli.GetContractCurrency(ethAddress, true)
 		if err != nil {
 			return err
 		}
