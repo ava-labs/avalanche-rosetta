@@ -167,7 +167,7 @@ func TestConstructionMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "21001000000000",
-					Currency: mapper.Erc20Currency(defaultSymbol, defaultDecimals, defaultContractAddress),
+					Currency: mapper.AvaxCurrency,
 				},
 			},
 		}, resp)
@@ -824,7 +824,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "21001000000000",
-					Currency: mapper.Erc20Currency(defaultSymbol, defaultDecimals, defaultContractAddress),
+					Currency: mapper.AvaxCurrency,
 				},
 			},
 		}, metadataResponse)
