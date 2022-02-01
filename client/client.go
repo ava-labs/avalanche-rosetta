@@ -2,7 +2,9 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/network"
@@ -50,17 +52,20 @@ type client struct {
 
 // NewClient returns a new client for Avalanche APIs
 func NewClient(endpoint string) (Client, error) {
-	eth, err := NewEthClient(endpoint)
+	endpoint = strings.TrimSuffix(endpoint, "/")
+	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
+
+	eth, err := NewEthClient(endpointURL)
 	if err != nil {
 		return nil, err
 	}
 
-	evmlogs, err := NewEvmLogsClient(endpoint)
+	evmlogs, err := NewEvmLogsClient(endpointURL)
 	if err != nil {
 		return nil, err
 	}
 
-	contract, err := NewContractClient(endpoint)
+	contract, err := NewContractClient(endpointURL)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,6 @@
 .PHONY: mocks build setup test docker-build \
 				run-testnet run-testnet-offline run-mainnet run-mainnet-offline \
-				check-testnet-data check-testnet-construction \
+				check-testnet-data check-testnet-construction check-testnet-construction-erc20 \
 				check-mainnet-data check-mainnet-construction
 
 PROJECT             ?= avalanche-rosetta
@@ -98,6 +98,10 @@ check-testnet-data:
 # Perform the Testnet construction check
 check-testnet-construction:
 	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/testnet/config.json
+
+# Perform the Testnet construction check for ERC-20s
+check-testnet-construction-erc20:
+	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/testnet/config_erc20.json
 
 # Perform the Mainnet data check
 check-mainnet-data:
