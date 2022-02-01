@@ -90,14 +90,10 @@ func (c *config) Validate() error {
 	if !(c.IngestionMode == service.AnalyticsIngestion || c.IngestionMode == service.StandardIngestion) {
 		return errInvalidIngestionMode
 	}
-
 	return nil
 }
 
 func (c *config) ValidateWhitelistOnlyValidErc20s(cli client.Client) error {
-	if len(c.TokenWhiteList) == 0 {
-		return nil
-	}
 	for _, token := range c.TokenWhiteList {
 		ethAddress := ethcommon.HexToAddress(token)
 		contractInfo, err := cli.ContractInfo(ethAddress, true)
