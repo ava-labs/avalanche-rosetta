@@ -7,8 +7,7 @@ import (
 )
 
 const (
-	contractCacheSize       = 1024
-	contractAddressMetadata = "contractAddress"
+	contractCacheSize = 1024
 )
 
 // ContractClient is a client for the calling contract information
