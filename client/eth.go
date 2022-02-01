@@ -2,8 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/coreth/ethclient"
@@ -22,17 +20,15 @@ type EthClient struct {
 }
 
 // NewEthClient returns a new EVM client
-func NewEthClient(endpoint string) (*EthClient, error) {
-	endpoint = strings.TrimSuffix(endpoint, "/")
-
-	c, err := ethclient.Dial(fmt.Sprintf("%s%s", endpoint, prefixEth))
+func NewEthClient(endpointURL string) (*EthClient, error) {
+	c, err := ethclient.Dial(endpointURL)
 	if err != nil {
 		return nil, err
 	}
 
 	return &EthClient{
 		Client: c,
-		rpc:    rpc.NewRPCRequester(endpoint),
+		rpc:    rpc.NewRPCRequester(endpointURL),
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,
 			Tracer:  &jsTracer,

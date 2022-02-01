@@ -1,9 +1,6 @@
 package client
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -21,10 +18,8 @@ type ContractClient struct {
 }
 
 // NewContractClient returns a new ContractInfo client
-func NewContractClient(endpoint string) (*ContractClient, error) {
-	endpoint = strings.TrimSuffix(endpoint, "/")
-
-	c, err := ethclient.Dial(fmt.Sprintf("%s%s", endpoint, prefixEth))
+func NewContractClient(endpointURL string) (*ContractClient, error) {
+	c, err := ethclient.Dial(endpointURL)
 	if err != nil {
 		return nil, err
 	}

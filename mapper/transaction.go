@@ -137,7 +137,7 @@ func crossChainTransaction(
 	)
 
 	// Prepare transaction for ID calcuation
-	if err := tx.Sign(codecManager, nil); err != nil {
+	if err := tx.Sign(evm.Codec, nil); err != nil {
 		return nil, err
 	}
 
@@ -236,7 +236,7 @@ func CrossChainTransactions(
 		return transactions, nil
 	}
 
-	atomicTxs, err := evm.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, codecManager)
+	atomicTxs, err := evm.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, evm.Codec)
 	if err != nil {
 		return nil, err
 	}

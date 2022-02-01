@@ -84,10 +84,6 @@ func (s AccountService) AccountBalance(
 				fmt.Errorf("currencies outside of avax must have contractAddress in metadata field"))
 		}
 
-		if s.config.IsStandardMode() && !mapper.EqualFoldContains(s.config.TokenWhiteList, value.(string)) {
-			return nil, wrapError(errCallInvalidParams, fmt.Errorf("only addresses contained in token whitelist are supported"))
-		}
-
 		identifierAddress := req.AccountIdentifier.Address
 		if has0xPrefix(identifierAddress) {
 			identifierAddress = identifierAddress[2:42]
