@@ -8,7 +8,6 @@ import (
 
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/network"
-	"github.com/ava-labs/coreth/core/types"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -29,18 +28,17 @@ type Client interface {
 	TransactionByHash(context.Context, ethcommon.Hash) (*ethtypes.Transaction, bool, error)
 	TransactionReceipt(context.Context, ethcommon.Hash) (*ethtypes.Receipt, error)
 	TraceTransaction(context.Context, string) (*Call, []*FlatCall, error)
-	EvmTransferLogs(ctx context.Context, blockHash ethcommon.Hash, transactionHash ethcommon.Hash) ([]types.Log, error)
+	EvmTransferLogs(context.Context, ethcommon.Hash, ethcommon.Hash) ([]ethtypes.Log, error)
 	SendTransaction(context.Context, *ethtypes.Transaction) error
 	BalanceAt(context.Context, ethcommon.Address, *big.Int) (*big.Int, error)
 	NonceAt(context.Context, ethcommon.Address, *big.Int) (uint64, error)
 	SuggestGasPrice(context.Context) (*big.Int, error)
-	EstimateGas(ctx context.Context, msg interfaces.CallMsg) (uint64, error)
-	TxPoolStatus(context.Context) (*TxPoolStatus, error)
+	EstimateGas(context.Context, interfaces.CallMsg) (uint64, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	GetNetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]network.PeerInfo, error)
-	ContractInfo(contractAddress ethcommon.Address, isErc20 bool) (*ContractInfo, error)
-	CallContract(ctx context.Context, msg interfaces.CallMsg, blockNumber *big.Int) ([]byte, error)
+	GetContractCurrency(ethcommon.Address, bool) (*ContractCurrency, error)
+	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
 }
 
 type client struct {
@@ -60,20 +58,10 @@ func NewClient(endpoint string) (Client, error) {
 		return nil, err
 	}
 
-	evmlogs, err := NewEvmLogsClient(endpointURL)
-	if err != nil {
-		return nil, err
-	}
-
-	contract, err := NewContractClient(endpointURL)
-	if err != nil {
-		return nil, err
-	}
-
 	return client{
 		Client:         info.NewClient(endpoint),
 		EthClient:      eth,
-		EvmLogsClient:  evmlogs,
-		ContractClient: contract,
+		EvmLogsClient:  NewEvmLogsClient(eth.Client),
+		ContractClient: NewContractClient(eth.Client),
 	}, nil
 }

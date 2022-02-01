@@ -101,7 +101,7 @@ func (s AccountService) AccountBalance(
 			return nil, wrapError(errInternalError, err)
 		}
 
-		amount := mapper.Erc20Amount(response, contractAddress, currency.Symbol, uint8(currency.Decimals), false)
+		amount := mapper.Erc20Amount(response, contractAddress, currency.Symbol, currency.Decimals, false)
 
 		balances = append(balances, amount)
 	}

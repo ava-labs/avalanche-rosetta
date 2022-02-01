@@ -101,11 +101,11 @@ func (c *config) Validate() error {
 func (c *config) ValidateWhitelistOnlyValidErc20s(cli client.Client) error {
 	for _, token := range c.TokenWhiteList {
 		ethAddress := ethcommon.HexToAddress(token)
-		contractInfo, err := cli.ContractInfo(ethAddress, true)
+		currency, err := cli.GetContractCurrency(ethAddress, true)
 		if err != nil {
 			return err
 		}
-		if contractInfo.Decimals == client.UnknownERC20Decimals && contractInfo.Symbol == client.UnknownERC20Symbol {
+		if currency.Decimals == client.UnknownERC20Decimals && currency.Symbol == client.UnknownERC20Symbol {
 			return errInvalidErc20Address
 		}
 	}

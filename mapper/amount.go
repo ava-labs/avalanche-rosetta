@@ -22,21 +22,20 @@ func AvaxAmount(value *big.Int) *types.Amount {
 }
 
 func Erc20Amount(
-	data []byte,
-	contractAddress common.Address,
-	contractSymbol string,
-	contractDecimal uint8,
-	isSender bool) *types.Amount {
-	value := common.BytesToHash(data)
-	decimalValue := value.Big()
+	bytes []byte,
+	addr common.Address,
+	symbol string,
+	decimals int32,
+	sender bool) *types.Amount {
+	value := common.BytesToHash(bytes).Big()
 
-	if isSender {
-		decimalValue = new(big.Int).Neg(decimalValue)
+	if sender {
+		value = new(big.Int).Neg(value)
 	}
 
-	currency := Erc20Currency(contractSymbol, int32(contractDecimal), contractAddress.String())
+	currency := Erc20Currency(symbol, decimals, addr.String())
 	return &types.Amount{
-		Value:    decimalValue.String(),
+		Value:    value.String(),
 		Currency: currency,
 	}
 }

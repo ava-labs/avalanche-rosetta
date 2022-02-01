@@ -2,8 +2,8 @@ package client
 
 import (
 	"github.com/ava-labs/avalanchego/cache"
+	"github.com/ava-labs/coreth/ethclient"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 const (
@@ -12,44 +12,35 @@ const (
 
 // ContractClient is a client for the calling contract information
 type ContractClient struct {
-	ethClient *ethclient.Client
+	ethClient ethclient.Client
 	cache     *cache.LRU
 }
 
 // NewContractClient returns a new ContractInfo client
-func NewContractClient(endpointURL string) (*ContractClient, error) {
-	c, err := ethclient.Dial(endpointURL)
-	if err != nil {
-		return nil, err
-	}
-
-	cache := &cache.LRU{Size: contractCacheSize}
-
+func NewContractClient(c ethclient.Client) *ContractClient {
 	return &ContractClient{
 		ethClient: c,
-		cache:     cache,
-	}, nil
+		cache:     &cache.LRU{Size: contractCacheSize},
+	}
 }
 
-// ContractInfo returns the ContractInfo for a specific address
-func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bool) (*ContractInfo, error) {
-	cachedInfo, isCached := c.cache.Get(contractAddress)
-
-	if isCached {
-		castCachedInfo := cachedInfo.(*ContractInfo)
-		return castCachedInfo, nil
+// GetContractCurrency returns the currency for a specific address
+func (c *ContractClient) GetContractCurrency(addr common.Address, erc20 bool) (*ContractCurrency, error) {
+	if currency, cached := c.cache.Get(addr); cached {
+		return currency.(*ContractCurrency), nil
 	}
 
-	token, err := NewContractInfoToken(contractAddress, c.ethClient)
+	token, err := NewContractInfoToken(addr, c.ethClient)
 	if err != nil {
 		return nil, err
 	}
+
 	symbol, symbolErr := token.Symbol(nil)
 	decimals, decimalErr := token.Decimals(nil)
 
 	// Any of these indicate a failure to get complete information from contract
 	if symbolErr != nil || decimalErr != nil || symbol == "" || decimals == 0 {
-		if isErc20 {
+		if erc20 {
 			symbol = UnknownERC20Symbol
 			decimals = UnknownERC20Decimals
 		} else {
@@ -57,9 +48,13 @@ func (c *ContractClient) ContractInfo(contractAddress common.Address, isErc20 bo
 			decimals = UnknownERC721Decimals
 		}
 	}
-	contractInfo := &ContractInfo{Symbol: symbol, Decimals: decimals}
+
+	currency := &ContractCurrency{
+		Symbol:   symbol,
+		Decimals: int32(decimals),
+	}
 
 	// Cache defaults for contract address to avoid unnecessary lookups
-	c.cache.Put(contractAddress, contractInfo)
-	return contractInfo, nil
+	c.cache.Put(addr, currency)
+	return currency, nil
 }

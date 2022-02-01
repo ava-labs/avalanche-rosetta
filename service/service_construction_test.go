@@ -7,11 +7,11 @@ import (
 	"math/big"
 	"testing"
 
+	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	"github.com/ava-labs/coreth/interfaces"
 
-	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
@@ -752,13 +752,13 @@ func TestPreprocessMetadata(t *testing.T) {
 			config: &Config{Mode: ModeOnline, TokenWhiteList: tokenList},
 			client: client,
 		}
-		contractInfo := &clientTypes.ContractInfo{Symbol: defaultSymbol, Decimals: defaultDecimals}
+		currency := &clientTypes.ContractCurrency{Symbol: defaultSymbol, Decimals: defaultDecimals}
 		client.On(
 			"ContractInfo",
 			common.HexToAddress(defaultContractAddress),
 			true,
 		).Return(
-			contractInfo,
+			currency,
 			nil,
 		).Once()
 		var ops []*types.Operation

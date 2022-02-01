@@ -22,18 +22,11 @@ type EvmLogsClient struct {
 }
 
 // NewEvmLogsClient returns a new EVM Logs client
-func NewEvmLogsClient(endpointURL string) (*EvmLogsClient, error) {
-	c, err := ethclient.Dial(endpointURL)
-	if err != nil {
-		return nil, err
-	}
-
-	cache := &cache.LRU{Size: logCacheSize}
-
+func NewEvmLogsClient(c ethclient.Client) *EvmLogsClient {
 	return &EvmLogsClient{
 		ethClient: c,
-		cache:     cache,
-	}, nil
+		cache:     &cache.LRU{Size: logCacheSize},
+	}
 }
 
 // EvmTransferLogs returns a set of evm logs based on the requested block hash and transaction hash
@@ -42,23 +35,23 @@ func (c *EvmLogsClient) EvmTransferLogs(
 	blockHash common.Hash,
 	transactionHash common.Hash,
 ) ([]types.Log, error) {
-	blockLogs, isCached := c.cache.Get(blockHash.String())
-	if !isCached {
+	logs, cached := c.cache.Get(blockHash.String())
+	if !cached {
 		var err error
-		var topics [][]common.Hash = [][]common.Hash{{common.HexToHash(transferMethodHash)}}
 
-		var filter interfaces.FilterQuery = interfaces.FilterQuery{BlockHash: &blockHash, Topics: topics}
-		blockLogs, err = c.ethClient.FilterLogs(ctx, filter)
-
+		topics := [][]common.Hash{{common.HexToHash(transferMethodHash)}}
+		filter := interfaces.FilterQuery{BlockHash: &blockHash, Topics: topics}
+		logs, err = c.ethClient.FilterLogs(ctx, filter)
 		if err != nil {
 			return nil, err
 		}
-		c.cache.Put(blockHash.String(), blockLogs)
+
+		c.cache.Put(blockHash.String(), logs)
 	}
 
 	var filteredLogs []types.Log
 
-	for _, log := range blockLogs.([]types.Log) {
+	for _, log := range logs.([]types.Log) {
 		if log.TxHash == transactionHash {
 			filteredLogs = append(filteredLogs, log)
 		}

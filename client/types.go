@@ -15,9 +15,9 @@ const (
 	UnknownERC721Decimals = 0
 )
 
-type ContractInfo struct {
+type ContractCurrency struct {
 	Symbol   string `json:"symbol"`
-	Decimals uint8  `json:"decimals"`
+	Decimals int32  `json:"decimals"`
 }
 
 type Blockchain struct {

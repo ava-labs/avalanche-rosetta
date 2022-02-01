@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 
+	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/coreth/ethclient"
 	"github.com/ethereum/go-ethereum/eth/tracers"
 )
@@ -14,7 +15,7 @@ var (
 // EthClient provides access to Coreth API
 type EthClient struct {
 	ethclient.Client
-	rpc         *RPC
+	rpc         rpc.Requester
 	traceConfig *tracers.TraceConfig
 }
 
@@ -24,11 +25,10 @@ func NewEthClient(endpointURL string) (*EthClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	raw := Dial(endpointURL)
 
 	return &EthClient{
 		Client: c,
-		rpc:    raw,
+		rpc:    rpc.NewRPCRequester(endpointURL),
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,
 			Tracer:  &jsTracer,
@@ -36,20 +36,10 @@ func NewEthClient(endpointURL string) (*EthClient, error) {
 	}, nil
 }
 
-// TxPoolStatus return the current tx pool status
-func (c *EthClient) TxPoolStatus(ctx context.Context) (*TxPoolStatus, error) {
-	status := &TxPoolStatus{}
-	err := c.rpc.Call(ctx, "txpool_status", nil, status)
-	if err != nil {
-		status = nil
-	}
-	return status, err
-}
-
 // TxPoolContent returns the tx pool content
 func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 	content := &TxPoolContent{}
-	err := c.rpc.Call(ctx, "txpool_inspect", nil, content)
+	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "txpool_inspect", nil, content)
 	if err != nil {
 		content = nil
 	}
@@ -61,7 +51,7 @@ func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, [
 	result := &Call{}
 	args := []interface{}{hash, c.traceConfig}
 
-	err := c.rpc.Call(ctx, "debug_traceTransaction", args, &result)
+	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceTransaction", args, &result)
 	if err != nil {
 		return nil, nil, err
 	}
