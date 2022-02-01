@@ -602,7 +602,7 @@ func (s ConstructionService) ConstructionSubmit(
 	}
 
 	var wrappedTx signedTransactionWrapper
-	if err := json.Unmarshal([]byte(req.SignedTransaction), wrappedTx); err != nil {
+	if err := json.Unmarshal([]byte(req.SignedTransaction), &wrappedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
