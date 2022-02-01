@@ -11,12 +11,13 @@ import (
 )
 
 var (
-	errMissingRPC           = errors.New("avalanche rpc endpoint is not provided")
-	errInvalidMode          = errors.New("invalid rosetta mode")
-	errGenesisBlockRequired = errors.New("genesis block hash is not provided")
-	errInvalidTokenAddress  = errors.New("invalid token address provided")
-	errInvalidErc20Address  = errors.New("not all token addresses provided are valid erc20s")
-	errInvalidIngestionMode = errors.New("invalid rosetta ingestion mode")
+	errMissingRPC              = errors.New("avalanche rpc endpoint is not provided")
+	errInvalidMode             = errors.New("invalid rosetta mode")
+	errGenesisBlockRequired    = errors.New("genesis block hash is not provided")
+	errInvalidTokenAddress     = errors.New("invalid token address provided")
+	errInvalidErc20Address     = errors.New("not all token addresses provided are valid erc20s")
+	errInvalidIngestionMode    = errors.New("invalid rosetta ingestion mode")
+	errInvalidUnknownTokenMode = errors.New("cannot index unknown tokens while in standard ingestion mode")
 )
 
 type config struct {
@@ -89,6 +90,10 @@ func (c *config) Validate() error {
 
 	if !(c.IngestionMode == service.AnalyticsIngestion || c.IngestionMode == service.StandardIngestion) {
 		return errInvalidIngestionMode
+	}
+
+	if c.IngestionMode == service.StandardIngestion && c.IndexUnknownTokens {
+		return errInvalidUnknownTokenMode
 	}
 	return nil
 }
