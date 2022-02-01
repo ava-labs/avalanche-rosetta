@@ -308,28 +308,3 @@ type signedTransactionWrapper struct {
 	SignedTransaction []byte          `json:"signed_tx"`
 	Currency          *types.Currency `json:"currency,omitempty"`
 }
-
-type signedTransactionWrapperWire struct {
-	SignedTransaction []byte          `json:"signed_tx"`
-	Currency          *types.Currency `json:"currency,omitempty"`
-}
-
-func (m *signedTransactionWrapper) MarshalJSON() ([]byte, error) {
-	mw := &signedTransactionWrapperWire{
-		SignedTransaction: m.SignedTransaction,
-		Currency:          m.Currency,
-	}
-
-	return json.Marshal(mw)
-}
-
-func (m *signedTransactionWrapper) UnmarshalJSON(data []byte) error {
-	var mw signedTransactionWrapperWire
-	if err := json.Unmarshal(data, &mw); err != nil {
-		return err
-	}
-
-	m.SignedTransaction = mw.SignedTransaction
-	m.Currency = mw.Currency
-	return nil
-}

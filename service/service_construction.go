@@ -128,7 +128,7 @@ func (s ConstructionService) ConstructionMetadata(
 	return &types.ConstructionMetadataResponse{
 		Metadata: metadataMap,
 		SuggestedFee: []*types.Amount{
-			mapper.FeeAmount(suggestedFee, input.Currency), //TODO: LOOK AT!
+			mapper.AvaxAmount(big.NewInt(suggestedFee)),
 		},
 	}, nil
 }
@@ -146,7 +146,7 @@ func (s ConstructionService) ConstructionHash(
 	}
 
 	wrappedTx := new(signedTransactionWrapper)
-	if err := wrappedTx.UnmarshalJSON([]byte(req.SignedTransaction)); err != nil {
+	if err := json.Unmarshal([]byte(req.SignedTransaction), wrappedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
@@ -179,8 +179,8 @@ func (s ConstructionService) ConstructionCombine(
 		return nil, wrapError(errInvalidInput, "signature is not provided")
 	}
 
-	var unsignedTx transaction
-	if err := json.Unmarshal([]byte(req.UnsignedTransaction), &unsignedTx); err != nil {
+	unsignedTx := new(transaction)
+	if err := json.Unmarshal([]byte(req.UnsignedTransaction), unsignedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
@@ -206,7 +206,7 @@ func (s ConstructionService) ConstructionCombine(
 
 	wrappedSignedTx := signedTransactionWrapper{SignedTransaction: signedTxJSON, Currency: unsignedTx.Currency}
 
-	wrappedSignedTxJSON, err := wrappedSignedTx.MarshalJSON()
+	wrappedSignedTxJSON, err := json.Marshal(wrappedSignedTx)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
@@ -259,11 +259,11 @@ func (s ConstructionService) ConstructionParse(
 		}
 	} else {
 		wrappedTx := new(signedTransactionWrapper)
-		if err := wrappedTx.UnmarshalJSON([]byte(req.Transaction)); err != nil {
+		if err := json.Unmarshal([]byte(req.Transaction), wrappedTx); err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
 
-		t := new(ethtypes.Transaction)
+		var t ethtypes.Transaction
 		if err := t.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
@@ -503,7 +503,6 @@ func (s ConstructionService) ConstructionPreprocess(
 	req *types.ConstructionPreprocessRequest,
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
 	operationDescriptions, err := s.CreateOperationDescription(req.Operations)
-
 	if err != nil {
 		return nil, wrapError(errInvalidInput, err.Error())
 	}
@@ -603,7 +602,7 @@ func (s ConstructionService) ConstructionSubmit(
 	}
 
 	wrappedTx := new(signedTransactionWrapper)
-	if err := wrappedTx.UnmarshalJSON([]byte(req.SignedTransaction)); err != nil {
+	if err := json.Unmarshal([]byte(req.SignedTransaction), wrappedTx); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
@@ -680,16 +679,18 @@ func (s ConstructionService) createOperationDescriptionNative() []*parser.Operat
 			Currency: mapper.AvaxCurrency,
 		},
 	}
+
 	descriptions = append(descriptions, &nativeSend)
 	descriptions = append(descriptions, &nativeReceive)
 	return descriptions
 }
 
 func (s ConstructionService) createOperationDescriptionERC20(
-	contractAddress string,
-	currencyInfo *types.Currency) []*parser.OperationDescription {
+	contractAddress string, currencyInfo *types.Currency,
+) []*parser.OperationDescription {
 	var descriptions []*parser.OperationDescription
 	currency := mapper.Erc20Currency(currencyInfo.Symbol, currencyInfo.Decimals, contractAddress)
+
 	send := parser.OperationDescription{
 		Type: mapper.OpErc20Transfer,
 		Account: &parser.AccountDescription{
@@ -712,9 +713,9 @@ func (s ConstructionService) createOperationDescriptionERC20(
 			Currency: currency,
 		},
 	}
+
 	descriptions = append(descriptions, &send)
 	descriptions = append(descriptions, &receive)
-
 	return descriptions
 }
 
