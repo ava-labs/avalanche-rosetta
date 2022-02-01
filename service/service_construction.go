@@ -259,7 +259,7 @@ func (s ConstructionService) ConstructionParse(
 		}
 
 		t := new(ethtypes.Transaction)
-		if err := t.UnmarshalJSON([]byte(wrappedTx.SignedTransaction)); err != nil {
+		if err := t.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
 
