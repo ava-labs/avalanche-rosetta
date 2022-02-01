@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/big"
 
 	"github.com/coinbase/rosetta-sdk-go/parser"
@@ -188,7 +189,7 @@ func (s ConstructionService) ConstructionCombine(
 		unsignedTx.Data,
 	)
 
-	signer := s.config.Signer()
+	signer := ethtypes.LatestSignerForChainID(unsignedTx.ChainID)
 	signedTx, err := ethTransaction.WithSignature(signer, req.Signatures[0].Bytes)
 	if err != nil {
 		return nil, wrapError(errInvalidInput, err)
@@ -198,6 +199,8 @@ func (s ConstructionService) ConstructionCombine(
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
+
+	log.Println(signedTxJSON)
 
 	wrappedSignedTx := signedTransactionWrapper{SignedTransaction: signedTxJSON, Currency: unsignedTx.Currency}
 
@@ -257,6 +260,8 @@ func (s ConstructionService) ConstructionParse(
 		if err := wrappedTx.UnmarshalJSON([]byte(req.Transaction)); err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
+
+		log.Println(wrappedTx.SignedTransaction)
 
 		t := new(ethtypes.Transaction)
 		if err := t.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
