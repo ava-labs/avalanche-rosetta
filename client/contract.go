@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	contractCacheSize = 1024
+	contractCacheSize       = 1024
+	contractAddressMetadata = "contractAddress"
 )
 
 // ContractClient is a client for the calling contract information
@@ -60,6 +61,9 @@ func (c *ContractClient) ContractCurrency(addr common.Address, erc20 bool) (*typ
 	currency := &types.Currency{
 		Symbol:   symbol,
 		Decimals: int32(decimals),
+		Metadata: map[string]interface{}{
+			contractAddressMetadata: addr,
+		},
 	}
 
 	// Cache defaults for contract address to avoid unnecessary lookups
