@@ -392,7 +392,7 @@ func (s ConstructionService) ConstructionPayloads(
 ) (*types.ConstructionPayloadsResponse, *types.Error) {
 	operationDescriptions, err := s.CreateOperationDescription(req.Operations)
 	if err != nil {
-		return nil, wrapError(errInvalidInput, err.Error())
+		return nil, wrapError(errInvalidInput, err)
 	}
 
 	descriptions := &parser.Descriptions{
@@ -499,7 +499,7 @@ func (s ConstructionService) ConstructionPreprocess(
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
 	operationDescriptions, err := s.CreateOperationDescription(req.Operations)
 	if err != nil {
-		return nil, wrapError(errInvalidInput, err.Error())
+		return nil, wrapError(errInvalidInput, err)
 	}
 
 	descriptions := &parser.Descriptions{
