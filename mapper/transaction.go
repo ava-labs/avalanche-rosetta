@@ -83,31 +83,31 @@ func Transaction(
 
 		// ERC721 index the value in the transfer event.  ERC20's do not
 		if len(transferLog.Topics) == topicsInErc721Transfer {
-			contractInfo, err := client.ContractInfo(transferLog.Address, false)
+			currency, err := client.GetContractCurrency(transferLog.Address, false)
 			if err != nil {
 				return nil, err
 			}
 
 			// Don't include default tokens if setting is not enabled
-			if !includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC721Symbol {
+			if !includeUnknownTokens && currency.Symbol == clientTypes.UnknownERC721Symbol {
 				continue
 			}
 
 			erc721txs := parseErc721Txs(transferLog, int64(len(ops)))
 			ops = append(ops, erc721txs...)
 		} else {
-			contractInfo, err := client.ContractInfo(transferLog.Address, true)
+			currency, err := client.GetContractCurrency(transferLog.Address, true)
 			if err != nil {
 				return nil, err
 			}
 
 			// Don't include default tokens if setting is not enabled
-			if (!includeUnknownTokens && contractInfo.Symbol == clientTypes.UnknownERC20Symbol) ||
+			if (!includeUnknownTokens && currency.Symbol == clientTypes.UnknownERC20Symbol) ||
 				(len(transferLog.Topics) != topicsInErc20Transfer) {
 				continue
 			}
 
-			erc20txs := parseErc20Txs(transferLog, contractInfo, int64(len(ops)))
+			erc20txs := parseErc20Txs(transferLog, currency, int64(len(ops)))
 			ops = append(ops, erc20txs...)
 		}
 	}
@@ -137,7 +137,7 @@ func crossChainTransaction(
 	)
 
 	// Prepare transaction for ID calcuation
-	if err := tx.Sign(codecManager, nil); err != nil {
+	if err := tx.Sign(evm.Codec, nil); err != nil {
 		return nil, err
 	}
 
@@ -236,7 +236,7 @@ func CrossChainTransactions(
 		return transactions, nil
 	}
 
-	atomicTxs, err := evm.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, codecManager)
+	atomicTxs, err := evm.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, evm.Codec)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +438,7 @@ func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
 	return ops
 }
 
-func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractInfo, opsLen int64) []*types.Operation {
+func parseErc20Txs(transferLog ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
@@ -452,7 +452,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 			},
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Mint,
-			Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
+			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
 			Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
 		}
 		ops = append(ops, &mintOp)
@@ -466,7 +466,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 			},
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Burn,
-			Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
+			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
 			Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
 		}
 		ops = append(ops, &burnOp)
@@ -479,7 +479,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, true),
+		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
 		Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
 	}
 	receiptOp := types.Operation{
@@ -488,7 +488,7 @@ func parseErc20Txs(transferLog ethtypes.Log, contractInfo *clientTypes.ContractI
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, contractInfo.Symbol, contractInfo.Decimals, false),
+		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
 		Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
 		RelatedOperations: []*types.OperationIdentifier{
 			{
@@ -509,9 +509,10 @@ func parseErc721Txs(transferLog ethtypes.Log, opsLen int64) []*types.Operation {
 	addressFrom := transferLog.Topics[1]
 	addressTo := transferLog.Topics[2]
 	erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
-	metadata := make(map[string]interface{})
-	metadata[ContractAddressMetadata] = contractAddress.String()
-	metadata[IndexTransferedMetadata] = erc721Index.String()
+	metadata := map[string]interface{}{
+		ContractAddressMetadata:  contractAddress.String(),
+		IndexTransferredMetadata: erc721Index.String(),
+	}
 
 	if addressFrom.Hex() == zeroAddress {
 		mintOp := types.Operation{

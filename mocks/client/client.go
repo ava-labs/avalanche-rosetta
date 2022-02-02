@@ -93,13 +93,13 @@ func (_m *Client) BlockByNumber(_a0 context.Context, _a1 *big.Int) (*types.Block
 	return r0, r1
 }
 
-// CallContract provides a mock function with given fields: ctx, msg, blockNumber
-func (_m *Client) CallContract(ctx context.Context, msg interfaces.CallMsg, blockNumber *big.Int) ([]byte, error) {
-	ret := _m.Called(ctx, msg, blockNumber)
+// CallContract provides a mock function with given fields: _a0, _a1, _a2
+func (_m *Client) CallContract(_a0 context.Context, _a1 interfaces.CallMsg, _a2 *big.Int) ([]byte, error) {
+	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 []byte
 	if rf, ok := ret.Get(0).(func(context.Context, interfaces.CallMsg, *big.Int) []byte); ok {
-		r0 = rf(ctx, msg, blockNumber)
+		r0 = rf(_a0, _a1, _a2)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
@@ -108,7 +108,7 @@ func (_m *Client) CallContract(ctx context.Context, msg interfaces.CallMsg, bloc
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, interfaces.CallMsg, *big.Int) error); ok {
-		r1 = rf(ctx, msg, blockNumber)
+		r1 = rf(_a0, _a1, _a2)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -139,43 +139,20 @@ func (_m *Client) ChainID(_a0 context.Context) (*big.Int, error) {
 	return r0, r1
 }
 
-// ContractInfo provides a mock function with given fields: contractAddress, isErc20
-func (_m *Client) ContractInfo(contractAddress common.Address, isErc20 bool) (*client.ContractInfo, error) {
-	ret := _m.Called(contractAddress, isErc20)
-
-	var r0 *client.ContractInfo
-	if rf, ok := ret.Get(0).(func(common.Address, bool) *client.ContractInfo); ok {
-		r0 = rf(contractAddress, isErc20)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*client.ContractInfo)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(common.Address, bool) error); ok {
-		r1 = rf(contractAddress, isErc20)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// EstimateGas provides a mock function with given fields: ctx, msg
-func (_m *Client) EstimateGas(ctx context.Context, msg interfaces.CallMsg) (uint64, error) {
-	ret := _m.Called(ctx, msg)
+// EstimateGas provides a mock function with given fields: _a0, _a1
+func (_m *Client) EstimateGas(_a0 context.Context, _a1 interfaces.CallMsg) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 uint64
 	if rf, ok := ret.Get(0).(func(context.Context, interfaces.CallMsg) uint64); ok {
-		r0 = rf(ctx, msg)
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Get(0).(uint64)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, interfaces.CallMsg) error); ok {
-		r1 = rf(ctx, msg)
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -183,13 +160,13 @@ func (_m *Client) EstimateGas(ctx context.Context, msg interfaces.CallMsg) (uint
 	return r0, r1
 }
 
-// EvmTransferLogs provides a mock function with given fields: ctx, blockHash, transactionHash
-func (_m *Client) EvmTransferLogs(ctx context.Context, blockHash common.Hash, transactionHash common.Hash) ([]types.Log, error) {
-	ret := _m.Called(ctx, blockHash, transactionHash)
+// EvmTransferLogs provides a mock function with given fields: _a0, _a1, _a2
+func (_m *Client) EvmTransferLogs(_a0 context.Context, _a1 common.Hash, _a2 common.Hash) ([]types.Log, error) {
+	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 []types.Log
 	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, common.Hash) []types.Log); ok {
-		r0 = rf(ctx, blockHash, transactionHash)
+		r0 = rf(_a0, _a1, _a2)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]types.Log)
@@ -198,7 +175,30 @@ func (_m *Client) EvmTransferLogs(ctx context.Context, blockHash common.Hash, tr
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, common.Hash, common.Hash) error); ok {
-		r1 = rf(ctx, blockHash, transactionHash)
+		r1 = rf(_a0, _a1, _a2)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetContractCurrency provides a mock function with given fields: _a0, _a1
+func (_m *Client) GetContractCurrency(_a0 common.Address, _a1 bool) (*client.ContractCurrency, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *client.ContractCurrency
+	if rf, ok := ret.Get(0).(func(common.Address, bool) *client.ContractCurrency); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*client.ContractCurrency)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(common.Address, bool) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -470,29 +470,6 @@ func (_m *Client) TxPoolContent(_a0 context.Context) (*client.TxPoolContent, err
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*client.TxPoolContent)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(_a0)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// TxPoolStatus provides a mock function with given fields: _a0
-func (_m *Client) TxPoolStatus(_a0 context.Context) (*client.TxPoolStatus, error) {
-	ret := _m.Called(_a0)
-
-	var r0 *client.TxPoolStatus
-	if rf, ok := ret.Get(0).(func(context.Context) *client.TxPoolStatus); ok {
-		r0 = rf(_a0)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*client.TxPoolStatus)
 		}
 	}
 

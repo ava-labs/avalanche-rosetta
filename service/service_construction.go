@@ -9,15 +9,24 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"golang.org/x/crypto/sha3"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+)
+
+const (
+	genericTransferBytesLength = 68
+	requiredPaddingBytes       = 32
+	transferFnSignature        = "transfer(address,uint256)" // do not include spaces in the string
+
 )
 
 // ConstructionService implements /construction/* endpoints
@@ -89,17 +98,13 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		if len(input.To) == 0 || input.Value == nil {
-			// We guard against malformed inputs that may have been generated using
-			// a previous version of avalanche-rosetta.
-			gasLimit = transferGasLimit
+		if input.Currency == nil || types.Hash(input.Currency) == types.Hash(mapper.AvaxCurrency) {
+			gasLimit, err = s.getNativeTransferGasLimit(ctx, input.To, input.From, input.Value)
+			if err != nil {
+				return nil, wrapError(errClientError, err)
+			}
 		} else {
-			to := common.HexToAddress(input.To)
-			gasLimit, err = s.client.EstimateGas(ctx, interfaces.CallMsg{
-				From:  common.HexToAddress(input.From),
-				To:    &to,
-				Value: input.Value,
-			})
+			gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
 			if err != nil {
 				return nil, wrapError(errClientError, err)
 			}
@@ -123,7 +128,7 @@ func (s ConstructionService) ConstructionMetadata(
 	return &types.ConstructionMetadataResponse{
 		Metadata: metadataMap,
 		SuggestedFee: []*types.Amount{
-			mapper.FeeAmount(suggestedFee),
+			mapper.AvaxAmount(big.NewInt(suggestedFee)),
 		},
 	}, nil
 }
@@ -140,8 +145,13 @@ func (s ConstructionService) ConstructionHash(
 		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
 	}
 
+	var wrappedTx signedTransactionWrapper
+	if err := json.Unmarshal([]byte(req.SignedTransaction), &wrappedTx); err != nil {
+		return nil, wrapError(errInvalidInput, err)
+	}
+
 	var signedTx ethtypes.Transaction
-	if err := signedTx.UnmarshalJSON([]byte(req.SignedTransaction)); err != nil {
+	if err := signedTx.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
@@ -194,8 +204,15 @@ func (s ConstructionService) ConstructionCombine(
 		return nil, wrapError(errInternalError, err)
 	}
 
+	wrappedSignedTx := signedTransactionWrapper{SignedTransaction: signedTxJSON, Currency: unsignedTx.Currency}
+
+	wrappedSignedTxJSON, err := json.Marshal(wrappedSignedTx)
+	if err != nil {
+		return nil, wrapError(errInternalError, err)
+	}
+
 	return &types.ConstructionCombineResponse{
-		SignedTransaction: string(signedTxJSON),
+		SignedTransaction: string(wrappedSignedTxJSON),
 	}, nil
 }
 
@@ -241,8 +258,13 @@ func (s ConstructionService) ConstructionParse(
 			return nil, wrapError(errInvalidInput, err)
 		}
 	} else {
-		t := new(ethtypes.Transaction)
-		if err := t.UnmarshalJSON([]byte(req.Transaction)); err != nil {
+		var wrappedTx signedTransactionWrapper
+		if err := json.Unmarshal([]byte(req.Transaction), &wrappedTx); err != nil {
+			return nil, wrapError(errInvalidInput, err)
+		}
+
+		var t ethtypes.Transaction
+		if err := t.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
 
@@ -253,12 +275,32 @@ func (s ConstructionService) ConstructionParse(
 		tx.GasPrice = t.GasPrice()
 		tx.GasLimit = t.Gas()
 		tx.ChainID = s.config.ChainID
+		tx.Currency = wrappedTx.Currency
 
 		msg, err := t.AsMessage(s.config.Signer(), nil)
 		if err != nil {
 			return nil, wrapError(errInvalidInput, err)
 		}
 		tx.From = msg.From().Hex()
+	}
+
+	var opMethod string
+	var value *big.Int
+	var toAddressHex string
+	// Erc20 transfer
+	if len(tx.Data) != 0 {
+		toAddress, amountSent, err := parseErc20TransferData(tx.Data)
+		if err != nil {
+			return nil, wrapError(errInvalidInput, err)
+		}
+
+		value = amountSent
+		opMethod = mapper.OpErc20Transfer
+		toAddressHex = toAddress.Hex()
+	} else {
+		value = tx.Value
+		opMethod = mapper.OpCall
+		toAddressHex = tx.To
 	}
 
 	// Ensure valid from address
@@ -268,14 +310,14 @@ func (s ConstructionService) ConstructionParse(
 	}
 
 	// Ensure valid to address
-	checkTo, ok := ChecksumAddress(tx.To)
+	checkTo, ok := ChecksumAddress(toAddressHex)
 	if !ok {
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
 	}
 
 	ops := []*types.Operation{
 		{
-			Type: mapper.OpCall,
+			Type: opMethod,
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 0,
 			},
@@ -283,12 +325,12 @@ func (s ConstructionService) ConstructionParse(
 				Address: checkFrom,
 			},
 			Amount: &types.Amount{
-				Value:    new(big.Int).Neg(tx.Value).String(),
-				Currency: mapper.AvaxCurrency,
+				Value:    new(big.Int).Neg(value).String(),
+				Currency: tx.Currency,
 			},
 		},
 		{
-			Type: mapper.OpCall,
+			Type: opMethod,
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 1,
 			},
@@ -301,8 +343,8 @@ func (s ConstructionService) ConstructionParse(
 				Address: checkTo,
 			},
 			Amount: &types.Amount{
-				Value:    tx.Value.String(),
-				Currency: mapper.AvaxCurrency,
+				Value:    value.String(),
+				Currency: tx.Currency,
 			},
 		},
 	}
@@ -353,32 +395,14 @@ func (s ConstructionService) ConstructionPayloads(
 	ctx context.Context,
 	req *types.ConstructionPayloadsRequest,
 ) (*types.ConstructionPayloadsResponse, *types.Error) {
+	operationDescriptions, err := s.CreateOperationDescription(req.Operations)
+	if err != nil {
+		return nil, wrapError(errInvalidInput, err.Error())
+	}
+
 	descriptions := &parser.Descriptions{
-		OperationDescriptions: []*parser.OperationDescription{
-			{
-				Type: mapper.OpCall,
-				Account: &parser.AccountDescription{
-					Exists: true,
-				},
-				Amount: &parser.AmountDescription{
-					Exists:   true,
-					Sign:     parser.NegativeAmountSign,
-					Currency: mapper.AvaxCurrency,
-				},
-			},
-			{
-				Type: mapper.OpCall,
-				Account: &parser.AccountDescription{
-					Exists: true,
-				},
-				Amount: &parser.AmountDescription{
-					Exists:   true,
-					Sign:     parser.PositiveAmountSign,
-					Currency: mapper.AvaxCurrency,
-				},
-			},
-		},
-		ErrUnmatched: true,
+		OperationDescriptions: operationDescriptions,
+		ErrUnmatched:          true,
 	}
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
@@ -397,10 +421,10 @@ func (s ConstructionService) ConstructionPayloads(
 	gasPrice := metadata.GasPrice
 	gasLimit := metadata.GasLimit
 	chainID := s.config.ChainID
-	transferData := []byte{}
 
 	fromOp, _ := matches[0].First()
 	fromAddress := fromOp.Account.Address
+	fromCurrency := fromOp.Amount.Currency
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
@@ -411,10 +435,26 @@ func (s ConstructionService) ConstructionPayloads(
 	if !ok {
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
 	}
+	var transferData []byte
+	var sendToAddress ethcommon.Address
+	if types.Hash(fromCurrency) == types.Hash(mapper.AvaxCurrency) {
+		transferData = []byte{}
+		sendToAddress = ethcommon.HexToAddress(checkTo)
+	} else {
+		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
+		if !ok {
+			return nil, wrapError(errInvalidInput,
+				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
+		}
+
+		transferData = generateErc20TransferData(toAddress, amount)
+		sendToAddress = ethcommon.HexToAddress(contract)
+		amount = big.NewInt(0)
+	}
 
 	tx := ethtypes.NewTransaction(
 		nonce,
-		ethcommon.HexToAddress(checkTo),
+		sendToAddress,
 		amount,
 		gasLimit,
 		gasPrice,
@@ -423,17 +463,19 @@ func (s ConstructionService) ConstructionPayloads(
 
 	unsignedTx := &transaction{
 		From:     checkFrom,
-		To:       checkTo,
+		To:       sendToAddress.Hex(),
 		Value:    amount,
 		Data:     tx.Data(),
 		Nonce:    tx.Nonce(),
 		GasPrice: gasPrice,
 		GasLimit: tx.Gas(),
 		ChainID:  chainID,
+		Currency: fromCurrency,
 	}
 
 	// Construct SigningPayload
 	signer := ethtypes.LatestSignerForChainID(s.config.ChainID)
+
 	payload := &types.SigningPayload{
 		AccountIdentifier: &types.AccountIdentifier{Address: checkFrom},
 		Bytes:             signer.Hash(tx).Bytes(),
@@ -460,32 +502,14 @@ func (s ConstructionService) ConstructionPreprocess(
 	ctx context.Context,
 	req *types.ConstructionPreprocessRequest,
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
+	operationDescriptions, err := s.CreateOperationDescription(req.Operations)
+	if err != nil {
+		return nil, wrapError(errInvalidInput, err.Error())
+	}
+
 	descriptions := &parser.Descriptions{
-		OperationDescriptions: []*parser.OperationDescription{
-			{
-				Type: mapper.OpCall,
-				Account: &parser.AccountDescription{
-					Exists: true,
-				},
-				Amount: &parser.AmountDescription{
-					Exists:   true,
-					Sign:     parser.NegativeAmountSign,
-					Currency: mapper.AvaxCurrency,
-				},
-			},
-			{
-				Type: mapper.OpCall,
-				Account: &parser.AccountDescription{
-					Exists: true,
-				},
-				Amount: &parser.AmountDescription{
-					Exists:   true,
-					Sign:     parser.PositiveAmountSign,
-					Currency: mapper.AvaxCurrency,
-				},
-			},
-		},
-		ErrUnmatched: true,
+		OperationDescriptions: operationDescriptions,
+		ErrUnmatched:          true,
 	}
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
@@ -497,6 +521,8 @@ func (s ConstructionService) ConstructionPreprocess(
 	fromAddress := fromOp.Account.Address
 	toOp, amount := matches[1].First()
 	toAddress := toOp.Account.Address
+
+	fromCurrency := fromOp.Amount.Currency
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
@@ -512,7 +538,9 @@ func (s ConstructionService) ConstructionPreprocess(
 		To:                     checkTo,
 		Value:                  amount,
 		SuggestedFeeMultiplier: req.SuggestedFeeMultiplier,
+		Currency:               fromCurrency,
 	}
+
 	if v, ok := req.Metadata["gas_price"]; ok {
 		stringObj, ok := v.(string)
 		if !ok {
@@ -573,8 +601,13 @@ func (s ConstructionService) ConstructionSubmit(
 		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
 	}
 
+	var wrappedTx signedTransactionWrapper
+	if err := json.Unmarshal([]byte(req.SignedTransaction), &wrappedTx); err != nil {
+		return nil, wrapError(errInvalidInput, err)
+	}
+
 	var signedTx ethtypes.Transaction
-	if err := signedTx.UnmarshalJSON([]byte(req.SignedTransaction)); err != nil {
+	if err := signedTx.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
 
@@ -587,4 +620,176 @@ func (s ConstructionService) ConstructionSubmit(
 			Hash: signedTx.Hash().String(),
 		},
 	}, nil
+}
+
+func (s ConstructionService) CreateOperationDescription(
+	operations []*types.Operation,
+) ([]*parser.OperationDescription, error) {
+	if len(operations) != 2 { //nolint:gomnd
+		return nil, fmt.Errorf("invalid number of operations")
+	}
+
+	firstCurrency := operations[0].Amount.Currency
+	secondCurrency := operations[1].Amount.Currency
+
+	if firstCurrency == nil || secondCurrency == nil {
+		return nil, fmt.Errorf("invalid currency on operation")
+	}
+
+	if types.Hash(firstCurrency) != types.Hash(secondCurrency) {
+		return nil, fmt.Errorf("currency info doesn't match between the operations")
+	}
+
+	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
+		return s.createOperationDescriptionNative(), nil
+	}
+	firstContract, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
+	_, secondOk := secondCurrency.Metadata[mapper.ContractAddressMetadata].(string)
+
+	// Not Native Avax, we require contractInfo in metadata
+	if !firstOk || !secondOk {
+		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
+	}
+
+	return s.createOperationDescriptionERC20(firstContract, firstCurrency), nil
+}
+
+func (s ConstructionService) createOperationDescriptionNative() []*parser.OperationDescription {
+	var descriptions []*parser.OperationDescription
+
+	nativeSend := parser.OperationDescription{
+		Type: mapper.OpCall,
+		Account: &parser.AccountDescription{
+			Exists: true,
+		},
+		Amount: &parser.AmountDescription{
+			Exists:   true,
+			Sign:     parser.NegativeAmountSign,
+			Currency: mapper.AvaxCurrency,
+		},
+	}
+	nativeReceive := parser.OperationDescription{
+		Type: mapper.OpCall,
+		Account: &parser.AccountDescription{
+			Exists: true,
+		},
+		Amount: &parser.AmountDescription{
+			Exists:   true,
+			Sign:     parser.PositiveAmountSign,
+			Currency: mapper.AvaxCurrency,
+		},
+	}
+
+	descriptions = append(descriptions, &nativeSend)
+	descriptions = append(descriptions, &nativeReceive)
+	return descriptions
+}
+
+func (s ConstructionService) createOperationDescriptionERC20(
+	contractAddress string, currencyInfo *types.Currency,
+) []*parser.OperationDescription {
+	var descriptions []*parser.OperationDescription
+	currency := mapper.Erc20Currency(currencyInfo.Symbol, currencyInfo.Decimals, contractAddress)
+
+	send := parser.OperationDescription{
+		Type: mapper.OpErc20Transfer,
+		Account: &parser.AccountDescription{
+			Exists: true,
+		},
+		Amount: &parser.AmountDescription{
+			Exists:   true,
+			Sign:     parser.NegativeAmountSign,
+			Currency: currency,
+		},
+	}
+	receive := parser.OperationDescription{
+		Type: mapper.OpErc20Transfer,
+		Account: &parser.AccountDescription{
+			Exists: true,
+		},
+		Amount: &parser.AmountDescription{
+			Exists:   true,
+			Sign:     parser.PositiveAmountSign,
+			Currency: currency,
+		},
+	}
+
+	descriptions = append(descriptions, &send)
+	descriptions = append(descriptions, &receive)
+	return descriptions
+}
+
+func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAddress string,
+	fromAddress string, value *big.Int) (uint64, error) {
+	if len(toAddress) == 0 || value == nil {
+		// We guard against malformed inputs that may have been generated using
+		// a previous version of avalanche-rosetta.
+		return nativeTransferGasLimit, nil
+	}
+	to := common.HexToAddress(toAddress)
+	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+		From:  common.HexToAddress(fromAddress),
+		To:    &to,
+		Value: value,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return gasLimit, nil
+}
+
+func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAddress string,
+	fromAddress string, value *big.Int, currency *types.Currency) (uint64, error) {
+	contract, ok := currency.Metadata[mapper.ContractAddressMetadata]
+	if len(toAddress) == 0 || value == nil || !ok {
+		return erc20TransferGasLimit, nil
+	}
+	// ToAddress for erc20 transfers is the contract address
+	contractAddress := common.HexToAddress(contract.(string))
+	data := generateErc20TransferData(toAddress, value)
+	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+		From: common.HexToAddress(fromAddress),
+		To:   &contractAddress,
+		Data: data,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return gasLimit, nil
+}
+
+func generateErc20TransferData(toAddress string, value *big.Int) []byte {
+	to := common.HexToAddress(toAddress)
+	methodID := getTransferMethodID()
+
+	paddedAddress := common.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
+	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
+
+	var data []byte
+	data = append(data, methodID...)
+	data = append(data, paddedAddress...)
+	data = append(data, paddedAmount...)
+	return data
+}
+
+func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
+	if len(data) != genericTransferBytesLength {
+		return nil, nil, fmt.Errorf("incorrect length for data array")
+	}
+	methodID := getTransferMethodID()
+	if hexutil.Encode(data[:4]) != hexutil.Encode(methodID) {
+		return nil, nil, fmt.Errorf("incorrect methodID signature")
+	}
+
+	address := ethcommon.BytesToAddress(data[5:36])
+	amount := new(big.Int).SetBytes(data[37:])
+	return &address, amount, nil
+}
+
+func getTransferMethodID() []byte {
+	transferSignature := []byte(transferFnSignature) // do not include spaces in the string
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(transferSignature)
+	methodID := hash.Sum(nil)[:4]
+	return methodID
 }

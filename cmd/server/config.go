@@ -5,16 +5,19 @@ import (
 	"errors"
 	"os"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 var (
-	errMissingRPC           = errors.New("avalanche rpc endpoint is not provided")
-	errInvalidMode          = errors.New("invalid rosetta mode")
-	errGenesisBlockRequired = errors.New("genesis block hash is not provided")
-	errInvalidTokenAddress  = errors.New("invalid token address provided")
-	errInvalidIngestionMode = errors.New("invalid rosetta ingestion mode")
+	errMissingRPC              = errors.New("avalanche rpc endpoint is not provided")
+	errInvalidMode             = errors.New("invalid rosetta mode")
+	errGenesisBlockRequired    = errors.New("genesis block hash is not provided")
+	errInvalidTokenAddress     = errors.New("invalid token address provided")
+	errInvalidErc20Address     = errors.New("not all token addresses provided are valid erc20s")
+	errInvalidIngestionMode    = errors.New("invalid rosetta ingestion mode")
+	errInvalidUnknownTokenMode = errors.New("cannot index unknown tokens while in standard ingestion mode")
 )
 
 type config struct {
@@ -89,5 +92,22 @@ func (c *config) Validate() error {
 		return errInvalidIngestionMode
 	}
 
+	if c.IngestionMode == service.StandardIngestion && c.IndexUnknownTokens {
+		return errInvalidUnknownTokenMode
+	}
+	return nil
+}
+
+func (c *config) ValidateWhitelistOnlyValidErc20s(cli client.Client) error {
+	for _, token := range c.TokenWhiteList {
+		ethAddress := ethcommon.HexToAddress(token)
+		currency, err := cli.GetContractCurrency(ethAddress, true)
+		if err != nil {
+			return err
+		}
+		if currency.Decimals == client.UnknownERC20Decimals && currency.Symbol == client.UnknownERC20Symbol {
+			return errInvalidErc20Address
+		}
+	}
 	return nil
 }

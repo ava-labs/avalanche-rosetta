@@ -2,8 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/coreth/core/types"
@@ -13,7 +11,7 @@ import (
 )
 
 const (
-	logCacheSize       = 100
+	logCacheSize       = 1024
 	transferMethodHash = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 )
 
@@ -24,20 +22,11 @@ type EvmLogsClient struct {
 }
 
 // NewEvmLogsClient returns a new EVM Logs client
-func NewEvmLogsClient(endpoint string) (*EvmLogsClient, error) {
-	endpoint = strings.TrimSuffix(endpoint, "/")
-
-	c, err := ethclient.Dial(fmt.Sprintf("%s%s", endpoint, prefixEth))
-	if err != nil {
-		return nil, err
-	}
-
-	cache := &cache.LRU{Size: logCacheSize}
-
+func NewEvmLogsClient(c ethclient.Client) *EvmLogsClient {
 	return &EvmLogsClient{
 		ethClient: c,
-		cache:     cache,
-	}, nil
+		cache:     &cache.LRU{Size: logCacheSize},
+	}
 }
 
 // EvmTransferLogs returns a set of evm logs based on the requested block hash and transaction hash
@@ -46,23 +35,23 @@ func (c *EvmLogsClient) EvmTransferLogs(
 	blockHash common.Hash,
 	transactionHash common.Hash,
 ) ([]types.Log, error) {
-	blockLogs, isCached := c.cache.Get(blockHash.String())
-	if !isCached {
+	logs, cached := c.cache.Get(blockHash.String())
+	if !cached {
 		var err error
-		var topics [][]common.Hash = [][]common.Hash{{common.HexToHash(transferMethodHash)}}
 
-		var filter interfaces.FilterQuery = interfaces.FilterQuery{BlockHash: &blockHash, Topics: topics}
-		blockLogs, err = c.ethClient.FilterLogs(ctx, filter)
-
+		topics := [][]common.Hash{{common.HexToHash(transferMethodHash)}}
+		filter := interfaces.FilterQuery{BlockHash: &blockHash, Topics: topics}
+		logs, err = c.ethClient.FilterLogs(ctx, filter)
 		if err != nil {
 			return nil, err
 		}
-		c.cache.Put(blockHash.String(), blockLogs)
+
+		c.cache.Put(blockHash.String(), logs)
 	}
 
 	var filteredLogs []types.Log
 
-	for _, log := range blockLogs.([]types.Log) {
+	for _, log := range logs.([]types.Log) {
 		if log.TxHash == transactionHash {
 			filteredLogs = append(filteredLogs, log)
 		}
