@@ -34,19 +34,9 @@ func Erc20Amount(
 		value = new(big.Int).Neg(value)
 	}
 
-	currency := ContractCurrency(symbol, decimals, addr.String())
+	currency := client.ContractCurrency(symbol, decimals, addr.String())
 	return &types.Amount{
 		Value:    value.String(),
 		Currency: currency,
-	}
-}
-
-func ContractCurrency(symbol string, decimals int32, addr string) *types.Currency {
-	return &types.Currency{
-		Symbol:   symbol,
-		Decimals: decimals,
-		Metadata: map[string]interface{}{
-			client.ContractAddressMetadata: addr,
-		},
 	}
 }
