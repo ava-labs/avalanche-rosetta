@@ -10,7 +10,6 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v3 v3.0.0 // indirect
 	github.com/ethereum/go-ethereum v1.10.15
 	github.com/go-ole/go-ole v1.2.4 // indirect
-	github.com/gorilla/rpc v1.2.0
 	github.com/prometheus/client_golang v1.8.0 // indirect
 	github.com/prometheus/common v0.15.0 // indirect
 	github.com/stretchr/testify v1.7.0
