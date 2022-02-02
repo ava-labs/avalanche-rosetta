@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"strings"
 
@@ -51,9 +50,8 @@ type client struct {
 // NewClient returns a new client for Avalanche APIs
 func NewClient(endpoint string) (Client, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
-	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 
-	eth, err := NewEthClient(endpointURL)
+	eth, err := NewEthClient(endpoint)
 	if err != nil {
 		return nil, err
 	}
