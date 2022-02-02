@@ -10,7 +10,6 @@ import (
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
 	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 )
 
@@ -29,10 +28,10 @@ func Transaction(
 	tx *ethtypes.Transaction,
 	msg *ethtypes.Message,
 	receipt *ethtypes.Receipt,
-	trace *client.Call,
-	flattenedTrace []*client.FlatCall,
+	trace *clientTypes.Call,
+	flattenedTrace []*clientTypes.FlatCall,
 	transferLogs []ethtypes.Log,
-	client client.Client,
+	client clientTypes.Client,
 	isAnalyticsMode bool,
 	standardModeWhiteList []string,
 	includeUnknownTokens bool,
@@ -266,7 +265,7 @@ func CrossChainTransactions(
 }
 
 // MempoolTransactionsIDs returns a list of transction IDs in the mempool
-func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.TransactionIdentifier {
+func MempoolTransactionsIDs(accountMap clientTypes.TxAccountMap) []*types.TransactionIdentifier {
 	result := []*types.TransactionIdentifier{}
 
 	for _, txNonceMap := range accountMap {
@@ -284,7 +283,7 @@ func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.Transaction
 }
 
 // nolint:gocognit
-func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
+func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation {
 	var ops []*types.Operation
 	if len(trace) == 0 {
 		return ops
@@ -438,7 +437,7 @@ func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
 	return ops
 }
 
-func parseErc20Txs(transferLog ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
+func parseErc20Txs(transferLog ethtypes.Log, currency *types.Currency, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
@@ -510,8 +509,8 @@ func parseErc721Txs(transferLog ethtypes.Log, opsLen int64) []*types.Operation {
 	addressTo := transferLog.Topics[2]
 	erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
 	metadata := map[string]interface{}{
-		ContractAddressMetadata:  contractAddress.String(),
-		IndexTransferredMetadata: erc721Index.String(),
+		clientTypes.ContractAddressMetadata: contractAddress.String(),
+		IndexTransferredMetadata:            erc721Index.String(),
 	}
 
 	if addressFrom.Hex() == zeroAddress {

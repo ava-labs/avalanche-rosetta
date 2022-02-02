@@ -14,7 +14,6 @@ const (
 	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
 
 	TokenTypeMetadata        = "tokenType"
-	ContractAddressMetadata  = "contractAddress"
 	IndexTransferredMetadata = "indexTransferred"
 	TokenSymbol              = "tokenSymbol"
 

@@ -7,7 +7,6 @@ import (
 	"math/big"
 	"testing"
 
-	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	"github.com/ava-labs/coreth/interfaces"
@@ -752,7 +751,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			config: &Config{Mode: ModeOnline, TokenWhiteList: tokenList},
 			client: client,
 		}
-		currency := &clientTypes.ContractCurrency{Symbol: defaultSymbol, Decimals: defaultDecimals}
+		currency := &types.Currency{Symbol: defaultSymbol, Decimals: defaultDecimals}
 		client.On(
 			"ContractInfo",
 			common.HexToAddress(defaultContractAddress),

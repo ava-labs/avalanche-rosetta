@@ -16,6 +16,8 @@ import (
 
 	network "github.com/ava-labs/avalanchego/network"
 
+	rosetta_sdk_gotypes "github.com/coinbase/rosetta-sdk-go/types"
+
 	types "github.com/ava-labs/coreth/core/types"
 )
 
@@ -184,15 +186,15 @@ func (_m *Client) EvmTransferLogs(_a0 context.Context, _a1 common.Hash, _a2 comm
 }
 
 // GetContractCurrency provides a mock function with given fields: _a0, _a1
-func (_m *Client) GetContractCurrency(_a0 common.Address, _a1 bool) (*client.ContractCurrency, error) {
+func (_m *Client) GetContractCurrency(_a0 common.Address, _a1 bool) (*rosetta_sdk_gotypes.Currency, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 *client.ContractCurrency
-	if rf, ok := ret.Get(0).(func(common.Address, bool) *client.ContractCurrency); ok {
+	var r0 *rosetta_sdk_gotypes.Currency
+	if rf, ok := ret.Get(0).(func(common.Address, bool) *rosetta_sdk_gotypes.Currency); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*client.ContractCurrency)
+			r0 = ret.Get(0).(*rosetta_sdk_gotypes.Currency)
 		}
 	}
 

@@ -3,11 +3,13 @@ package client
 import (
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/coreth/ethclient"
+	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
-	contractCacheSize = 1024
+	contractCacheSize       = 1024
+	ContractAddressMetadata = "contractAddress"
 )
 
 // ContractClient is a client for the calling contract information
@@ -25,9 +27,9 @@ func NewContractClient(c ethclient.Client) *ContractClient {
 }
 
 // GetContractCurrency returns the currency for a specific address
-func (c *ContractClient) GetContractCurrency(addr common.Address, erc20 bool) (*ContractCurrency, error) {
+func (c *ContractClient) GetContractCurrency(addr common.Address, erc20 bool) (*types.Currency, error) {
 	if currency, cached := c.cache.Get(addr); cached {
-		return currency.(*ContractCurrency), nil
+		return currency.(*types.Currency), nil
 	}
 
 	token, err := NewContractInfoToken(addr, c.ethClient)
@@ -49,12 +51,19 @@ func (c *ContractClient) GetContractCurrency(addr common.Address, erc20 bool) (*
 		}
 	}
 
-	currency := &ContractCurrency{
-		Symbol:   symbol,
-		Decimals: int32(decimals),
-	}
+	currency := ContractCurrency(symbol, int32(decimals), addr.String())
 
 	// Cache defaults for contract address to avoid unnecessary lookups
 	c.cache.Put(addr, currency)
 	return currency, nil
+}
+
+func ContractCurrency(symbol string, decimals int32, addr string) *types.Currency {
+	return &types.Currency{
+		Symbol:   symbol,
+		Decimals: decimals,
+		Metadata: map[string]interface{}{
+			ContractAddressMetadata: addr,
+		},
+	}
 }
