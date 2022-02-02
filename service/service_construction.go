@@ -78,10 +78,9 @@ func (s ConstructionService) ConstructionMetadata(
 		nonce = input.Nonce.Uint64()
 	}
 
-	var gasPrice *big.Int
-	if input.GasPrice == nil {
-		gasPrice, err = s.client.SuggestGasPrice(ctx)
-		if err != nil {
+	gasPrice := input.GasPrice
+	if gasPrice == nil {
+		if gasPrice, err = s.client.SuggestGasPrice(ctx); err != nil {
 			return nil, wrapError(errClientError, err)
 		}
 
@@ -92,22 +91,18 @@ func (s ConstructionService) ConstructionMetadata(
 			)
 			newGasPrice.Int(gasPrice)
 		}
-	} else {
-		gasPrice = input.GasPrice
 	}
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
 		if input.Currency == nil || types.Hash(input.Currency) == types.Hash(mapper.AvaxCurrency) {
 			gasLimit, err = s.getNativeTransferGasLimit(ctx, input.To, input.From, input.Value)
-			if err != nil {
-				return nil, wrapError(errClientError, err)
-			}
 		} else {
 			gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
-			if err != nil {
-				return nil, wrapError(errClientError, err)
-			}
+		}
+
+		if err != nil {
+			return nil, wrapError(errClientError, err)
 		}
 	} else {
 		gasLimit = input.GasLimit.Uint64()
