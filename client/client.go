@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"strings"
 
@@ -15,8 +14,6 @@ import (
 
 // Interface compliance
 var _ Client = &client{}
-
-const prefixEth = "/ext/bc/C/rpc"
 
 type Client interface {
 	IsBootstrapped(context.Context, string) (bool, error)
@@ -51,9 +48,8 @@ type client struct {
 // NewClient returns a new client for Avalanche APIs
 func NewClient(endpoint string) (Client, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
-	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 
-	eth, err := NewEthClient(endpointURL)
+	eth, err := NewEthClient(endpoint)
 	if err != nil {
 		return nil, err
 	}

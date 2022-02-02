@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/coreth/ethclient"
@@ -10,6 +11,7 @@ import (
 
 var (
 	tracerTimeout = "180s"
+	prefixEth     = "/ext/bc/C/rpc"
 )
 
 // EthClient provides access to Coreth API
@@ -20,7 +22,9 @@ type EthClient struct {
 }
 
 // NewEthClient returns a new EVM client
-func NewEthClient(endpointURL string) (*EthClient, error) {
+func NewEthClient(endpoint string) (*EthClient, error) {
+	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
+
 	c, err := ethclient.Dial(endpointURL)
 	if err != nil {
 		return nil, err
@@ -28,7 +32,7 @@ func NewEthClient(endpointURL string) (*EthClient, error) {
 
 	return &EthClient{
 		Client: c,
-		rpc:    rpc.NewRPCRequester(endpointURL),
+		rpc:    rpc.NewRPCRequester(endpoint),
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,
 			Tracer:  &jsTracer,
