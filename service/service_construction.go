@@ -95,7 +95,7 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		if input.Currency == nil || types.Hash(input.Currency) == types.Hash(mapper.AvaxCurrency) {
+		if input.Currency == nil || utils.Equal(input.Currency, mapper.AvaxCurrency) {
 			gasLimit, err = s.getNativeTransferGasLimit(ctx, input.To, input.From, input.Value)
 		} else {
 			gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
@@ -432,7 +432,7 @@ func (s ConstructionService) ConstructionPayloads(
 	}
 	var transferData []byte
 	var sendToAddress ethcommon.Address
-	if types.Hash(fromCurrency) == types.Hash(mapper.AvaxCurrency) {
+	if utils.Equal(fromCurrency, mapper.AvaxCurrency) {
 		transferData = []byte{}
 		sendToAddress = ethcommon.HexToAddress(checkTo)
 	} else {
