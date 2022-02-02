@@ -15,8 +15,6 @@ import (
 // Interface compliance
 var _ Client = &client{}
 
-const prefixEth = "/ext/bc/C/rpc"
-
 type Client interface {
 	IsBootstrapped(context.Context, string) (bool, error)
 	ChainID(context.Context) (*big.Int, error)
