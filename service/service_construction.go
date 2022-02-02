@@ -188,8 +188,7 @@ func (s ConstructionService) ConstructionCombine(
 		unsignedTx.Data,
 	)
 
-	signer := ethtypes.LatestSignerForChainID(unsignedTx.ChainID)
-	signedTx, err := ethTransaction.WithSignature(signer, req.Signatures[0].Bytes)
+	signedTx, err := ethTransaction.WithSignature(s.config.Signer(), req.Signatures[0].Bytes)
 	if err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
@@ -469,11 +468,9 @@ func (s ConstructionService) ConstructionPayloads(
 	}
 
 	// Construct SigningPayload
-	signer := ethtypes.LatestSignerForChainID(s.config.ChainID)
-
 	payload := &types.SigningPayload{
 		AccountIdentifier: &types.AccountIdentifier{Address: checkFrom},
-		Bytes:             signer.Hash(tx).Bytes(),
+		Bytes:             s.config.Signer().Hash(tx).Bytes(),
 		SignatureType:     types.EcdsaRecovery,
 	}
 
