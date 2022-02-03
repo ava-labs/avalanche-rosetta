@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ava-labs/avalanchego/ids"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -130,7 +131,7 @@ func crossChainTransaction(
 	rawIdx int,
 	avaxAssetID string,
 	tx *evm.Tx,
-) ([]*types.Operation, error) {
+) ([]*types.Operation, ids.ID, error) {
 	var (
 		ops = []*types.Operation{}
 		idx = int64(rawIdx)
@@ -138,7 +139,7 @@ func crossChainTransaction(
 
 	// Prepare transaction for ID calcuation
 	if err := tx.Sign(evm.Codec, nil); err != nil {
-		return nil, err
+		return nil, ids.Empty, err
 	}
 
 	switch t := tx.UnsignedAtomicTx.(type) {
@@ -219,9 +220,9 @@ func crossChainTransaction(
 			idx++
 		}
 	default:
-		return nil, fmt.Errorf("unsupported transaction: %T", t)
+		return nil, ids.Empty, fmt.Errorf("unsupported transaction: %T", t)
 	}
-	return ops, nil
+	return ops, tx.ID(), nil
 }
 
 func CrossChainTransactions(
@@ -241,26 +242,22 @@ func CrossChainTransactions(
 		return nil, err
 	}
 
-	ops := []*types.Operation{}
+	idx := 0
 	for _, tx := range atomicTxs {
-		txOps, err := crossChainTransaction(len(ops), avaxAssetID, tx)
+		ops, txID, err := crossChainTransaction(idx, avaxAssetID, tx)
 		if err != nil {
 			return nil, err
 		}
-		ops = append(ops, txOps...)
-	}
 
-	// TODO: migrate to using atomic transaction ID instead of marking as a block
-	// transaction
-	//
-	// NOTE: We need to be very careful about this because it will require
-	// integrators to re-index the chain to get the new result.
-	transactions = append(transactions, &types.Transaction{
-		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: block.Hash().String(),
-		},
-		Operations: ops,
-	})
+		transactions = append(transactions, &types.Transaction{
+			TransactionIdentifier: &types.TransactionIdentifier{
+				Hash: txID.String(),
+			},
+			Operations: ops,
+		})
+
+		idx += len(ops)
+	}
 
 	return transactions, nil
 }
