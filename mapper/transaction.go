@@ -127,13 +127,12 @@ func Transaction(
 }
 
 func crossChainTransaction(
-	rawIdx int,
 	avaxAssetID string,
 	tx *evm.Tx,
 ) ([]*types.Operation, error) {
 	var (
 		ops = []*types.Operation{}
-		idx = int64(rawIdx)
+		idx = int64(0)
 	)
 
 	// Prepare transaction for ID calcuation
@@ -241,9 +240,8 @@ func CrossChainTransactions(
 		return nil, err
 	}
 
-	idx := 0
 	for _, tx := range atomicTxs {
-		ops, err := crossChainTransaction(idx, avaxAssetID, tx)
+		ops, err := crossChainTransaction(avaxAssetID, tx)
 		if err != nil {
 			return nil, err
 		}
@@ -254,8 +252,6 @@ func CrossChainTransactions(
 			},
 			Operations: ops,
 		})
-
-		idx += len(ops)
 	}
 
 	return transactions, nil
