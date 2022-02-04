@@ -88,7 +88,7 @@ func TestConstructionMetadata(t *testing.T) {
 			uint64(21001),
 			nil,
 		).Once()
-		var input = map[string]interface{}{"from": "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309", "to": "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d", "value": "0x9864aac3510d02"} //nolint:lll
+		input := map[string]interface{}{"from": "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309", "to": "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d", "value": "0x9864aac3510d02"}
 		resp, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -135,21 +135,21 @@ func TestConstructionMetadata(t *testing.T) {
 			interfaces.CallMsg{
 				From: common.HexToAddress(defaultFromAddress),
 				To:   &contractAddress,
-				Data: common.Hex2Bytes("a9059cbb000000000000000000000000920eb8ca79f07eb3bfc39c324c8113948ed3104c00000000000000000000000000000000000000000000000000000000b4d360e3"), //nolint:lll
+				Data: common.Hex2Bytes("a9059cbb000000000000000000000000920eb8ca79f07eb3bfc39c324c8113948ed3104c00000000000000000000000000000000000000000000000000000000b4d360e3"),
 			},
 		).Return(
 			uint64(21001),
 			nil,
 		).Once()
-		var currencyMetadata = map[string]interface{}{
+		currencyMetadata := map[string]interface{}{
 			"contractAddress": defaultContractAddress,
 		}
-		var currency = map[string]interface{}{
+		currency := map[string]interface{}{
 			"symbol":   defaultSymbol,
 			"decimals": defaultDecimals,
 			"metadata": currencyMetadata,
 		}
-		var input = map[string]interface{}{"from": defaultFromAddress, "to": "0x920eb8ca79f07eb3bfc39c324c8113948ed3104c", "value": "0xb4d360e3", "currency": currency} //nolint:lll
+		input := map[string]interface{}{"from": defaultFromAddress, "to": "0x920eb8ca79f07eb3bfc39c324c8113948ed3104c", "value": "0xb4d360e3", "currency": currency}
 		resp, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -196,7 +196,7 @@ func TestContructionHash(t *testing.T) {
 	})
 
 	t.Run("valid transaction", func(t *testing.T) {
-		signed := `{"nonce":"0x6","gasPrice":"0x6d6e2edc00","gas":"0x5208","to":"0x85ad9d1fcf50b72255e4288dca0ad29f5f509409","value":"0xde0b6b3a7640000","input":"0x","v":"0x150f6","r":"0x64d46cc17cbdbcf73b204a6979172eb3148237ecd369181b105e92b0d7fa49a7","s":"0x285063de57245f532a14b13f605bed047a9d20ebfd0db28e01bc8cc9eaac40ee","hash":"0x92ea9280c1653aa9042c7a4d3a608c2149db45064609c18b270c7c73738e2a46"}` //nolint:lll
+		signed := `{"nonce":"0x6","gasPrice":"0x6d6e2edc00","gas":"0x5208","to":"0x85ad9d1fcf50b72255e4288dca0ad29f5f509409","value":"0xde0b6b3a7640000","input":"0x","v":"0x150f6","r":"0x64d46cc17cbdbcf73b204a6979172eb3148237ecd369181b105e92b0d7fa49a7","s":"0x285063de57245f532a14b13f605bed047a9d20ebfd0db28e01bc8cc9eaac40ee","hash":"0x92ea9280c1653aa9042c7a4d3a608c2149db45064609c18b270c7c73738e2a46"}`
 		request := signedTransactionWrapper{SignedTransaction: []byte(signed), Currency: nil}
 
 		json, marshalErr := json.Marshal(request)
@@ -284,12 +284,12 @@ func TestPreprocessMetadata(t *testing.T) {
 		config: &Config{Mode: ModeOnline},
 		client: client,
 	}
-	intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"AVAX","decimals":18}}}]` //nolint
+	intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"AVAX","decimals":18}}}]`
 	t.Run("currency info doesn't match between the operations", func(t *testing.T) {
-		unclear_intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"NOAX","decimals":18}}}]` //nolint
+		unclearIntent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"NOAX","decimals":18}}}]`
 
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(unclear_intent), &ops))
+		assert.NoError(t, json.Unmarshal([]byte(unclearIntent), &ops))
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -311,7 +311,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02", "currency":{"symbol":"AVAX","decimals":18}}` //nolint
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02", "currency":{"symbol":"AVAX","decimals":18}}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -373,7 +373,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		var ops []*types.Operation
 		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
 
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"}` //nolint
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 
@@ -429,7 +429,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","gas_price":"0x4190ab00", "currency":{"decimals":18, "symbol":"AVAX"}}` //nolint
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","gas_price":"0x4190ab00", "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -496,7 +496,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","gas_price":"0x4190ab00","suggested_fee_multiplier":1.1, "currency":{"decimals":18, "symbol":"AVAX"}}` //nolint
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","gas_price":"0x4190ab00","suggested_fee_multiplier":1.1, "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -560,7 +560,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1, "currency":{"decimals":18, "symbol":"AVAX"}}` //nolint
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1, "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -634,7 +634,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1, "nonce":"0x1", "currency":{"decimals":18, "symbol":"AVAX"}}` //nolint
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1, "nonce":"0x1", "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -699,7 +699,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1,"gas_limit":"0x9c40", "currency":{"decimals":18, "symbol":"AVAX"}}` //nolint:lll
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1,"gas_limit":"0x9c40", "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -745,7 +745,7 @@ func TestPreprocessMetadata(t *testing.T) {
 	})
 
 	t.Run("basic erc20 flow", func(t *testing.T) {
-		erc20_intent := `[{"operation_identifier":{"index":0},"type":"ERC20_TRANSFER","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}},{"operation_identifier":{"index":1},"type":"ERC20_TRANSFER","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}}]` //nolint
+		erc20Intent := `[{"operation_identifier":{"index":0},"type":"ERC20_TRANSFER","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}},{"operation_identifier":{"index":1},"type":"ERC20_TRANSFER","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}}]`
 		tokenList := []string{defaultContractAddress}
 
 		service := ConstructionService{
@@ -762,7 +762,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			nil,
 		).Once()
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(erc20_intent), &ops))
+		assert.NoError(t, json.Unmarshal([]byte(erc20Intent), &ops))
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -771,7 +771,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02", "currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}` //nolint
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02", "currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
@@ -798,7 +798,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			interfaces.CallMsg{
 				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 				To:   &contractAddress,
-				Data: common.Hex2Bytes("a9059cbb00000000000000000000000057B414a0332B5CaB885a451c2a28a07d1e9b8a8d000000000000000000000000000000000000000000000000009864aac3510d02"), //nolint:lll
+				Data: common.Hex2Bytes("a9059cbb00000000000000000000000057B414a0332B5CaB885a451c2a28a07d1e9b8a8d000000000000000000000000000000000000000000000000009864aac3510d02"),
 			},
 		).Return(
 			uint64(21001),
