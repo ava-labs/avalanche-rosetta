@@ -53,7 +53,7 @@ var (
 
 	AvaxCurrency = &types.Currency{
 		Symbol:   "AVAX",
-		Decimals: 18, //nolint:gomnd
+		Decimals: 18,
 	}
 
 	OperationStatuses = []*types.OperationStatus{

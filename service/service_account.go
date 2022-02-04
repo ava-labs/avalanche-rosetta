@@ -68,7 +68,7 @@ func (s AccountService) AccountBalance(
 		return nil, wrapError(errInternalError, balanceErr)
 	}
 
-	var balances []*types.Amount
+	balances := []*types.Amount{}
 	if len(req.Currencies) == 0 {
 		balances = append(balances, mapper.AvaxAmount(avaxBalance))
 	}

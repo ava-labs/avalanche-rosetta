@@ -10,12 +10,11 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
-	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 const (
-	nativeTransferGasLimit = uint64(21000) //nolint:gomnd
+	nativeTransferGasLimit = uint64(21000)
 	erc20TransferGasLimit  = uint64(250000)
 	genesisTimestamp       = 946713601000 // min allowable timestamp
 )
@@ -98,7 +97,7 @@ func ChecksumAddress(address string) (string, bool) {
 		return "", false
 	}
 
-	addr, err := common.NewMixedcaseAddressFromString(address)
+	addr, err := ethcommon.NewMixedcaseAddressFromString(address)
 	if err != nil {
 		return "", false
 	}

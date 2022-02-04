@@ -19,9 +19,7 @@ const (
 	zeroAddress            = "0x0000000000000000000000000000000000000000000000000000000000000000"
 )
 
-var (
-	x2crate = big.NewInt(1000000000) //nolint:gomnd
-)
+var x2crate = big.NewInt(1000000000)
 
 func Transaction(
 	header *ethtypes.Header,
@@ -282,9 +280,8 @@ func MempoolTransactionsIDs(accountMap clientTypes.TxAccountMap) []*types.Transa
 	return result
 }
 
-// nolint:gocognit
 func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation {
-	var ops []*types.Operation
+	ops := []*types.Operation{}
 	if len(trace) == 0 {
 		return ops
 	}
