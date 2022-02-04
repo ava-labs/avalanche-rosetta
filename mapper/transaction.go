@@ -130,14 +130,11 @@ func crossChainTransaction(
 	avaxAssetID string,
 	tx *evm.Tx,
 ) ([]*types.Operation, error) {
-	var (
-		ops = []*types.Operation{}
-		idx = int64(0)
-	)
+	ops := []*types.Operation{}
 
 	// Prepare transaction for ID calcuation
 	if err := tx.Sign(evm.Codec, nil); err != nil {
-		return nil, err
+		return ops, err
 	}
 
 	switch t := tx.UnsignedAtomicTx.(type) {
@@ -155,14 +152,14 @@ func crossChainTransaction(
 			i++
 		}
 
-		for _, out := range t.Outs {
+		for idx, out := range t.Outs {
 			if out.AssetID.String() != avaxAssetID {
 				continue
 			}
 
 			op := &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
-					Index: idx,
+					Index: int64(idx),
 				},
 				Type:   OpImport,
 				Status: types.String(StatusSuccess),
@@ -184,17 +181,16 @@ func crossChainTransaction(
 				},
 			}
 			ops = append(ops, op)
-			idx++
 		}
 	case *evm.UnsignedExportTx:
-		for _, in := range t.Ins {
+		for idx, in := range t.Ins {
 			if in.AssetID.String() != avaxAssetID {
 				continue
 			}
 
 			op := &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
-					Index: idx,
+					Index: int64(idx),
 				},
 				Type:   OpExport,
 				Status: types.String(StatusSuccess),
@@ -215,7 +211,6 @@ func crossChainTransaction(
 				},
 			}
 			ops = append(ops, op)
-			idx++
 		}
 	default:
 		return nil, fmt.Errorf("unsupported transaction: %T", t)
