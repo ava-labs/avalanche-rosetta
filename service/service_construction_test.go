@@ -141,7 +141,7 @@ func TestConstructionMetadata(t *testing.T) {
 			nil,
 		).Once()
 		currencyMetadata := map[string]interface{}{
-			"contractAddress": defaultContractAddress,
+			"contract_address": defaultContractAddress,
 		}
 		currency := map[string]interface{}{
 			"symbol":   defaultSymbol,
@@ -744,7 +744,7 @@ func TestPreprocessMetadata(t *testing.T) {
 	})
 
 	t.Run("basic erc20 flow", func(t *testing.T) {
-		erc20Intent := `[{"operation_identifier":{"index":0},"type":"ERC20_TRANSFER","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}},{"operation_identifier":{"index":1},"type":"ERC20_TRANSFER","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}}]`
+		erc20Intent := `[{"operation_identifier":{"index":0},"type":"ERC20_TRANSFER","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contract_address": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}},{"operation_identifier":{"index":1},"type":"ERC20_TRANSFER","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contract_address": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}}]`
 		tokenList := []string{defaultContractAddress}
 
 		service := ConstructionService{
@@ -770,7 +770,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02", "currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}`
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02", "currency":{"symbol":"TEST","decimals":18, "metadata": {"contract_address": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
