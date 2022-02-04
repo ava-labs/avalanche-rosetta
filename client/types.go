@@ -27,8 +27,10 @@ type Blockchain struct {
 	VMID     string `json:"vmId"`
 }
 
-type TxNonceMap map[string]string
-type TxAccountMap map[string]TxNonceMap
+type (
+	TxNonceMap   map[string]string
+	TxAccountMap map[string]TxNonceMap
+)
 
 type TxPoolStatus struct {
 	PendingCount int `json:"pending"`
