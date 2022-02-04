@@ -441,7 +441,7 @@ func (s ConstructionService) ConstructionPayloads(
 		transferData = []byte{}
 		sendToAddress = ethcommon.HexToAddress(checkTo)
 	} else {
-		contract, ok := fromCurrency.Metadata[client.ContractAddressMetadata].(string)
+		contract, ok := fromCurrency.Metadata["contract_address"].(string)
 		if !ok {
 			return nil, wrapError(errInvalidInput,
 				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
@@ -643,8 +643,8 @@ func (s ConstructionService) CreateOperationDescription(
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
 		return s.createOperationDescriptionNative(), nil
 	}
-	firstContract, firstOk := firstCurrency.Metadata[client.ContractAddressMetadata].(string)
-	_, secondOk := secondCurrency.Metadata[client.ContractAddressMetadata].(string)
+	firstContract, firstOk := firstCurrency.Metadata["contract_address"].(string)
+	_, secondOk := secondCurrency.Metadata["contract_address"].(string)
 
 	// Not Native Avax, we require contractInfo in metadata
 	if !firstOk || !secondOk {
@@ -689,7 +689,13 @@ func (s ConstructionService) createOperationDescriptionERC20(
 	contractAddress string, currencyInfo *types.Currency,
 ) []*parser.OperationDescription {
 	var descriptions []*parser.OperationDescription
-	currency := client.ContractCurrency(currencyInfo.Symbol, currencyInfo.Decimals, contractAddress)
+	currency := &types.Currency{
+		Symbol:   currencyInfo.Symbol,
+		Decimals: currencyInfo.Decimals,
+		Metadata: map[string]interface{}{
+			"contract_address": contractAddress,
+		},
+	}
 
 	send := parser.OperationDescription{
 		Type: mapper.OpErc20Transfer,
@@ -740,7 +746,7 @@ func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAd
 
 func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAddress string,
 	fromAddress string, value *big.Int, currency *types.Currency) (uint64, error) {
-	contract, ok := currency.Metadata[client.ContractAddressMetadata]
+	contract, ok := currency.Metadata["contract_address"]
 	if len(toAddress) == 0 || value == nil || !ok {
 		return erc20TransferGasLimit, nil
 	}

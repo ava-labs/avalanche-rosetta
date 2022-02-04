@@ -3,7 +3,6 @@ package mapper
 import (
 	"math/big"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -34,9 +33,14 @@ func Erc20Amount(
 		value = new(big.Int).Neg(value)
 	}
 
-	currency := client.ContractCurrency(symbol, decimals, addr.String())
 	return &types.Amount{
-		Value:    value.String(),
-		Currency: currency,
+		Value: value.String(),
+		Currency: &types.Currency{
+			Symbol:   symbol,
+			Decimals: decimals,
+			Metadata: map[string]interface{}{
+				"contract_address": addr,
+			},
+		},
 	}
 }
