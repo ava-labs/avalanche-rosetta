@@ -13,7 +13,6 @@ import (
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
-	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -546,7 +545,7 @@ func (s ConstructionService) ConstructionPreprocess(
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas price string", v))
 		}
-		bigObj, ok := new(big.Int).SetString(stringObj, 10) //nolint:gomnd
+		bigObj, ok := new(big.Int).SetString(stringObj, 10)
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas price", v))
 		}
@@ -557,7 +556,7 @@ func (s ConstructionService) ConstructionPreprocess(
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas limit string", v))
 		}
-		bigObj, ok := new(big.Int).SetString(stringObj, 10) //nolint:gomnd
+		bigObj, ok := new(big.Int).SetString(stringObj, 10)
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas limit", v))
 		}
@@ -568,7 +567,7 @@ func (s ConstructionService) ConstructionPreprocess(
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid nonce string", v))
 		}
-		bigObj, ok := new(big.Int).SetString(stringObj, 10) //nolint:gomnd
+		bigObj, ok := new(big.Int).SetString(stringObj, 10)
 		if !ok {
 			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid nonce", v))
 		}
@@ -625,7 +624,7 @@ func (s ConstructionService) ConstructionSubmit(
 func (s ConstructionService) CreateOperationDescription(
 	operations []*types.Operation,
 ) ([]*parser.OperationDescription, error) {
-	if len(operations) != 2 { //nolint:gomnd
+	if len(operations) != 2 {
 		return nil, fmt.Errorf("invalid number of operations")
 	}
 
@@ -726,9 +725,9 @@ func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAd
 		// a previous version of avalanche-rosetta.
 		return nativeTransferGasLimit, nil
 	}
-	to := common.HexToAddress(toAddress)
+	to := ethcommon.HexToAddress(toAddress)
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From:  common.HexToAddress(fromAddress),
+		From:  ethcommon.HexToAddress(fromAddress),
 		To:    &to,
 		Value: value,
 	})
@@ -745,10 +744,10 @@ func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAdd
 		return erc20TransferGasLimit, nil
 	}
 	// ToAddress for erc20 transfers is the contract address
-	contractAddress := common.HexToAddress(contract.(string))
+	contractAddress := ethcommon.HexToAddress(contract.(string))
 	data := generateErc20TransferData(toAddress, value)
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From: common.HexToAddress(fromAddress),
+		From: ethcommon.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,
 	})
@@ -759,11 +758,11 @@ func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAdd
 }
 
 func generateErc20TransferData(toAddress string, value *big.Int) []byte {
-	to := common.HexToAddress(toAddress)
+	to := ethcommon.HexToAddress(toAddress)
 	methodID := getTransferMethodID()
 
-	paddedAddress := common.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
-	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
+	paddedAddress := ethcommon.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
+	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
 
 	var data []byte
 	data = append(data, methodID...)
