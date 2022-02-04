@@ -157,7 +157,7 @@ func crossChainTransaction(
 				continue
 			}
 
-			op := &types.Operation{
+			ops = append(ops, &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: int64(idx),
 				},
@@ -179,8 +179,7 @@ func crossChainTransaction(
 					"meta":          t.Metadata,
 					"asset_id":      out.AssetID.String(),
 				},
-			}
-			ops = append(ops, op)
+			})
 		}
 	case *evm.UnsignedExportTx:
 		for idx, in := range t.Ins {
@@ -188,7 +187,7 @@ func crossChainTransaction(
 				continue
 			}
 
-			op := &types.Operation{
+			ops = append(ops, &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: int64(idx),
 				},
@@ -209,8 +208,7 @@ func crossChainTransaction(
 					"meta":              t.Metadata,
 					"asset_id":          in.AssetID.String(),
 				},
-			}
-			ops = append(ops, op)
+			})
 		}
 	default:
 		return nil, fmt.Errorf("unsupported transaction: %T", t)
