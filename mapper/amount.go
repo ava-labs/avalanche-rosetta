@@ -39,7 +39,7 @@ func Erc20Amount(
 			Symbol:   symbol,
 			Decimals: decimals,
 			Metadata: map[string]interface{}{
-				"contract_address": addr,
+				"contractAddress": addr,
 			},
 		},
 	}

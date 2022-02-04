@@ -74,7 +74,7 @@ func (s AccountService) AccountBalance(
 	}
 
 	for _, currency := range req.Currencies {
-		value, ok := currency.Metadata["contract_address"]
+		value, ok := currency.Metadata["contractAddress"]
 		if !ok {
 			if types.Hash(currency) == types.Hash(mapper.AvaxCurrency) {
 				balances = append(balances, mapper.AvaxAmount(avaxBalance))

@@ -54,7 +54,7 @@ func (c *ContractClient) GetContractCurrency(addr common.Address, erc20 bool) (*
 		Symbol:   symbol,
 		Decimals: int32(decimals),
 		Metadata: map[string]interface{}{
-			"contract_address": addr,
+			"contractAddress": addr,
 		},
 	}
 
