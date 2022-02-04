@@ -78,8 +78,8 @@ func (s ConstructionService) ConstructionMetadata(
 		nonce = input.Nonce.Uint64()
 	}
 
-	gasPrice := input.GasPrice
-	if gasPrice == nil {
+	var gasPrice *big.Int
+	if input.GasPrice == nil {
 		if gasPrice, err = s.client.SuggestGasPrice(ctx); err != nil {
 			return nil, wrapError(errClientError, err)
 		}
@@ -91,6 +91,8 @@ func (s ConstructionService) ConstructionMetadata(
 			)
 			newGasPrice.Int(gasPrice)
 		}
+	} else {
+		gasPrice = input.GasPrice
 	}
 
 	var gasLimit uint64
