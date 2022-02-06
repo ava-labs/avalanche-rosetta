@@ -10,7 +10,6 @@ import (
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
 	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 )
 
@@ -20,18 +19,16 @@ const (
 	zeroAddress            = "0x0000000000000000000000000000000000000000000000000000000000000000"
 )
 
-var (
-	x2crate = big.NewInt(1000000000) //nolint:gomnd
-)
+var x2crate = big.NewInt(1000000000)
 
 func Transaction(
 	header *ethtypes.Header,
 	tx *ethtypes.Transaction,
 	msg *ethtypes.Message,
 	receipt *ethtypes.Receipt,
-	trace *client.Call,
-	flattenedTrace []*client.FlatCall,
-	client client.Client,
+	trace *clientTypes.Call,
+	flattenedTrace []*clientTypes.FlatCall,
+	client clientTypes.Client,
 	isAnalyticsMode bool,
 	standardModeWhiteList []string,
 	includeUnknownTokens bool,
@@ -264,7 +261,7 @@ func CrossChainTransactions(
 }
 
 // MempoolTransactionsIDs returns a list of transction IDs in the mempool
-func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.TransactionIdentifier {
+func MempoolTransactionsIDs(accountMap clientTypes.TxAccountMap) []*types.TransactionIdentifier {
 	result := []*types.TransactionIdentifier{}
 
 	for _, txNonceMap := range accountMap {
@@ -281,9 +278,8 @@ func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.Transaction
 	return result
 }
 
-// nolint:gocognit
-func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
-	var ops []*types.Operation
+func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation {
+	ops := []*types.Operation{}
 	if len(trace) == 0 {
 		return ops
 	}
