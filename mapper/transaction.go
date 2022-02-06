@@ -31,7 +31,6 @@ func Transaction(
 	receipt *ethtypes.Receipt,
 	trace *client.Call,
 	flattenedTrace []*client.FlatCall,
-	transferLogs []ethtypes.Log,
 	client client.Client,
 	isAnalyticsMode bool,
 	standardModeWhiteList []string,
@@ -74,8 +73,7 @@ func Transaction(
 
 	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
-	// Logs will be empty if in standard mode and token whitelist is empty
-	for _, transferLog := range transferLogs {
+	for _, transferLog := range receipt.Logs {
 		// If in standard mode, token address must be whitelisted
 		if !isAnalyticsMode && !EqualFoldContains(standardModeWhiteList, transferLog.Address.String()) {
 			continue
@@ -438,7 +436,7 @@ func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
 	return ops
 }
 
-func parseErc20Txs(transferLog ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
+func parseErc20Txs(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
@@ -502,7 +500,7 @@ func parseErc20Txs(transferLog ethtypes.Log, currency *clientTypes.ContractCurre
 	return ops
 }
 
-func parseErc721Txs(transferLog ethtypes.Log, opsLen int64) []*types.Operation {
+func parseErc721Txs(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
