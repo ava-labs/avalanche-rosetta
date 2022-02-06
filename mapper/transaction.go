@@ -17,6 +17,8 @@ const (
 	topicsInErc721Transfer = 4
 	topicsInErc20Transfer  = 3
 	zeroAddress            = "0x0000000000000000000000000000000000000000000000000000000000000000"
+
+	transferMethodHash = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 )
 
 var x2crate = big.NewInt(1000000000)
@@ -70,15 +72,28 @@ func Transaction(
 
 	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
-	for _, transferLog := range receipt.Logs {
+	for _, log := range receipt.Logs {
+		transfer := false
+		for _, topic := range log.Topics {
+			if topic.String() == transferMethodHash {
+				transfer = true
+				break
+			}
+		}
+
+		// Only check transfer logs
+		if !transfer {
+			continue
+		}
+
 		// If in standard mode, token address must be whitelisted
-		if !isAnalyticsMode && !EqualFoldContains(standardModeWhiteList, transferLog.Address.String()) {
+		if !isAnalyticsMode && !EqualFoldContains(standardModeWhiteList, log.Address.String()) {
 			continue
 		}
 
 		// ERC721 index the value in the transfer event.  ERC20's do not
-		if len(transferLog.Topics) == topicsInErc721Transfer {
-			currency, err := client.GetContractCurrency(transferLog.Address, false)
+		if len(log.Topics) == topicsInErc721Transfer {
+			currency, err := client.GetContractCurrency(log.Address, false)
 			if err != nil {
 				return nil, err
 			}
@@ -88,21 +103,21 @@ func Transaction(
 				continue
 			}
 
-			erc721txs := parseErc721Txs(transferLog, int64(len(ops)))
+			erc721txs := parseErc721Txs(log, int64(len(ops)))
 			ops = append(ops, erc721txs...)
 		} else {
-			currency, err := client.GetContractCurrency(transferLog.Address, true)
+			currency, err := client.GetContractCurrency(log.Address, true)
 			if err != nil {
 				return nil, err
 			}
 
 			// Don't include default tokens if setting is not enabled
 			if (!includeUnknownTokens && currency.Symbol == clientTypes.UnknownERC20Symbol) ||
-				(len(transferLog.Topics) != topicsInErc20Transfer) {
+				(len(log.Topics) != topicsInErc20Transfer) {
 				continue
 			}
 
-			erc20txs := parseErc20Txs(transferLog, currency, int64(len(ops)))
+			erc20txs := parseErc20Txs(log, currency, int64(len(ops)))
 			ops = append(ops, erc20txs...)
 		}
 	}
