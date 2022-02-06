@@ -73,16 +73,8 @@ func Transaction(
 	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
 	for _, log := range receipt.Logs {
-		transfer := false
-		for _, topic := range log.Topics {
-			if topic.String() == transferMethodHash {
-				transfer = true
-				break
-			}
-		}
-
 		// Only check transfer logs
-		if !transfer {
+		if len(log.Topics) == 0 || log.Topics[0].String() != transferMethodHash {
 			continue
 		}
 
