@@ -94,7 +94,8 @@ func Transaction(
 				continue
 			}
 
-			ops = append(ops, parseErc721Txs(log, int64(len(ops)))...)
+			erc721Ops := erc721Ops(log, int64(len(ops)))
+			ops = append(ops, erc721Ops...)
 		case topicsInErc20Transfer:
 			currency, err := client.GetContractCurrency(log.Address, true)
 			if err != nil {
@@ -105,7 +106,8 @@ func Transaction(
 				continue
 			}
 
-			ops = append(ops, parseErc20Txs(log, currency, int64(len(ops)))...)
+			erc20Ops := erc20Ops(log, currency, int64(len(ops)))
+			ops = append(ops, erc20Ops...)
 		default:
 		}
 	}
@@ -436,7 +438,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 	return ops
 }
 
-func parseErc20Txs(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
+func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
@@ -500,7 +502,7 @@ func parseErc20Txs(transferLog *ethtypes.Log, currency *clientTypes.ContractCurr
 	return ops
 }
 
-func parseErc721Txs(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
+func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
