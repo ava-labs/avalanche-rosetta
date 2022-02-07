@@ -146,7 +146,7 @@ func (s *BlockService) BlockTransaction(
 	}
 
 	transaction, terr := s.fetchTransaction(ctx, tx, header, trace, flattened)
-	if err != nil {
+	if terr != nil {
 		return nil, terr
 	}
 
@@ -162,10 +162,13 @@ func (s *BlockService) fetchTransactions(
 	transactions := []*types.Transaction{}
 
 	trace, flattened, err := s.client.TraceBlockByHash(ctx, block.Hash().String())
+	if err != nil {
+		return nil, wrapError(errClientError, err)
+	}
 
 	for i, tx := range block.Transactions() {
 		transaction, terr := s.fetchTransaction(ctx, tx, block.Header(), trace[i], flattened[i])
-		if err != nil {
+		if terr != nil {
 			return nil, terr
 		}
 
