@@ -51,11 +51,12 @@ func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, [
 	var result *Call
 	args := []interface{}{hash, c.traceConfig}
 
-	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceTransaction", args, &result)
-	if err != nil {
+	if err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceTransaction", args, &result); err != nil {
 		return nil, nil, err
 	}
+
 	flattened := result.init()
+
 	return result, flattened, nil
 }
 
@@ -65,9 +66,7 @@ func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call,
 	}
 
 	args := []interface{}{hash, c.traceConfig}
-
-	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceBlockByHash", args, &raw)
-	if err != nil {
+	if err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceBlockByHash", args, &raw); err != nil {
 		return nil, nil, err
 	}
 
@@ -78,5 +77,5 @@ func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call,
 		flattened[i] = tx.Call.init()
 	}
 
-	return result, flattened, err
+	return result, flattened, nil
 }
