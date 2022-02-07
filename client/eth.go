@@ -52,7 +52,7 @@ func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 
 // TraceTransaction returns a transaction trace
 func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, []*FlatCall, error) {
-	var result *Call
+	var result Call
 	args := []interface{}{hash, c.traceConfig}
 
 	if err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceTransaction", args, &result); err != nil {
@@ -61,7 +61,7 @@ func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, [
 
 	flattened := result.init()
 
-	return result, flattened, nil
+	return &result, flattened, nil
 }
 
 // TraceBlockByHash returns the transaction traces of all transactions in the block
