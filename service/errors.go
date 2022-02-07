@@ -7,9 +7,9 @@ import (
 var (
 	// Errors lists all available error types
 	Errors = []*types.Error{
+		errNotReady,
 		errNotImplemented,
 		errNotSupported,
-		errNotReady,
 		errUnavailableOffline,
 		errInternalError,
 		errInvalidInput,
@@ -17,6 +17,7 @@ var (
 		errBlockInvalidInput,
 		errBlockNotFound,
 		errCallInvalidMethod,
+		errCallInvalidParams,
 	}
 
 	// General errors
