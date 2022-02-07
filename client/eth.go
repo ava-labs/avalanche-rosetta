@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	tracer    = "callTracer"
-	prefixEth = "/ext/bc/C/rpc"
+	tracer        = "callTracer"
+	tracerTimeout = "180s"
+	prefixEth     = "/ext/bc/C/rpc"
 )
 
 // EthClient provides access to Coreth API
