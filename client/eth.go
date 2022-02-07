@@ -60,14 +60,22 @@ func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, [
 }
 
 func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call, [][]*FlatCall, error) {
-	var result []*Call
+	var raw []struct {
+		*Call `json:"result"`
+	}
+
 	args := []interface{}{hash, c.traceConfig}
 
-	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceBlockByHash", args, &result)
+	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceBlockByHash", args, &raw)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	flattened := make([][]*FlatCall, len(result))
-	for i, tx := range result {
-		flattened[i] = tx.init()
+	result := make([]*Call, len(raw))
+	flattened := make([][]*FlatCall, len(raw))
+	for i, tx := range raw {
+		result[i] = tx.Call
+		flattened[i] = tx.Call.init()
 	}
 
 	return result, flattened, err
