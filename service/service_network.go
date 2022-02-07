@@ -6,6 +6,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/coinbase/rosetta-sdk-go/utils"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -90,7 +91,7 @@ func (s *NetworkService) NetworkStatus(
 	}
 
 	return &types.NetworkStatusResponse{
-		CurrentBlockTimestamp: int64(blockHeader.Time * seconds2milliseconds),
+		CurrentBlockTimestamp: int64(blockHeader.Time * utils.MillisecondsInSecond),
 		CurrentBlockIdentifier: &types.BlockIdentifier{
 			Index: blockHeader.Number.Int64(),
 			Hash:  blockHeader.Hash().String(),
