@@ -14,14 +14,12 @@ var (
 	prefixEth     = "/ext/bc/C/rpc"
 )
 
-// EthClient provides access to Coreth API
 type EthClient struct {
 	ethclient.Client
 	rpc         rpc.Requester
 	traceConfig *tracers.TraceConfig
 }
 
-// NewEthClient returns a new EVM client
 func NewEthClient(endpoint string) (*EthClient, error) {
 	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 
@@ -40,7 +38,6 @@ func NewEthClient(endpoint string) (*EthClient, error) {
 	}, nil
 }
 
-// TxPoolContent returns the tx pool content
 func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 	content := &TxPoolContent{}
 	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "txpool_inspect", nil, content)
@@ -50,9 +47,8 @@ func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 	return content, err
 }
 
-// TraceTransaction returns a transaction trace
 func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, []*FlatCall, error) {
-	result := &Call{}
+	var result *Call
 	args := []interface{}{hash, c.traceConfig}
 
 	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceTransaction", args, &result)
@@ -61,4 +57,18 @@ func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, [
 	}
 	flattened := result.init()
 	return result, flattened, nil
+}
+
+func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call, [][]*FlatCall, error) {
+	var result []*Call
+	args := []interface{}{hash, c.traceConfig}
+
+	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceBlockByHash", args, &result)
+
+	flattened := make([][]*FlatCall, len(result))
+	for i, tx := range result {
+		flattened[i] = tx.init()
+	}
+
+	return result, flattened, err
 }

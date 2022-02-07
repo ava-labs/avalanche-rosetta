@@ -140,7 +140,12 @@ func (s *BlockService) BlockTransaction(
 		return nil, nil
 	}
 
-	transaction, terr := s.fetchTransaction(ctx, tx, header)
+	trace, flattened, err := s.client.TraceTransaction(ctx, tx.Hash().String())
+	if err != nil {
+		return nil, wrapError(errClientError, err)
+	}
+
+	transaction, terr := s.fetchTransaction(ctx, tx, header, trace, flattened)
 	if err != nil {
 		return nil, terr
 	}
@@ -156,11 +161,14 @@ func (s *BlockService) fetchTransactions(
 ) ([]*types.Transaction, *types.Error) {
 	transactions := []*types.Transaction{}
 
-	for _, tx := range block.Transactions() {
-		transaction, err := s.fetchTransaction(ctx, tx, block.Header())
+	trace, flattened, err := s.client.TraceBlockByHash(ctx, block.Hash().String())
+
+	for i, tx := range block.Transactions() {
+		transaction, terr := s.fetchTransaction(ctx, tx, block.Header(), trace[i], flattened[i])
 		if err != nil {
-			return nil, err
+			return nil, terr
 		}
+
 		transactions = append(transactions, transaction)
 	}
 
@@ -171,6 +179,8 @@ func (s *BlockService) fetchTransaction(
 	ctx context.Context,
 	tx *corethTypes.Transaction,
 	header *corethTypes.Header,
+	trace *client.Call,
+	flattened []*client.FlatCall,
 ) (*types.Transaction, *types.Error) {
 	msg, err := tx.AsMessage(s.config.Signer(), header.BaseFee)
 	if err != nil {
@@ -178,11 +188,6 @@ func (s *BlockService) fetchTransaction(
 	}
 
 	receipt, err := s.client.TransactionReceipt(ctx, tx.Hash())
-	if err != nil {
-		return nil, wrapError(errClientError, err)
-	}
-
-	trace, flattened, err := s.client.TraceTransaction(ctx, tx.Hash().String())
 	if err != nil {
 		return nil, wrapError(errClientError, err)
 	}
