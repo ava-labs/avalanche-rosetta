@@ -7,6 +7,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/coinbase/rosetta-sdk-go/utils"
 
 	corethTypes "github.com/ava-labs/coreth/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -106,7 +107,7 @@ func (s *BlockService) Block(
 		Block: &types.Block{
 			BlockIdentifier:       blockIdentifier,
 			ParentBlockIdentifier: parentBlockIdentifier,
-			Timestamp:             int64(block.Time() * seconds2milliseconds),
+			Timestamp:             int64(block.Time() * utils.MillisecondsInSecond),
 			Transactions:          append(transactions, crosstx...),
 			Metadata:              mapper.BlockMetadata(block),
 		},
