@@ -6,6 +6,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/coinbase/rosetta-sdk-go/utils"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -42,30 +43,30 @@ func (s AccountService) AccountBalance(
 		return nil, wrapError(errInvalidInput, "account identifier is not provided")
 	}
 
-	header, err := blockHeaderFromInput(ctx, s.client, req.BlockIdentifier)
-	if err != nil {
-		return nil, wrapError(errInternalError, err)
+	header, terr := blockHeaderFromInput(ctx, s.client, req.BlockIdentifier)
+	if terr != nil {
+		return nil, terr
 	}
 
 	address := ethcommon.HexToAddress(req.AccountIdentifier.Address)
 
-	nonce, nonceErr := s.client.NonceAt(ctx, address, header.Number)
-	if nonceErr != nil {
-		return nil, wrapError(errClientError, nonceErr)
+	nonce, err := s.client.NonceAt(ctx, address, header.Number)
+	if err != nil {
+		return nil, wrapError(errClientError, err)
 	}
 
 	metadata := &accountMetadata{
 		Nonce: nonce,
 	}
 
-	metadataMap, metadataErr := marshalJSONMap(metadata)
+	metadataMap, err := marshalJSONMap(metadata)
 	if err != nil {
-		return nil, wrapError(errInternalError, metadataErr)
+		return nil, wrapError(errInternalError, err)
 	}
 
-	avaxBalance, balanceErr := s.client.BalanceAt(ctx, address, header.Number)
-	if balanceErr != nil {
-		return nil, wrapError(errInternalError, balanceErr)
+	avaxBalance, err := s.client.BalanceAt(ctx, address, header.Number)
+	if err != nil {
+		return nil, wrapError(errClientError, err)
 	}
 
 	balances := []*types.Amount{}
@@ -76,12 +77,11 @@ func (s AccountService) AccountBalance(
 	for _, currency := range req.Currencies {
 		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
 		if !ok {
-			if types.Hash(currency) == types.Hash(mapper.AvaxCurrency) {
+			if utils.Equal(currency, mapper.AvaxCurrency) {
 				balances = append(balances, mapper.AvaxAmount(avaxBalance))
 				continue
 			}
-			return nil, wrapError(errCallInvalidParams,
-				fmt.Errorf("currencies outside of avax must have contractAddress in metadata field"))
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies outside of avax must have contractAddress in metadata field"))
 		}
 
 		identifierAddress := req.AccountIdentifier.Address
@@ -91,7 +91,7 @@ func (s AccountService) AccountBalance(
 
 		data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
 		if err != nil {
-			return nil, wrapError(errCallInvalidParams, fmt.Errorf("failed to decode contractAddress in metadata field"))
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("marshalling balanceOf call msg data failed with %w", err))
 		}
 
 		contractAddress := ethcommon.HexToAddress(value.(string))
@@ -106,16 +106,14 @@ func (s AccountService) AccountBalance(
 		balances = append(balances, amount)
 	}
 
-	resp := &types.AccountBalanceResponse{
+	return &types.AccountBalanceResponse{
 		BlockIdentifier: &types.BlockIdentifier{
 			Index: header.Number.Int64(),
 			Hash:  header.Hash().String(),
 		},
 		Balances: balances,
 		Metadata: metadataMap,
-	}
-
-	return resp, nil
+	}, nil
 }
 
 // AccountCoins implements the /account/coins endpoint
