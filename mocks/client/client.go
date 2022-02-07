@@ -162,29 +162,6 @@ func (_m *Client) EstimateGas(_a0 context.Context, _a1 interfaces.CallMsg) (uint
 	return r0, r1
 }
 
-// EvmTransferLogs provides a mock function with given fields: _a0, _a1, _a2
-func (_m *Client) EvmTransferLogs(_a0 context.Context, _a1 common.Hash, _a2 common.Hash) ([]types.Log, error) {
-	ret := _m.Called(_a0, _a1, _a2)
-
-	var r0 []types.Log
-	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, common.Hash) []types.Log); ok {
-		r0 = rf(_a0, _a1, _a2)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]types.Log)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, common.Hash, common.Hash) error); ok {
-		r1 = rf(_a0, _a1, _a2)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetContractCurrency provides a mock function with given fields: _a0, _a1
 func (_m *Client) GetContractCurrency(_a0 common.Address, _a1 bool) (*rosetta_sdk_gotypes.Currency, error) {
 	ret := _m.Called(_a0, _a1)

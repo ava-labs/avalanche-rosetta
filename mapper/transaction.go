@@ -17,6 +17,8 @@ const (
 	topicsInErc721Transfer = 4
 	topicsInErc20Transfer  = 3
 	zeroAddress            = "0x0000000000000000000000000000000000000000000000000000000000000000"
+
+	transferMethodHash = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 )
 
 var x2crate = big.NewInt(1000000000)
@@ -28,7 +30,6 @@ func Transaction(
 	receipt *ethtypes.Receipt,
 	trace *clientTypes.Call,
 	flattenedTrace []*clientTypes.FlatCall,
-	transferLogs []ethtypes.Log,
 	client clientTypes.Client,
 	isAnalyticsMode bool,
 	standardModeWhiteList []string,
@@ -71,43 +72,46 @@ func Transaction(
 
 	traceOps := traceOps(flattenedTrace, len(feeOps))
 	ops = append(ops, traceOps...)
-	// Logs will be empty if in standard mode and token whitelist is empty
-	for _, transferLog := range transferLogs {
-		// If in standard mode, token address must be whitelisted
-		if !isAnalyticsMode && !EqualFoldContains(standardModeWhiteList, transferLog.Address.String()) {
+	for _, log := range receipt.Logs {
+		// Only check transfer logs
+		if len(log.Topics) == 0 || log.Topics[0].String() != transferMethodHash {
 			continue
 		}
 
-		// ERC721 index the value in the transfer event.  ERC20's do not
-		if len(transferLog.Topics) == topicsInErc721Transfer {
-			currency, err := client.GetContractCurrency(transferLog.Address, false)
+		// If in standard mode, token address must be whitelisted
+		if !isAnalyticsMode && !EqualFoldContains(standardModeWhiteList, log.Address.String()) {
+			continue
+		}
+
+		switch len(log.Topics) {
+		case topicsInErc721Transfer:
+			currency, err := client.GetContractCurrency(log.Address, false)
 			if err != nil {
 				return nil, err
 			}
 
-			// Don't include default tokens if setting is not enabled
-			if !includeUnknownTokens && currency.Symbol == clientTypes.UnknownERC721Symbol {
+			if currency.Symbol == clientTypes.UnknownERC721Symbol && !includeUnknownTokens {
 				continue
 			}
 
-			erc721txs := parseErc721Txs(transferLog, int64(len(ops)))
-			ops = append(ops, erc721txs...)
-		} else {
-			currency, err := client.GetContractCurrency(transferLog.Address, true)
+			erc721Ops := erc721Ops(log, int64(len(ops)))
+			ops = append(ops, erc721Ops...)
+		case topicsInErc20Transfer:
+			currency, err := client.GetContractCurrency(log.Address, true)
 			if err != nil {
 				return nil, err
 			}
 
-			// Don't include default tokens if setting is not enabled
-			if (!includeUnknownTokens && currency.Symbol == clientTypes.UnknownERC20Symbol) ||
-				(len(transferLog.Topics) != topicsInErc20Transfer) {
+			if currency.Symbol == clientTypes.UnknownERC20Symbol && !includeUnknownTokens {
 				continue
 			}
 
-			erc20txs := parseErc20Txs(transferLog, currency, int64(len(ops)))
-			ops = append(ops, erc20txs...)
+			erc20Ops := erc20Ops(log, currency, int64(len(ops)))
+			ops = append(ops, erc20Ops...)
+		default:
 		}
 	}
+
 	return &types.Transaction{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: tx.Hash().String(),
@@ -434,7 +438,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 	return ops
 }
 
-func parseErc20Txs(transferLog ethtypes.Log, currency *types.Currency, opsLen int64) []*types.Operation {
+func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
@@ -498,7 +502,7 @@ func parseErc20Txs(transferLog ethtypes.Log, currency *types.Currency, opsLen in
 	return ops
 }
 
-func parseErc721Txs(transferLog ethtypes.Log, opsLen int64) []*types.Operation {
+func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
