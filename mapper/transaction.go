@@ -83,36 +83,33 @@ func Transaction(
 			continue
 		}
 
-		// ERC721 index the value in the transfer event.  ERC20's do not
-		if len(log.Topics) == topicsInErc721Transfer {
+		switch len(log.Topics) {
+		case topicsInErc721Transfer:
 			currency, err := client.GetContractCurrency(log.Address, false)
 			if err != nil {
 				return nil, err
 			}
 
-			// Don't include default tokens if setting is not enabled
-			if !includeUnknownTokens && currency.Symbol == clientTypes.UnknownERC721Symbol {
+			if currency.Symbol == clientTypes.UnknownERC721Symbol && !includeUnknownTokens {
 				continue
 			}
 
-			erc721txs := parseErc721Txs(log, int64(len(ops)))
-			ops = append(ops, erc721txs...)
-		} else {
+			ops = append(ops, parseErc721Txs(log, int64(len(ops)))...)
+		case topicsInErc20Transfer:
 			currency, err := client.GetContractCurrency(log.Address, true)
 			if err != nil {
 				return nil, err
 			}
 
-			// Don't include default tokens if setting is not enabled
-			if (!includeUnknownTokens && currency.Symbol == clientTypes.UnknownERC20Symbol) ||
-				(len(log.Topics) != topicsInErc20Transfer) {
+			if currency.Symbol == clientTypes.UnknownERC20Symbol && !includeUnknownTokens {
 				continue
 			}
 
-			erc20txs := parseErc20Txs(log, currency, int64(len(ops)))
-			ops = append(ops, erc20txs...)
+			ops = append(ops, parseErc20Txs(log, currency, int64(len(ops)))...)
+		default:
 		}
 	}
+
 	return &types.Transaction{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: tx.Hash().String(),
