@@ -9,10 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-const (
-	seconds2milliseconds  = 1000
-	BalanceOfMethodPrefix = "0x70a08231000000000000000000000000"
-)
+const BalanceOfMethodPrefix = "0x70a08231000000000000000000000000"
 
 type options struct {
 	From                   string          `json:"from"`
