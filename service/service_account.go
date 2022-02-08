@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
@@ -81,7 +82,7 @@ func (s AccountService) AccountBalance(
 				balances = append(balances, mapper.AvaxAmount(avaxBalance))
 				continue
 			}
-			return nil, wrapError(errCallInvalidParams, fmt.Errorf("currencies outside of avax must have contractAddress in metadata field"))
+			return nil, wrapError(errCallInvalidParams, errors.New("non-avax currencies must specify contractAddress in metadata"))
 		}
 
 		identifierAddress := req.AccountIdentifier.Address
@@ -91,7 +92,7 @@ func (s AccountService) AccountBalance(
 
 		data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
 		if err != nil {
-			return nil, wrapError(errCallInvalidParams, fmt.Errorf("marshalling balanceOf call msg data failed with %w", err))
+			return nil, wrapError(errCallInvalidParams, fmt.Errorf("%w: marshalling balanceOf call msg data failed", err))
 		}
 
 		contractAddress := ethcommon.HexToAddress(value.(string))
