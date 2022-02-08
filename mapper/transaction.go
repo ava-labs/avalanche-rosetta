@@ -9,7 +9,7 @@ import (
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 
 	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 )
@@ -443,8 +443,8 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
-	addressFrom := ethcommon.HexToAddress(transferLog.Topics[1].Hex())
-	addressTo := ethcommon.HexToAddress(transferLog.Topics[2].Hex())
+	addressFrom := common.HexToAddress(transferLog.Topics[1].Hex())
+	addressTo := common.HexToAddress(transferLog.Topics[2].Hex())
 
 	if addressFrom.Hex() == zeroAddress {
 		mintOp := types.Operation{
@@ -507,8 +507,8 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 	ops := []*types.Operation{}
 
 	contractAddress := transferLog.Address
-	addressFrom := ethcommon.HexToAddress(transferLog.Topics[1].Hex())
-	addressTo := ethcommon.HexToAddress(transferLog.Topics[2].Hex())
+	addressFrom := common.HexToAddress(transferLog.Topics[1].Hex())
+	addressTo := common.HexToAddress(transferLog.Topics[2].Hex())
 	erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
 	metadata := map[string]interface{}{
 		ContractAddressMetadata:  contractAddress.String(),
