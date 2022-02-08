@@ -23,7 +23,7 @@ const (
 
 var (
 	x2crate     = big.NewInt(1000000000)
-	zeroAddress = common.HexToAddress("0").Hex()
+	zeroAddress = common.HexToAddress("0")
 )
 
 func Transaction(
@@ -448,7 +448,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 	addressFrom := common.HexToAddress(transferLog.Topics[1].Hex())
 	addressTo := common.HexToAddress(transferLog.Topics[2].Hex())
 
-	if addressFrom.Hex() == zeroAddress {
+	if addressFrom.Hex() == zeroAddress.Hex() {
 		mintOp := types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
@@ -462,7 +462,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 		return ops
 	}
 
-	if addressTo.Hex() == zeroAddress {
+	if addressTo.Hex() == zeroAddress.Hex() {
 		burnOp := types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
@@ -517,7 +517,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		IndexTransferredMetadata: erc721Index.String(),
 	}
 
-	if addressFrom.Hex() == zeroAddress {
+	if addressFrom.Hex() == zeroAddress.Hex() {
 		mintOp := types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
@@ -531,7 +531,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		return ops
 	}
 
-	if addressTo.Hex() == zeroAddress {
+	if addressTo.Hex() == zeroAddress.Hex() {
 		burnOp := types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
