@@ -52,13 +52,35 @@ func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 
 // TraceTransaction returns a transaction trace
 func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, []*FlatCall, error) {
-	result := &Call{}
+	var result Call
 	args := []interface{}{hash, c.traceConfig}
 
-	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceTransaction", args, &result)
-	if err != nil {
+	if err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceTransaction", args, &result); err != nil {
 		return nil, nil, err
 	}
+
 	flattened := result.init()
+
+	return &result, flattened, nil
+}
+
+// TraceBlockByHash returns the transaction traces of all transactions in the block
+func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call, [][]*FlatCall, error) {
+	var raw []struct {
+		*Call `json:"result"`
+	}
+
+	args := []interface{}{hash, c.traceConfig}
+	if err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceBlockByHash", args, &raw); err != nil {
+		return nil, nil, err
+	}
+
+	result := make([]*Call, len(raw))
+	flattened := make([][]*FlatCall, len(raw))
+	for i, tx := range raw {
+		result[i] = tx.Call
+		flattened[i] = tx.Call.init()
+	}
+
 	return result, flattened, nil
 }
