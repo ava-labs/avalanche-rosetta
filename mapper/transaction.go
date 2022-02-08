@@ -439,133 +439,136 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 }
 
 func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
-	ops := []*types.Operation{}
-
 	contractAddress := transferLog.Address
-	addressFrom := transferLog.Topics[1]
-	addressTo := transferLog.Topics[2]
+	fromAddr := transferLog.Topics[1]
+	toAddr := transferLog.Topics[2]
 
-	if addressFrom.Hex() == zeroAddress {
-		mintOp := types.Operation{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: opsLen,
-			},
-			Status:  types.String(StatusSuccess),
-			Type:    OpErc20Mint,
-			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
-			Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
-		}
-		ops = append(ops, &mintOp)
-		return ops
-	}
-
-	if addressTo.Hex() == zeroAddress {
-		burnOp := types.Operation{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: opsLen,
-			},
-			Status:  types.String(StatusSuccess),
-			Type:    OpErc20Burn,
-			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
-			Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
-		}
-		ops = append(ops, &burnOp)
-		return ops
-	}
-
-	sendingOp := types.Operation{
-		OperationIdentifier: &types.OperationIdentifier{
-			Index: opsLen,
-		},
-		Status:  types.String(StatusSuccess),
-		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
-		Account: Account(ConvertEVMTopicHashToAddress(&addressFrom)),
-	}
-	receiptOp := types.Operation{
-		OperationIdentifier: &types.OperationIdentifier{
-			Index: opsLen + 1,
-		},
-		Status:  types.String(StatusSuccess),
-		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
-		Account: Account(ConvertEVMTopicHashToAddress(&addressTo)),
-		RelatedOperations: []*types.OperationIdentifier{
+	// Mint
+	if fromAddr.Hex() == zeroAddress {
+		return []*types.Operation{
 			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: opsLen,
+				},
+				Status:  types.String(StatusSuccess),
+				Type:    OpErc20Mint,
+				Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
+				Account: Account(ConvertEVMTopicHashToAddress(&toAddr)),
+			},
+		}
+	}
+
+	// Burn
+	if toAddr.Hex() == zeroAddress {
+		return []*types.Operation{
+			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: opsLen,
+				},
+				Status:  types.String(StatusSuccess),
+				Type:    OpErc20Burn,
+				Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
+				Account: Account(ConvertEVMTopicHashToAddress(&fromAddr)),
+			},
+		}
+	}
+
+	return []*types.Operation{
+		// Send
+		{
+			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
+			},
+			Status:  types.String(StatusSuccess),
+			Type:    OpErc20Transfer,
+			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
+			Account: Account(ConvertEVMTopicHashToAddress(&fromAddr)),
+		},
+
+		// Receive
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opsLen + 1,
+			},
+			Status:  types.String(StatusSuccess),
+			Type:    OpErc20Transfer,
+			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
+			Account: Account(ConvertEVMTopicHashToAddress(&toAddr)),
+			RelatedOperations: []*types.OperationIdentifier{
+				{
+					Index: opsLen,
+				},
 			},
 		},
 	}
-	ops = append(ops, &sendingOp)
-	ops = append(ops, &receiptOp)
-
-	return ops
 }
 
 func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
-	ops := []*types.Operation{}
-
 	contractAddress := transferLog.Address
-	addressFrom := transferLog.Topics[1]
-	addressTo := transferLog.Topics[2]
+	fromAddr := transferLog.Topics[1]
+	toAddr := transferLog.Topics[2]
 	erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
 	metadata := map[string]interface{}{
 		ContractAddressMetadata:  contractAddress.String(),
 		IndexTransferredMetadata: erc721Index.String(),
 	}
 
-	if addressFrom.Hex() == zeroAddress {
-		mintOp := types.Operation{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: opsLen,
-			},
-			Status:   types.String(StatusSuccess),
-			Type:     OpErc721Mint,
-			Account:  Account(ConvertEVMTopicHashToAddress(&addressTo)),
-			Metadata: metadata,
-		}
-		ops = append(ops, &mintOp)
-		return ops
-	}
-
-	if addressTo.Hex() == zeroAddress {
-		burnOp := types.Operation{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: opsLen,
-			},
-			Status:   types.String(StatusSuccess),
-			Type:     OpErc721Burn,
-			Account:  Account(ConvertEVMTopicHashToAddress(&addressFrom)),
-			Metadata: metadata,
-		}
-		ops = append(ops, &burnOp)
-		return ops
-	}
-
-	sendingOp := types.Operation{
-		OperationIdentifier: &types.OperationIdentifier{
-			Index: opsLen,
-		},
-		Status:   types.String(StatusSuccess),
-		Type:     OpErc721TransferSender,
-		Account:  Account(ConvertEVMTopicHashToAddress(&addressFrom)),
-		Metadata: metadata,
-	}
-	receiptOp := types.Operation{
-		OperationIdentifier: &types.OperationIdentifier{
-			Index: opsLen + 1,
-		},
-		Status:   types.String(StatusSuccess),
-		Type:     OpErc721TransferReceive,
-		Account:  Account(ConvertEVMTopicHashToAddress(&addressTo)),
-		Metadata: metadata,
-		RelatedOperations: []*types.OperationIdentifier{
+	// Mint
+	if fromAddr.Hex() == zeroAddress {
+		return []*types.Operation{
 			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: opsLen,
+				},
+				Status:   types.String(StatusSuccess),
+				Type:     OpErc721Mint,
+				Account:  Account(ConvertEVMTopicHashToAddress(&toAddr)),
+				Metadata: metadata,
+			},
+		}
+	}
+
+	// Burn
+	if toAddr.Hex() == zeroAddress {
+		return []*types.Operation{
+			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: opsLen,
+				},
+				Status:   types.String(StatusSuccess),
+				Type:     OpErc721Burn,
+				Account:  Account(ConvertEVMTopicHashToAddress(&fromAddr)),
+				Metadata: metadata,
+			},
+		}
+	}
+
+	return []*types.Operation{
+		// Send
+		{
+			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
+			},
+			Status:   types.String(StatusSuccess),
+			Type:     OpErc721TransferSender,
+			Account:  Account(ConvertEVMTopicHashToAddress(&fromAddr)),
+			Metadata: metadata,
+		},
+
+		// Receive
+		{
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: opsLen + 1,
+			},
+			Status:   types.String(StatusSuccess),
+			Type:     OpErc721TransferReceive,
+			Account:  Account(ConvertEVMTopicHashToAddress(&toAddr)),
+			Metadata: metadata,
+			RelatedOperations: []*types.OperationIdentifier{
+				{
+					Index: opsLen,
+				},
 			},
 		},
 	}
-	ops = append(ops, &sendingOp)
-	ops = append(ops, &receiptOp)
-	return ops
 }
