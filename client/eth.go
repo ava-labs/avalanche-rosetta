@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/ava-labs/coreth/eth/tracers"
 	"github.com/ava-labs/coreth/ethclient"
-	"github.com/ethereum/go-ethereum/eth/tracers"
 )
 
 var (
+	tracer        = "callTracer"
 	tracerTimeout = "180s"
 	prefixEth     = "/ext/bc/C/rpc"
 )
@@ -35,7 +36,7 @@ func NewEthClient(endpoint string) (*EthClient, error) {
 		rpc:    rpc.NewRPCRequester(endpoint),
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,
-			Tracer:  &jsTracer,
+			Tracer:  &tracer,
 		},
 	}, nil
 }
