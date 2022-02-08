@@ -17,12 +17,14 @@ import (
 const (
 	topicsInErc721Transfer = 4
 	topicsInErc20Transfer  = 3
-	zeroAddress            = "0x0000000000000000000000000000000000000000000000000000000000000000"
 
 	transferMethodHash = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 )
 
-var x2crate = big.NewInt(1000000000)
+var (
+	x2crate     = big.NewInt(1000000000)
+	zeroAddress = common.HexToAddress("0").Hex()
+)
 
 func Transaction(
 	header *ethtypes.Header,
