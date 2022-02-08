@@ -25,10 +25,10 @@ type BlockService struct {
 }
 
 // NewBlockService returns a new block servicer
-func NewBlockService(config *Config, rcpClient client.Client) server.BlockAPIServicer {
+func NewBlockService(config *Config, c client.Client) server.BlockAPIServicer {
 	return &BlockService{
 		config:       config,
-		client:       rcpClient,
+		client:       c,
 		genesisBlock: makeGenesisBlock(config.GenesisBlockHash),
 	}
 }
@@ -81,13 +81,13 @@ func (s *BlockService) Block(
 
 	if block.ParentHash().String() != s.config.GenesisBlockHash {
 		parentBlock, err := s.client.HeaderByHash(ctx, block.ParentHash())
-		if err == nil {
-			parentBlockIdentifier = &types.BlockIdentifier{
-				Index: parentBlock.Number.Int64(),
-				Hash:  parentBlock.Hash().String(),
-			}
-		} else {
+		if err != nil {
 			return nil, wrapError(errClientError, err)
+		}
+
+		parentBlockIdentifier = &types.BlockIdentifier{
+			Index: parentBlock.Number.Int64(),
+			Hash:  parentBlock.Hash().String(),
 		}
 	} else {
 		parentBlockIdentifier = s.genesisBlock.BlockIdentifier
