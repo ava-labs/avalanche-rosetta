@@ -352,6 +352,38 @@ func (_m *Client) SuggestGasPrice(_a0 context.Context) (*big.Int, error) {
 	return r0, r1
 }
 
+// TraceBlockByHash provides a mock function with given fields: _a0, _a1
+func (_m *Client) TraceBlockByHash(_a0 context.Context, _a1 string) ([]*client.Call, [][]*client.FlatCall, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 []*client.Call
+	if rf, ok := ret.Get(0).(func(context.Context, string) []*client.Call); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*client.Call)
+		}
+	}
+
+	var r1 [][]*client.FlatCall
+	if rf, ok := ret.Get(1).(func(context.Context, string) [][]*client.FlatCall); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([][]*client.FlatCall)
+		}
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, string) error); ok {
+		r2 = rf(_a0, _a1)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // TraceTransaction provides a mock function with given fields: _a0, _a1
 func (_m *Client) TraceTransaction(_a0 context.Context, _a1 string) (*client.Call, []*client.FlatCall, error) {
 	ret := _m.Called(_a0, _a1)
