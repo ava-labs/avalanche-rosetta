@@ -60,7 +60,7 @@ func (s AccountService) AccountBalance(
 		Nonce: nonce,
 	}
 
-	metadataMap, err := marshalJSONMap(metadata)
+	metadataMap, err := types.MarshalMap(metadata)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
