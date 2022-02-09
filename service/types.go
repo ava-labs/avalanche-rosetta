@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/ava-labs/avalanche-rosetta/mapper"
+	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -304,4 +306,38 @@ func has0xPrefix(str string) bool {
 type signedTransactionWrapper struct {
 	SignedTransaction []byte          `json:"signed_tx"`
 	Currency          *types.Currency `json:"currency,omitempty"`
+}
+type signedTransactionWrapperWire struct {
+	SignedTransaction []byte          `json:"signed_tx"`
+	Currency          *types.Currency `json:"currency,omitempty"`
+}
+
+func (t *signedTransactionWrapper) MarshalJSON() ([]byte, error) {
+	tw := &signedTransactionWrapperWire{
+		SignedTransaction: t.SignedTransaction,
+		Currency:          t.Currency,
+	}
+
+	return json.Marshal(tw)
+}
+
+func (t *signedTransactionWrapper) UnmarshalJSON(data []byte) error {
+	var tw signedTransactionWrapperWire
+	if err := json.Unmarshal(data, &tw); err != nil {
+		return err
+	}
+
+	if tw.SignedTransaction == nil {
+		//Check if unmarshal is empty because of legacy format
+		var signedTx ethtypes.Transaction
+		if err := signedTx.UnmarshalJSON(data); err == nil {
+			t.SignedTransaction = data
+			t.Currency = mapper.AvaxCurrency
+			return nil
+		}
+	}
+
+	t.SignedTransaction = tw.SignedTransaction
+	t.Currency = tw.Currency
+	return nil
 }

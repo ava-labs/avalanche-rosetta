@@ -212,6 +212,20 @@ func TestContructionHash(t *testing.T) {
 			resp.TransactionIdentifier.Hash,
 		)
 	})
+
+	t.Run("legacy transaction success", func(t *testing.T) {
+		signed := `{"nonce":"0x6","gasPrice":"0x6d6e2edc00","gas":"0x5208","to":"0x85ad9d1fcf50b72255e4288dca0ad29f5f509409","value":"0xde0b6b3a7640000","input":"0x","v":"0x150f6","r":"0x64d46cc17cbdbcf73b204a6979172eb3148237ecd369181b105e92b0d7fa49a7","s":"0x285063de57245f532a14b13f605bed047a9d20ebfd0db28e01bc8cc9eaac40ee","hash":"0x92ea9280c1653aa9042c7a4d3a608c2149db45064609c18b270c7c73738e2a46"}` //nolint:lll
+
+		resp, err := service.ConstructionHash(context.Background(), &types.ConstructionHashRequest{
+			SignedTransaction: signed,
+		})
+		assert.Nil(t, err)
+		assert.Equal(
+			t,
+			"0x92ea9280c1653aa9042c7a4d3a608c2149db45064609c18b270c7c73738e2a46",
+			resp.TransactionIdentifier.Hash,
+		)
+	})
 }
 
 func TestConstructionDerive(t *testing.T) {
