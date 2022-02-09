@@ -307,6 +307,7 @@ type signedTransactionWrapper struct {
 	SignedTransaction []byte          `json:"signed_tx"`
 	Currency          *types.Currency `json:"currency,omitempty"`
 }
+
 type signedTransactionWrapperWire struct {
 	SignedTransaction []byte          `json:"signed_tx"`
 	Currency          *types.Currency `json:"currency,omitempty"`
@@ -328,7 +329,7 @@ func (t *signedTransactionWrapper) UnmarshalJSON(data []byte) error {
 	}
 
 	if tw.SignedTransaction == nil {
-		//Check if unmarshal is empty because of legacy format
+		// Check if unmarshal is empty because of legacy format
 		var signedTx ethtypes.Transaction
 		if err := signedTx.UnmarshalJSON(data); err == nil {
 			t.SignedTransaction = data
