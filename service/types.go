@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -304,4 +305,31 @@ func has0xPrefix(str string) bool {
 type signedTransactionWrapper struct {
 	SignedTransaction []byte          `json:"signed_tx"`
 	Currency          *types.Currency `json:"currency,omitempty"`
+}
+
+func (t *signedTransactionWrapper) UnmarshalJSON(data []byte) error {
+	// We need to re-define the signedTransactionWrapper struct to avoid
+	// infinite recursion while unmarshaling.
+	//
+	// We don't define another struct because this is never used outside of this
+	// function.
+	tw := struct {
+		SignedTransaction []byte          `json:"signed_tx"`
+		Currency          *types.Currency `json:"currency,omitempty"`
+	}{}
+	if err := json.Unmarshal(data, &tw); err != nil {
+		return err
+	}
+
+	// Exit early if SignedTransaction is populated
+	if len(tw.SignedTransaction) > 0 {
+		t.SignedTransaction = tw.SignedTransaction
+		t.Currency = tw.Currency
+		return nil
+	}
+
+	// Handle legacy format (will error during processing if invalid)
+	t.SignedTransaction = data
+	t.Currency = mapper.AvaxCurrency
+	return nil
 }
