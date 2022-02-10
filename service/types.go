@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -308,37 +309,33 @@ type signedTransactionWrapper struct {
 	Currency          *types.Currency `json:"currency,omitempty"`
 }
 
-type signedTransactionWrapperWire struct {
-	SignedTransaction []byte          `json:"signed_tx"`
-	Currency          *types.Currency `json:"currency,omitempty"`
-}
-
-func (t *signedTransactionWrapper) MarshalJSON() ([]byte, error) {
-	tw := &signedTransactionWrapperWire{
-		SignedTransaction: t.SignedTransaction,
-		Currency:          t.Currency,
-	}
-
-	return json.Marshal(tw)
-}
-
 func (t *signedTransactionWrapper) UnmarshalJSON(data []byte) error {
-	var tw signedTransactionWrapperWire
+	// We need to re-define the signedTransactionWrapper struct to avoid
+	// infinite recursion while unmarshaling.
+	//
+	// We don't define another struct because this is never used outside of this
+	// function.
+	tw := struct {
+		SignedTransaction []byte          `json:"signed_tx"`
+		Currency          *types.Currency `json:"currency,omitempty"`
+	}{}
 	if err := json.Unmarshal(data, &tw); err != nil {
 		return err
 	}
 
-	if tw.SignedTransaction == nil {
-		// Check if unmarshal is empty because of legacy format
-		var signedTx ethtypes.Transaction
-		if err := signedTx.UnmarshalJSON(data); err == nil {
-			t.SignedTransaction = data
-			t.Currency = mapper.AvaxCurrency
-			return nil
-		}
+	// Exit early if SignedTransaction is populated
+	if len(tw.SignedTransaction) > 0 {
+		t.SignedTransaction = tw.SignedTransaction
+		t.Currency = tw.Currency
+		return nil
 	}
 
-	t.SignedTransaction = tw.SignedTransaction
-	t.Currency = tw.Currency
+	// Handle legacy format
+	var signedTx ethtypes.Transaction
+	if err := signedTx.UnmarshalJSON(data); err != nil {
+		return fmt.Errorf("%w: %s", errInvalidLegacyTransaction, err.Error())
+	}
+	t.SignedTransaction = data
+	t.Currency = mapper.AvaxCurrency
 	return nil
 }

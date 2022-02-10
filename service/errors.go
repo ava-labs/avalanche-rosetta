@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
@@ -32,6 +34,9 @@ var (
 	errBlockNotFound      = makeError(9, "Block was not found", true)
 	errCallInvalidMethod  = makeError(10, "Invalid call method", false)
 	errCallInvalidParams  = makeError(11, "invalid call params", false)
+
+	// Golang errors
+	errInvalidLegacyTransaction = errors.New("unable to parse legacy transaction")
 )
 
 func makeError(code int32, message string, retriable bool) *types.Error {
