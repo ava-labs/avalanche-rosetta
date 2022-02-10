@@ -233,7 +233,7 @@ func TestContructionHash(t *testing.T) {
 		resp, err := service.ConstructionHash(context.Background(), &types.ConstructionHashRequest{
 			SignedTransaction: signed,
 		})
-		assert.Contains(t, err.Details["error"].(string), errInvalidLegacyTransaction.Error())
+		assert.Contains(t, err.Details["error"].(string), "nonce")
 		assert.Nil(t, resp)
 	})
 }

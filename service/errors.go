@@ -1,8 +1,6 @@
 package service
 
 import (
-	"errors"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
@@ -22,7 +20,7 @@ var (
 		errCallInvalidParams,
 	}
 
-	// Rosetta errors
+	// General errors
 	errNotReady           = makeError(1, "Node is not ready", true)
 	errNotImplemented     = makeError(2, "Endpoint is not implemented", false)
 	errNotSupported       = makeError(3, "Endpoint is not supported", false)
@@ -34,9 +32,6 @@ var (
 	errBlockNotFound      = makeError(9, "Block was not found", true)
 	errCallInvalidMethod  = makeError(10, "Invalid call method", false)
 	errCallInvalidParams  = makeError(11, "invalid call params", false)
-
-	// Standard errors
-	errInvalidLegacyTransaction = errors.New("unable to parse legacy transaction")
 )
 
 func makeError(code int32, message string, retriable bool) *types.Error {

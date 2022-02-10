@@ -2,12 +2,10 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"strconv"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -330,11 +328,7 @@ func (t *signedTransactionWrapper) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// Handle legacy format
-	var signedTx ethtypes.Transaction
-	if err := signedTx.UnmarshalJSON(data); err != nil {
-		return fmt.Errorf("%w: %s", errInvalidLegacyTransaction, err.Error())
-	}
+	// Handle legacy format (will error during processing if invalid)
 	t.SignedTransaction = data
 	t.Currency = mapper.AvaxCurrency
 	return nil
