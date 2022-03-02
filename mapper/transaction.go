@@ -442,14 +442,13 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 }
 
 func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
-	ops := []*types.Operation{}
-
 	contractAddress := transferLog.Address
 	addressFrom := common.HexToAddress(transferLog.Topics[1].Hex())
 	addressTo := common.HexToAddress(transferLog.Topics[2].Hex())
 
+	// Mint
 	if addressFrom.Hex() == zeroAddress.Hex() {
-		mintOp := types.Operation{
+		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
@@ -457,13 +456,12 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 			Type:    OpErc20Mint,
 			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
 			Account: Account(&addressTo),
-		}
-		ops = append(ops, &mintOp)
-		return ops
+		}}
 	}
 
+	// Burn
 	if addressTo.Hex() == zeroAddress.Hex() {
-		burnOp := types.Operation{
+		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
@@ -471,12 +469,11 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 			Type:    OpErc20Burn,
 			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
 			Account: Account(&addressFrom),
-		}
-		ops = append(ops, &burnOp)
-		return ops
+		}}
 	}
 
-	sendingOp := types.Operation{
+	return []*types.Operation{{
+		// Send
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen,
 		},
@@ -484,8 +481,8 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 		Type:    OpErc20Transfer,
 		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
 		Account: Account(&addressFrom),
-	}
-	receiptOp := types.Operation{
+	}, {
+		// Receive
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen + 1,
 		},
@@ -498,16 +495,10 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 				Index: opsLen,
 			},
 		},
-	}
-	ops = append(ops, &sendingOp)
-	ops = append(ops, &receiptOp)
-
-	return ops
+	}}
 }
 
 func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
-	ops := []*types.Operation{}
-
 	contractAddress := transferLog.Address
 	addressFrom := common.HexToAddress(transferLog.Topics[1].Hex())
 	addressTo := common.HexToAddress(transferLog.Topics[2].Hex())
@@ -517,8 +508,9 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		IndexTransferredMetadata: erc721Index.String(),
 	}
 
+	// Mint
 	if addressFrom.Hex() == zeroAddress.Hex() {
-		mintOp := types.Operation{
+		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
@@ -526,13 +518,12 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 			Type:     OpErc721Mint,
 			Account:  Account(&addressTo),
 			Metadata: metadata,
-		}
-		ops = append(ops, &mintOp)
-		return ops
+		}}
 	}
 
+	// Burn
 	if addressTo.Hex() == zeroAddress.Hex() {
-		burnOp := types.Operation{
+		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
@@ -540,12 +531,11 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 			Type:     OpErc721Burn,
 			Account:  Account(&addressFrom),
 			Metadata: metadata,
-		}
-		ops = append(ops, &burnOp)
-		return ops
+		}}
 	}
 
-	sendingOp := types.Operation{
+	return []*types.Operation{{
+		// Send
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen,
 		},
@@ -553,8 +543,8 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		Type:     OpErc721TransferSender,
 		Account:  Account(&addressFrom),
 		Metadata: metadata,
-	}
-	receiptOp := types.Operation{
+	}, {
+		// Receive
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen + 1,
 		},
@@ -567,8 +557,5 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 				Index: opsLen,
 			},
 		},
-	}
-	ops = append(ops, &sendingOp)
-	ops = append(ops, &receiptOp)
-	return ops
+	}}
 }
