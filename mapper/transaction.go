@@ -443,11 +443,11 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 
 func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
 	contractAddress := transferLog.Address
-	addressFrom := common.HexToAddress(transferLog.Topics[1].Hex())
-	addressTo := common.HexToAddress(transferLog.Topics[2].Hex())
+	fromAddress := common.HexToAddress(transferLog.Topics[1].Hex())
+	toAddress := common.HexToAddress(transferLog.Topics[2].Hex())
 
 	// Mint
-	if addressFrom.Hex() == zeroAddress.Hex() {
+	if fromAddress.Hex() == zeroAddress.Hex() {
 		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
@@ -455,12 +455,12 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Mint,
 			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
-			Account: Account(&addressTo),
+			Account: Account(&toAddress),
 		}}
 	}
 
 	// Burn
-	if addressTo.Hex() == zeroAddress.Hex() {
+	if toAddress.Hex() == zeroAddress.Hex() {
 		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
@@ -468,7 +468,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Burn,
 			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
-			Account: Account(&addressFrom),
+			Account: Account(&fromAddress),
 		}}
 	}
 
@@ -480,7 +480,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
 		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
-		Account: Account(&addressFrom),
+		Account: Account(&fromAddress),
 	}, {
 		// Receive
 		OperationIdentifier: &types.OperationIdentifier{
@@ -489,7 +489,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
 		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
-		Account: Account(&addressTo),
+		Account: Account(&toAddress),
 		RelatedOperations: []*types.OperationIdentifier{
 			{
 				Index: opsLen,
@@ -499,37 +499,35 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 }
 
 func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
-	contractAddress := transferLog.Address
-	addressFrom := common.HexToAddress(transferLog.Topics[1].Hex())
-	addressTo := common.HexToAddress(transferLog.Topics[2].Hex())
-	erc721Index := transferLog.Topics[3] // Erc721 4th topic is the index.  Data is empty
+	fromAddress := common.HexToAddress(transferLog.Topics[1].Hex())
+	toAddress := common.HexToAddress(transferLog.Topics[2].Hex())
 	metadata := map[string]interface{}{
-		ContractAddressMetadata:  contractAddress.String(),
-		IndexTransferredMetadata: erc721Index.String(),
+		ContractAddressMetadata:  transferLog.Address.String(),
+		IndexTransferredMetadata: transferLog.Topics[3].String(),
 	}
 
 	// Mint
-	if addressFrom.Hex() == zeroAddress.Hex() {
+	if fromAddress.Hex() == zeroAddress.Hex() {
 		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
 			Status:   types.String(StatusSuccess),
 			Type:     OpErc721Mint,
-			Account:  Account(&addressTo),
+			Account:  Account(&toAddress),
 			Metadata: metadata,
 		}}
 	}
 
 	// Burn
-	if addressTo.Hex() == zeroAddress.Hex() {
+	if toAddress.Hex() == zeroAddress.Hex() {
 		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
 			Status:   types.String(StatusSuccess),
 			Type:     OpErc721Burn,
-			Account:  Account(&addressFrom),
+			Account:  Account(&fromAddress),
 			Metadata: metadata,
 		}}
 	}
@@ -541,7 +539,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		},
 		Status:   types.String(StatusSuccess),
 		Type:     OpErc721TransferSender,
-		Account:  Account(&addressFrom),
+		Account:  Account(&fromAddress),
 		Metadata: metadata,
 	}, {
 		// Receive
@@ -550,7 +548,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		},
 		Status:   types.String(StatusSuccess),
 		Type:     OpErc721TransferReceive,
-		Account:  Account(&addressTo),
+		Account:  Account(&toAddress),
 		Metadata: metadata,
 		RelatedOperations: []*types.OperationIdentifier{
 			{
