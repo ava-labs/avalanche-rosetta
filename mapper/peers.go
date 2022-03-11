@@ -3,10 +3,10 @@ package mapper
 import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/ava-labs/avalanchego/network"
+	"github.com/ava-labs/avalanchego/api/info"
 )
 
-func Peers(peers []network.PeerInfo) []*types.Peer {
+func Peers(peers []info.Peer) []*types.Peer {
 	result := make([]*types.Peer, len(peers))
 
 	for idx, peer := range peers {
