@@ -440,7 +440,7 @@ func (s ConstructionService) ConstructionPayloads(
 		transferData = []byte{}
 		sendToAddress = ethcommon.HexToAddress(checkTo)
 	} else {
-		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
+		contract, ok := fromCurrency.Metadata[client.ContractAddressMetadata].(string)
 		if !ok {
 			return nil, wrapError(errInvalidInput,
 				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
@@ -642,8 +642,8 @@ func (s ConstructionService) CreateOperationDescription(
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
 		return s.createOperationDescriptionNative(), nil
 	}
-	firstContract, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
-	_, secondOk := secondCurrency.Metadata[mapper.ContractAddressMetadata].(string)
+	firstContract, firstOk := firstCurrency.Metadata[client.ContractAddressMetadata].(string)
+	_, secondOk := secondCurrency.Metadata[client.ContractAddressMetadata].(string)
 
 	// Not Native Avax, we require contractInfo in metadata
 	if !firstOk || !secondOk {
@@ -739,7 +739,7 @@ func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAd
 
 func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAddress string,
 	fromAddress string, value *big.Int, currency *types.Currency) (uint64, error) {
-	contract, ok := currency.Metadata[mapper.ContractAddressMetadata]
+	contract, ok := currency.Metadata[client.ContractAddressMetadata]
 	if len(toAddress) == 0 || value == nil || !ok {
 		return erc20TransferGasLimit, nil
 	}

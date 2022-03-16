@@ -3,7 +3,7 @@ package mapper
 import (
 	"testing"
 
-	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/client"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -36,11 +36,6 @@ func TestERC20Ops(t *testing.T) {
 			Data: ethcommon.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
 		}
 
-		currency := clientTypes.ContractCurrency{
-			Symbol:   WAVAX.Symbol,
-			Decimals: WAVAX.Decimals,
-		}
-
 		assert.Equal(t, []*types.Operation{
 			{
 				OperationIdentifier: &types.OperationIdentifier{
@@ -75,7 +70,7 @@ func TestERC20Ops(t *testing.T) {
 					Currency: WAVAX,
 				},
 			},
-		}, erc20Ops(log, &currency, 1))
+		}, erc20Ops(log, WAVAX, 1))
 	})
 
 	t.Run("burn op", func(t *testing.T) {
@@ -87,11 +82,6 @@ func TestERC20Ops(t *testing.T) {
 				ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
 			},
 			Data: ethcommon.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
-		}
-
-		currency := clientTypes.ContractCurrency{
-			Symbol:   WAVAX.Symbol,
-			Decimals: WAVAX.Decimals,
 		}
 
 		assert.Equal(t, []*types.Operation{
@@ -109,7 +99,7 @@ func TestERC20Ops(t *testing.T) {
 					Currency: WAVAX,
 				},
 			},
-		}, erc20Ops(log, &currency, 1))
+		}, erc20Ops(log, WAVAX, 1))
 	})
 
 	t.Run("mint op", func(t *testing.T) {
@@ -121,11 +111,6 @@ func TestERC20Ops(t *testing.T) {
 				ethcommon.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
 			},
 			Data: ethcommon.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
-		}
-
-		currency := clientTypes.ContractCurrency{
-			Symbol:   WAVAX.Symbol,
-			Decimals: WAVAX.Decimals,
 		}
 
 		assert.Equal(t, []*types.Operation{
@@ -143,7 +128,7 @@ func TestERC20Ops(t *testing.T) {
 					Currency: WAVAX,
 				},
 			},
-		}, erc20Ops(log, &currency, 1))
+		}, erc20Ops(log, WAVAX, 1))
 	})
 }
 
@@ -170,8 +155,8 @@ func TestERC721Ops(t *testing.T) {
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
 				Metadata: map[string]interface{}{
-					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
+					client.ContractAddressMetadata: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+					IndexTransferredMetadata:       "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 			{
@@ -189,8 +174,8 @@ func TestERC721Ops(t *testing.T) {
 					Address: "0x5d95ae932D42E53Bb9DA4DE65E9b7263A4fA8564",
 				},
 				Metadata: map[string]interface{}{
-					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
+					client.ContractAddressMetadata: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+					IndexTransferredMetadata:       "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 		}, erc721Ops(log, 1))
@@ -218,8 +203,8 @@ func TestERC721Ops(t *testing.T) {
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
 				Metadata: map[string]interface{}{
-					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
+					client.ContractAddressMetadata: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+					IndexTransferredMetadata:       "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 		}, erc721Ops(log, 1))
@@ -247,8 +232,8 @@ func TestERC721Ops(t *testing.T) {
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
 				Metadata: map[string]interface{}{
-					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
+					client.ContractAddressMetadata: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+					IndexTransferredMetadata:       "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 		}, erc721Ops(log, 1))

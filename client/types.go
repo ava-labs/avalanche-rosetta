@@ -13,12 +13,9 @@ const (
 
 	UnknownERC721Symbol   = "ERC721_UNKNOWN"
 	UnknownERC721Decimals = 0
-)
 
-type ContractCurrency struct {
-	Symbol   string `json:"symbol"`
-	Decimals int32  `json:"decimals"`
-}
+	ContractAddressMetadata = "contractAddress"
+)
 
 type Blockchain struct {
 	ID       string `json:"id"`

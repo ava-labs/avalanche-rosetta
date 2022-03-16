@@ -441,8 +441,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 	return ops
 }
 
-func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
-	contractAddress := transferLog.Address
+func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64) []*types.Operation {
 	fromAddress := common.BytesToAddress(transferLog.Topics[1].Bytes())
 	toAddress := common.BytesToAddress(transferLog.Topics[2].Bytes())
 
@@ -454,7 +453,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 			},
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Mint,
-			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
+			Amount:  Erc20Amount(transferLog.Data, false, currency),
 			Account: Account(&toAddress),
 		}}
 	}
@@ -467,7 +466,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 			},
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Burn,
-			Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
+			Amount:  Erc20Amount(transferLog.Data, true, currency),
 			Account: Account(&fromAddress),
 		}}
 	}
@@ -479,7 +478,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, true),
+		Amount:  Erc20Amount(transferLog.Data, true, currency),
 		Account: Account(&fromAddress),
 	}, {
 		// Receive
@@ -488,7 +487,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, contractAddress, currency.Symbol, currency.Decimals, false),
+		Amount:  Erc20Amount(transferLog.Data, false, currency),
 		Account: Account(&toAddress),
 		RelatedOperations: []*types.OperationIdentifier{
 			{
@@ -502,8 +501,8 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 	fromAddress := common.BytesToAddress(transferLog.Topics[1].Bytes())
 	toAddress := common.BytesToAddress(transferLog.Topics[2].Bytes())
 	metadata := map[string]interface{}{
-		ContractAddressMetadata:  transferLog.Address.String(),
-		IndexTransferredMetadata: transferLog.Topics[3].String(),
+		clientTypes.ContractAddressMetadata: transferLog.Address.String(),
+		IndexTransferredMetadata:            transferLog.Topics[3].String(),
 	}
 
 	// Mint
