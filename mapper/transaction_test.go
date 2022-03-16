@@ -18,7 +18,7 @@ var WAVAX = &types.Currency{
 	},
 }
 
-func TestERC20(t *testing.T) {
+func TestERC20Ops(t *testing.T) {
 	t.Run("transfer op", func(t *testing.T) {
 		log := &ethtypes.Log{
 			Address: ethcommon.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
@@ -141,7 +141,7 @@ func TestERC20(t *testing.T) {
 	})
 }
 
-func TestERC721(t *testing.T) {
+func TestERC721Ops(t *testing.T) {
 	t.Run("transfer op", func(t *testing.T) {
 		log := &ethtypes.Log{
 			Address: ethcommon.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
