@@ -88,28 +88,28 @@ func Transaction(
 
 		switch len(log.Topics) {
 		case topicsInErc721Transfer:
-			currency, err := client.GetContractCurrency(log.Address, false)
+			symbol, _, err := client.GetContractInfo(log.Address, false)
 			if err != nil {
 				return nil, err
 			}
 
-			if currency.Symbol == clientTypes.UnknownERC721Symbol && !includeUnknownTokens {
+			if symbol == clientTypes.UnknownERC721Symbol && !includeUnknownTokens {
 				continue
 			}
 
 			erc721Ops := erc721Ops(log, int64(len(ops)))
 			ops = append(ops, erc721Ops...)
 		case topicsInErc20Transfer:
-			currency, err := client.GetContractCurrency(log.Address, true)
+			symbol, decimals, err := client.GetContractInfo(log.Address, true)
 			if err != nil {
 				return nil, err
 			}
 
-			if currency.Symbol == clientTypes.UnknownERC20Symbol && !includeUnknownTokens {
+			if symbol == clientTypes.UnknownERC20Symbol && !includeUnknownTokens {
 				continue
 			}
 
-			erc20Ops := erc20Ops(log, currency, int64(len(ops)))
+			erc20Ops := erc20Ops(log, ToCurrency(symbol, decimals, log.Address), int64(len(ops)))
 			ops = append(ops, erc20Ops...)
 		default:
 		}
@@ -501,8 +501,8 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 	fromAddress := common.BytesToAddress(transferLog.Topics[1].Bytes())
 	toAddress := common.BytesToAddress(transferLog.Topics[2].Bytes())
 	metadata := map[string]interface{}{
-		clientTypes.ContractAddressMetadata: transferLog.Address.String(),
-		IndexTransferredMetadata:            transferLog.Topics[3].String(),
+		ContractAddressMetadata:  transferLog.Address.String(),
+		IndexTransferredMetadata: transferLog.Topics[3].String(),
 	}
 
 	// Mint

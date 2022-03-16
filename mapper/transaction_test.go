@@ -3,7 +3,6 @@ package mapper
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -155,8 +154,8 @@ func TestERC721Ops(t *testing.T) {
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
 				Metadata: map[string]interface{}{
-					client.ContractAddressMetadata: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata:       "0x0000000000000000000000000000000000000000000000000000000000000051",
+					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 			{
@@ -174,8 +173,8 @@ func TestERC721Ops(t *testing.T) {
 					Address: "0x5d95ae932D42E53Bb9DA4DE65E9b7263A4fA8564",
 				},
 				Metadata: map[string]interface{}{
-					client.ContractAddressMetadata: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata:       "0x0000000000000000000000000000000000000000000000000000000000000051",
+					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 		}, erc721Ops(log, 1))
@@ -203,8 +202,8 @@ func TestERC721Ops(t *testing.T) {
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
 				Metadata: map[string]interface{}{
-					client.ContractAddressMetadata: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata:       "0x0000000000000000000000000000000000000000000000000000000000000051",
+					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 		}, erc721Ops(log, 1))
@@ -232,8 +231,8 @@ func TestERC721Ops(t *testing.T) {
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
 				Metadata: map[string]interface{}{
-					client.ContractAddressMetadata: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata:       "0x0000000000000000000000000000000000000000000000000000000000000051",
+					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 		}, erc721Ops(log, 1))

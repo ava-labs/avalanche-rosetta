@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/ava-labs/coreth/params"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
@@ -13,6 +14,7 @@ const (
 	FujiChainID = 43113
 	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
 
+	ContractAddressMetadata  = "contractAddress"
 	IndexTransferredMetadata = "indexTransferred"
 
 	OpCall          = "CALL"
@@ -125,4 +127,14 @@ func CreateType(t string) bool {
 	}
 
 	return false
+}
+
+func ToCurrency(symbol string, decimals uint8, contractAddress common.Address) *types.Currency {
+	return &types.Currency{
+		Symbol:   symbol,
+		Decimals: int32(decimals),
+		Metadata: map[string]interface{}{
+			ContractAddressMetadata: contractAddress,
+		},
+	}
 }

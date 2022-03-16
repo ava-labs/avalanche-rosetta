@@ -8,7 +8,6 @@ import (
 	"github.com/ava-labs/avalanchego/api/info"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
-	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
@@ -34,7 +33,7 @@ type Client interface {
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	GetNetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]info.Peer, error)
-	GetContractCurrency(ethcommon.Address, bool) (*types.Currency, error)
+	GetContractInfo(ethcommon.Address, bool) (string, uint8, error)
 	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
 }
 

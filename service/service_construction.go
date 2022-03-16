@@ -440,7 +440,7 @@ func (s ConstructionService) ConstructionPayloads(
 		transferData = []byte{}
 		sendToAddress = ethcommon.HexToAddress(checkTo)
 	} else {
-		contract, ok := fromCurrency.Metadata[client.ContractAddressMetadata].(string)
+		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 		if !ok {
 			return nil, wrapError(errInvalidInput,
 				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
@@ -642,15 +642,15 @@ func (s ConstructionService) CreateOperationDescription(
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
 		return s.createOperationDescriptionNative(), nil
 	}
-	firstContract, firstOk := firstCurrency.Metadata[client.ContractAddressMetadata].(string)
-	_, secondOk := secondCurrency.Metadata[client.ContractAddressMetadata].(string)
+	_, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
+	_, secondOk := secondCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 
 	// Not Native Avax, we require contractInfo in metadata
 	if !firstOk || !secondOk {
 		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
 	}
 
-	return s.createOperationDescriptionERC20(firstContract, firstCurrency), nil
+	return s.createOperationDescriptionERC20(firstCurrency), nil
 }
 
 func (s ConstructionService) createOperationDescriptionNative() []*parser.OperationDescription {
@@ -684,9 +684,7 @@ func (s ConstructionService) createOperationDescriptionNative() []*parser.Operat
 	return descriptions
 }
 
-func (s ConstructionService) createOperationDescriptionERC20(
-	contractAddress string, currency *types.Currency,
-) []*parser.OperationDescription {
+func (s ConstructionService) createOperationDescriptionERC20(currency *types.Currency) []*parser.OperationDescription {
 	var descriptions []*parser.OperationDescription
 
 	send := parser.OperationDescription{
@@ -738,7 +736,7 @@ func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAd
 
 func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAddress string,
 	fromAddress string, value *big.Int, currency *types.Currency) (uint64, error) {
-	contract, ok := currency.Metadata[client.ContractAddressMetadata]
+	contract, ok := currency.Metadata[mapper.ContractAddressMetadata]
 	if len(toAddress) == 0 || value == nil || !ok {
 		return erc20TransferGasLimit, nil
 	}

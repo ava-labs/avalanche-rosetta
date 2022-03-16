@@ -13,8 +13,6 @@ const (
 
 	UnknownERC721Symbol   = "ERC721_UNKNOWN"
 	UnknownERC721Decimals = 0
-
-	ContractAddressMetadata = "contractAddress"
 )
 
 type Blockchain struct {
