@@ -453,7 +453,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 			},
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Mint,
-			Amount:  Erc20Amount(transferLog.Data, false, currency),
+			Amount:  Erc20Amount(transferLog.Data, currency, false),
 			Account: Account(&toAddress),
 		}}
 	}
@@ -466,7 +466,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 			},
 			Status:  types.String(StatusSuccess),
 			Type:    OpErc20Burn,
-			Amount:  Erc20Amount(transferLog.Data, true, currency),
+			Amount:  Erc20Amount(transferLog.Data, currency, true),
 			Account: Account(&fromAddress),
 		}}
 	}
@@ -478,7 +478,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, true, currency),
+		Amount:  Erc20Amount(transferLog.Data, currency, true),
 		Account: Account(&fromAddress),
 	}, {
 		// Receive
@@ -487,7 +487,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 		},
 		Status:  types.String(StatusSuccess),
 		Type:    OpErc20Transfer,
-		Amount:  Erc20Amount(transferLog.Data, false, currency),
+		Amount:  Erc20Amount(transferLog.Data, currency, false),
 		Account: Account(&toAddress),
 		RelatedOperations: []*types.OperationIdentifier{
 			{

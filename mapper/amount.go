@@ -24,8 +24,8 @@ func AvaxAmount(value *big.Int) *types.Amount {
 
 func Erc20Amount(
 	bytes []byte,
-	sender bool,
 	currency *types.Currency,
+	sender bool,
 ) *types.Amount {
 	value := common.BytesToHash(bytes).Big()
 
