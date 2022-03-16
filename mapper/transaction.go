@@ -443,11 +443,11 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 
 func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency, opsLen int64) []*types.Operation {
 	contractAddress := transferLog.Address
-	fromAddress := common.HexToAddress(transferLog.Topics[1].Hex())
-	toAddress := common.HexToAddress(transferLog.Topics[2].Hex())
+	fromAddress := common.BytesToAddress(transferLog.Topics[1].Bytes())
+	toAddress := common.BytesToAddress(transferLog.Topics[2].Bytes())
 
 	// Mint
-	if fromAddress.Hex() == zeroAddress.Hex() {
+	if fromAddress == zeroAddress {
 		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
@@ -460,7 +460,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 	}
 
 	// Burn
-	if toAddress.Hex() == zeroAddress.Hex() {
+	if toAddress == zeroAddress {
 		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
@@ -499,15 +499,15 @@ func erc20Ops(transferLog *ethtypes.Log, currency *clientTypes.ContractCurrency,
 }
 
 func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
-	fromAddress := common.HexToAddress(transferLog.Topics[1].Hex())
-	toAddress := common.HexToAddress(transferLog.Topics[2].Hex())
+	fromAddress := common.BytesToAddress(transferLog.Topics[1].Bytes())
+	toAddress := common.BytesToAddress(transferLog.Topics[2].Bytes())
 	metadata := map[string]interface{}{
 		ContractAddressMetadata:  transferLog.Address.String(),
 		IndexTransferredMetadata: transferLog.Topics[3].String(),
 	}
 
 	// Mint
-	if fromAddress.Hex() == zeroAddress.Hex() {
+	if fromAddress == zeroAddress {
 		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
@@ -520,7 +520,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 	}
 
 	// Burn
-	if toAddress.Hex() == zeroAddress.Hex() {
+	if toAddress == zeroAddress {
 		return []*types.Operation{{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
