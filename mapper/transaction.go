@@ -23,7 +23,7 @@ const (
 
 var (
 	x2crate     = big.NewInt(1000000000)
-	zeroAddress = common.HexToAddress("0")
+	zeroAddress = common.Address{}
 )
 
 func Transaction(
