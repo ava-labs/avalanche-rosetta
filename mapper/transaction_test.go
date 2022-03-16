@@ -20,7 +20,7 @@ var WAVAX = &types.Currency{
 
 func TestZeroAddress(t *testing.T) {
 	t.Run("correct address", func(t *testing.T) {
-		assert.Equal(t, "0x0000000000000000000000000000000000000000", zeroAddress.Hex())
+		assert.Equal(t, ethcommon.HexToAddress("0x0000000000000000000000000000000000000000"), zeroAddress)
 	})
 }
 
