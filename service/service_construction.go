@@ -685,10 +685,9 @@ func (s ConstructionService) createOperationDescriptionNative() []*parser.Operat
 }
 
 func (s ConstructionService) createOperationDescriptionERC20(
-	contractAddress string, currencyInfo *types.Currency,
+	contractAddress string, currency *types.Currency,
 ) []*parser.OperationDescription {
 	var descriptions []*parser.OperationDescription
-	currency := mapper.Erc20Currency(currencyInfo.Symbol, currencyInfo.Decimals, contractAddress)
 
 	send := parser.OperationDescription{
 		Type: mapper.OpErc20Transfer,
