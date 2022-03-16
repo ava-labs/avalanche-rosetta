@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/ava-labs/avalanchego v1.7.7
 	github.com/ava-labs/coreth v0.8.7-rc.2
-	github.com/coinbase/rosetta-sdk-go v0.6.5
+	github.com/coinbase/rosetta-sdk-go v0.7.4
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
@@ -17,8 +17,8 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/VictoriaMetrics/fastcache v1.9.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/btcsuite/btcd v0.21.0-beta // indirect
-	github.com/btcsuite/btcutil v1.0.2 // indirect
+	github.com/btcsuite/btcd v0.22.0-beta // indirect
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
