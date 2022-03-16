@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/api/info"
-	"github.com/ava-labs/avalanchego/network"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -33,7 +32,7 @@ type Client interface {
 	EstimateGas(context.Context, interfaces.CallMsg) (uint64, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	GetNetworkName(context.Context) (string, error)
-	Peers(context.Context) ([]network.PeerInfo, error)
+	Peers(context.Context) ([]info.Peer, error)
 	GetContractCurrency(ethcommon.Address, bool) (*ContractCurrency, error)
 	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
 }

@@ -13,8 +13,7 @@ import (
 	interfaces "github.com/ava-labs/coreth/interfaces"
 
 	mock "github.com/stretchr/testify/mock"
-
-	network "github.com/ava-labs/avalanchego/network"
+	"github.com/ava-labs/avalanchego/api/info"
 
 	types "github.com/ava-labs/coreth/core/types"
 )
@@ -293,15 +292,15 @@ func (_m *Client) NonceAt(_a0 context.Context, _a1 common.Address, _a2 *big.Int)
 }
 
 // Peers provides a mock function with given fields: _a0
-func (_m *Client) Peers(_a0 context.Context) ([]network.PeerInfo, error) {
+func (_m *Client) Peers(_a0 context.Context) ([]info.Peer, error) {
 	ret := _m.Called(_a0)
 
-	var r0 []network.PeerInfo
-	if rf, ok := ret.Get(0).(func(context.Context) []network.PeerInfo); ok {
+	var r0 []info.Peer
+	if rf, ok := ret.Get(0).(func(context.Context) []info.Peer); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]network.PeerInfo)
+			r0 = ret.Get(0).([]info.Peer)
 		}
 	}
 
