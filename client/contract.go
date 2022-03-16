@@ -43,19 +43,18 @@ func (c *ContractClient) GetContractInfo(addr common.Address, erc20 bool) (strin
 		return "", 0, err
 	}
 
-	symbol, symbolErr := token.Symbol(nil)
-	decimals, decimalErr := token.Decimals(nil)
-
-	// Any of these indicate a failure to get complete information from contract
-	if symbolErr != nil || decimalErr != nil || symbol == "" || decimals == 0 {
+	// [symbol] is set to "" if [token.Symbol] errors.
+	symbol, _ := token.Symbol(nil)
+	if symbol == "" {
 		if erc20 {
 			symbol = UnknownERC20Symbol
-			decimals = UnknownERC20Decimals
 		} else {
 			symbol = UnknownERC721Symbol
-			decimals = UnknownERC721Decimals
 		}
 	}
+
+	// [decimals] is set to 0 if [token.Decimals] errors.
+	decimals, _ := token.Decimals(nil)
 
 	// Cache defaults for contract address to avoid unnecessary lookups
 	c.cache.Put(addr, &ContractInfo{

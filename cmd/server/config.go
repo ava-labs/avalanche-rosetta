@@ -105,7 +105,7 @@ func (c *config) ValidateWhitelistOnlyValidErc20s(cli client.Client) error {
 		if err != nil {
 			return err
 		}
-		if decimals == client.UnknownERC20Decimals && symbol == client.UnknownERC20Symbol {
+		if decimals == 0 && symbol == client.UnknownERC20Symbol {
 			return errInvalidErc20Address
 		}
 	}
