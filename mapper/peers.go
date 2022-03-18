@@ -20,6 +20,7 @@ func Peers(peers []info.Peer) []*types.Peer {
 				"last_received":   peer.LastReceived,
 				"benched":         peer.Benched,
 				"observed_uptime": peer.ObservedUptime,
+				"tracked_subnets": peer.TrackedSubnets,
 			},
 		}
 	}
