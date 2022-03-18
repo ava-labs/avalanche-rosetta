@@ -21,13 +21,6 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
-const (
-	genericTransferBytesLength = 68
-	requiredPaddingBytes       = 32
-	transferFnSignature        = "transfer(address,uint256)" // do not include spaces in the string
-
-)
-
 // ConstructionService implements /construction/* endpoints
 type ConstructionService struct {
 	config *Config
@@ -716,54 +709,53 @@ func (s ConstructionService) createOperationDescriptionERC20(currency *types.Cur
 }
 
 func (s ConstructionService) getNativeTransferGasLimit(
-	ctx context.Context, toAddress string,
-	fromAddress string, value *big.Int,
+	ctx context.Context,
+	to string,
+	from string,
+	value *big.Int,
 ) (uint64, error) {
-	if len(toAddress) == 0 || value == nil {
-		// We guard against malformed inputs that may have been generated using
-		// a previous version of avalanche-rosetta.
+	// Guard against malformed inputs that may have been generated using
+	// a previous version of avalanche-rosetta.
+	if len(to) == 0 || value == nil {
 		return nativeTransferGasLimit, nil
 	}
-	to := ethcommon.HexToAddress(toAddress)
-	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From:  ethcommon.HexToAddress(fromAddress),
-		To:    &to,
+
+	toAddr := ethcommon.HexToAddress(to)
+	return s.client.EstimateGas(ctx, interfaces.CallMsg{
+		From:  ethcommon.HexToAddress(from),
+		To:    &toAddr,
 		Value: value,
 	})
-	if err != nil {
-		return 0, err
-	}
-	return gasLimit, nil
 }
 
+// Ref: https://goethereumbook.org/en/transfer-tokens/#set-gas-limit
 func (s ConstructionService) getErc20TransferGasLimit(
-	ctx context.Context, toAddress string,
-	fromAddress string, value *big.Int, currency *types.Currency,
+	ctx context.Context,
+	to string,
+	from string,
+	value *big.Int,
+	currency *types.Currency,
 ) (uint64, error) {
 	contract, ok := currency.Metadata[mapper.ContractAddressMetadata]
-	if len(toAddress) == 0 || value == nil || !ok {
+	if len(to) == 0 || value == nil || !ok {
 		return erc20TransferGasLimit, nil
 	}
-	// ToAddress for erc20 transfers is the contract address
+
 	contractAddress := ethcommon.HexToAddress(contract.(string))
-	data := generateErc20TransferData(toAddress, value)
-	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From: ethcommon.HexToAddress(fromAddress),
+	return s.client.EstimateGas(ctx, interfaces.CallMsg{
+		From: ethcommon.HexToAddress(from),
 		To:   &contractAddress,
-		Data: data,
+		Data: generateErc20TransferData(to, value),
 	})
-	if err != nil {
-		return 0, err
-	}
-	return gasLimit, nil
 }
 
-func generateErc20TransferData(toAddress string, value *big.Int) []byte {
-	to := ethcommon.HexToAddress(toAddress)
+// Ref: https://goethereumbook.org/en/transfer-tokens/#forming-the-data-field
+func generateErc20TransferData(to string, value *big.Int) []byte {
+	toAddr := ethcommon.HexToAddress(to)
 	methodID := getTransferMethodID()
 
-	paddedAddress := ethcommon.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
-	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
+	paddedAddress := ethcommon.LeftPadBytes(toAddr.Bytes(), 32)
+	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), 32)
 
 	var data []byte
 	data = append(data, methodID...)
@@ -772,24 +764,27 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	return data
 }
 
+// Ref: https://goethereumbook.org/en/transfer-tokens/#forming-the-data-field
 func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
-	if len(data) != genericTransferBytesLength {
+	if len(data) != 68 {
 		return nil, nil, fmt.Errorf("incorrect length for data array")
 	}
-	methodID := getTransferMethodID()
-	if hexutil.Encode(data[:4]) != hexutil.Encode(methodID) {
+
+	methodBytes, addrBytes, amtBytes := data[:4], data[5:36], data[37:]
+
+	if hexutil.Encode(methodBytes) != hexutil.Encode(getTransferMethodID()) {
 		return nil, nil, fmt.Errorf("incorrect methodID signature")
 	}
 
-	address := ethcommon.BytesToAddress(data[5:36])
-	amount := new(big.Int).SetBytes(data[37:])
-	return &address, amount, nil
+	addr := ethcommon.BytesToAddress(addrBytes)
+	amt := new(big.Int).SetBytes(amtBytes)
+	return &addr, amt, nil
 }
 
+// Ref: https://goethereumbook.org/en/transfer-tokens/#forming-the-data-field
 func getTransferMethodID() []byte {
-	transferSignature := []byte(transferFnSignature) // do not include spaces in the string
+	transferFnSignature := []byte("transfer(address,uint256)")
 	hash := sha3.NewLegacyKeccak256()
-	hash.Write(transferSignature)
-	methodID := hash.Sum(nil)[:4]
-	return methodID
+	hash.Write(transferFnSignature)
+	return hash.Sum(nil)[:4]
 }
