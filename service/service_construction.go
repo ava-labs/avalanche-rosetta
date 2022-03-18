@@ -9,6 +9,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/coinbase/rosetta-sdk-go/utils"
 	"golang.org/x/crypto/sha3"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
@@ -621,29 +622,26 @@ func (s ConstructionService) CreateOperationDescription(
 		return nil, fmt.Errorf("invalid number of operations")
 	}
 
-	firstCurrency := operations[0].Amount.Currency
-	secondCurrency := operations[1].Amount.Currency
+	currency := operations[0].Amount.Currency
 
-	if firstCurrency == nil || secondCurrency == nil {
+	if currency == nil || operations[1].Amount.Currency == nil {
 		return nil, fmt.Errorf("invalid currency on operation")
 	}
 
-	if types.Hash(firstCurrency) != types.Hash(secondCurrency) {
+	if !utils.Equal(currency, operations[1].Amount.Currency) {
 		return nil, fmt.Errorf("currency info doesn't match between the operations")
 	}
 
-	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
-		return s.createOperationDescription(mapper.AvaxCurrency, mapper.OpCall), nil
-	}
-	_, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
-	_, secondOk := secondCurrency.Metadata[mapper.ContractAddressMetadata].(string)
-
-	// Not Native Avax, we require contractInfo in metadata
-	if !firstOk || !secondOk {
-		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
+	if utils.Equal(currency, mapper.AvaxCurrency) {
+		return s.createOperationDescription(currency, mapper.OpCall), nil
 	}
 
-	return s.createOperationDescription(firstCurrency, mapper.OpErc20Transfer), nil
+	// ERC-20s must have contract address in metadata
+	if _, ok := currency.Metadata[mapper.ContractAddressMetadata].(string); !ok {
+		return nil, fmt.Errorf("contractAddress must be populated in currency metadata")
+	}
+
+	return s.createOperationDescription(currency, mapper.OpErc20Transfer), nil
 }
 
 func (s ConstructionService) createOperationDescription(
