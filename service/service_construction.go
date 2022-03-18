@@ -633,7 +633,7 @@ func (s ConstructionService) CreateOperationDescription(
 	}
 
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
-		return s.createOperationDescriptionNative(), nil
+		return s.createOperationDescription(mapper.AvaxCurrency, mapper.OpCall), nil
 	}
 	_, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 	_, secondOk := secondCurrency.Metadata[mapper.ContractAddressMetadata].(string)
@@ -643,69 +643,40 @@ func (s ConstructionService) CreateOperationDescription(
 		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
 	}
 
-	return s.createOperationDescriptionERC20(firstCurrency), nil
+	return s.createOperationDescription(firstCurrency, mapper.OpErc20Transfer), nil
 }
 
-func (s ConstructionService) createOperationDescriptionNative() []*parser.OperationDescription {
-	var descriptions []*parser.OperationDescription
-
-	nativeSend := parser.OperationDescription{
-		Type: mapper.OpCall,
-		Account: &parser.AccountDescription{
-			Exists: true,
+func (s ConstructionService) createOperationDescription(
+	currency *types.Currency,
+	opType string,
+) []*parser.OperationDescription {
+	return []*parser.OperationDescription{
+		// Send
+		{
+			Type: opType,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.NegativeAmountSign,
+				Currency: currency,
+			},
 		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.NegativeAmountSign,
-			Currency: mapper.AvaxCurrency,
+
+		// Receive
+		{
+			Type: opType,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.PositiveAmountSign,
+				Currency: currency,
+			},
 		},
 	}
-	nativeReceive := parser.OperationDescription{
-		Type: mapper.OpCall,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.PositiveAmountSign,
-			Currency: mapper.AvaxCurrency,
-		},
-	}
-
-	descriptions = append(descriptions, &nativeSend)
-	descriptions = append(descriptions, &nativeReceive)
-	return descriptions
-}
-
-func (s ConstructionService) createOperationDescriptionERC20(currency *types.Currency) []*parser.OperationDescription {
-	var descriptions []*parser.OperationDescription
-
-	send := parser.OperationDescription{
-		Type: mapper.OpErc20Transfer,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.NegativeAmountSign,
-			Currency: currency,
-		},
-	}
-	receive := parser.OperationDescription{
-		Type: mapper.OpErc20Transfer,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.PositiveAmountSign,
-			Currency: currency,
-		},
-	}
-
-	descriptions = append(descriptions, &send)
-	descriptions = append(descriptions, &receive)
-	return descriptions
 }
 
 func (s ConstructionService) getNativeTransferGasLimit(
