@@ -3,7 +3,6 @@ package mapper
 import (
 	"testing"
 
-	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -34,11 +33,6 @@ func TestERC20Ops(t *testing.T) {
 				ethcommon.HexToHash("0x0000000000000000000000005d95ae932d42e53bb9da4de65e9b7263a4fa8564"),
 			},
 			Data: ethcommon.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
-		}
-
-		currency := clientTypes.ContractCurrency{
-			Symbol:   WAVAX.Symbol,
-			Decimals: WAVAX.Decimals,
 		}
 
 		assert.Equal(t, []*types.Operation{
@@ -75,7 +69,7 @@ func TestERC20Ops(t *testing.T) {
 					Currency: WAVAX,
 				},
 			},
-		}, erc20Ops(log, &currency, 1))
+		}, erc20Ops(log, WAVAX, 1))
 	})
 
 	t.Run("burn op", func(t *testing.T) {
@@ -87,11 +81,6 @@ func TestERC20Ops(t *testing.T) {
 				ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
 			},
 			Data: ethcommon.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
-		}
-
-		currency := clientTypes.ContractCurrency{
-			Symbol:   WAVAX.Symbol,
-			Decimals: WAVAX.Decimals,
 		}
 
 		assert.Equal(t, []*types.Operation{
@@ -109,7 +98,7 @@ func TestERC20Ops(t *testing.T) {
 					Currency: WAVAX,
 				},
 			},
-		}, erc20Ops(log, &currency, 1))
+		}, erc20Ops(log, WAVAX, 1))
 	})
 
 	t.Run("mint op", func(t *testing.T) {
@@ -121,11 +110,6 @@ func TestERC20Ops(t *testing.T) {
 				ethcommon.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
 			},
 			Data: ethcommon.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
-		}
-
-		currency := clientTypes.ContractCurrency{
-			Symbol:   WAVAX.Symbol,
-			Decimals: WAVAX.Decimals,
 		}
 
 		assert.Equal(t, []*types.Operation{
@@ -143,7 +127,7 @@ func TestERC20Ops(t *testing.T) {
 					Currency: WAVAX,
 				},
 			},
-		}, erc20Ops(log, &currency, 1))
+		}, erc20Ops(log, WAVAX, 1))
 	})
 }
 

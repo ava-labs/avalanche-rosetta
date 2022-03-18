@@ -33,7 +33,7 @@ type Client interface {
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	GetNetworkName(context.Context) (string, error)
 	Peers(context.Context) ([]info.Peer, error)
-	GetContractCurrency(ethcommon.Address, bool) (*ContractCurrency, error)
+	GetContractInfo(ethcommon.Address, bool) (string, uint8, error)
 	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
 }
 

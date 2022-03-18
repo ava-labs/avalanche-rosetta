@@ -8,17 +8,9 @@ import (
 )
 
 const (
-	UnknownERC20Symbol   = "ERC20_UNKNOWN"
-	UnknownERC20Decimals = 0
-
-	UnknownERC721Symbol   = "ERC721_UNKNOWN"
-	UnknownERC721Decimals = 0
+	UnknownERC20Symbol  = "ERC20_UNKNOWN"
+	UnknownERC721Symbol = "ERC721_UNKNOWN"
 )
-
-type ContractCurrency struct {
-	Symbol   string `json:"symbol"`
-	Decimals int32  `json:"decimals"`
-}
 
 type Blockchain struct {
 	ID       string `json:"id"`
