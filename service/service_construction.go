@@ -715,8 +715,10 @@ func (s ConstructionService) createOperationDescriptionERC20(currency *types.Cur
 	return descriptions
 }
 
-func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAddress string,
-	fromAddress string, value *big.Int) (uint64, error) {
+func (s ConstructionService) getNativeTransferGasLimit(
+	ctx context.Context, toAddress string,
+	fromAddress string, value *big.Int,
+) (uint64, error) {
 	if len(toAddress) == 0 || value == nil {
 		// We guard against malformed inputs that may have been generated using
 		// a previous version of avalanche-rosetta.
@@ -734,8 +736,10 @@ func (s ConstructionService) getNativeTransferGasLimit(ctx context.Context, toAd
 	return gasLimit, nil
 }
 
-func (s ConstructionService) getErc20TransferGasLimit(ctx context.Context, toAddress string,
-	fromAddress string, value *big.Int, currency *types.Currency) (uint64, error) {
+func (s ConstructionService) getErc20TransferGasLimit(
+	ctx context.Context, toAddress string,
+	fromAddress string, value *big.Int, currency *types.Currency,
+) (uint64, error) {
 	contract, ok := currency.Metadata[mapper.ContractAddressMetadata]
 	if len(toAddress) == 0 || value == nil || !ok {
 		return erc20TransferGasLimit, nil
