@@ -40,7 +40,10 @@ cat <<EOF > /app/rosetta-config.json
   "network_id": 1,
   "network_name": "$AVALANCHE_NETWORK",
   "chain_id": $AVALANCHE_CHAIN,
-  "genesis_block_hash": "$AVALANCHE_GENESIS_HASH"
+  "genesis_block_hash": "$AVALANCHE_GENESIS_HASH",
+  "index_unknown_tokens": false,
+  "ingestion_mode": "standard",
+  "token_whitelist": ["0x6fea8769d9511e693a3e5C3aE4C0FB717a9f897D"]
 }
 EOF
 

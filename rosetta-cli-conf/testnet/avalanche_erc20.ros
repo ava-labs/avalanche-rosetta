@@ -1,8 +1,7 @@
 request_funds(1){
   find_account{
     currency = {"symbol":"AVAX", "decimals":18};
-    // You can get test DAI funds from: https://faucet.paradigm.xyz/
-    erc20_currency = {"symbol":"DAI", "decimals":18, "metadata": {"contractAddress": "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9"}};
+    erc20_currency = {"symbol":"TCOIN", "decimals":18, "metadata": {"contractAddress": "0x6fea8769d9511e693a3e5C3aE4C0FB717a9f897D"}};
     random_account = find_balance({
       "minimum_balance":{
         "value": "0",
@@ -27,7 +26,7 @@ request_funds(1){
     loaded_account2 = find_balance({
       "account_identifier": {{random_account.account_identifier}},
       "minimum_balance":{
-        "value": "10000000000000000", // 0.01 DAI
+        "value": "10000000000000000", // 0.01 TCOIN
         "currency": {{erc20_currency}}
       }
     });
@@ -56,10 +55,10 @@ simple_transfer_erc20(1){
     transfer.network = {"network":"Fuji", "blockchain":"Avalanche"};
     avax_currency = {"symbol":"AVAX", "decimals":18};
 
-    currency = {"symbol":"DAI", "decimals":18, "metadata": {"contractAddress": "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9"}};
+    currency = {"symbol":"TCOIN", "decimals":18, "metadata": {"contractAddress": "0x6fea8769d9511e693a3e5C3aE4C0FB717a9f897D"}};
     sender = find_balance({
       "minimum_balance":{
-        "value": "10000000000000000", // 0.01 DAI
+        "value": "10000000000000000", // 0.01 TCOIN
         "currency": {{currency}}
       }
     });
