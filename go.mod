@@ -3,7 +3,7 @@ module github.com/ava-labs/avalanche-rosetta
 go 1.17
 
 require (
-	github.com/ava-labs/avalanchego v1.7.8
+	github.com/ava-labs/avalanchego v1.7.9
 	github.com/ava-labs/coreth v0.8.8-rc.0
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/ethereum/go-ethereum v1.10.16
