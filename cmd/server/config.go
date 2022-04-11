@@ -29,9 +29,10 @@ type config struct {
 	LogRequests      bool   `json:"log_requests"`
 	GenesisBlockHash string `json:"genesis_block_hash"`
 
-	IngestionMode      string   `json:"ingestion_mode"`
-	TokenWhiteList     []string `json:"token_whitelist"`
-	IndexUnknownTokens bool     `json:"index_unknown_tokens"`
+	IngestionMode          string   `json:"ingestion_mode"`
+	TokenWhiteList         []string `json:"token_whitelist"`
+	IndexUnknownTokens     bool     `json:"index_unknown_tokens"`
+	ValidateERC20Whitelist bool     `json:"validate_erc20_whitelist"`
 }
 
 func readConfig(path string) (*config, error) {
