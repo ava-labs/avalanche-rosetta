@@ -75,10 +75,10 @@ Where:
 | network_name  | string  | -       | Avalanche network name
 | chain_id      | integer | -       | Avalanche C-Chain ID
 | genesis_block_hash    | string  | -         | The block hash for the genesis block
-| index_unknown_tokens  | bool    | `false`   | Enables ingesting tokens that don't have a public symbol or decimal variable=
+| index_unknown_tokens  | bool    | `false`   | Enables ingesting tokens that don't have a public symbol or decimal variable
 | ingestion_mode        | string  | `standard`| Toggles between standard and analytics ingesting modes
 | token_whitelist       |[]string | []        | Enables ingesting for the provided ERC20 contract addresses in standard mode.
-| validate_erc20_whitelist  | bool | `false`  | Verifies provided ERC20 contract addresses in standard mode.
+| validate_erc20_whitelist  | bool | `false`  | Verifies provided ERC20 contract addresses in standard mode (node must be bootstrapped when rosetta server starts).
 
 The token whitelist only supports tokens that emit evm transfer logs for all minting (from should be 0x000---), burning (to address should be 0x0000) and transfer events are supported.  All other tokens will break cause ingestion to fail.
 
