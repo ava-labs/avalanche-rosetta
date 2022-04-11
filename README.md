@@ -60,7 +60,8 @@ Full configuration example:
   "genesis_block_hash" :"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b",
   "index_unknown_tokens": false,
   "ingestion_mode" : "standard",
-  "token_whitelist" : []
+  "token_whitelist" : [],
+  "validate_erc20_whitelist": false
 }
 ```
 
