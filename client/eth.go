@@ -44,7 +44,11 @@ func NewEthClient(endpoint string) (*EthClient, error) {
 // TxPoolContent returns the tx pool content
 func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 	content := &TxPoolContent{}
-	err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "txpool_inspect", nil, content)
+	ops := rpc.NewOptions(nil)
+	err := c.rpc.SendJSONRPCRequest(
+		ctx, prefixEth, ops.Headers(), ops.QueryParams(),
+		"txpool_inspect", nil, content,
+	)
 	if err != nil {
 		content = nil
 	}
@@ -55,8 +59,11 @@ func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, []*FlatCall, error) {
 	var result Call
 	args := []interface{}{hash, c.traceConfig}
-
-	if err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceTransaction", args, &result); err != nil {
+	ops := rpc.NewOptions(nil)
+	if err := c.rpc.SendJSONRPCRequest(
+		ctx, prefixEth, ops.Headers(), ops.QueryParams(),
+		"debug_traceTransaction", args, &result,
+	); err != nil {
 		return nil, nil, err
 	}
 
@@ -70,9 +77,12 @@ func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call,
 	var raw []struct {
 		*Call `json:"result"`
 	}
-
 	args := []interface{}{hash, c.traceConfig}
-	if err := c.rpc.SendJSONRPCRequest(ctx, prefixEth, "debug_traceBlockByHash", args, &raw); err != nil {
+	ops := rpc.NewOptions(nil)
+	if err := c.rpc.SendJSONRPCRequest(
+		ctx, prefixEth, ops.Headers(), ops.QueryParams(),
+		"debug_traceBlockByHash", args, &raw,
+	); err != nil {
 		return nil, nil, err
 	}
 
