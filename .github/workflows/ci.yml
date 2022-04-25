@@ -4,6 +4,7 @@ on:
   push:
     branches: 
       - master
+      - e2e
     tags:
       - "*"
   pull_request:
