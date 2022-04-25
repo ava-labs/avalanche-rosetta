@@ -4,7 +4,6 @@ on:
   push:
     branches: 
       - master
-      - e2e
     tags:
       - "*"
   pull_request:
@@ -34,16 +33,16 @@ jobs:
           go-version: ${{ env.go_version }}
       - run: make test
   Test (E2E):
-     runs-on: ubuntu-latest
-     steps:
-       - uses: actions/checkout@v2
-         with:
-           fetch-depth: 0
-       - uses: actions/setup-go@v2
-         with:
-           go-version: ${{ env.go_version }}
-       - shell: bash
-         run: scripts/run.sh 1.7.10 test 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.go_version }}
+      - shell: bash
+        run: scripts/run.sh 1.7.10 test 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC
   Lint:
     runs-on: ubuntu-latest
     steps:
