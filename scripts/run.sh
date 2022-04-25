@@ -2,8 +2,8 @@
 set -e
 
 # e.g.,
-# ./scripts/run.sh 1.7.10 test 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC
-# ./scripts/run.sh 1.7.10 run 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC
+# ./scripts/run.sh 1.7.10 test
+# ./scripts/run.sh 1.7.10 run
 if ! [[ "$0" =~ scripts/run.sh ]]; then
   echo "must be run from repository root"
   exit 255
@@ -12,28 +12,20 @@ fi
 VERSION=$1
 if [[ -z "${VERSION}" ]]; then
   echo "Missing version argument!"
-  echo "Usage: ${0} [VERSION] [MODE] [GENESIS_ADDRESS]" >> /dev/stderr
+  echo "Usage: ${0} [VERSION] [MODE]" >> /dev/stderr
   exit 255
 fi
 
 MODE=$2
 if [[ -z "${MODE}" ]]; then
   echo "Missing mode argument!"
-  echo "Usage: ${0} [VERSION] [MODE] [GENESIS_ADDRESS]" >> /dev/stderr
-  exit 255
-fi
-
-GENESIS_ADDRESS=$3
-if [[ -z "${GENESIS_ADDRESS}" ]]; then
-  echo "Missing address argument!"
-  echo "Usage: ${0} [VERSION] [MODE] [GENESIS_ADDRESS]" >> /dev/stderr
+  echo "Usage: ${0} [VERSION] [MODE]" >> /dev/stderr
   exit 255
 fi
 
 echo "Running e2e tests with:"
 echo VERSION: ${VERSION}
 echo MODE: ${MODE}
-echo GENESIS_ADDRESS: ${GENESIS_ADDRESS}
 
 ############################
 # download avalanchego
@@ -64,119 +56,6 @@ find /tmp/avalanchego-v${VERSION}
 
 AVALANCHEGO_PATH=/tmp/avalanchego-v${VERSION}/avalanchego
 AVALANCHEGO_PLUGIN_DIR=/tmp/avalanchego-v${VERSION}/plugins
-
-#################################
-# compile subnet-evm
-# Check if SUBNET_EVM_COMMIT is set, if not retrieve the last commit from the repo.
-# This is used in the Dockerfile to allow a commit hash to be passed in without
-# including the .git/ directory within the Docker image.
-subnet_evm_commit=${SUBNET_EVM_COMMIT:-$( git rev-list -1 HEAD )}
-
-# Build Subnet EVM, which is run as a subprocess
-echo "Building Subnet EVM Version: $subnet_evm_version; GitCommit: $subnet_evm_commit"
-go build \
--ldflags "-X github.com/ava-labs/subnet_evm/plugin/evm.GitCommit=$subnet_evm_commit -X github.com/ava-labs/subnet_evm/plugin/evm.Version=$subnet_evm_version" \
--o /tmp/avalanchego-v${VERSION}/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy \
-"plugin/"*.go
-find /tmp/avalanchego-v${VERSION}
-
-#################################
-# write subnet-evm genesis
-
-# Create genesis file to use in network (make sure to add your address to
-# "alloc")
-export CHAIN_ID=99999
-echo "creating genesis"
-cat <<EOF > /tmp/genesis.json
-{
-  "config": {
-    "chainId": $CHAIN_ID,
-    "homesteadBlock": 0,
-    "eip150Block": 0,
-    "eip150Hash": "0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0",
-    "eip155Block": 0,
-    "eip158Block": 0,
-    "byzantiumBlock": 0,
-    "constantinopleBlock": 0,
-    "petersburgBlock": 0,
-    "istanbulBlock": 0,
-    "muirGlacierBlock": 0,
-    "subnetEVMTimestamp": 0,
-    "feeConfig": {
-      "gasLimit": 20000000,
-      "minBaseFee": 1000000000,
-      "targetGas": 100000000,
-      "baseFeeChangeDenominator": 48,
-      "minBlockGasCost": 0,
-      "maxBlockGasCost": 10000000,
-      "targetBlockRate": 2,
-      "blockGasCostStep": 500000
-    }
-  },
-  "alloc": {
-    "${GENESIS_ADDRESS:2}": {
-      "balance": "0x52B7D2DCC80CD2E4000000"
-    }
-  },
-  "nonce": "0x0",
-  "timestamp": "0x0",
-  "extraData": "0x00",
-  "gasLimit": "0x1312D00",
-  "difficulty": "0x0",
-  "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "coinbase": "0x0000000000000000000000000000000000000000",
-  "number": "0x0",
-  "gasUsed": "0x0",
-  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
-}
-EOF
-
-# If you'd like to try the airdrop feature, use the commented genesis
-# cat <<EOF > /tmp/genesis.json
-# {
-#   "config": {
-#     "chainId": $CHAIN_ID,
-#     "homesteadBlock": 0,
-#     "eip150Block": 0,
-#     "eip150Hash": "0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0",
-#     "eip155Block": 0,
-#     "eip158Block": 0,
-#     "byzantiumBlock": 0,
-#     "constantinopleBlock": 0,
-#     "petersburgBlock": 0,
-#     "istanbulBlock": 0,
-#     "muirGlacierBlock": 0,
-#     "subnetEVMTimestamp": 0,
-#     "feeConfig": {
-#       "gasLimit": 20000000,
-#       "minBaseFee": 1000000000,
-#       "targetGas": 100000000,
-#       "baseFeeChangeDenominator": 48,
-#       "minBlockGasCost": 0,
-#       "maxBlockGasCost": 10000000,
-#       "targetBlockRate": 2,
-#       "blockGasCostStep": 500000
-#     }
-#   },
-#   "airdropHash":"0xccbf8e430b30d08b5b3342208781c40b373d1b5885c1903828f367230a2568da",
-#   "airdropAmount":"0x8AC7230489E80000",
-#   "alloc": {
-#     "${GENESIS_ADDRESS:2}": {
-#       "balance": "0x52B7D2DCC80CD2E4000000"
-#     }
-#   },
-#   "nonce": "0x0",
-#   "timestamp": "0x0",
-#   "extraData": "0x00",
-#   "gasLimit": "0x1312D00",
-#   "difficulty": "0x0",
-#   "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-#   "coinbase": "0x0000000000000000000000000000000000000000",
-#   "number": "0x0",
-#   "gasUsed": "0x0",
-#   "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
-# }
-# EOF
 
 #################################
 # download avalanche-network-runner
