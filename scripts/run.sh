@@ -79,11 +79,11 @@ tar xzvf ${DOWNLOAD_PATH} -C /tmp
 /tmp/avalanche-network-runner -h
 
 #################################
-echo "building e2e.test"
+echo "building e2e"
 # to install the ginkgo binary (required for test build and run)
 go install -v github.com/onsi/ginkgo/v2/ginkgo@v2.1.3
-ACK_GINKGO_RC=true ginkgo build ./tests/e2e
-./tests/e2e/e2e.test --help
+ACK_GINKGO_RC=true ginkgo build ./tests
+./tests/e2e --help
 
 #################################
 # run "avalanche-network-runner" server
