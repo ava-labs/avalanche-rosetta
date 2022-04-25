@@ -22,7 +22,8 @@ jobs:
         with:
           go-version: ${{ env.go_version }}
       - run: make build
-  Test (Unit):
+  unit_test:
+    name: Test (Unit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -32,7 +33,8 @@ jobs:
         with:
           go-version: ${{ env.go_version }}
       - run: make test
-  Test (E2E):
+  e2e_test:
+    name: Test (E2E)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
