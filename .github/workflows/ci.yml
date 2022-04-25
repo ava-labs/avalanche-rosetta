@@ -4,6 +4,8 @@ on:
   push:
     branches: 
       - master
+    tags:
+      - "*"
   pull_request:
 
 env:
@@ -14,22 +16,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.go_version }}
       - run: make build
-  Test:
+  Test (Unit):
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.go_version }}
       - run: make test
+  Test (E2E):
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v2
+         with:
+           fetch-depth: 0
+       - uses: actions/setup-go@v2
+         with:
+           go-version: ${{ env.go_version }}
+       - shell: bash
+         run: scripts/run.sh 1.7.10 test 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC
   Lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: golangci/golangci-lint-action@v2
         with:
           version: latest
