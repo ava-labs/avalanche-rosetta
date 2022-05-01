@@ -16,8 +16,8 @@ import (
 	"github.com/onsi/gomega"
 
 	runner_client "github.com/ava-labs/avalanche-network-runner/client"
+	"github.com/ava-labs/avalanchego/tests"
 
-	"github.com/ava-labs/avalanche-rosetta/tests"
 	"github.com/ava-labs/avalanche-rosetta/tests/e2e"
 
 	// ensure test packages are scanned by ginkgo

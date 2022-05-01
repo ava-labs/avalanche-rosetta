@@ -1,4 +1,4 @@
-module github.com/ava-labs/avalanche-rosetta/tests
+module github.com/ava-labs/avalanche-rosetta/tests/e2e
 
 go 1.17
 
@@ -7,7 +7,6 @@ require (
 	github.com/ava-labs/avalanchego v1.7.11-0.20220416161358-8755486a274e
 	github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/onsi/gomega v1.19.0
-	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
