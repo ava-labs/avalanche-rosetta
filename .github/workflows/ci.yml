@@ -44,7 +44,7 @@ jobs:
         with:
           go-version: ${{ env.go_version }}
       - shell: bash
-        run: scripts/run.sh 1.7.10 test 0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC
+        run: scripts/run.sh 1.7.10 test
   Lint:
     runs-on: ubuntu-latest
     steps:
