@@ -61,7 +61,7 @@ AVALANCHEGO_PLUGIN_DIR=/tmp/avalanchego-v${VERSION}/plugins
 # download avalanche-network-runner
 # https://github.com/ava-labs/avalanche-network-runner
 # TODO: use "go install -v github.com/ava-labs/avalanche-network-runner/cmd/avalanche-network-runner@v${NETWORK_RUNNER_VERSION}"
-NETWORK_RUNNER_VERSION=1.0.11
+NETWORK_RUNNER_VERSION=1.0.16
 DOWNLOAD_PATH=/tmp/avalanche-network-runner.tar.gz
 DOWNLOAD_URL=https://github.com/ava-labs/avalanche-network-runner/releases/download/v${NETWORK_RUNNER_VERSION}/avalanche-network-runner_${NETWORK_RUNNER_VERSION}_linux_amd64.tar.gz
 if [[ ${GOOS} == "darwin" ]]; then
@@ -82,7 +82,7 @@ tar xzvf ${DOWNLOAD_PATH} -C /tmp
 echo "building e2e"
 # to install the ginkgo binary (required for test build and run)
 go install -v github.com/onsi/ginkgo/v2/ginkgo@v2.1.3
-ACK_GINKGO_RC=true ginkgo build ./tests
+ACK_GINKGO_RC=true ginkgo build ./tests/e2e
 ./tests/e2e --help
 
 #################################
