@@ -104,8 +104,8 @@ echo "running e2e tests"
 --ginkgo.v \
 --network-runner-log-level debug \
 --network-runner-grpc-endpoint="0.0.0.0:12342" \
---avalanchego-path=${AVALANCHEGO_PATH} \
---avalanchego-plugin-dir=${AVALANCHEGO_PLUGIN_DIR} \
+--network-runner-avalanchego-path=${AVALANCHEGO_PATH} \
+--network-runner-avalanchego-log-level="WARN" \
 --avalanchego-log-level="DEBUG" \
 --vm-genesis-path=/tmp/genesis.json \
 --output-path=/tmp/avalanchego-v${VERSION}/output.yaml \
