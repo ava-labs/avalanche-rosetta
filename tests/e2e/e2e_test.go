@@ -17,6 +17,9 @@ import (
 
 	ginkgo "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+
+	// ensure test packages are scanned by ginkgo
+	_ "github.com/ava-labs/avalanche-rosetta/tests/e2e/transfer"
 )
 
 func TestE2E(t *testing.T) {
