@@ -21,7 +21,7 @@ setup:
 	go mod download
 
 test:
-	go test -v -cover -race ./...
+	go test -v -cover -race $(shell go list ./... | grep -v /tests/e2e)
 
 docker-build:
 	docker build \
