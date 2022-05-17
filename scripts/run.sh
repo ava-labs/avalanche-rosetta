@@ -119,7 +119,7 @@ PID=${!}
 echo "running e2e tests"
 ./tests/e2e/e2e.test \
 --ginkgo.v \
---log-level debug \  
+--log-level debug \
 --network-runner-grpc-endpoint="0.0.0.0:12342" || EXIT_CODE=$?
 
 # "e2e.test" already terminates the cluster
