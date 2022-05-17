@@ -119,9 +119,7 @@ PID=${!}
 echo "running e2e tests"
 ./tests/e2e/e2e.test \
 --ginkgo.v \
---log-level debug \  
---network-runner-avalanchego-path=${AVALANCHEGO_PATH} \
---network-runner-avalanchego-log-level=${AVALANCHE_LOG_LEVEL} || EXIT_CODE=$?
+--log-level debug || EXIT_CODE=$?
 
 # "e2e.test" already terminates the cluster
 # just in case tests are aborted, manually terminate them again

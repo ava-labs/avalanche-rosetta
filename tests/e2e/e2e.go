@@ -9,7 +9,6 @@ import (
 	"time"
 
 	runner_sdk "github.com/ava-labs/avalanche-network-runner-sdk"
-	"github.com/ava-labs/avalanchego/utils/crypto"
 )
 
 const (
@@ -84,40 +83,4 @@ func GetURIs() []string {
 	us := uris
 	urisMu.RUnlock()
 	return us
-}
-
-var (
-	testKeysMu sync.RWMutex
-	testKeys   []*crypto.PrivateKeySECP256K1R
-)
-
-func SetTestKeys(ks []*crypto.PrivateKeySECP256K1R) {
-	testKeysMu.Lock()
-	testKeys = ks
-	testKeysMu.Unlock()
-}
-
-func GetTestKeys() []*crypto.PrivateKeySECP256K1R {
-	testKeysMu.RLock()
-	ks := testKeys
-	testKeysMu.RUnlock()
-	return ks
-}
-
-var (
-	enableWhitelistTxTestMu sync.RWMutex
-	enableWhitelistTxTests  bool
-)
-
-func SetEnableWhitelistTxTests(b bool) {
-	enableWhitelistTxTestMu.Lock()
-	enableWhitelistTxTests = b
-	enableWhitelistTxTestMu.Unlock()
-}
-
-func GetEnableWhitelistTxTests() (b bool) {
-	enableWhitelistTxTestMu.RLock()
-	b = enableWhitelistTxTests
-	enableWhitelistTxTestMu.RUnlock()
-	return b
 }
