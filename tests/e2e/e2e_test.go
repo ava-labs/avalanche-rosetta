@@ -32,9 +32,6 @@ var (
 	networkRunnerAvalancheGoLogLevel string
 
 	uris string
-
-	testKeysFile           string
-	enableWhitelistTxTests bool
 )
 
 // TODO: support existing keys
@@ -65,35 +62,9 @@ func init() {
 		"INFO",
 		"[optional] avalanchego log-level (only required for local network-runner tests)",
 	)
-
-	// e.g., custom network HTTP RPC endpoints
-	flag.StringVar(
-		&uris,
-		"uris",
-		"",
-		"HTTP RPC endpoint URIs for avalanche node (comma-separated, required to run against existing cluster)",
-	)
-
-	// file that contains a list of new-line separated secp256k1 private keys
-	flag.StringVar(
-		&testKeysFile,
-		"test-keys-file",
-		"",
-		"file that contains a list of new-line separated cb58-encoded secp256k1 private keys (assume test keys are pre-funded, for test networks)",
-	)
-
-	// TODO: remove this once we linearize DAG
-	flag.BoolVar(
-		&enableWhitelistTxTests,
-		"enable-whitelist-vtx-tests",
-		false,
-		"true to enable whitelist vtx tests",
-	)
 }
 
 var _ = ginkgo.BeforeSuite(func() {
-	e2e.SetEnableWhitelistTxTests(enableWhitelistTxTests)
-
 	if networkRunnerAvalancheGoExecPath != "" {
 		_, err := os.Stat(networkRunnerAvalancheGoExecPath)
 		gomega.Expect(err).Should(gomega.BeNil())
