@@ -46,8 +46,13 @@ func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 	var content TxPoolContent
 
 	err := c.rpc.SendJSONRPCRequest(
-		ctx, prefixEth, nil, nil,
-		"txpool_inspect", nil, &content,
+		ctx,
+		prefixEth,
+		nil,
+		nil,
+		"txpool_inspect",
+		nil,
+		&content,
 	)
 	if err != nil {
 		return nil, err
@@ -62,8 +67,13 @@ func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, [
 	args := []interface{}{hash, c.traceConfig}
 
 	err := c.rpc.SendJSONRPCRequest(
-		ctx, prefixEth, nil, nil,
-		"debug_traceTransaction", args, &result,
+		ctx,
+		prefixEth,
+		nil,
+		nil,
+		"debug_traceTransaction",
+		args,
+		&result,
 	)
 	if err != nil {
 		return nil, nil, err
@@ -82,8 +92,13 @@ func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call,
 	args := []interface{}{hash, c.traceConfig}
 
 	err := c.rpc.SendJSONRPCRequest(
-		ctx, prefixEth, nil, nil,
-		"debug_traceBlockByHash", args, &raw,
+		ctx,
+		prefixEth,
+		nil,
+		nil,
+		"debug_traceBlockByHash",
+		args,
+		&raw,
 	)
 	if err != nil {
 		return nil, nil, err
