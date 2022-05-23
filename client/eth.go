@@ -54,11 +54,8 @@ func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 		nil,
 		&content,
 	)
-	if err != nil {
-		return nil, err
-	}
 
-	return &content, nil
+	return &content, err
 }
 
 // TraceTransaction returns a transaction trace
