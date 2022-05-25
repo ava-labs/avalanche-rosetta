@@ -49,13 +49,10 @@ func NewClient(ctx context.Context, endpoint string) (Client, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
 
 	eth, err := NewEthClient(ctx, endpoint)
-	if err != nil {
-		return nil, err
-	}
 
 	return client{
 		Client:         info.NewClient(endpoint),
 		EthClient:      eth,
 		ContractClient: NewContractClient(eth.Client),
-	}, nil
+	}, err
 }
