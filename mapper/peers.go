@@ -11,7 +11,7 @@ func Peers(peers []info.Peer) []*types.Peer {
 
 	for idx, peer := range peers {
 		result[idx] = &types.Peer{
-			PeerID: peer.ID,
+			PeerID: peer.ID.String(),
 			Metadata: map[string]interface{}{
 				"ip":              peer.IP,
 				"public_ip":       peer.PublicIP,
