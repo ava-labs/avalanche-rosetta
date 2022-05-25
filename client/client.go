@@ -45,10 +45,10 @@ type client struct {
 }
 
 // NewClient returns a new client for Avalanche APIs
-func NewClient(endpoint string) (Client, error) {
+func NewClient(ctx context.Context, endpoint string) (Client, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
 
-	eth, err := NewEthClient(endpoint)
+	eth, err := NewEthClient(ctx, endpoint)
 	if err != nil {
 		return nil, err
 	}
