@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/coreth/eth/tracers"
 	"github.com/ava-labs/coreth/ethclient"
+	"github.com/ava-labs/coreth/rpc"
 )
 
 var (
@@ -18,7 +18,7 @@ var (
 // EthClient provides access to Coreth API
 type EthClient struct {
 	ethclient.Client
-	rpc         rpc.Requester
+	rpc         *rpc.Client
 	traceConfig *tracers.TraceConfig
 }
 
@@ -26,14 +26,14 @@ type EthClient struct {
 func NewEthClient(endpoint string) (*EthClient, error) {
 	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 
-	c, err := ethclient.Dial(endpointURL)
+	c, err := rpc.Dial(endpointURL)
 	if err != nil {
 		return nil, err
 	}
 
 	return &EthClient{
-		Client: c,
-		rpc:    rpc.NewRPCRequester(endpoint),
+		Client: ethclient.NewClient(c),
+		rpc:    c,
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,
 			Tracer:  &tracer,
@@ -45,15 +45,7 @@ func NewEthClient(endpoint string) (*EthClient, error) {
 func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 	var content TxPoolContent
 
-	err := c.rpc.SendJSONRPCRequest(
-		ctx,
-		prefixEth,
-		nil,
-		nil,
-		"txpool_inspect",
-		nil,
-		&content,
-	)
+	err := c.rpc.CallContext(ctx, &content, "txpool_inspect")
 
 	return &content, err
 }
@@ -61,17 +53,8 @@ func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 // TraceTransaction returns a transaction trace
 func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, []*FlatCall, error) {
 	var result Call
-	args := []interface{}{hash, c.traceConfig}
 
-	err := c.rpc.SendJSONRPCRequest(
-		ctx,
-		prefixEth,
-		nil,
-		nil,
-		"debug_traceTransaction",
-		args,
-		&result,
-	)
+	err := c.rpc.CallContext(ctx, &result, "debug_traceTransaction", hash, c.traceConfig)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -86,17 +69,8 @@ func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call,
 	var raw []struct {
 		*Call `json:"result"`
 	}
-	args := []interface{}{hash, c.traceConfig}
 
-	err := c.rpc.SendJSONRPCRequest(
-		ctx,
-		prefixEth,
-		nil,
-		nil,
-		"debug_traceBlockByHash",
-		args,
-		&raw,
-	)
+	err := c.rpc.CallContext(ctx, &raw, "debug_traceBlockByHash", hash, c.traceConfig)
 	if err != nil {
 		return nil, nil, err
 	}
