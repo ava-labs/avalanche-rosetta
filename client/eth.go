@@ -27,6 +27,9 @@ func NewEthClient(ctx context.Context, endpoint string) (*EthClient, error) {
 	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 
 	c, err := rpc.DialContext(ctx, endpointURL)
+	if err != nil {
+		return nil, err
+	}
 
 	return &EthClient{
 		Client: ethclient.NewClient(c),
@@ -35,7 +38,7 @@ func NewEthClient(ctx context.Context, endpoint string) (*EthClient, error) {
 			Timeout: &tracerTimeout,
 			Tracer:  &tracer,
 		},
-	}, err
+	}, nil
 }
 
 // TxPoolContent returns the tx pool content
