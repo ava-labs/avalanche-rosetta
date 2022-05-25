@@ -23,13 +23,10 @@ type EthClient struct {
 }
 
 // NewEthClient returns a new EVM client
-func NewEthClient(endpoint string) (*EthClient, error) {
+func NewEthClient(ctx context.Context, endpoint string) (*EthClient, error) {
 	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
 
-	c, err := rpc.Dial(endpointURL)
-	if err != nil {
-		return nil, err
-	}
+	c, err := rpc.DialContext(ctx, endpointURL)
 
 	return &EthClient{
 		Client: ethclient.NewClient(c),
@@ -38,7 +35,7 @@ func NewEthClient(endpoint string) (*EthClient, error) {
 			Timeout: &tracerTimeout,
 			Tracer:  &tracer,
 		},
-	}, nil
+	}, err
 }
 
 // TxPoolContent returns the tx pool content
