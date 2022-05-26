@@ -2,20 +2,24 @@ package mapper
 
 import (
 	"github.com/ava-labs/coreth/params"
-	"github.com/ethereum/go-ethereum/common"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
 	MainnetChainID = 43114
 	MainnetAssetID = "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
+	MainnetNetwork = "Mainnet"
 
 	FujiChainID = 43113
 	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
+	FujiNetwork = "Fuji"
 
 	ContractAddressMetadata  = "contractAddress"
 	IndexTransferredMetadata = "indexTransferred"
+
+	PChainNetworkIdentifier = "P"
+	PChainIDAlias           = "P"
 
 	OpCall          = "CALL"
 	OpFee           = "FEE"

@@ -111,17 +111,24 @@ func main() {
 		cfg.NetworkName = networkName
 	}
 
-	network := &types.NetworkIdentifier{
+	networkP := &types.NetworkIdentifier{
+		Blockchain: service.BlockchainName,
+		Network:    cfg.NetworkName,
+		SubNetworkIdentifier: &types.SubNetworkIdentifier{
+			Network: "P",
+		},
+	}
+	networkC := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
 		Network:    cfg.NetworkName,
 	}
 
 	asserter, err := asserter.NewServer(
-		mapper.OperationTypes,               // supported operation types
-		true,                                // historical balance lookup
-		[]*types.NetworkIdentifier{network}, // supported networks
-		[]string{},                          // call methods
-		false,                               // mempool coins
+		mapper.OperationTypes, // supported operation types
+		true,                  // historical balance lookup
+		[]*types.NetworkIdentifier{networkP, networkC}, // supported networks
+		[]string{}, // call methods
+		false,      // mempool coins
 	)
 	if err != nil {
 		log.Fatal("server asserter init error:", err)
@@ -130,7 +137,7 @@ func main() {
 	serviceConfig := &service.Config{
 		Mode:               cfg.Mode,
 		ChainID:            big.NewInt(cfg.ChainID),
-		NetworkID:          network,
+		NetworkID:          networkC,
 		GenesisBlockHash:   cfg.GenesisBlockHash,
 		AvaxAssetID:        assetID,
 		AP5Activation:      AP5Activation,

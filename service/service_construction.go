@@ -6,20 +6,21 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/utils/formatting/address"
+	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/interfaces"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
-	"golang.org/x/crypto/sha3"
-
-	ethtypes "github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
 const (
@@ -222,6 +223,30 @@ func (s ConstructionService) ConstructionDerive(
 	ctx context.Context,
 	req *types.ConstructionDeriveRequest,
 ) (*types.ConstructionDeriveResponse, *types.Error) {
+	if isPChain(req.NetworkIdentifier) {
+		fac := crypto.FactorySECP256K1R{}
+		pub, err := fac.ToPublicKey(req.PublicKey.Bytes)
+		if err != nil {
+			return nil, wrapError(errInvalidInput, err)
+		}
+
+		chainIDAlias, hrp, getErr := getAliasAndHRP(req.NetworkIdentifier)
+		if err != nil {
+			return nil, getErr
+		}
+
+		addr, err := address.Format(chainIDAlias, hrp, pub.Address().Bytes())
+		if err != nil {
+			return nil, wrapError(errInvalidInput, err)
+		}
+
+		return &types.ConstructionDeriveResponse{
+			AccountIdentifier: &types.AccountIdentifier{
+				Address: addr,
+			},
+		}, nil
+	}
+
 	if req.PublicKey == nil {
 		return nil, wrapError(errInvalidInput, "public key is not provided")
 	}

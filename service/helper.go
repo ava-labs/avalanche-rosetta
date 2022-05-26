@@ -6,11 +6,13 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/coinbase/rosetta-sdk-go/types"
-
+	"github.com/ava-labs/avalanchego/utils/constants"
 	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
+	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 const (
@@ -103,4 +105,34 @@ func ChecksumAddress(address string) (string, bool) {
 	}
 
 	return addr.Address().Hex(), true
+}
+
+// isPChain checks network identifier to make sure sub-network identifier set to "P"
+func isPChain(networkIdentifier *types.NetworkIdentifier) bool {
+	if networkIdentifier.SubNetworkIdentifier != nil &&
+		networkIdentifier.SubNetworkIdentifier.Network == mapper.PChainNetworkIdentifier {
+		return true
+	}
+
+	return false
+}
+
+// getAliasAndHRP fetches chain id alias and hrp for address formatting.
+// Right now only P chain id alias is supported
+func getAliasAndHRP(networkIdentifier *types.NetworkIdentifier) (string, string, *types.Error) {
+	var chainIDAlias, hrp string
+	if !isPChain(networkIdentifier) {
+		return "", "", makeError(errNotImplemented.Code, "only support P chain alias", false)
+	}
+	chainIDAlias = mapper.PChainIDAlias
+	switch networkIdentifier.Network {
+	case mapper.FujiNetwork:
+		hrp = constants.GetHRP(constants.FujiID)
+	case mapper.MainnetNetwork:
+		hrp = constants.GetHRP(constants.MainnetID)
+	default:
+		return "", "", makeError(errNotImplemented.Code, "can't recognize network", false)
+	}
+
+	return chainIDAlias, hrp, nil
 }
