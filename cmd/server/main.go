@@ -115,7 +115,7 @@ func main() {
 		Blockchain: service.BlockchainName,
 		Network:    cfg.NetworkName,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
-			Network: "P",
+			Network: mapper.PChainNetworkIdentifier,
 		},
 	}
 	networkC := &types.NetworkIdentifier{
