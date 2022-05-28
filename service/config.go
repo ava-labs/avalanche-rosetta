@@ -16,6 +16,7 @@ type Config struct {
 	AvaxAssetID        string
 	IngestionMode      string
 	TokenWhiteList     []string
+	BridgeTokenList    []string
 	IndexUnknownTokens bool
 
 	// Upgrade Times
