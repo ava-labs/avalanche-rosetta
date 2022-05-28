@@ -137,6 +137,7 @@ func main() {
 		IndexUnknownTokens: cfg.IndexUnknownTokens,
 		IngestionMode:      cfg.IngestionMode,
 		TokenWhiteList:     cfg.TokenWhiteList,
+		BridgeTokenList:    cfg.BridgeTokenList,
 	}
 
 	handler := configureRouter(serviceConfig, asserter, apiClient)

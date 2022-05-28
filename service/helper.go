@@ -16,6 +16,7 @@ import (
 const (
 	nativeTransferGasLimit = uint64(21000)
 	erc20TransferGasLimit  = uint64(250000)
+	unwrapGasLimit         = uint64(750000)
 	genesisTimestamp       = 946713601000 // min allowable timestamp
 )
 
