@@ -26,7 +26,7 @@ const (
 	genericTransferBytesLength = 68
 	genericUnwrapBytesLength   = 68
 	requiredPaddingBytes       = 32
-	defaultUnwrapChainId       = 0
+	defaultUnwrapChainID       = 0
 	// do not include spaces in the Fn Signature strings
 	transferFnSignature = "transfer(address,uint256)"
 	unwrapFnSignature   = "unwrap(uint256,uint256)"
@@ -207,13 +207,6 @@ func (s ConstructionService) ConstructionCombine(
 		return nil, wrapError(errInvalidInput, err)
 	}
 
-	//TEMP
-	msg, err := signedTx.AsMessage(s.config.Signer(), nil)
-	if err != nil {
-		return nil, wrapError(errInternalError, err)
-	}
-	println(msg.From().String())
-
 	signedTxJSON, err := signedTx.MarshalJSON()
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
@@ -297,7 +290,6 @@ func (s ConstructionService) ConstructionParse(
 			return nil, wrapError(errInvalidInput, err)
 		}
 		tx.From = msg.From().Hex()
-		println(tx.From)
 	}
 
 	metadata := &parseMetadata{
@@ -619,7 +611,7 @@ func (s ConstructionService) createUnwrapPayload(req *types.ConstructionPayloads
 			fmt.Errorf("%s contract address not in configured list of supported bridge tokens", contract))
 	}
 
-	unwrapData := generateBridgeUnwrapTransferData(amount, big.NewInt(defaultUnwrapChainId))
+	unwrapData := generateBridgeUnwrapTransferData(amount, big.NewInt(defaultUnwrapChainID))
 	sendToAddress := ethcommon.HexToAddress(contract)
 
 	var metadata metadata
@@ -848,7 +840,8 @@ func (s ConstructionService) CreateUnwrapOperationDescription(
 
 func (s ConstructionService) createTransferPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
-	req *types.ConstructionPreprocessRequest) (*options, *types.Error) {
+	req *types.ConstructionPreprocessRequest,
+) (*options, *types.Error) {
 	descriptions := &parser.Descriptions{
 		OperationDescriptions: operationDescriptions,
 		ErrUnmatched:          true,
@@ -886,7 +879,8 @@ func (s ConstructionService) createTransferPreprocessOptions(
 
 func (s ConstructionService) createUnwrapPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
-	req *types.ConstructionPreprocessRequest) (*options, *types.Error) {
+	req *types.ConstructionPreprocessRequest,
+) (*options, *types.Error) {
 	descriptions := &parser.Descriptions{
 		OperationDescriptions: operationDescriptions,
 		ErrUnmatched:          true,
@@ -1046,8 +1040,8 @@ func (s ConstructionService) getBridgeUnwrapTransferGasLimit(
 	}
 	// ToAddress for bridge unwrap is the contract address
 	contractAddress := ethcommon.HexToAddress(contract.(string))
-	chainId := big.NewInt(defaultUnwrapChainId)
-	data := generateBridgeUnwrapTransferData(value, chainId)
+	chainID := big.NewInt(defaultUnwrapChainID)
+	data := generateBridgeUnwrapTransferData(value, chainID)
 
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
 		From: ethcommon.HexToAddress(fromAddress),
@@ -1080,12 +1074,12 @@ func generateBridgeUnwrapTransferData(value *big.Int, chainId *big.Int) []byte {
 	methodID := getUnwrapMethodID()
 
 	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
-	paddedChainId := ethcommon.LeftPadBytes(chainId.Bytes(), requiredPaddingBytes)
+	paddedChainID := ethcommon.LeftPadBytes(chainID.Bytes(), requiredPaddingBytes)
 
 	var data []byte
 	data = append(data, methodID...)
 	data = append(data, paddedAmount...)
-	data = append(data, paddedChainId...)
+	data = append(data, paddedChainID...)
 	return data
 }
 
@@ -1115,13 +1109,13 @@ func parseUnwrapData(data []byte) (*big.Int, *big.Int, error) {
 	}
 
 	amount := new(big.Int).SetBytes(data[5:36])
-	chainId := new(big.Int).SetBytes(data[37:])
+	chainID := new(big.Int).SetBytes(data[37:])
 
-	if chainId.Uint64() != 0 {
+	if chainID.Uint64() != 0 {
 		return nil, nil, fmt.Errorf("incorrect chainId value")
 	}
 
-	return amount, chainId, nil
+	return amount, chainID, nil
 }
 
 func getTransferMethodID() []byte {
