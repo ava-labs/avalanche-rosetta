@@ -52,13 +52,17 @@ func main() {
 		log.Fatal("config validation error:", err)
 	}
 
-	apiClient, err := client.NewClient(cfg.RPCEndpoint)
+	apiClient, err := client.NewClient(context.Background(), cfg.RPCEndpoint)
 	if err != nil {
 		log.Fatal("client init error:", err)
 	}
 
-	// Token Address Validation requires online mode
-	if cfg.Mode == service.ModeOnline {
+	// [ValidateERC20Whitelist] is disabled by default because it requires
+	// a fully synced node to work correctly. If the underlying node is still
+	// bootstrapping, it will fail.
+	//
+	// TODO: Only perform this check after the underlying node is bootstrapped
+	if cfg.Mode == service.ModeOnline && cfg.ValidateERC20Whitelist {
 		if err := cfg.ValidateWhitelistOnlyValidErc20s(apiClient); err != nil {
 			log.Fatal("token whitelist validation error:", err)
 		}
