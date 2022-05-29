@@ -22,6 +22,11 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
+const (
+	// do not include spaces in the string
+	transferFnSignature = "transfer(address,uint256)"
+)
+
 // ConstructionService implements /construction/* endpoints
 type ConstructionService struct {
 	config *Config
@@ -721,7 +726,7 @@ func (s ConstructionService) getErc20TransferGasLimit(
 // Ref: https://goethereumbook.org/en/transfer-tokens/#forming-the-data-field
 func generateErc20TransferData(to string, value *big.Int) []byte {
 	toAddr := ethcommon.HexToAddress(to)
-	methodID := getTransferMethodID()
+	methodID := getMethodID(transferFnSignature)
 
 	paddedAddress := ethcommon.LeftPadBytes(toAddr.Bytes(), 32)
 	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), 32)
@@ -741,7 +746,7 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 
 	methodBytes, addrBytes, amtBytes := data[:4], data[5:36], data[37:]
 
-	if hexutil.Encode(methodBytes) != hexutil.Encode(getTransferMethodID()) {
+	if hexutil.Encode(methodBytes) != hexutil.Encode(getMethodID(transferFnSignature)) {
 		return nil, nil, fmt.Errorf("incorrect methodID signature")
 	}
 
@@ -751,9 +756,9 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 }
 
 // Ref: https://goethereumbook.org/en/transfer-tokens/#forming-the-data-field
-func getTransferMethodID() []byte {
-	transferFnSignature := []byte("transfer(address,uint256)")
+func getMethodID(signature string) []byte {
+	bytes := []byte(signature)
 	hash := sha3.NewLegacyKeccak256()
-	hash.Write(transferFnSignature)
+	hash.Write(bytes)
 	return hash.Sum(nil)[:4]
 }
