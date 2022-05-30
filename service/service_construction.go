@@ -23,8 +23,10 @@ import (
 )
 
 const (
-	// do not include spaces in the string
-	transferFnSignature = "transfer(address,uint256)"
+	padLength = 32
+
+	transferFnSignature = "transfer(address,uint256)" // do not include spaces in the string
+	transferDataLength  = 68                          // 4 + 32 + 32
 )
 
 // ConstructionService implements /construction/* endpoints
@@ -728,8 +730,8 @@ func generateErc20TransferData(to string, value *big.Int) []byte {
 	toAddr := ethcommon.HexToAddress(to)
 	methodID := getMethodID(transferFnSignature)
 
-	paddedAddress := ethcommon.LeftPadBytes(toAddr.Bytes(), 32)
-	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), 32)
+	paddedAddress := ethcommon.LeftPadBytes(toAddr.Bytes(), padLength)
+	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), padLength)
 
 	var data []byte
 	data = append(data, methodID...)
@@ -740,7 +742,7 @@ func generateErc20TransferData(to string, value *big.Int) []byte {
 
 // Ref: https://goethereumbook.org/en/transfer-tokens/#forming-the-data-field
 func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
-	if len(data) != 68 {
+	if len(data) != transferDataLength {
 		return nil, nil, fmt.Errorf("incorrect length for data array")
 	}
 
