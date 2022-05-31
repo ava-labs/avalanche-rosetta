@@ -39,6 +39,7 @@ type optionsWire struct {
 func (o *options) MarshalJSON() ([]byte, error) {
 	ow := &optionsWire{
 		From:                   o.From,
+		To:                     o.To,
 		SuggestedFeeMultiplier: o.SuggestedFeeMultiplier,
 		Currency:               o.Currency,
 		UnwrapBridgeTx:         o.UnwrapBridgeTx,
@@ -65,6 +66,7 @@ func (o *options) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	o.From = ow.From
+	o.To = ow.To
 	o.SuggestedFeeMultiplier = ow.SuggestedFeeMultiplier
 	o.Currency = ow.Currency
 	o.UnwrapBridgeTx = ow.UnwrapBridgeTx

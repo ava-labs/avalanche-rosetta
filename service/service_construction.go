@@ -309,7 +309,7 @@ func (s ConstructionService) ConstructionParse(
 	var wrappedErr *types.Error
 
 	if len(tx.Data) != 0 {
-		unwrapMethodID := getUnwrapMethodID()
+		unwrapMethodID := getMethodID(unwrapFnSignature)
 		if hexutil.Encode(tx.Data[:4]) == hexutil.Encode(unwrapMethodID) {
 			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
 		} else {
@@ -819,17 +819,15 @@ func (s ConstructionService) CreateTransferOperationDescription(
 	}
 
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
-		return s.createOperationDescriptionNativeTransfer(), nil
+		return s.createOperationDescriptionTransfer(mapper.AvaxCurrency, mapper.OpCall), nil
 	}
-	_, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
-	_, secondOk := secondCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 
-	// Not Native Avax, we require contractInfo in metadata
-	if !firstOk || !secondOk {
+	// Not Native Avax, we require contractInfo in metadata.
+	if _, ok := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string); !ok {
 		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
 	}
 
-	return s.createOperationDescriptionERC20Transfer(firstCurrency), nil
+	return s.createOperationDescriptionTransfer(firstCurrency, mapper.OpErc20Transfer), nil
 }
 
 func (s ConstructionService) CreateUnwrapOperationDescription(
@@ -842,7 +840,7 @@ func (s ConstructionService) CreateUnwrapOperationDescription(
 	firstCurrency := operations[0].Amount.Currency
 
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
-		return s.createOperationDescriptionNativeTransfer(), nil
+		return nil, fmt.Errorf("cannot unwrap native avax")
 	}
 	tokenAddress, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 
@@ -932,68 +930,34 @@ func (s ConstructionService) createUnwrapPreprocessOptions(
 	}, nil
 }
 
-func (s ConstructionService) createOperationDescriptionNativeTransfer() []*parser.OperationDescription {
-	var descriptions []*parser.OperationDescription
-
-	nativeSend := parser.OperationDescription{
-		Type: mapper.OpCall,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.NegativeAmountSign,
-			Currency: mapper.AvaxCurrency,
-		},
-	}
-	nativeReceive := parser.OperationDescription{
-		Type: mapper.OpCall,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.PositiveAmountSign,
-			Currency: mapper.AvaxCurrency,
-		},
-	}
-
-	descriptions = append(descriptions, &nativeSend)
-	descriptions = append(descriptions, &nativeReceive)
-	return descriptions
-}
-
-func (s ConstructionService) createOperationDescriptionERC20Transfer(
+func (s ConstructionService) createOperationDescriptionTransfer(
 	currency *types.Currency,
+	opCode string,
 ) []*parser.OperationDescription {
-	var descriptions []*parser.OperationDescription
-
-	send := parser.OperationDescription{
-		Type: mapper.OpErc20Transfer,
-		Account: &parser.AccountDescription{
-			Exists: true,
+	return []*parser.OperationDescription{
+		{
+			Type: opCode,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.NegativeAmountSign,
+				Currency: currency,
+			},
 		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.NegativeAmountSign,
-			Currency: currency,
+		{
+			Type: opCode,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.PositiveAmountSign,
+				Currency: currency,
+			},
 		},
 	}
-	receive := parser.OperationDescription{
-		Type: mapper.OpErc20Transfer,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.PositiveAmountSign,
-			Currency: currency,
-		},
-	}
-
-	descriptions = append(descriptions, &send)
-	descriptions = append(descriptions, &receive)
-	return descriptions
 }
 
 func (s ConstructionService) createOperationDescriptionBridgeUnwrap(
@@ -1015,13 +979,6 @@ func (s ConstructionService) createOperationDescriptionBridgeUnwrap(
 
 	descriptions = append(descriptions, &send)
 	return descriptions
-}
-
-func isUnwrapRequest(metadata map[string]interface{}) bool {
-	if isUnwrap, ok := metadata["bridge_unwrap"]; ok {
-		return isUnwrap.(bool)
-	}
-	return false
 }
 
 func (s ConstructionService) getNativeTransferGasLimit(
@@ -1095,7 +1052,7 @@ func (s ConstructionService) getBridgeUnwrapTransferGasLimit(
 
 func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	to := ethcommon.HexToAddress(toAddress)
-	methodID := getTransferMethodID()
+	methodID := getMethodID(transferFnSignature)
 
 	paddedAddress := ethcommon.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
 	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
@@ -1108,7 +1065,7 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 }
 
 func generateBridgeUnwrapTransferData(value *big.Int, chainID *big.Int) []byte {
-	methodID := getUnwrapMethodID()
+	methodID := getMethodID(unwrapFnSignature)
 
 	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
 	paddedChainID := ethcommon.LeftPadBytes(chainID.Bytes(), requiredPaddingBytes)
@@ -1124,7 +1081,7 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 	if len(data) != genericTransferBytesLength {
 		return nil, nil, fmt.Errorf("incorrect length for data array")
 	}
-	methodID := getTransferMethodID()
+	methodID := getMethodID(transferFnSignature)
 	if hexutil.Encode(data[:4]) != hexutil.Encode(methodID) {
 		return nil, nil, fmt.Errorf("incorrect methodID signature")
 	}
@@ -1138,7 +1095,7 @@ func parseUnwrapData(data []byte) (*big.Int, *big.Int, error) {
 	if len(data) != genericUnwrapBytesLength {
 		return nil, nil, fmt.Errorf("incorrect length for data array")
 	}
-	methodID := getUnwrapMethodID()
+	methodID := getMethodID(unwrapFnSignature)
 	if hexutil.Encode(data[:4]) != hexutil.Encode(methodID) {
 		return nil, nil, fmt.Errorf("incorrect methodID signature")
 	}
@@ -1153,16 +1110,15 @@ func parseUnwrapData(data []byte) (*big.Int, *big.Int, error) {
 	return amount, chainID, nil
 }
 
-func getTransferMethodID() []byte {
-	transferSignature := []byte(transferFnSignature)
-	hash := sha3.NewLegacyKeccak256()
-	hash.Write(transferSignature)
-	methodID := hash.Sum(nil)[:4]
-	return methodID
+func isUnwrapRequest(metadata map[string]interface{}) bool {
+	if isUnwrap, ok := metadata["bridge_unwrap"]; ok {
+		return isUnwrap.(bool)
+	}
+	return false
 }
 
-func getUnwrapMethodID() []byte {
-	transferSignature := []byte(unwrapFnSignature)
+func getMethodID(signature string) []byte {
+	transferSignature := []byte(signature)
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(transferSignature)
 	methodID := hash.Sum(nil)[:4]
