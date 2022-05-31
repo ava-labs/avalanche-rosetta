@@ -99,7 +99,7 @@ check-testnet-data:
 check-testnet-construction:
 	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/testnet/config.json
 
-# Perform the Testnet construction check for ERC-20s transfers
+# Perform the Testnet construction check for ERC-20 transfers
 check-testnet-construction-erc20:
 	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/testnet/config_erc20.json
 
