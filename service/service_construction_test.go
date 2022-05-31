@@ -87,7 +87,11 @@ func TestConstructionMetadata(t *testing.T) {
 			uint64(21001),
 			nil,
 		).Once()
-		input := map[string]interface{}{"from": "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309", "to": "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d", "value": "0x9864aac3510d02"}
+		input := map[string]interface{}{
+			"from":  "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309",
+			"to":    "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d",
+			"value": "0x9864aac3510d02",
+		}
 		resp, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -99,6 +103,76 @@ func TestConstructionMetadata(t *testing.T) {
 			GasPrice: big.NewInt(1000000000),
 			GasLimit: 21_001,
 			Nonce:    0,
+		}
+		assert.Equal(t, &types.ConstructionMetadataResponse{
+			Metadata: forceMarshalMap(t, metadata),
+			SuggestedFee: []*types.Amount{
+				{
+					Value:    "21001000000000",
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+		}, resp)
+	})
+	t.Run("basic unwrap transfer", func(t *testing.T) {
+		contractAddress := common.HexToAddress(defaultContractAddress)
+		client.On(
+			"NonceAt",
+			ctx,
+			common.HexToAddress(defaultFromAddress),
+			(*big.Int)(nil),
+		).Return(
+			uint64(0),
+			nil,
+		).Once()
+		client.On(
+			"SuggestGasPrice",
+			ctx,
+		).Return(
+			big.NewInt(1000000000),
+			nil,
+		).Once()
+		client.On(
+			"EstimateGas",
+			ctx,
+			interfaces.CallMsg{
+				From: common.HexToAddress(defaultFromAddress),
+				To:   &contractAddress,
+				Data: common.Hex2Bytes(
+					"6e28667100000000000000000000000000000000000000000000000000000000b4d360e30000000000000000000000000000000000000000000000000000000000000000",
+				),
+			},
+		).Return(
+			uint64(21001),
+			nil,
+		).Once()
+		currencyMetadata := map[string]interface{}{
+			"contractAddress": defaultContractAddress,
+		}
+		currency := map[string]interface{}{
+			"symbol":   defaultSymbol,
+			"decimals": defaultDecimals,
+			"metadata": currencyMetadata,
+		}
+		input := map[string]interface{}{
+			"from":          defaultFromAddress,
+			"to":            "0x920eb8ca79f07eb3bfc39c324c8113948ed3104c",
+			"value":         "0xb4d360e3",
+			"currency":      currency,
+			"bridge_unwrap": true,
+		}
+		resp, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				Options: input,
+			},
+		)
+		assert.Nil(t, err)
+		metadata := &metadata{
+			GasPrice:       big.NewInt(1000000000),
+			GasLimit:       21_001,
+			Nonce:          0,
+			UnwrapBridgeTx: true,
 		}
 		assert.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
@@ -134,7 +208,9 @@ func TestConstructionMetadata(t *testing.T) {
 			interfaces.CallMsg{
 				From: common.HexToAddress(defaultFromAddress),
 				To:   &contractAddress,
-				Data: common.Hex2Bytes("a9059cbb000000000000000000000000920eb8ca79f07eb3bfc39c324c8113948ed3104c00000000000000000000000000000000000000000000000000000000b4d360e3"),
+				Data: common.Hex2Bytes(
+					"a9059cbb000000000000000000000000920eb8ca79f07eb3bfc39c324c8113948ed3104c00000000000000000000000000000000000000000000000000000000b4d360e3",
+				),
 			},
 		).Return(
 			uint64(21001),
@@ -148,7 +224,12 @@ func TestConstructionMetadata(t *testing.T) {
 			"decimals": defaultDecimals,
 			"metadata": currencyMetadata,
 		}
-		input := map[string]interface{}{"from": defaultFromAddress, "to": "0x920eb8ca79f07eb3bfc39c324c8113948ed3104c", "value": "0xb4d360e3", "currency": currency}
+		input := map[string]interface{}{
+			"from":     defaultFromAddress,
+			"to":       "0x920eb8ca79f07eb3bfc39c324c8113948ed3104c",
+			"value":    "0xb4d360e3",
+			"currency": currency,
+		}
 		resp, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -376,10 +457,13 @@ func TestPreprocessMetadata(t *testing.T) {
 			uint64(0),
 			nil,
 		).Once()
-		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
-			NetworkIdentifier: networkIdentifier,
-			Options:           forceMarshalMap(t, &opt),
-		})
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
 		assert.Nil(t, err)
 		assert.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
@@ -422,10 +506,13 @@ func TestPreprocessMetadata(t *testing.T) {
 			uint64(0),
 			nil,
 		).Once()
-		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
-			NetworkIdentifier: networkIdentifier,
-			Options:           forceMarshalMap(t, &opt),
-		})
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
 		assert.Nil(t, err)
 		assert.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
@@ -487,10 +574,13 @@ func TestPreprocessMetadata(t *testing.T) {
 			uint64(0),
 			nil,
 		).Once()
-		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
-			NetworkIdentifier: networkIdentifier,
-			Options:           forceMarshalMap(t, &opt),
-		})
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
 		assert.Nil(t, err)
 		assert.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
@@ -554,10 +644,13 @@ func TestPreprocessMetadata(t *testing.T) {
 			uint64(0),
 			nil,
 		).Once()
-		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
-			NetworkIdentifier: networkIdentifier,
-			Options:           forceMarshalMap(t, &opt),
-		})
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
 		assert.Nil(t, err)
 		assert.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
@@ -625,10 +718,13 @@ func TestPreprocessMetadata(t *testing.T) {
 			uint64(0),
 			nil,
 		).Once()
-		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
-			NetworkIdentifier: networkIdentifier,
-			Options:           forceMarshalMap(t, &opt),
-		})
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
 		assert.Nil(t, err)
 		assert.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
@@ -690,10 +786,13 @@ func TestPreprocessMetadata(t *testing.T) {
 			big.NewInt(1000000000),
 			nil,
 		).Once()
-		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
-			NetworkIdentifier: networkIdentifier,
-			Options:           forceMarshalMap(t, &opt),
-		})
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
 		assert.Nil(t, err)
 		assert.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
@@ -751,10 +850,13 @@ func TestPreprocessMetadata(t *testing.T) {
 			uint64(0),
 			nil,
 		).Once()
-		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
-			NetworkIdentifier: networkIdentifier,
-			Options:           forceMarshalMap(t, &opt),
-		})
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
 		assert.Nil(t, err)
 		assert.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
@@ -821,7 +923,9 @@ func TestPreprocessMetadata(t *testing.T) {
 			interfaces.CallMsg{
 				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 				To:   &contractAddress,
-				Data: common.Hex2Bytes("a9059cbb00000000000000000000000057B414a0332B5CaB885a451c2a28a07d1e9b8a8d000000000000000000000000000000000000000000000000009864aac3510d02"),
+				Data: common.Hex2Bytes(
+					"a9059cbb00000000000000000000000057B414a0332B5CaB885a451c2a28a07d1e9b8a8d000000000000000000000000000000000000000000000000009864aac3510d02",
+				),
 			},
 		).Return(
 			uint64(21001),
@@ -837,10 +941,113 @@ func TestPreprocessMetadata(t *testing.T) {
 			nil,
 		).Once()
 
-		metadataResponse, err := service.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
-			NetworkIdentifier: networkIdentifier,
-			Options:           forceMarshalMap(t, &opt),
-		})
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
+		assert.Nil(t, err)
+		assert.Equal(t, &types.ConstructionMetadataResponse{
+			Metadata: forceMarshalMap(t, metadata),
+			SuggestedFee: []*types.Amount{
+				{
+					Value:    "21001000000000",
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+		}, metadataResponse)
+	})
+
+	t.Run("basic unwrap flow", func(t *testing.T) {
+		unwrapIntent := `[{"operation_identifier":{"index":0},"type":"ERC20_BURN","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}}]`
+		bridgeTokenList := []string{defaultContractAddress}
+
+		service := ConstructionService{
+			config: &Config{
+				Mode:            ModeOnline,
+				BridgeTokenList: bridgeTokenList,
+			},
+			client: client,
+		}
+		currency := &types.Currency{Symbol: defaultSymbol, Decimals: defaultDecimals}
+		client.On(
+			"ContractInfo",
+			common.HexToAddress(defaultContractAddress),
+			true,
+		).Return(
+			currency,
+			nil,
+		).Once()
+		var ops []*types.Operation
+		assert.NoError(t, json.Unmarshal([]byte(unwrapIntent), &ops))
+
+		requestMetadata := map[string]interface{}{
+			"bridge_unwrap": true,
+		}
+		preprocessResponse, err := service.ConstructionPreprocess(
+			ctx,
+			&types.ConstructionPreprocessRequest{
+				NetworkIdentifier: networkIdentifier,
+				Operations:        ops,
+				Metadata:          requestMetadata,
+			},
+		)
+		assert.Nil(t, err)
+		optionsRaw := `{"bridge_unwrap":true, "from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","value":"0x9864aac3510d02", "currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}`
+		var opt options
+		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		assert.Equal(t, &types.ConstructionPreprocessResponse{
+			Options: forceMarshalMap(t, &opt),
+		}, preprocessResponse)
+
+		metadata := &metadata{
+			GasPrice:       big.NewInt(1000000000),
+			GasLimit:       21_001,
+			Nonce:          0,
+			UnwrapBridgeTx: true,
+		}
+
+		client.On(
+			"SuggestGasPrice",
+			ctx,
+		).Return(
+			big.NewInt(1000000000),
+			nil,
+		).Once()
+		contractAddress := common.HexToAddress(defaultContractAddress)
+		client.On(
+			"EstimateGas",
+			ctx,
+			interfaces.CallMsg{
+				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+				To:   &contractAddress,
+				Data: common.Hex2Bytes(
+					"6e286671000000000000000000000000000000000000000000000000009864aac3510d020000000000000000000000000000000000000000000000000000000000000000",
+				),
+			},
+		).Return(
+			uint64(21001),
+			nil,
+		).Once()
+		client.On(
+			"NonceAt",
+			ctx,
+			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+			(*big.Int)(nil),
+		).Return(
+			uint64(0),
+			nil,
+		).Once()
+
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
 		assert.Nil(t, err)
 		assert.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
