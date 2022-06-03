@@ -469,6 +469,12 @@ func (s ConstructionService) ConstructionPayloads(
 		Currency: fromCurrency,
 	}
 
+	payload := &types.SigningPayload{
+		AccountIdentifier: &types.AccountIdentifier{Address: checkFrom},
+		Bytes:             s.config.Signer().Hash(tx).Bytes(),
+		SignatureType:     types.EcdsaRecovery,
+	}
+
 	unsignedTxJSON, err := json.Marshal(unsignedTx)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
@@ -476,13 +482,7 @@ func (s ConstructionService) ConstructionPayloads(
 
 	return &types.ConstructionPayloadsResponse{
 		UnsignedTransaction: string(unsignedTxJSON),
-		Payloads: []*types.SigningPayload{
-			{
-				AccountIdentifier: &types.AccountIdentifier{Address: checkFrom},
-				Bytes:             s.config.Signer().Hash(tx).Bytes(),
-				SignatureType:     types.EcdsaRecovery,
-			},
-		},
+		Payloads:            []*types.SigningPayload{payload},
 	}, nil
 }
 
