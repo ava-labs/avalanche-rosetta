@@ -9,6 +9,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/coinbase/rosetta-sdk-go/utils"
 	"golang.org/x/crypto/sha3"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
@@ -22,10 +23,10 @@ import (
 )
 
 const (
-	genericTransferBytesLength = 68
-	requiredPaddingBytes       = 32
-	transferFnSignature        = "transfer(address,uint256)" // do not include spaces in the string
+	padLength = 32
 
+	transferFnSignature = "transfer(address,uint256)" // do not include spaces in the string
+	transferDataLength  = 68                          // 4 + 32 + 32
 )
 
 // ConstructionService implements /construction/* endpoints
@@ -628,142 +629,109 @@ func (s ConstructionService) CreateOperationDescription(
 		return nil, fmt.Errorf("invalid number of operations")
 	}
 
-	firstCurrency := operations[0].Amount.Currency
-	secondCurrency := operations[1].Amount.Currency
+	currency := operations[0].Amount.Currency
 
-	if firstCurrency == nil || secondCurrency == nil {
+	if currency == nil || operations[1].Amount.Currency == nil {
 		return nil, fmt.Errorf("invalid currency on operation")
 	}
 
-	if types.Hash(firstCurrency) != types.Hash(secondCurrency) {
+	if !utils.Equal(currency, operations[1].Amount.Currency) {
 		return nil, fmt.Errorf("currency info doesn't match between the operations")
 	}
 
-	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
-		return s.createOperationDescriptionNative(), nil
-	}
-	_, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
-	_, secondOk := secondCurrency.Metadata[mapper.ContractAddressMetadata].(string)
-
-	// Not Native Avax, we require contractInfo in metadata
-	if !firstOk || !secondOk {
-		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
+	if utils.Equal(currency, mapper.AvaxCurrency) {
+		return s.createOperationDescription(currency, mapper.OpCall), nil
 	}
 
-	return s.createOperationDescriptionERC20(firstCurrency), nil
+	// ERC-20s must have contract address in metadata
+	if _, ok := currency.Metadata[mapper.ContractAddressMetadata].(string); !ok {
+		return nil, fmt.Errorf("contractAddress must be populated in currency metadata")
+	}
+
+	return s.createOperationDescription(currency, mapper.OpErc20Transfer), nil
 }
 
-func (s ConstructionService) createOperationDescriptionNative() []*parser.OperationDescription {
-	var descriptions []*parser.OperationDescription
-
-	nativeSend := parser.OperationDescription{
-		Type: mapper.OpCall,
-		Account: &parser.AccountDescription{
-			Exists: true,
+func (s ConstructionService) createOperationDescription(
+	currency *types.Currency,
+	opType string,
+) []*parser.OperationDescription {
+	return []*parser.OperationDescription{
+		// Send
+		{
+			Type: opType,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.NegativeAmountSign,
+				Currency: currency,
+			},
 		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.NegativeAmountSign,
-			Currency: mapper.AvaxCurrency,
+
+		// Receive
+		{
+			Type: opType,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.PositiveAmountSign,
+				Currency: currency,
+			},
 		},
 	}
-	nativeReceive := parser.OperationDescription{
-		Type: mapper.OpCall,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.PositiveAmountSign,
-			Currency: mapper.AvaxCurrency,
-		},
-	}
-
-	descriptions = append(descriptions, &nativeSend)
-	descriptions = append(descriptions, &nativeReceive)
-	return descriptions
-}
-
-func (s ConstructionService) createOperationDescriptionERC20(currency *types.Currency) []*parser.OperationDescription {
-	var descriptions []*parser.OperationDescription
-
-	send := parser.OperationDescription{
-		Type: mapper.OpErc20Transfer,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.NegativeAmountSign,
-			Currency: currency,
-		},
-	}
-	receive := parser.OperationDescription{
-		Type: mapper.OpErc20Transfer,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.PositiveAmountSign,
-			Currency: currency,
-		},
-	}
-
-	descriptions = append(descriptions, &send)
-	descriptions = append(descriptions, &receive)
-	return descriptions
 }
 
 func (s ConstructionService) getNativeTransferGasLimit(
-	ctx context.Context, toAddress string,
-	fromAddress string, value *big.Int,
+	ctx context.Context,
+	to string,
+	from string,
+	value *big.Int,
 ) (uint64, error) {
-	if len(toAddress) == 0 || value == nil {
-		// We guard against malformed inputs that may have been generated using
-		// a previous version of avalanche-rosetta.
+	// Guard against malformed inputs that may have been generated using
+	// a previous version of avalanche-rosetta.
+	if len(to) == 0 || value == nil {
 		return nativeTransferGasLimit, nil
 	}
-	to := ethcommon.HexToAddress(toAddress)
-	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From:  ethcommon.HexToAddress(fromAddress),
-		To:    &to,
+
+	toAddr := ethcommon.HexToAddress(to)
+	return s.client.EstimateGas(ctx, interfaces.CallMsg{
+		From:  ethcommon.HexToAddress(from),
+		To:    &toAddr,
 		Value: value,
 	})
-	if err != nil {
-		return 0, err
-	}
-	return gasLimit, nil
 }
 
+// Ref: https://goethereumbook.org/en/transfer-tokens/#set-gas-limit
 func (s ConstructionService) getErc20TransferGasLimit(
-	ctx context.Context, toAddress string,
-	fromAddress string, value *big.Int, currency *types.Currency,
+	ctx context.Context,
+	to string,
+	from string,
+	value *big.Int,
+	currency *types.Currency,
 ) (uint64, error) {
 	contract, ok := currency.Metadata[mapper.ContractAddressMetadata]
-	if len(toAddress) == 0 || value == nil || !ok {
+	if len(to) == 0 || value == nil || !ok {
 		return erc20TransferGasLimit, nil
 	}
-	// ToAddress for erc20 transfers is the contract address
+
 	contractAddress := ethcommon.HexToAddress(contract.(string))
-	data := generateErc20TransferData(toAddress, value)
-	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From: ethcommon.HexToAddress(fromAddress),
+	return s.client.EstimateGas(ctx, interfaces.CallMsg{
+		From: ethcommon.HexToAddress(from),
 		To:   &contractAddress,
-		Data: data,
+		Data: generateErc20TransferData(to, value),
 	})
-	if err != nil {
-		return 0, err
-	}
-	return gasLimit, nil
 }
 
-func generateErc20TransferData(toAddress string, value *big.Int) []byte {
-	to := ethcommon.HexToAddress(toAddress)
-	methodID := getTransferMethodID()
+// Ref: https://goethereumbook.org/en/transfer-tokens/#forming-the-data-field
+func generateErc20TransferData(to string, value *big.Int) []byte {
+	toAddr := ethcommon.HexToAddress(to)
+	methodID := getMethodID(transferFnSignature)
 
-	paddedAddress := ethcommon.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
-	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
+	paddedAddress := ethcommon.LeftPadBytes(toAddr.Bytes(), padLength)
+	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), padLength)
 
 	var data []byte
 	data = append(data, methodID...)
@@ -772,24 +740,27 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	return data
 }
 
+// Ref: https://goethereumbook.org/en/transfer-tokens/#forming-the-data-field
 func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
-	if len(data) != genericTransferBytesLength {
+	if len(data) != transferDataLength {
 		return nil, nil, fmt.Errorf("incorrect length for data array")
 	}
-	methodID := getTransferMethodID()
-	if hexutil.Encode(data[:4]) != hexutil.Encode(methodID) {
+
+	methodBytes, addrBytes, amtBytes := data[:4], data[5:36], data[37:]
+
+	if hexutil.Encode(methodBytes) != hexutil.Encode(getMethodID(transferFnSignature)) {
 		return nil, nil, fmt.Errorf("incorrect methodID signature")
 	}
 
-	address := ethcommon.BytesToAddress(data[5:36])
-	amount := new(big.Int).SetBytes(data[37:])
-	return &address, amount, nil
+	addr := ethcommon.BytesToAddress(addrBytes)
+	amt := new(big.Int).SetBytes(amtBytes)
+	return &addr, amt, nil
 }
 
-func getTransferMethodID() []byte {
-	transferSignature := []byte(transferFnSignature) // do not include spaces in the string
+// Ref: https://goethereumbook.org/en/transfer-tokens/#forming-the-data-field
+func getMethodID(signature string) []byte {
+	bytes := []byte(signature)
 	hash := sha3.NewLegacyKeccak256()
-	hash.Write(transferSignature)
-	methodID := hash.Sum(nil)[:4]
-	return methodID
+	hash.Write(bytes)
+	return hash.Sum(nil)[:4]
 }
