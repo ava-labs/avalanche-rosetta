@@ -26,7 +26,7 @@ const (
 	padLength = 32
 
 	transferFnSignature = "transfer(address,uint256)" // do not include spaces in the string
-	transferDataLength  = 68                          // 4 + 32 + 32
+	transferDataLength  = 68                          // 4 (method id) + 2*32 (args)
 )
 
 // ConstructionService implements /construction/* endpoints
