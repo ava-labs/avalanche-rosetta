@@ -190,7 +190,8 @@ func (s ConstructionService) ConstructionCombine(
 		unsignedTx.Data,
 	)
 
-	signedTx, err := ethTransaction.WithSignature(s.config.Signer(), req.Signatures[0].Bytes)
+	signer := ethtypes.LatestSignerForChainID(unsignedTx.ChainID)
+	signedTx, err := ethTransaction.WithSignature(signer, req.Signatures[0].Bytes)
 	if err != nil {
 		return nil, wrapError(errInvalidInput, err)
 	}
