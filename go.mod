@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/ava-labs/avalanchego v1.7.12
-	github.com/ava-labs/coreth v0.8.11-rc.11
+	github.com/ava-labs/coreth v0.8.11
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/stretchr/testify v1.7.0
