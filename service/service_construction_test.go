@@ -9,6 +9,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
+	"github.com/ava-labs/avalanche-rosetta/service/chain/p"
 	"github.com/ava-labs/coreth/interfaces"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -238,7 +239,9 @@ func TestContructionHash(t *testing.T) {
 }
 
 func TestConstructionDerive(t *testing.T) {
-	service := ConstructionService{}
+	service := ConstructionService{
+		p: p.NewClient(),
+	}
 
 	t.Run("no public key", func(t *testing.T) {
 		resp, err := service.ConstructionDerive(

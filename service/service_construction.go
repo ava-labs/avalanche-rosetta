@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ava-labs/avalanchego/utils/crypto"
-	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	"github.com/coinbase/rosetta-sdk-go/parser"
@@ -21,6 +19,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanche-rosetta/service/chain/p"
 )
 
 const (
@@ -34,6 +33,7 @@ const (
 type ConstructionService struct {
 	config *Config
 	client client.Client
+	p      *p.Client
 }
 
 // NewConstructionService returns a new construction servicer
@@ -41,6 +41,7 @@ func NewConstructionService(config *Config, client client.Client) server.Constru
 	return &ConstructionService{
 		config: config,
 		client: client,
+		p:      p.NewClient(),
 	}
 }
 
@@ -223,28 +224,13 @@ func (s ConstructionService) ConstructionDerive(
 	ctx context.Context,
 	req *types.ConstructionDeriveRequest,
 ) (*types.ConstructionDeriveResponse, *types.Error) {
-	if isPChain(req.NetworkIdentifier) {
-		fac := crypto.FactorySECP256K1R{}
-		pub, err := fac.ToPublicKey(req.PublicKey.Bytes)
+	if mapper.IsPChain(req.NetworkIdentifier) {
+		res, err := s.p.DeriveAddress(ctx, req)
 		if err != nil {
-			return nil, wrapError(errInvalidInput, err)
+			return nil, wrapError(errInternalError, "p chain address derivation failed")
 		}
 
-		chainIDAlias, hrp, getErr := getAliasAndHRP(req.NetworkIdentifier)
-		if getErr != nil {
-			return nil, getErr
-		}
-
-		addr, err := address.Format(chainIDAlias, hrp, pub.Address().Bytes())
-		if err != nil {
-			return nil, wrapError(errInvalidInput, err)
-		}
-
-		return &types.ConstructionDeriveResponse{
-			AccountIdentifier: &types.AccountIdentifier{
-				Address: addr,
-			},
-		}, nil
+		return res, nil
 	}
 
 	if req.PublicKey == nil {
