@@ -231,7 +231,7 @@ func (s ConstructionService) ConstructionDerive(
 		}
 
 		chainIDAlias, hrp, getErr := getAliasAndHRP(req.NetworkIdentifier)
-		if err != nil {
+		if getErr != nil {
 			return nil, getErr
 		}
 

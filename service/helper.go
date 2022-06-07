@@ -109,7 +109,8 @@ func ChecksumAddress(address string) (string, bool) {
 
 // isPChain checks network identifier to make sure sub-network identifier set to "P"
 func isPChain(networkIdentifier *types.NetworkIdentifier) bool {
-	if networkIdentifier.SubNetworkIdentifier != nil &&
+	if networkIdentifier != nil &&
+		networkIdentifier.SubNetworkIdentifier != nil &&
 		networkIdentifier.SubNetworkIdentifier.Network == mapper.PChainNetworkIdentifier {
 		return true
 	}
