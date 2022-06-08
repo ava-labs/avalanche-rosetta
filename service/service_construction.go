@@ -224,6 +224,10 @@ func (s ConstructionService) ConstructionDerive(
 	ctx context.Context,
 	req *types.ConstructionDeriveRequest,
 ) (*types.ConstructionDeriveResponse, *types.Error) {
+	if req.PublicKey == nil {
+		return nil, wrapError(errInvalidInput, "public key is not provided")
+	}
+
 	if mapper.IsPChain(req.NetworkIdentifier) {
 		res, err := s.p.DeriveAddress(ctx, req)
 		if err != nil {
@@ -231,10 +235,6 @@ func (s ConstructionService) ConstructionDerive(
 		}
 
 		return res, nil
-	}
-
-	if req.PublicKey == nil {
-		return nil, wrapError(errInvalidInput, "public key is not provided")
 	}
 
 	key, err := ethcrypto.DecompressPubkey(req.PublicKey.Bytes)

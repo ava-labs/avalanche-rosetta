@@ -124,11 +124,14 @@ func main() {
 	}
 
 	asserter, err := asserter.NewServer(
-		mapper.OperationTypes, // supported operation types
-		true,                  // historical balance lookup
-		[]*types.NetworkIdentifier{networkP, networkC}, // supported networks
-		[]string{}, // call methods
-		false,      // mempool coins
+		mapper.OperationTypes, 			// supported operation types
+		true,                  			// historical balance lookup
+		[]*types.NetworkIdentifier{ // supported networks
+			networkP,
+			networkC,
+		},
+		[]string{}, 								// call methods
+		false,      								// mempool coins
 	)
 	if err != nil {
 		log.Fatal("server asserter init error:", err)
