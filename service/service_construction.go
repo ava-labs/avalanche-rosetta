@@ -26,7 +26,7 @@ const (
 	padLength = 32
 
 	transferFnSignature = "transfer(address,uint256)" // do not include spaces in the string
-	transferDataLength  = 68                          // 4 + 32 + 32
+	transferDataLength  = 68                          // 4 (method id) + 2*32 (args)
 )
 
 // ConstructionService implements /construction/* endpoints
@@ -80,8 +80,7 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasPrice *big.Int
 	if input.GasPrice == nil {
-		gasPrice, err = s.client.SuggestGasPrice(ctx)
-		if err != nil {
+		if gasPrice, err = s.client.SuggestGasPrice(ctx); err != nil {
 			return nil, wrapError(errClientError, err)
 		}
 
@@ -98,16 +97,14 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		if input.Currency == nil || types.Hash(input.Currency) == types.Hash(mapper.AvaxCurrency) {
+		if input.Currency == nil || utils.Equal(input.Currency, mapper.AvaxCurrency) {
 			gasLimit, err = s.getNativeTransferGasLimit(ctx, input.To, input.From, input.Value)
-			if err != nil {
-				return nil, wrapError(errClientError, err)
-			}
 		} else {
 			gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
-			if err != nil {
-				return nil, wrapError(errClientError, err)
-			}
+		}
+
+		if err != nil {
+			return nil, wrapError(errClientError, err)
 		}
 	} else {
 		gasLimit = input.GasLimit.Uint64()
@@ -397,7 +394,7 @@ func (s ConstructionService) ConstructionPayloads(
 ) (*types.ConstructionPayloadsResponse, *types.Error) {
 	operationDescriptions, err := s.CreateOperationDescription(req.Operations)
 	if err != nil {
-		return nil, wrapError(errInvalidInput, err.Error())
+		return nil, wrapError(errInvalidInput, err)
 	}
 
 	descriptions := &parser.Descriptions{
@@ -437,7 +434,7 @@ func (s ConstructionService) ConstructionPayloads(
 	}
 	var transferData []byte
 	var sendToAddress ethcommon.Address
-	if types.Hash(fromCurrency) == types.Hash(mapper.AvaxCurrency) {
+	if utils.Equal(fromCurrency, mapper.AvaxCurrency) {
 		transferData = []byte{}
 		sendToAddress = ethcommon.HexToAddress(checkTo)
 	} else {
@@ -473,12 +470,9 @@ func (s ConstructionService) ConstructionPayloads(
 		Currency: fromCurrency,
 	}
 
-	// Construct SigningPayload
-	signer := ethtypes.LatestSignerForChainID(s.config.ChainID)
-
 	payload := &types.SigningPayload{
 		AccountIdentifier: &types.AccountIdentifier{Address: checkFrom},
-		Bytes:             signer.Hash(tx).Bytes(),
+		Bytes:             s.config.Signer().Hash(tx).Bytes(),
 		SignatureType:     types.EcdsaRecovery,
 	}
 
@@ -504,7 +498,7 @@ func (s ConstructionService) ConstructionPreprocess(
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
 	operationDescriptions, err := s.CreateOperationDescription(req.Operations)
 	if err != nil {
-		return nil, wrapError(errInvalidInput, err.Error())
+		return nil, wrapError(errInvalidInput, err)
 	}
 
 	descriptions := &parser.Descriptions{
