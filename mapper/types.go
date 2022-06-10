@@ -19,7 +19,6 @@ const (
 	IndexTransferredMetadata = "indexTransferred"
 
 	PChainNetworkIdentifier = "P"
-	PChainIDAlias           = "P"
 
 	OpCall          = "CALL"
 	OpFee           = "FEE"

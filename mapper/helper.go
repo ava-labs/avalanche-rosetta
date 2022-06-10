@@ -8,8 +8,10 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
-var errUnsupportedChain = errors.New("unsupported chain")
-var errUnsupportedNetwork = errors.New("unsupported network")
+var (
+	errUnsupportedChain   = errors.New("unsupported chain")
+	errUnsupportedNetwork = errors.New("unsupported network")
+)
 
 // EqualFoldContains checks if the array contains the string regardless of casing
 func EqualFoldContains(arr []string, str string) bool {
@@ -45,5 +47,5 @@ func GetAliasAndHRP(networkIdentifier *types.NetworkIdentifier) (string, string,
 		return "", "", errUnsupportedNetwork
 	}
 
-	return PChainIDAlias, hrp, nil
+	return PChainNetworkIdentifier, hrp, nil
 }
