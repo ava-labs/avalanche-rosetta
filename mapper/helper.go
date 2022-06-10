@@ -8,6 +8,9 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
+var errUnsupportedChain = errors.New("unsupported chain")
+var errUnsupportedNetwork = errors.New("unsupported network")
+
 // EqualFoldContains checks if the array contains the string regardless of casing
 func EqualFoldContains(arr []string, str string) bool {
 	for _, a := range arr {
@@ -20,31 +23,27 @@ func EqualFoldContains(arr []string, str string) bool {
 
 // IsPChain checks network identifier to make sure sub-network identifier set to "P"
 func IsPChain(networkIdentifier *types.NetworkIdentifier) bool {
-	if networkIdentifier != nil &&
+	return networkIdentifier != nil &&
 		networkIdentifier.SubNetworkIdentifier != nil &&
-		networkIdentifier.SubNetworkIdentifier.Network == PChainNetworkIdentifier {
-		return true
-	}
-
-	return false
+		networkIdentifier.SubNetworkIdentifier.Network == PChainNetworkIdentifier
 }
 
 // GetAliasAndHRP fetches chain id alias and hrp for address formatting.
 // Right now only P chain id alias is supported
 func GetAliasAndHRP(networkIdentifier *types.NetworkIdentifier) (string, string, error) {
-	var chainIDAlias, hrp string
 	if !IsPChain(networkIdentifier) {
-		return "", "", errors.New("only support P chain alias")
+		return "", "", errUnsupportedChain
 	}
-	chainIDAlias = PChainIDAlias
+
+	var hrp string
 	switch networkIdentifier.Network {
 	case FujiNetwork:
 		hrp = constants.GetHRP(constants.FujiID)
 	case MainnetNetwork:
 		hrp = constants.GetHRP(constants.MainnetID)
 	default:
-		return "", "", errors.New("can't recognize network")
+		return "", "", errUnsupportedNetwork
 	}
 
-	return chainIDAlias, hrp, nil
+	return PChainIDAlias, hrp, nil
 }
