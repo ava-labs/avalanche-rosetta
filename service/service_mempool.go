@@ -30,12 +30,12 @@ func (s MempoolService) Mempool(
 	req *types.NetworkRequest,
 ) (*types.MempoolResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
-		return nil, errUnavailableOffline
+		return nil, ErrUnavailableOffline
 	}
 
 	content, err := s.client.TxPoolContent(ctx)
 	if err != nil {
-		return nil, wrapError(errClientError, err)
+		return nil, WrapError(ErrClientError, err)
 	}
 
 	return &types.MempoolResponse{
@@ -51,5 +51,5 @@ func (s MempoolService) MempoolTransaction(
 	ctx context.Context,
 	req *types.MempoolTransactionRequest,
 ) (*types.MempoolTransactionResponse, *types.Error) {
-	return nil, errNotImplemented
+	return nil, ErrNotImplemented
 }

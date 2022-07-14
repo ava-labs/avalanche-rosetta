@@ -12,22 +12,38 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
+	"github.com/ava-labs/coreth/interfaces"
+
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	"github.com/ava-labs/coreth/interfaces"
 )
+
+type AccountBackend interface {
+	ShouldHandleRequest(req interface{}) bool
+	AccountBalance(ctx context.Context, req *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error)
+	AccountCoins(ctx context.Context, req *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error)
+}
 
 // AccountService implements the /account/* endpoints
 type AccountService struct {
-	config *Config
-	client client.Client
+	config                *Config
+	client                client.Client
+	cChainAtomicTxBackend AccountBackend
+	pChainBackend         AccountBackend
 }
 
 // NewAccountService returns a new network servicer
-func NewAccountService(config *Config, client client.Client) server.AccountAPIServicer {
+func NewAccountService(
+	config *Config,
+	client client.Client,
+	pChainBackend AccountBackend,
+	cChainAtomicTxBackend AccountBackend,
+) server.AccountAPIServicer {
 	return &AccountService{
-		config: config,
-		client: client,
+		config:                config,
+		client:                client,
+		cChainAtomicTxBackend: cChainAtomicTxBackend,
+		pChainBackend:         pChainBackend,
 	}
 }
 
@@ -37,11 +53,20 @@ func (s AccountService) AccountBalance(
 	req *types.AccountBalanceRequest,
 ) (*types.AccountBalanceResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
-		return nil, errUnavailableOffline
+		return nil, ErrUnavailableOffline
+	}
+
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.AccountBalance(ctx, req)
 	}
 
 	if req.AccountIdentifier == nil {
-		return nil, wrapError(errInvalidInput, "account identifier is not provided")
+		return nil, WrapError(ErrInvalidInput, "account identifier is not provided")
+	}
+
+	// If the address is in Bech32 format, we check the atomic balance
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.AccountBalance(ctx, req)
 	}
 
 	header, terr := blockHeaderFromInput(ctx, s.client, req.BlockIdentifier)
@@ -53,7 +78,7 @@ func (s AccountService) AccountBalance(
 
 	nonce, err := s.client.NonceAt(ctx, address, header.Number)
 	if err != nil {
-		return nil, wrapError(errClientError, err)
+		return nil, WrapError(ErrClientError, err)
 	}
 
 	metadata := &accountMetadata{
@@ -62,12 +87,12 @@ func (s AccountService) AccountBalance(
 
 	metadataMap, err := marshalJSONMap(metadata)
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	avaxBalance, err := s.client.BalanceAt(ctx, address, header.Number)
 	if err != nil {
-		return nil, wrapError(errClientError, err)
+		return nil, WrapError(ErrClientError, err)
 	}
 
 	balances := []*types.Amount{}
@@ -82,7 +107,7 @@ func (s AccountService) AccountBalance(
 				balances = append(balances, mapper.AvaxAmount(avaxBalance))
 				continue
 			}
-			return nil, wrapError(errCallInvalidParams, errors.New("non-avax currencies must specify contractAddress in metadata"))
+			return nil, WrapError(ErrCallInvalidParams, errors.New("non-avax currencies must specify contractAddress in metadata"))
 		}
 
 		identifierAddress := req.AccountIdentifier.Address
@@ -92,14 +117,14 @@ func (s AccountService) AccountBalance(
 
 		data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
 		if err != nil {
-			return nil, wrapError(errCallInvalidParams, fmt.Errorf("%w: marshalling balanceOf call msg data failed", err))
+			return nil, WrapError(ErrCallInvalidParams, fmt.Errorf("%w: marshalling balanceOf call msg data failed", err))
 		}
 
 		contractAddress := ethcommon.HexToAddress(value.(string))
 		callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
 		response, err := s.client.CallContract(ctx, callMsg, header.Number)
 		if err != nil {
-			return nil, wrapError(errInternalError, err)
+			return nil, WrapError(ErrInternalError, err)
 		}
 
 		amount := mapper.Erc20Amount(response, currency, false)
@@ -123,7 +148,16 @@ func (s AccountService) AccountCoins(
 	req *types.AccountCoinsRequest,
 ) (*types.AccountCoinsResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
-		return nil, errUnavailableOffline
+		return nil, ErrUnavailableOffline
 	}
-	return nil, errNotImplemented
+
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.AccountCoins(ctx, req)
+	}
+
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.AccountCoins(ctx, req)
+	}
+
+	return nil, ErrNotImplemented
 }

@@ -10,9 +10,15 @@ import (
 const (
 	MainnetChainID = 43114
 	MainnetAssetID = "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
+	MainnetNetwork = "Mainnet"
 
 	FujiChainID = 43113
 	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
+	FujiNetwork = "Fuji"
+
+	PChainNetworkIdentifier = "P"
+	CChainNetworkIdentifier = "C"
+	XChainNetworkIdentifier = "X"
 
 	ContractAddressMetadata  = "contractAddress"
 	IndexTransferredMetadata = "indexTransferred"
