@@ -16,6 +16,8 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/cchainatomictx"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain"
 )
 
 var (
@@ -111,17 +113,27 @@ func main() {
 		cfg.NetworkName = networkName
 	}
 
-	network := &types.NetworkIdentifier{
+	networkP := &types.NetworkIdentifier{
+		Blockchain: service.BlockchainName,
+		Network:    cfg.NetworkName,
+		SubNetworkIdentifier: &types.SubNetworkIdentifier{
+			Network: mapper.PChainNetworkIdentifier,
+		},
+	}
+	networkC := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
 		Network:    cfg.NetworkName,
 	}
 
 	asserter, err := asserter.NewServer(
-		mapper.OperationTypes,               // supported operation types
-		true,                                // historical balance lookup
-		[]*types.NetworkIdentifier{network}, // supported networks
-		[]string{},                          // call methods
-		false,                               // mempool coins
+		mapper.OperationTypes, // supported operation types
+		true,                  // historical balance lookup
+		[]*types.NetworkIdentifier{ // supported networks
+			networkP,
+			networkC,
+		}, // supported networks
+		[]string{}, // call methods
+		false,      // mempool coins
 	)
 	if err != nil {
 		log.Fatal("server asserter init error:", err)
@@ -130,7 +142,7 @@ func main() {
 	serviceConfig := &service.Config{
 		Mode:               cfg.Mode,
 		ChainID:            big.NewInt(cfg.ChainID),
-		NetworkID:          network,
+		NetworkID:          networkC,
 		GenesisBlockHash:   cfg.GenesisBlockHash,
 		AvaxAssetID:        assetID,
 		AP5Activation:      AP5Activation,
@@ -139,7 +151,17 @@ func main() {
 		TokenWhiteList:     cfg.TokenWhiteList,
 	}
 
-	handler := configureRouter(serviceConfig, asserter, apiClient)
+	pChainBackend, err := pchain.NewBackend(networkP)
+	if err != nil {
+		log.Fatal("unable to construct p-chain backend:", err)
+	}
+
+	cChainAtomicTxBackend, err := cchainatomictx.NewBackend()
+	if err != nil {
+		log.Fatal("unable to construct p-chain backend:", err)
+	}
+
+	handler := configureRouter(serviceConfig, asserter, apiClient, pChainBackend, cChainAtomicTxBackend)
 	if cfg.LogRequests {
 		handler = inspectMiddleware(handler)
 	}
@@ -163,12 +185,14 @@ func configureRouter(
 	serviceConfig *service.Config,
 	asserter *asserter.Asserter,
 	apiClient client.Client,
+	pChainBackend *pchain.Backend,
+	cChainAtomicTxBackend *cchainatomictx.Backend,
 ) http.Handler {
-	networkService := service.NewNetworkService(serviceConfig, apiClient)
-	blockService := service.NewBlockService(serviceConfig, apiClient)
-	accountService := service.NewAccountService(serviceConfig, apiClient)
+	networkService := service.NewNetworkService(serviceConfig, apiClient, pChainBackend)
+	blockService := service.NewBlockService(serviceConfig, apiClient, pChainBackend)
+	accountService := service.NewAccountService(serviceConfig, apiClient, pChainBackend, cChainAtomicTxBackend)
 	mempoolService := service.NewMempoolService(serviceConfig, apiClient)
-	constructionService := service.NewConstructionService(serviceConfig, apiClient)
+	constructionService := service.NewConstructionService(serviceConfig, apiClient, pChainBackend, cChainAtomicTxBackend)
 	callService := service.NewCallService(serviceConfig, apiClient)
 
 	return server.NewRouter(

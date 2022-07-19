@@ -1,6 +1,8 @@
 package mapper
 
-import "strings"
+import (
+	"strings"
+)
 
 // EqualFoldContains checks if the array contains the string regardless of casing
 func EqualFoldContains(arr []string, str string) bool {

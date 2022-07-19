@@ -6,8 +6,9 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/coinbase/rosetta-sdk-go/types"
+
+	"github.com/ava-labs/avalanche-rosetta/client"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -47,7 +48,7 @@ func blockHeaderFromInput(
 		header, err = c.HeaderByNumber(ctx, nil)
 	} else {
 		if input.Hash == nil && input.Index == nil {
-			return nil, errInvalidInput
+			return nil, ErrInvalidInput
 		}
 
 		if input.Index != nil {
@@ -58,7 +59,7 @@ func blockHeaderFromInput(
 	}
 
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	return header, nil

@@ -36,14 +36,14 @@ func (s CallService) Call(
 	req *types.CallRequest,
 ) (*types.CallResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
-		return nil, errUnavailableOffline
+		return nil, ErrUnavailableOffline
 	}
 
 	switch req.Method {
 	case "eth_getTransactionReceipt":
 		return s.callGetTransactionReceipt(ctx, req)
 	default:
-		return nil, errCallInvalidMethod
+		return nil, ErrCallInvalidMethod
 	}
 }
 
@@ -53,26 +53,26 @@ func (s CallService) callGetTransactionReceipt(
 ) (*types.CallResponse, *types.Error) {
 	var input GetTransactionReceiptInput
 	if err := types.UnmarshalMap(req.Parameters, &input); err != nil {
-		return nil, wrapError(errCallInvalidParams, err)
+		return nil, WrapError(ErrCallInvalidParams, err)
 	}
 
 	if len(input.TxHash) == 0 {
-		return nil, wrapError(errCallInvalidParams, "tx_hash missing from params")
+		return nil, WrapError(ErrCallInvalidParams, "tx_hash missing from params")
 	}
 
 	receipt, err := s.client.TransactionReceipt(ctx, common.HexToHash(input.TxHash))
 	if err != nil {
-		return nil, wrapError(errClientError, err)
+		return nil, WrapError(ErrClientError, err)
 	}
 
 	jsonOutput, err := receipt.MarshalJSON()
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	var receiptMap map[string]interface{}
 	if err := json.Unmarshal(jsonOutput, &receiptMap); err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	return &types.CallResponse{Result: receiptMap}, nil
