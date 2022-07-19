@@ -1,6 +1,7 @@
 package pchain
 
 import (
+	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
@@ -15,11 +16,15 @@ var (
 )
 
 type Backend struct {
+	fac               *crypto.FactorySECP256K1R
 	networkIdentifier *types.NetworkIdentifier
 }
 
 func NewBackend(networkIdentifier *types.NetworkIdentifier) (*Backend, error) {
-	return &Backend{networkIdentifier: networkIdentifier}, nil
+	return &Backend{
+		fac:               &crypto.FactorySECP256K1R{},
+		networkIdentifier: networkIdentifier,
+	}, nil
 }
 
 func (b *Backend) ShouldHandleRequest(req interface{}) bool {

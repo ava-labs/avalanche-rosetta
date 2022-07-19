@@ -45,6 +45,9 @@ const (
 
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
+
+	MetaAddressFormat   = "address_format"
+	AddressFormatBech32 = "bech32"
 )
 
 var (
