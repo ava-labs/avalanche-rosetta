@@ -888,7 +888,7 @@ func TestBackendDelegations(t *testing.T) {
 
 	makeBackends := func(currentBackend int) []*backendMocks.ConstructionBackend {
 		backends := make([]*backendMocks.ConstructionBackend, len(testCases))
-		for i, _ := range backends {
+		for i := range backends {
 			backends[i] = &backendMocks.ConstructionBackend{}
 
 			if i == currentBackend {

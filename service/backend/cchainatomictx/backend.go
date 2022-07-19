@@ -4,11 +4,12 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
-var _ service.ConstructionBackend = &Backend{}
-var _ service.AccountBackend = &Backend{}
+var (
+	_ service.ConstructionBackend = &Backend{}
+	_ service.AccountBackend      = &Backend{}
+)
 
-type Backend struct {
-}
+type Backend struct{}
 
 func NewBackend() (*Backend, error) {
 	return &Backend{}, nil

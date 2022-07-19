@@ -7,10 +7,12 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
-var _ service.ConstructionBackend = &Backend{}
-var _ service.NetworkBackend = &Backend{}
-var _ service.AccountBackend = &Backend{}
-var _ service.BlockBackend = &Backend{}
+var (
+	_ service.ConstructionBackend = &Backend{}
+	_ service.NetworkBackend      = &Backend{}
+	_ service.AccountBackend      = &Backend{}
+	_ service.BlockBackend        = &Backend{}
+)
 
 type Backend struct {
 	networkIdentifier *types.NetworkIdentifier

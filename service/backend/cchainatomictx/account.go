@@ -2,6 +2,7 @@ package cchainatomictx
 
 import (
 	"context"
+
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
