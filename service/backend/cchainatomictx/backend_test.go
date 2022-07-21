@@ -16,7 +16,10 @@ func TestShouldHandleRequest(t *testing.T) {
 		Network:    mapper.FujiNetwork,
 	}
 
-	backend, _ := NewBackend()
+	cBech32Address := "C-avax18xxz9e8323836t5wtpqh6fmrsjnksd6mka3gh7"
+	cEvmAddress := "0x8cBE7BdCd93FD767349074CBdD6CB69127eb0950"
+
+	backend := NewBackend(nil)
 
 	t.Run("should handle c-chain bech32 request", func(t *testing.T) {
 		assert.True(t, backend.ShouldHandleRequest(
@@ -27,12 +30,36 @@ func TestShouldHandleRequest(t *testing.T) {
 				},
 			},
 		))
+		assert.True(t, backend.ShouldHandleRequest(
+			&types.AccountBalanceRequest{
+				NetworkIdentifier: networkIdentifier,
+				AccountIdentifier: &types.AccountIdentifier{Address: cBech32Address},
+			},
+		))
+		assert.True(t, backend.ShouldHandleRequest(
+			&types.AccountCoinsRequest{
+				NetworkIdentifier: networkIdentifier,
+				AccountIdentifier: &types.AccountIdentifier{Address: cBech32Address},
+			},
+		))
 	})
 
 	t.Run("should not handle regular c-chain request", func(t *testing.T) {
 		assert.False(t, backend.ShouldHandleRequest(
 			&types.ConstructionDeriveRequest{
 				NetworkIdentifier: networkIdentifier,
+			},
+		))
+		assert.False(t, backend.ShouldHandleRequest(
+			&types.AccountBalanceRequest{
+				NetworkIdentifier: networkIdentifier,
+				AccountIdentifier: &types.AccountIdentifier{Address: cEvmAddress},
+			},
+		))
+		assert.False(t, backend.ShouldHandleRequest(
+			&types.AccountCoinsRequest{
+				NetworkIdentifier: networkIdentifier,
+				AccountIdentifier: &types.AccountIdentifier{Address: cEvmAddress},
 			},
 		))
 	})

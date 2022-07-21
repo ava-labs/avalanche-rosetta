@@ -25,7 +25,7 @@ func TestShouldHandleRequest(t *testing.T) {
 		Network:    mapper.FujiNetwork,
 	}
 
-	backend, _ := NewBackend(pChainNetworkIdentifier)
+	backend := NewBackend(nil, pChainNetworkIdentifier)
 
 	testData := []struct {
 		name              string

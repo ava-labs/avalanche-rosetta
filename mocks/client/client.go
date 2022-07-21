@@ -5,7 +5,10 @@ package client
 import (
 	big "math/big"
 
+	api "github.com/ava-labs/avalanchego/api"
+
 	client "github.com/ava-labs/avalanche-rosetta/client"
+
 	common "github.com/ethereum/go-ethereum/common"
 
 	context "context"
@@ -160,6 +163,36 @@ func (_m *Client) EstimateGas(_a0 context.Context, _a1 interfaces.CallMsg) (uint
 	}
 
 	return r0, r1
+}
+
+// GetAtomicUTXOs provides a mock function with given fields: ctx, addrs, sourceChain, limit, startAddress, startUTXOID
+func (_m *Client) GetAtomicUTXOs(ctx context.Context, addrs []string, sourceChain string, limit uint32, startAddress string, startUTXOID string) ([][]byte, api.Index, error) {
+	ret := _m.Called(ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+
+	var r0 [][]byte
+	if rf, ok := ret.Get(0).(func(context.Context, []string, string, uint32, string, string) [][]byte); ok {
+		r0 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([][]byte)
+		}
+	}
+
+	var r1 api.Index
+	if rf, ok := ret.Get(1).(func(context.Context, []string, string, uint32, string, string) api.Index); ok {
+		r1 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+	} else {
+		r1 = ret.Get(1).(api.Index)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, []string, string, uint32, string, string) error); ok {
+		r2 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetContractInfo provides a mock function with given fields: _a0, _a1
