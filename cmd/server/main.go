@@ -151,15 +151,10 @@ func main() {
 		TokenWhiteList:     cfg.TokenWhiteList,
 	}
 
-	pChainBackend, err := pchain.NewBackend(networkP)
-	if err != nil {
-		log.Fatal("unable to construct p-chain backend:", err)
-	}
+	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCEndpoint)
+	pChainBackend := pchain.NewBackend(pChainClient, networkP)
 
-	cChainAtomicTxBackend, err := cchainatomictx.NewBackend()
-	if err != nil {
-		log.Fatal("unable to construct p-chain backend:", err)
-	}
+	cChainAtomicTxBackend := cchainatomictx.NewBackend(apiClient)
 
 	handler := configureRouter(serviceConfig, asserter, apiClient, pChainBackend, cChainAtomicTxBackend)
 	if cfg.LogRequests {

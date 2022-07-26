@@ -5,10 +5,12 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
+	"github.com/ava-labs/coreth/plugin/evm"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
@@ -36,10 +38,14 @@ type Client interface {
 	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)
 	GetContractInfo(ethcommon.Address, bool) (string, uint8, error)
 	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
+	GetAtomicUTXOs(ctx context.Context, addrs []string, sourceChain string, limit uint32, startAddress, startUTXOID string) ([][]byte, api.Index, error)
 }
+
+type EvmClient evm.Client
 
 type client struct {
 	info.Client
+	EvmClient
 	*EthClient
 	*ContractClient
 }
@@ -55,6 +61,7 @@ func NewClient(ctx context.Context, endpoint string) (Client, error) {
 
 	return client{
 		Client:         info.NewClient(endpoint),
+		EvmClient:      evm.NewClient(endpoint, "C"),
 		EthClient:      eth,
 		ContractClient: NewContractClient(eth.Client),
 	}, nil

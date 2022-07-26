@@ -18,7 +18,7 @@ var networkIdentifier = &types.NetworkIdentifier{
 }
 
 func TestConstructionDerive(t *testing.T) {
-	backend, _ := NewBackend()
+	backend := NewBackend(nil)
 
 	t.Run("c-chain address", func(t *testing.T) {
 		src := "02e0d4392cfa224d4be19db416b3cf62e90fb2b7015e7b62a95c8cb490514943f6"

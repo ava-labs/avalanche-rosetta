@@ -1,9 +1,12 @@
 package pchain
 
 import (
+	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/vms/platformvm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
 )
@@ -18,13 +21,24 @@ var (
 type Backend struct {
 	fac               *crypto.FactorySECP256K1R
 	networkIdentifier *types.NetworkIdentifier
+	pClient           client.PChainClient
+	getUTXOsPageSize  uint32
+	codec             codec.Manager
+	codecVersion      uint16
 }
 
-func NewBackend(networkIdentifier *types.NetworkIdentifier) (*Backend, error) {
+func NewBackend(
+	pClient client.PChainClient,
+	networkIdentifier *types.NetworkIdentifier,
+) *Backend {
 	return &Backend{
 		fac:               &crypto.FactorySECP256K1R{},
 		networkIdentifier: networkIdentifier,
-	}, nil
+		pClient:           pClient,
+		getUTXOsPageSize:  1024,
+		codec:             platformvm.Codec,
+		codecVersion:      platformvm.CodecVersion,
+	}
 }
 
 func (b *Backend) ShouldHandleRequest(req interface{}) bool {
