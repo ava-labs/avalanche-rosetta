@@ -149,12 +149,12 @@ func (s *NetworkService) NetworkOptions(
 }
 
 func checkBootstrapStatus(ctx context.Context, client client.Client) *types.Error {
-	cReady, err := client.IsBootstrapped(ctx, "C")
+	cReady, err := client.IsBootstrapped(ctx, mapper.CChainNetworkIdentifier)
 	if err != nil {
 		return WrapError(ErrClientError, err)
 	}
 
-	xReady, err := client.IsBootstrapped(ctx, "X")
+	xReady, err := client.IsBootstrapped(ctx, mapper.XChainNetworkIdentifier)
 	if err != nil {
 		return WrapError(ErrClientError, err)
 	}

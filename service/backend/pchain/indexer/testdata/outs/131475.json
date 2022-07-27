@@ -1,0 +1,22 @@
+{
+  "id": "2DxASWodkHwmQURYjddSysMYiWoR2cArEaLEh6s6114gy2zSD4",
+  "type": "*platformvm.ProposalBlock",
+  "parent": "guP5pc9yADiupb6riw8fPaWwNTpw5kPwhF43nM2csamDqrrNH",
+  "timestamp": 1599696000000,
+  "height": 131476,
+  "transactions": [
+    {
+      "unsignedTx": {
+        "txID": "jWgE5KiiCejNYbYGDzhu9WAXrAdgwav9EXuycNVdB62rSU4tH"
+      },
+      "credentials": []
+    }
+  ],
+  "proposer": {
+    "id": "11111111111111111111111111111111LpoYY",
+    "parent": "11111111111111111111111111111111LpoYY",
+    "nodeID": "NodeID-111111111111111111116DBWJs",
+    "pChainHeight": 0,
+    "timestamp": 0
+  }
+}

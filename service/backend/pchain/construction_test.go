@@ -21,7 +21,7 @@ var pChainNetworkIdentifier = &types.NetworkIdentifier{
 }
 
 func TestConstructionDerive(t *testing.T) {
-	backend := NewBackend(nil, pChainNetworkIdentifier)
+	backend := NewBackend(nil, nil, pChainNetworkIdentifier)
 
 	t.Run("p-chain address", func(t *testing.T) {
 		src := "02e0d4392cfa224d4be19db416b3cf62e90fb2b7015e7b62a95c8cb490514943f6"
