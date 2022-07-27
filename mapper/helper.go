@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -37,6 +38,31 @@ func GetHRP(networkIdentifier *types.NetworkIdentifier) (string, error) {
 	}
 
 	return hrp, nil
+}
+
+// UnmarshalJSONMap converts map[string]interface{} into a interface{}.
+func UnmarshalJSONMap(m map[string]interface{}, i interface{}) error {
+	b, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(b, i)
+}
+
+// MarshalJSONMap converts an interface into a map[string]interface{}.
+func MarshalJSONMap(i interface{}) (map[string]interface{}, error) {
+	b, err := json.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }
 
 // Parse string into avax.UTXOID

@@ -69,6 +69,11 @@ var (
 		Decimals: 18,
 	}
 
+	AtomicAvaxCurrency = &types.Currency{
+		Symbol:   "AVAX",
+		Decimals: 9,
+	}
+
 	OperationStatuses = []*types.OperationStatus{
 		{
 			Status:     StatusSuccess,
