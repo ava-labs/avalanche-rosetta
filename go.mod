@@ -3,8 +3,8 @@ module github.com/ava-labs/avalanche-rosetta
 go 1.17
 
 require (
-	github.com/ava-labs/avalanchego v1.7.11
-	github.com/ava-labs/coreth v0.8.10
+	github.com/ava-labs/avalanchego v1.7.13
+	github.com/ava-labs/coreth v0.8.12
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/stretchr/testify v1.7.0
@@ -52,7 +52,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.12.1 // indirect
+	github.com/prometheus/client_golang v1.12.2 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
