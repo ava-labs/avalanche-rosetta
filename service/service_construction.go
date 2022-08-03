@@ -22,10 +22,13 @@ import (
 )
 
 const (
+	// 68 Bytes = methodID (4 Bytes) + param 1 (32 Bytes) + param 2 (32 Bytes)
 	genericTransferBytesLength = 68
 	genericUnwrapBytesLength   = 68
-	requiredPaddingBytes       = 32
-	defaultUnwrapChainID       = 0
+
+	requiredPaddingBytes = 32
+	defaultUnwrapChainID = 0
+
 	// do not include spaces in the Fn Signature strings
 	transferFnSignature = "transfer(address,uint256)"
 	unwrapFnSignature   = "unwrap(uint256,uint256)"
@@ -106,7 +109,7 @@ func (s ConstructionService) ConstructionMetadata(
 				return nil, wrapError(errClientError, err)
 			}
 		} else {
-			if input.UnwrapBridgeTx {
+			if input.Metadata.UnwrapBridgeTx {
 				gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
 			} else {
 				gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
@@ -123,7 +126,7 @@ func (s ConstructionService) ConstructionMetadata(
 		Nonce:          nonce,
 		GasPrice:       gasPrice,
 		GasLimit:       gasLimit,
-		UnwrapBridgeTx: input.UnwrapBridgeTx,
+		UnwrapBridgeTx: input.Metadata.UnwrapBridgeTx,
 	}
 
 	metadataMap, err := marshalJSONMap(metadata)
@@ -891,7 +894,6 @@ func (s ConstructionService) createTransferPreprocessOptions(
 		Value:                  amount,
 		SuggestedFeeMultiplier: req.SuggestedFeeMultiplier,
 		Currency:               fromCurrency,
-		UnwrapBridgeTx:         false,
 	}, nil
 }
 
@@ -921,12 +923,16 @@ func (s ConstructionService) createUnwrapPreprocessOptions(
 		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
 	}
 
+	metadata := &metadataOptions{
+		UnwrapBridgeTx: true,
+	}
+
 	return &options{
 		From:                   checkFrom,
 		Value:                  amount,
 		SuggestedFeeMultiplier: req.SuggestedFeeMultiplier,
 		Currency:               fromCurrency,
-		UnwrapBridgeTx:         true,
+		Metadata:               metadata,
 	}, nil
 }
 
