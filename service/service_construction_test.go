@@ -154,12 +154,15 @@ func TestConstructionMetadata(t *testing.T) {
 			"decimals": defaultDecimals,
 			"metadata": currencyMetadata,
 		}
-		input := map[string]interface{}{
-			"from":          defaultFromAddress,
-			"to":            "0x920eb8ca79f07eb3bfc39c324c8113948ed3104c",
-			"value":         "0xb4d360e3",
-			"currency":      currency,
+		inputMetadata := map[string]interface{}{
 			"bridge_unwrap": true,
+		}
+		input := map[string]interface{}{
+			"from":     defaultFromAddress,
+			"to":       "0x920eb8ca79f07eb3bfc39c324c8113948ed3104c",
+			"value":    "0xb4d360e3",
+			"currency": currency,
+			"metadata": inputMetadata,
 		}
 		resp, err := service.ConstructionMetadata(
 			ctx,
@@ -995,7 +998,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		)
 		assert.Nil(t, err)
-		optionsRaw := `{"bridge_unwrap":true, "from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","value":"0x9864aac3510d02", "currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}`
+		optionsRaw := `{"metadata": {"bridge_unwrap":true}, "from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","value":"0x9864aac3510d02", "currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}`
 		var opt options
 		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 		assert.Equal(t, &types.ConstructionPreprocessResponse{

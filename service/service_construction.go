@@ -109,8 +109,10 @@ func (s ConstructionService) ConstructionMetadata(
 				return nil, wrapError(errClientError, err)
 			}
 		} else {
-			if input.Metadata.UnwrapBridgeTx {
-				gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
+			if input.Metadata != nil {
+				if input.Metadata.UnwrapBridgeTx {
+					gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
+				}
 			} else {
 				gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
 			}
@@ -123,10 +125,15 @@ func (s ConstructionService) ConstructionMetadata(
 	}
 
 	metadata := &metadata{
-		Nonce:          nonce,
-		GasPrice:       gasPrice,
-		GasLimit:       gasLimit,
-		UnwrapBridgeTx: input.Metadata.UnwrapBridgeTx,
+		Nonce:    nonce,
+		GasPrice: gasPrice,
+		GasLimit: gasLimit,
+	}
+
+	if input.Metadata != nil {
+		if input.Metadata.UnwrapBridgeTx {
+			metadata.UnwrapBridgeTx = true
+		}
 	}
 
 	metadataMap, err := marshalJSONMap(metadata)
