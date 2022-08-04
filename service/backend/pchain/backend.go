@@ -1,6 +1,8 @@
 package pchain
 
 import (
+	"context"
+
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/avalanchego/vms/platformvm"
@@ -9,6 +11,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
 
 var (
@@ -19,16 +22,20 @@ var (
 )
 
 type Backend struct {
-	fac               *crypto.FactorySECP256K1R
-	networkIdentifier *types.NetworkIdentifier
-	pClient           client.PChainClient
-	getUTXOsPageSize  uint32
-	codec             codec.Manager
-	codecVersion      uint16
+	fac                    *crypto.FactorySECP256K1R
+	networkIdentifier      *types.NetworkIdentifier
+	pClient                client.PChainClient
+	indexerParser          indexer.Parser
+	getUTXOsPageSize       uint32
+	codec                  codec.Manager
+	codecVersion           uint16
+	genesisBlock           *indexer.ParsedGenesisBlock
+	genesisBlockIdentifier *types.BlockIdentifier
 }
 
 func NewBackend(
 	pClient client.PChainClient,
+	indexerParser indexer.Parser,
 	networkIdentifier *types.NetworkIdentifier,
 ) *Backend {
 	return &Backend{
@@ -38,6 +45,7 @@ func NewBackend(
 		getUTXOsPageSize:  1024,
 		codec:             platformvm.Codec,
 		codecVersion:      platformvm.CodecVersion,
+		indexerParser:     indexerParser,
 	}
 }
 
@@ -72,4 +80,26 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	}
 
 	return false
+}
+
+func (b *Backend) getGenesisBlock(ctx context.Context) (*indexer.ParsedGenesisBlock, error) {
+	// Initializing parser gives parsed genesis block
+	if b.genesisBlock != nil {
+		return b.genesisBlock, nil
+	}
+	genesisBlock, err := b.indexerParser.Initialize(ctx)
+	if err != nil {
+		return nil, err
+	}
+	b.genesisBlock = genesisBlock
+	b.genesisBlockIdentifier = b.buildGenesisBlockIdentifier(genesisBlock)
+
+	return genesisBlock, nil
+}
+
+func (b *Backend) buildGenesisBlockIdentifier(genesisBlock *indexer.ParsedGenesisBlock) *types.BlockIdentifier {
+	return &types.BlockIdentifier{
+		Index: int64(genesisBlock.Height),
+		Hash:  genesisBlock.BlockID.String(),
+	}
 }

@@ -116,3 +116,4 @@ mocks:
 	mockery --dir client --all --case underscore --outpkg client --output mocks/client;
 	mockery --dir service --name '.*Backend' --case underscore --outpkg chain --output mocks/service;
 	mockery --dir service/backend --all --case underscore --outpkg chain --output mocks/service/backend;
+	mockery --dir service/backend/pchain/indexer --all --case underscore --outpkg chain --output mocks/service/backend/pchain/indexer;

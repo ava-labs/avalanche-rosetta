@@ -1,0 +1,15 @@
+{
+  "id": "2peK2rrira1UUdFuLWZTMHFdGe3JY8sQeKLfPj5jhPdK8mMAcJ",
+  "type": "*platformvm.CommitBlock",
+  "parent": "4AqeFPxtTW4B5D6oR8gRZTvRKnnqkUWiV6mUNZxjUMbQKYWpi",
+  "timestamp": 1599696000000,
+  "height": 2,
+  "transactions": [],
+  "proposer": {
+    "id": "11111111111111111111111111111111LpoYY",
+    "parent": "11111111111111111111111111111111LpoYY",
+    "nodeID": "NodeID-111111111111111111116DBWJs",
+    "pChainHeight": 0,
+    "timestamp": 0
+  }
+}

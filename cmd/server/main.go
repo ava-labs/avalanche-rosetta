@@ -15,9 +15,11 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
 
 var (
@@ -125,9 +127,13 @@ func main() {
 		Network:    cfg.NetworkName,
 	}
 
+	var operationTypes []string
+	operationTypes = append(operationTypes, mapper.OperationTypes...)
+	operationTypes = append(operationTypes, pmapper.OperationTypes...)
+
 	asserter, err := asserter.NewServer(
-		mapper.OperationTypes, // supported operation types
-		true,                  // historical balance lookup
+		operationTypes, // supported operation types
+		true,           // historical balance lookup
 		[]*types.NetworkIdentifier{ // supported networks
 			networkP,
 			networkC,
@@ -151,8 +157,12 @@ func main() {
 		TokenWhiteList:     cfg.TokenWhiteList,
 	}
 
-	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCEndpoint)
-	pChainBackend := pchain.NewBackend(pChainClient, networkP)
+	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCEndpoint, cfg.IndexerEndpoint)
+	pIndexerParser, err := indexer.NewParser(pChainClient)
+	if err != nil {
+		log.Fatal("unable to initialize p-chain indexer parser:", err)
+	}
+	pChainBackend := pchain.NewBackend(pChainClient, pIndexerParser, networkP)
 
 	cChainAtomicTxBackend := cchainatomictx.NewBackend(apiClient)
 

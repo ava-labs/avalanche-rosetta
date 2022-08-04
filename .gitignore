@@ -21,3 +21,6 @@ rosetta-data
 data
 .vscode*
 __debug_bin*
+
+# *.json is excluded above, make sure we include indexer testdata
+!service/backend/pchain/indexer/testdata/**

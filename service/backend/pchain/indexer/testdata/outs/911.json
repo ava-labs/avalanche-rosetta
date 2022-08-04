@@ -1,0 +1,60 @@
+{
+  "id": "2PpHLb6QA8grZaGP9nmQmADjXBetSYyjPRmR9eqoSfo4yinxq",
+  "type": "*platformvm.AtomicBlock",
+  "parent": "WbVcJjrYR7SMHeymedravjJMi7SgWMtP4HZiVKcwTS8DuvZAX",
+  "timestamp": 1599696000000,
+  "height": 912,
+  "transactions": [
+    {
+      "unsignedTx": {
+        "networkID": 1,
+        "blockchainID": "11111111111111111111111111111111LpoYY",
+        "outputs": [],
+        "inputs": [
+          {
+            "txID": "kxAd41CPYQJ4nC5yYd99iHsGuce2Q5A2ZebpZwyHBkcEiKYRz",
+            "outputIndex": 0,
+            "assetID": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z",
+            "fxID": "spdxUxVJQbX85MGxMHbKw1sHxMnSqJ3QBzDyDYEP3h6TLuxqQ",
+            "input": {
+              "amount": 2998000000,
+              "signatureIndices": [
+                0
+              ]
+            }
+          }
+        ],
+        "memo": "0x00000000",
+        "destinationChain": "2oYMBNV4eNHyqk2fjjV5nVQLDbtmNJzq5s3qs3Lo6ftnC6FByM",
+        "exportedOutputs": [
+          {
+            "assetID": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z",
+            "fxID": "spdxUxVJQbX85MGxMHbKw1sHxMnSqJ3QBzDyDYEP3h6TLuxqQ",
+            "output": {
+              "addresses": [
+                "P-avax1da8qpayhzshr73lf94rjxncf4ve7nn4570fakq"
+              ],
+              "amount": 2997000000,
+              "locktime": 0,
+              "threshold": 1
+            }
+          }
+        ]
+      },
+      "credentials": [
+        {
+          "signatures": [
+            "0x9834c0af0dd92c0aa2febdc7e7b147d7b4bc46825cf8bd1a6df306bc7e795f250a05555a0e7776373259fc22ec3f514e2ceed50a8eb6a428b0b284b602fc030301"
+          ]
+        }
+      ]
+    }
+  ],
+  "proposer": {
+    "id": "11111111111111111111111111111111LpoYY",
+    "parent": "11111111111111111111111111111111LpoYY",
+    "nodeID": "NodeID-111111111111111111116DBWJs",
+    "pChainHeight": 0,
+    "timestamp": 0
+  }
+}

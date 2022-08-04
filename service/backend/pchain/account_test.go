@@ -32,7 +32,7 @@ func TestAccountBalance(t *testing.T) {
 	ctx := context.Background()
 	pChainMock.Mock.On("GetNetworkID", ctx).Return(uint32(5), nil)
 
-	service := NewBackend(pChainMock, nil)
+	service := NewBackend(pChainMock, nil, nil)
 
 	t.Run("Account Balance Test", func(t *testing.T) {
 		pChainAddr := "P-fuji1wmd9dfrqpud6daq0cde47u0r7pkrr46ep60399"
@@ -87,7 +87,7 @@ func TestAccountCoins(t *testing.T) {
 	ctx := context.Background()
 	pChainMock.Mock.On("GetNetworkID", ctx).Return(uint32(5), nil)
 
-	service := NewBackend(pChainMock, nil)
+	service := NewBackend(pChainMock, nil, nil)
 
 	t.Run("Account Coins Test", func(t *testing.T) {
 		pChainAddr := "P-fuji1wmd9dfrqpud6daq0cde47u0r7pkrr46ep60399"

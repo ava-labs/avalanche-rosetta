@@ -5,9 +5,10 @@ import (
 	"errors"
 	"os"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/service"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 var (
@@ -23,6 +24,7 @@ var (
 type config struct {
 	Mode             string `json:"mode"`
 	RPCEndpoint      string `json:"rpc_endpoint"`
+	IndexerEndpoint  string `json:"indexer_endpoint"`
 	ListenAddr       string `json:"listen_addr"`
 	NetworkName      string `json:"network_name"`
 	ChainID          int64  `json:"chain_id"`
@@ -59,6 +61,10 @@ func (c *config) ApplyDefaults() {
 
 	if c.RPCEndpoint == "" {
 		c.RPCEndpoint = "http://localhost:9650"
+	}
+
+	if c.IndexerEndpoint == "" {
+		c.IndexerEndpoint = c.RPCEndpoint
 	}
 
 	if c.ListenAddr == "" {

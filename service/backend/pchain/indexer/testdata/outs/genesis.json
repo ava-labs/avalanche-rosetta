@@ -1,0 +1,61 @@
+{
+  "id": "2FUFPVPxbTpKNn39moGSzsmGroYES4NZRdw3mJgNvMkMiMHJ9e",
+  "type": "GenesisBlock",
+  "parent": "UUvXi6j7QhVvgpbKM89MP5HdrxKm9CaJeHc187TsDNf8nZdLk",
+  "timestamp": 1599696000000,
+  "height": 0,
+  "transactions": [
+    {
+      "unsignedTx": {
+        "networkID": 1,
+        "blockchainID": "11111111111111111111111111111111LpoYY",
+        "outputs": [],
+        "inputs": [],
+        "memo": "0x",
+        "subnetID": "11111111111111111111111111111111LpoYY",
+        "chainName": "X-Chain",
+        "vmID": "jvYyfQTxGMJLuGWa55kdP2p2zSUYsQ5Raupu4TW34ZAUBAbtq",
+        "fxIDs": [
+          "spdxUxVJQbX85MGxMHbKw1sHxMnSqJ3QBzDyDYEP3h6TLuxqQ",
+          "qd2U4HDWUvMrVUeTcCHp6xH3Qpnn1XbU5MDdnBoiifFqvgXwT",
+          "rXJsCSEYXg2TehWxCEEGj6JU2PWKTkd6cBdNLjoe2SpsKD9cy"
+        ],
+        "genesisData": "",
+        "subnetAuthorization": {
+          "signatureIndices": []
+        }
+      },
+      "credentials": []
+    },
+    {
+      "unsignedTx": {
+        "networkID": 1,
+        "blockchainID": "11111111111111111111111111111111LpoYY",
+        "outputs": [],
+        "inputs": [],
+        "memo": "0x",
+        "subnetID": "11111111111111111111111111111111LpoYY",
+        "chainName": "C-Chain",
+        "vmID": "mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6",
+        "fxIDs": [],
+        "genesisData": "",
+        "subnetAuthorization": {
+          "signatureIndices": []
+        }
+      },
+      "credentials": []
+    }
+  ],
+  "proposer": {
+    "id": "11111111111111111111111111111111LpoYY",
+    "parent": "11111111111111111111111111111111LpoYY",
+    "nodeID": "NodeID-111111111111111111116DBWJs",
+    "pChainHeight": 0,
+    "timestamp": 0
+  },
+  "data": {
+    "message": "From Snowflake to Avalanche. Per consensum ad astra.",
+    "initialSupply": 359999999999990210,
+    "utxos": []
+  }
+}
