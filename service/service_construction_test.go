@@ -308,7 +308,7 @@ func TestConstructionDerive(t *testing.T) {
 }
 
 func forceMarshalMap(t *testing.T, i interface{}) map[string]interface{} {
-	m, err := marshalJSONMap(i)
+	m, err := mapper.MarshalJSONMap(i)
 	if err != nil {
 		t.Fatalf("could not marshal map %s", types.PrintStruct(i))
 	}

@@ -22,6 +22,10 @@ func AvaxAmount(value *big.Int) *types.Amount {
 	return Amount(value, AvaxCurrency)
 }
 
+func AtomicAvaxAmount(value *big.Int) *types.Amount {
+	return Amount(value, AtomicAvaxCurrency)
+}
+
 func Erc20Amount(
 	bytes []byte,
 	currency *types.Currency,
