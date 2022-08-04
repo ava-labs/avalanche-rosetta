@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ava-labs/avalanchego/codec"
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/avalanchego/vms/platformvm"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -31,11 +32,13 @@ type Backend struct {
 	codecVersion           uint16
 	genesisBlock           *indexer.ParsedGenesisBlock
 	genesisBlockIdentifier *types.BlockIdentifier
+	avaxAssetID            ids.ID
 }
 
 func NewBackend(
 	pClient client.PChainClient,
 	indexerParser indexer.Parser,
+	assetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
 ) *Backend {
 	return &Backend{
@@ -46,6 +49,7 @@ func NewBackend(
 		codec:             platformvm.Codec,
 		codecVersion:      platformvm.CodecVersion,
 		indexerParser:     indexerParser,
+		avaxAssetID:       assetID,
 	}
 }
 
