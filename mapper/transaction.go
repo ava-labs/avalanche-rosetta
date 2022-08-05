@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	x2crate     = big.NewInt(1000000000)
+	X2crate     = big.NewInt(1000000000)
 	zeroAddress = common.Address{}
 )
 
@@ -175,7 +175,7 @@ func crossChainTransaction(
 					Address: out.Address.Hex(),
 				},
 				Amount: &types.Amount{
-					Value:    new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), x2crate).String(),
+					Value:    new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), X2crate).String(),
 					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
@@ -207,7 +207,7 @@ func crossChainTransaction(
 					Address: in.Address.Hex(),
 				},
 				Amount: &types.Amount{
-					Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(x2crate)).String(),
+					Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(X2crate)).String(),
 					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{

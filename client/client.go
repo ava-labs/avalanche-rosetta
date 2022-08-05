@@ -7,6 +7,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
@@ -38,7 +39,11 @@ type Client interface {
 	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)
 	GetContractInfo(ethcommon.Address, bool) (string, uint8, error)
 	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
+	GetNetworkID(context.Context, ...rpc.Option) (uint32, error)
+	GetBlockchainID(context.Context, string, ...rpc.Option) (ids.ID, error)
+	IssueTx(ctx context.Context, txBytes []byte) (ids.ID, error)
 	GetAtomicUTXOs(ctx context.Context, addrs []string, sourceChain string, limit uint32, startAddress, startUTXOID string) ([][]byte, api.Index, error)
+	EstimateBaseFee(ctx context.Context) (*big.Int, error)
 }
 
 type EvmClient evm.Client

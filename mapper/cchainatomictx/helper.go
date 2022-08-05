@@ -13,3 +13,7 @@ func IsCChainBech32Address(accountIdentifier *types.AccountIdentifier) bool {
 	}
 	return false
 }
+
+func IsAtomicOpType(t string) bool {
+	return t == mapper.OpExport || t == mapper.OpImport
+}
