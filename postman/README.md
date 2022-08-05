@@ -21,11 +21,6 @@ Construction Endpoints use Postman pre-request script and tests features to chai
 
 Requests can be found under `Construction` folder; grouped by chains first, then by transaction type.
 
-The operations and preprocess metadata inputs are defined in the pre-request script section of the folders with the transaction name. This way, the operations will be wired to both preprocess and payloads without having to modify them in 2 places.
+The operations from the `/construction/process` request body are copied to the corresponding `/construction/payloads` request automatically.
 
 Once the operations and preprocess metadata is set, the collection run feature of Postman can be used to execute the full transaction construction and broadcast, provided the test signing server is up and running as well.
-
-
-
-
-
