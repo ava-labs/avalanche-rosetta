@@ -49,7 +49,6 @@ func NewConstructionService(config *Config, client client.Client) server.Constru
 // Metadata returned here could be a recent hash to use, an account sequence number,
 // or even arbitrary chain state. The request used when calling this endpoint
 // is created by calling /construction/preprocess in an offline environment.
-//
 func (s ConstructionService) ConstructionMetadata(
 	ctx context.Context,
 	req *types.ConstructionMetadataRequest,
@@ -133,7 +132,6 @@ func (s ConstructionService) ConstructionMetadata(
 // ConstructionHash implements /construction/hash endpoint.
 //
 // TransactionHash returns the network-specific transaction hash for a signed transaction.
-//
 func (s ConstructionService) ConstructionHash(
 	ctx context.Context,
 	req *types.ConstructionHashRequest,
@@ -164,7 +162,6 @@ func (s ConstructionService) ConstructionHash(
 // Combine creates a network-specific transaction from an unsigned transaction
 // and an array of provided signatures. The signed transaction returned from
 // this method will be sent to the /construction/submit endpoint by the caller.
-//
 func (s ConstructionService) ConstructionCombine(
 	ctx context.Context,
 	req *types.ConstructionCombineRequest,
@@ -217,7 +214,6 @@ func (s ConstructionService) ConstructionCombine(
 //
 // Derive returns the AccountIdentifier associated with a public key. Blockchains
 // that require an on-chain action to create an account should not implement this method.
-//
 func (s ConstructionService) ConstructionDerive(
 	ctx context.Context,
 	req *types.ConstructionDeriveRequest,
@@ -243,7 +239,6 @@ func (s ConstructionService) ConstructionDerive(
 // Parse is called on both unsigned and signed transactions to understand the
 // intent of the formulated transaction. This is run as a sanity check before signing
 // (after /construction/payloads) and before broadcast (after /construction/combine).
-//
 func (s ConstructionService) ConstructionParse(
 	ctx context.Context,
 	req *types.ConstructionParseRequest,
@@ -387,7 +382,6 @@ func (s ConstructionService) ConstructionParse(
 // which is sufficient for construction. For this reason, parsing the corresponding
 // transaction in the Data API (when it lands on chain) will contain a superset of
 // whatever operations were provided during construction.
-//
 func (s ConstructionService) ConstructionPayloads(
 	ctx context.Context,
 	req *types.ConstructionPayloadsRequest,
@@ -491,7 +485,6 @@ func (s ConstructionService) ConstructionPayloads(
 //
 // Preprocess is called prior to /construction/payloads to construct a request for
 // any metadata that is needed for transaction construction given (i.e. account nonce).
-//
 func (s ConstructionService) ConstructionPreprocess(
 	ctx context.Context,
 	req *types.ConstructionPreprocessRequest,
@@ -582,7 +575,6 @@ func (s ConstructionService) ConstructionPreprocess(
 // ConstructionSubmit implements /construction/submit endpoint.
 //
 // Submit a pre-signed transaction to the node.
-//
 func (s ConstructionService) ConstructionSubmit(
 	ctx context.Context,
 	req *types.ConstructionSubmitRequest,
