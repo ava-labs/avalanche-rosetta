@@ -8,9 +8,9 @@ import (
 
 var NodeVersion = fmt.Sprintf(
 	"%d.%d.%d",
-	version.Current.Major(),
-	version.Current.Minor(),
-	version.Current.Patch(),
+	version.Current.Major,
+	version.Current.Minor,
+	version.Current.Patch,
 )
 
 const (
