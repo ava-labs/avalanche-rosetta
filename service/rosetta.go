@@ -8,12 +8,12 @@ import (
 
 var NodeVersion = fmt.Sprintf(
 	"%d.%d.%d",
-	version.Current.Major(),
-	version.Current.Minor(),
-	version.Current.Patch(),
+	version.Current.Major,
+	version.Current.Minor,
+	version.Current.Patch,
 )
 
 const (
-	MiddlewareVersion = "0.1.11"
+	MiddlewareVersion = "0.1.12"
 	BlockchainName    = "Avalanche"
 )
