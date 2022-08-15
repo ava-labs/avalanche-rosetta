@@ -13,6 +13,12 @@ const (
 	OpAddSubnetValidator = "ADD_SUBNET_VALIDATOR"
 
 	MetadataOpType = "type"
+
+	SubAccountTypeSharedMemory       = "shared_memory"
+	SubAccountTypeUnlocked           = "unlocked"
+	SubAccountTypeLockedStakeable    = "locked_stakeable"
+	SubAccountTypeLockedNotStakeable = "locked_not_stakeable"
+	SubAccountTypeStaked             = "staked"
 )
 
 var (
