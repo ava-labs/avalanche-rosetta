@@ -1,6 +1,10 @@
 package pchain
 
-import "github.com/ava-labs/avalanchego/ids"
+import (
+	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm"
+)
 
 const (
 	OpImportAvax         = "IMPORT_AVAX"
@@ -11,14 +15,24 @@ const (
 	OpCreateChain        = "CREATE_CHAIN"
 	OpCreateSubnet       = "CREATE_SUBNET"
 	OpAddSubnetValidator = "ADD_SUBNET_VALIDATOR"
+	OpAdvanceTime        = "ADVANCE_TIME"
 
 	OpTypeImport      = "IMPORT"
 	OpTypeExport      = "EXPORT"
 	OpTypeInput       = "INPUT"
 	OpTypeOutput      = "OUTPUT"
 	OpTypeStakeOutput = "STAKE"
+	OpTypeReward      = "REWARD"
+	OpTypeCreateChain = "CREATE_CHAIN"
 
-	MetadataOpType = "type"
+	MetadataOpType      = "type"
+	MetadataTxType      = "tx_type"
+	MetadataStakingTxID = "staking_tx_id"
+	MetadataSubnetID    = "subnet_id"
+	MetadataChainName   = "chain_name"
+	MetadataVMID        = "vmid"
+	MetadataMemo        = "memo"
+	MetadataMessage     = "message"
 
 	SubAccountTypeSharedMemory       = "shared_memory"
 	SubAccountTypeUnlocked           = "unlocked"
@@ -90,4 +104,10 @@ type StakingMetadata struct {
 	Locktime        uint64   `json:"locktime"`
 	Threshold       uint32   `json:"threshold"`
 	Memo            string   `json:"memo"`
+}
+
+type DependencyTx struct {
+	ID          ids.ID
+	Tx          *platformvm.Tx
+	RewardUTXOs []*avax.UTXO
 }

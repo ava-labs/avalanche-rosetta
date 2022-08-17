@@ -32,6 +32,7 @@ type Backend struct {
 	codecVersion           uint16
 	genesisBlock           *indexer.ParsedGenesisBlock
 	genesisBlockIdentifier *types.BlockIdentifier
+	chainIDs               map[string]string
 	avaxAssetID            ids.ID
 }
 
