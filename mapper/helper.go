@@ -9,6 +9,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
@@ -86,4 +87,12 @@ func DecodeUTXOID(s string) (*avax.UTXOID, error) {
 		TxID:        txID,
 		OutputIndex: uint32(outputIdx),
 	}, nil
+}
+
+func EncodeBytes(bytes []byte) (string, error) {
+	return formatting.EncodeWithChecksum(formatting.Hex, bytes)
+}
+
+func DecodeToBytes(binaryData string) ([]byte, error) {
+	return formatting.Decode(formatting.Hex, binaryData)
 }
