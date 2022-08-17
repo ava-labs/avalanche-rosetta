@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/ava-labs/avalanchego/utils/crypto"
@@ -9,6 +10,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
@@ -88,4 +90,78 @@ func MatchOperations(operations []*types.Operation) ([]*parser.Match, error) {
 	}
 
 	return parser.MatchOperations(descriptions, operations)
+}
+
+type TxBuilder interface {
+	BuildTx(matches []*types.Operation, rawMetadata map[string]interface{}) (AvaxTx, []*types.AccountIdentifier, *types.Error)
+}
+
+func BuildPayloads(
+	txBuilder TxBuilder,
+	req *types.ConstructionPayloadsRequest,
+) (*types.ConstructionPayloadsResponse, *types.Error) {
+	tx, signers, tErr := txBuilder.BuildTx(req.Operations, req.Metadata)
+	if tErr != nil {
+		return nil, tErr
+	}
+
+	accountIdentifierSigners := make([]Signer, 0, len(req.Operations))
+	for _, o := range req.Operations {
+		// Skip positive amounts
+		if o.Amount.Value[0] != '-' {
+			continue
+		}
+
+		var coinIdentifier string
+
+		if o.CoinChange != nil && o.CoinChange.CoinIdentifier != nil {
+			coinIdentifier = o.CoinChange.CoinIdentifier.Identifier
+		}
+
+		accountIdentifierSigners = append(accountIdentifierSigners, Signer{
+			CoinIdentifier:    coinIdentifier,
+			AccountIdentifier: o.Account,
+		})
+	}
+
+	rosettaTx := &RosettaTx{
+		Tx:                       tx,
+		AccountIdentifierSigners: accountIdentifierSigners,
+	}
+
+	hash, err := tx.SigningPayload()
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	payloads := make([]*types.SigningPayload, len(signers))
+
+	for i, signer := range signers {
+		payloads[i] = &types.SigningPayload{
+			AccountIdentifier: signer,
+			Bytes:             hash,
+			SignatureType:     types.EcdsaRecovery,
+		}
+	}
+
+	var metadata pmapper.Metadata
+	err = mapper.UnmarshalJSONMap(req.Metadata, &metadata)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+
+	if metadata.ExportMetadata != nil {
+		rosettaTx.DestinationChain = metadata.DestinationChain
+		rosettaTx.DestinationChainID = &metadata.DestinationChainID
+	}
+
+	txJSON, err := json.Marshal(rosettaTx)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+
+	return &types.ConstructionPayloadsResponse{
+		UnsignedTransaction: string(txJSON),
+		Payloads:            payloads,
+	}, nil
 }

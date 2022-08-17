@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -157,12 +158,17 @@ func main() {
 		TokenWhiteList:     cfg.TokenWhiteList,
 	}
 
+	avaxAssetID, err := ids.FromString(assetID)
+	if err != nil {
+		log.Fatal("parse asset id failed:", err)
+	}
+
 	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCEndpoint, cfg.IndexerEndpoint)
 	pIndexerParser, err := indexer.NewParser(pChainClient)
 	if err != nil {
 		log.Fatal("unable to initialize p-chain indexer parser:", err)
 	}
-	pChainBackend := pchain.NewBackend(pChainClient, pIndexerParser, networkP)
+	pChainBackend := pchain.NewBackend(pChainClient, pIndexerParser, avaxAssetID, networkP)
 
 	cChainAtomicTxBackend := cchainatomictx.NewBackend(apiClient)
 

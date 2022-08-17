@@ -12,6 +12,12 @@ const (
 	OpCreateSubnet       = "CREATE_SUBNET"
 	OpAddSubnetValidator = "ADD_SUBNET_VALIDATOR"
 
+	OpTypeImport      = "IMPORT"
+	OpTypeExport      = "EXPORT"
+	OpTypeInput       = "INPUT"
+	OpTypeOutput      = "OUTPUT"
+	OpTypeStakeOutput = "STAKE"
+
 	MetadataOpType = "type"
 
 	SubAccountTypeSharedMemory       = "shared_memory"
@@ -51,7 +57,6 @@ type StakingOptions struct {
 	NodeID          string   `json:"node_id"`
 	Start           uint64   `json:"start"`
 	End             uint64   `json:"end"`
-	Wght            uint64   `json:"weight"`
 	Shares          uint32   `json:"shares"`
 	Memo            string   `json:"memo"`
 	Locktime        uint64   `json:"locktime"`
@@ -81,7 +86,6 @@ type StakingMetadata struct {
 	RewardAddresses []string `json:"reward_addresses"`
 	Start           uint64   `json:"start"`
 	End             uint64   `json:"end"`
-	Wght            uint64   `json:"weight"`
 	Shares          uint32   `json:"shares"`
 	Locktime        uint64   `json:"locktime"`
 	Threshold       uint32   `json:"threshold"`

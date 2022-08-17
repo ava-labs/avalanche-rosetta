@@ -146,7 +146,6 @@ func (b *Backend) buildStakingMetadata(options map[string]interface{}) (*pmapper
 		NodeID:          preprocessOptions.NodeID,
 		Start:           preprocessOptions.Start,
 		End:             preprocessOptions.End,
-		Wght:            preprocessOptions.Wght,
 		Memo:            preprocessOptions.Memo,
 		Locktime:        preprocessOptions.Locktime,
 		Threshold:       preprocessOptions.Threshold,
@@ -171,7 +170,12 @@ func (b *Backend) getBaseTxFee(ctx context.Context) (*types.Amount, error) {
 }
 
 func (b *Backend) ConstructionPayloads(ctx context.Context, req *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
-	return nil, service.ErrNotImplemented
+	builder := pTxBuilder{
+		avaxAssetID:  b.avaxAssetID,
+		codec:        b.codec,
+		codecVersion: b.codecVersion,
+	}
+	return common.BuildPayloads(builder, req)
 }
 
 func (b *Backend) ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
