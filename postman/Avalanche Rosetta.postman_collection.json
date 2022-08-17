@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "65eb0ec6-6e73-49ac-ae2b-c5e1c3d87fdc",
+		"_postman_id": "afdd0b91-b049-4c38-9410-fdaaff7f275c",
 		"name": "Avalanche Rosetta",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -272,8 +272,10 @@
 											"listen": "test",
 											"script": {
 												"exec": [
-													"const response = pm.response.json();",
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
 													"",
+													"const response = pm.response.json();",
 													"Utils.set(pm.environment, EnvVar.Options, response.options);",
 													"",
 													"pm.test('success', pm.response.to.have.status(200))",
@@ -286,8 +288,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
-													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.PreprocessMetadata));"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -298,7 +299,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"EXPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"-1000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"coin_change\": {\n                \"coin_action\": \"coin_spent\",\n                \"coin_identifier\": {\n                    \"identifier\": \"NGcWaGCzBUtUsD85wDuX1DwbHFkvMHwJ9tDFiN7HCCnVcB9B8:0\"\n                }\n            },\n            \"metadata\": {\n                \"type\": \"INPUT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"EXPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{CChainBech32Address}}\"\n            },\n            \"amount\": {\n                \"value\": \"8000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"EXPORT\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"destination_chain\": \"C\"\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -399,6 +400,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
+													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
 													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.Metadata));"
 												],
 												"type": "text/javascript"
@@ -410,7 +412,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"EXPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"-9000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 18\n                }\n            },\n            \"coin_change\": {\n                \"coin_action\": \"coin_spent\",\n                \"coin_identifier\": {\n                    \"identifier\": \"NGcWaGCzBUtUsD85wDuX1DwbHFkvMHwJ9tDFiN7HCCnVcB9B8:0\"\n                }\n            },\n            \"metadata\": {\n                \"type\": \"INPUT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"EXPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{CChainBech32Address}}\"\n            },\n            \"amount\": {\n                \"value\": \"8000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 18\n                }\n            },\n            \"metadata\": {\n                \"type\": \"EXPORT\"\n            }\n        }\n    ],\n    \"metadata\": {{metadata}}\n}",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -734,66 +736,8 @@
 										"type": "text/javascript",
 										"exec": [
 											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
-											"const REQUEST_TYPE = 'p-chain-export'",
-											"",
-											"const sourceAddress = pm.collectionVariables.get('PChainAddress')",
-											"const destinationAddress = pm.collectionVariables.get('CChainBech32Address')",
-											"",
-											"const requestParams = {",
-											"    operations: [",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 0",
-											"            },",
-											"            \"type\": \"EXPORT_AVAX\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"-9000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"coin_change\": {",
-											"                \"coin_action\": \"coin_spent\",",
-											"                \"coin_identifier\": {",
-											"                    \"identifier\": \"NGcWaGCzBUtUsD85wDuX1DwbHFkvMHwJ9tDFiN7HCCnVcB9B8:0\"",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"INPUT\"",
-											"            }",
-											"        },",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 1",
-											"            },",
-											"            \"type\": \"EXPORT_AVAX\",",
-											"            \"account\": {",
-											"                \"address\": destinationAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"8000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"EXPORT\"",
-											"            }",
-											"        }",
-											"    ],",
-											"    metadata: {",
-											"        \"destination_chain\": \"C\"",
-											"    }",
-											"};",
-											"",
-											"pm.environment.set('requestType', REQUEST_TYPE)",
-											"Utils.set(pm.environment, EnvVar.Operations, requestParams.operations);",
-											"Utils.set(pm.environment, EnvVar.PreprocessMetadata, requestParams.metadata);"
+											"pm.environment.set('requestType', 'p-chain-export')",
+											""
 										]
 									}
 								},
@@ -818,8 +762,10 @@
 											"listen": "test",
 											"script": {
 												"exec": [
-													"const response = pm.response.json();",
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
 													"",
+													"const response = pm.response.json();",
 													"Utils.set(pm.environment, EnvVar.Options, response.options);",
 													"",
 													"pm.test('success', pm.response.to.have.status(200))",
@@ -832,8 +778,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
-													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.PreprocessMetadata));"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -844,7 +789,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"IMPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{CChainBech32Address}}\"\n            },\n            \"amount\": {\n                \"value\": \"-1001000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 18\n                }\n            },\n            \"coin_change\": {\n                \"coin_action\": \"coin_spent\",\n                \"coin_identifier\": {\n                    \"identifier\": \"qnfiXfiskzghMdzWPEesLV9GZ2DypbEZLKAWmPLigk5U5oAYL:0\"\n                }\n            },\n            \"metadata\": {\n                \"type\": \"IMPORT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"IMPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"1000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"OUTPUT\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"source_chain\": \"C\"\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -1282,91 +1227,8 @@
 										"type": "text/javascript",
 										"exec": [
 											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
-											"const REQUEST_IDENTIFIER = 'p-chain-import'",
-											"",
-											"const sourceAddress = pm.collectionVariables.get('CChainBech32Address')",
-											"const destinationAddress = pm.collectionVariables.get('PChainAddress')",
-											"",
-											"const requestParams = {",
-											"    operations: [",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 0",
-											"            },",
-											"            \"type\": \"IMPORT_AVAX\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"-1000000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"coin_change\": {",
-											"                \"coin_action\": \"coin_spent\",",
-											"                \"coin_identifier\": {",
-											"                    \"identifier\": \"QHDmbkkDBt5qJ3Qtt3FRDwprTUZ7U9RQihd5RGPRooKCJZcnA:0\"",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"IMPORT\"",
-											"            }",
-											"        },",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 1",
-											"            },",
-											"            \"type\": \"IMPORT_AVAX\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"-1000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"coin_change\": {",
-											"                \"coin_action\": \"coin_spent\",",
-											"                \"coin_identifier\": {",
-											"                    \"identifier\": \"25zN8jjVShoDwHpoZBq51SjY4CzRCbCs4yvySTFfcdp3uBjYQY:0\"",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"IMPORT\"",
-											"            }",
-											"        },",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 2",
-											"            },",
-											"            \"type\": \"IMPORT_AVAX\",",
-											"            \"account\": {",
-											"                \"address\": destinationAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"1000000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"OUTPUT\"",
-											"            }",
-											"        }",
-											"    ],",
-											"    metadata: {",
-											"        \"source_chain\": \"C\"",
-											"    }",
-											"};",
-											"",
-											"pm.environment.set('requestType', REQUEST_IDENTIFIER)",
-											"Utils.set(pm.environment, EnvVar.Operations, requestParams.operations);",
-											"Utils.set(pm.environment, EnvVar.PreprocessMetadata, requestParams.metadata);"
+											"pm.environment.set('requestType', 'p-chain-import')",
+											""
 										]
 									}
 								},
@@ -1391,8 +1253,10 @@
 											"listen": "test",
 											"script": {
 												"exec": [
-													"const response = pm.response.json();",
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
 													"",
+													"const response = pm.response.json();",
 													"Utils.set(pm.environment, EnvVar.Options, response.options);",
 													"",
 													"pm.test('success', pm.response.to.have.status(200))",
@@ -1405,8 +1269,11 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
-													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.PreprocessMetadata));"
+													"const startTimestamp = Math.floor(Date.now() / 1000) + 60;",
+													"const endTimestamp = startTimestamp + 86400 * 2; // 2 day staking period",
+													"",
+													"pm.variables.set('startTimestamp', startTimestamp);",
+													"pm.variables.set('endTimestamp', endTimestamp);"
 												],
 												"type": "text/javascript"
 											}
@@ -1417,7 +1284,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"ADD_VALIDATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"-2877137500\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"coin_change\": {\n                \"coin_action\": \"coin_spent\",\n                \"coin_identifier\": {\n                    \"identifier\": \"pyQfA1Aq9vLaDETjeQe5DAwVxr2KAYdHg4CHzawmaj9oA6ppn:0\"\n                }\n            },\n            \"metadata\": {\n                \"type\": \"INPUT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"ADD_VALIDATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"2000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"STAKE\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 2\n            },\n            \"type\": \"ADD_VALIDATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"877137500\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"OUTPUT\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"node_id\": \"NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S\",\n\t    \"start\": {{startTimestamp}},\n        \"end\": {{endTimestamp}},\n        \"shares\": 100000\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -1855,89 +1722,8 @@
 										"type": "text/javascript",
 										"exec": [
 											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
-											"const REQUEST_IDENTIFIER = 'p-chain-add-validator'",
-											"",
-											"const sourceAddress = pm.collectionVariables.get('PChainAddress')",
-											"const startTimestamp = Math.floor(Date.now() / 1000) + 60;",
-											"const endTimestamp = startTimestamp + 86400 * 2; // 2 day staking period",
-											"",
-											"const requestParams = {",
-											"    operations: [",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 0",
-											"            },",
-											"            \"type\": \"ADD_VALIDATOR\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"-2877137500\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"coin_change\": {",
-											"                \"coin_action\": \"coin_spent\",",
-											"                \"coin_identifier\": {",
-											"                    \"identifier\": \"pyQfA1Aq9vLaDETjeQe5DAwVxr2KAYdHg4CHzawmaj9oA6ppn:0\"",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"INPUT\"",
-											"            }",
-											"        },",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 1",
-											"            },",
-											"            \"type\": \"ADD_VALIDATOR\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"2000000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"STAKE\"",
-											"            }",
-											"        },",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 2",
-											"            },",
-											"            \"type\": \"ADD_VALIDATOR\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"877137500\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"OUTPUT\"",
-											"            }",
-											"        }",
-											"    ],",
-											"    metadata: {",
-											"        node_id: \"NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S\",",
-											"\t    start: startTimestamp,",
-											"        end: endTimestamp,",
-											"        shares: 100000",
-											"    }",
-											"};",
-											"",
-											"pm.environment.set('requestType', REQUEST_IDENTIFIER)",
-											"Utils.set(pm.environment, EnvVar.Operations, requestParams.operations);",
-											"Utils.set(pm.environment, EnvVar.PreprocessMetadata, requestParams.metadata);"
+											"pm.environment.set('requestType', 'p-chain-add-validator')",
+											""
 										]
 									}
 								},
@@ -1962,8 +1748,10 @@
 											"listen": "test",
 											"script": {
 												"exec": [
-													"const response = pm.response.json();",
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
 													"",
+													"const response = pm.response.json();",
 													"Utils.set(pm.environment, EnvVar.Options, response.options);",
 													"",
 													"pm.test('success', pm.response.to.have.status(200))",
@@ -1976,8 +1764,11 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
-													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.PreprocessMetadata));"
+													"const startTimestamp = Math.floor(Date.now() / 1000) + 60;",
+													"const endTimestamp = startTimestamp + 86400 ; // 1 day staking period",
+													"",
+													"pm.variables.set('startTimestamp', startTimestamp);",
+													"pm.variables.set('endTimestamp', endTimestamp);"
 												],
 												"type": "text/javascript"
 											}
@@ -1988,7 +1779,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"ADD_DELEGATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"-1000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"coin_change\": {\n                \"coin_action\": \"coin_spent\",\n                \"coin_identifier\": {\n                    \"identifier\": \"2c6AtXKfyZLxVKCUs7TS3bZN6uu1VvWC2ebV9RYdAFYDLh5izX:0\"\n                }\n            },\n            \"metadata\": {\n                \"type\": \"INPUT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"ADD_DELEGATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"1000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"STAKE\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"node_id\": \"NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S\",\n\t    \"start\": {{startTimestamp}},\n        \"end\": {{endTimestamp}}\n    }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2426,69 +2217,8 @@
 										"type": "text/javascript",
 										"exec": [
 											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
-											"const REQUEST_IDENTIFIER = 'p-chain-add-delegator'",
-											"",
-											"const sourceAddress = pm.collectionVariables.get('PChainAddress')",
-											"const startTimestamp = Math.floor(Date.now() / 1000) + 60;",
-											"const endTimestamp = startTimestamp + 86400; // 1 day staking period",
-											"",
-											"const requestParams = {",
-											"    operations: [",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 0",
-											"            },",
-											"            \"type\": \"ADD_DELEGATOR\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"-1000000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"coin_change\": {",
-											"                \"coin_action\": \"coin_spent\",",
-											"                \"coin_identifier\": {",
-											"                    \"identifier\": \"2c6AtXKfyZLxVKCUs7TS3bZN6uu1VvWC2ebV9RYdAFYDLh5izX:0\"",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"INPUT\"",
-											"            }",
-											"        },",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 1",
-											"            },",
-											"            \"type\": \"ADD_DELEGATOR\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"1000000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"STAKE\"",
-											"            }",
-											"        }",
-											"    ],",
-											"    metadata: {",
-											"        node_id: \"NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S\",",
-											"\t    start: startTimestamp,",
-											"        end: endTimestamp,",
-											"    }",
-											"};",
-											"",
-											"pm.environment.set('requestType', REQUEST_IDENTIFIER)",
-											"Utils.set(pm.environment, EnvVar.Operations, requestParams.operations);",
-											"Utils.set(pm.environment, EnvVar.PreprocessMetadata, requestParams.metadata);"
+											"pm.environment.set('requestType', 'p-chain-add-delegator')",
+											""
 										]
 									}
 								},
@@ -2518,11 +2248,14 @@
 											"listen": "test",
 											"script": {
 												"exec": [
-													"const response = pm.response.json();",
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
 													"",
+													"const response = pm.response.json();",
 													"Utils.set(pm.environment, EnvVar.Options, response.options);",
 													"",
-													"pm.test('success', pm.response.to.have.status(200))"
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2531,8 +2264,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
-													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.PreprocessMetadata));"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2543,7 +2275,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"EXPORT\",\n            \"account\": {\n                \"address\": \"{{CChainEVMAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"-1001280750\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"INPUT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"EXPORT\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"1001000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"EXPORT\"\n            }\n        }\n    ]\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2932,7 +2664,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
-													"pm.test('success', pm.response.to.have.status(200))"
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2980,58 +2713,7 @@
 										"type": "text/javascript",
 										"exec": [
 											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
-											"const REQUEST_TYPE = 'c-chain-export'",
-											"",
-											"const sourceAddress = pm.collectionVariables.get('CChainEVMAddress')",
-											"const destinationAddress = pm.collectionVariables.get('PChainAddress')",
-											"",
-											"const requestParams = {",
-											"    operations: [",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 0",
-											"            },",
-											"            \"type\": \"EXPORT\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"-1280750\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"INPUT\"",
-											"            }",
-											"        },",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 1",
-											"            },",
-											"            \"type\": \"EXPORT\",",
-											"            \"account\": {",
-											"                \"address\": destinationAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"1000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            },",
-											"            \"metadata\": {",
-											"                \"type\": \"EXPORT\"",
-											"            }",
-											"        }",
-											"    ],",
-											"    metadata: {}",
-											"};",
-											"",
-											"pm.environment.set('requestType', REQUEST_TYPE)",
-											"Utils.set(pm.environment, EnvVar.Operations, requestParams.operations);",
-											"Utils.set(pm.environment, EnvVar.PreprocessMetadata, requestParams.metadata);",
+											"pm.environment.set('requestType', 'c-chain-export')",
 											""
 										]
 									}
@@ -3057,11 +2739,14 @@
 											"listen": "test",
 											"script": {
 												"exec": [
-													"const response = pm.response.json();",
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
 													"",
+													"const response = pm.response.json();",
 													"Utils.set(pm.environment, EnvVar.Options, response.options);",
 													"",
-													"pm.test('success', pm.response.to.have.status(200))"
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -3070,8 +2755,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
-													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.PreprocessMetadata));"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -3082,7 +2766,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"IMPORT\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"coin_change\": {\n                \"coin_identifier\": {\n                    \"identifier\": \"XcmVCgMbsA7jhNc2njE1LZ8tY8EVXv5T2NNXKsMqQYWKg7cro:0\"\n                },\n                \"coin_action\": \"coin_spent\"\n            },\n            \"amount\": {\n                \"value\": \"-8000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"IMPORT\",\n            \"account\": {\n                \"address\": \"{{CChainEVMAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"7719250\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            }\n        }\n    ]\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3519,58 +3203,8 @@
 										"type": "text/javascript",
 										"exec": [
 											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
-											"const REQUEST_TYPE = 'c-chain-import'",
-											"",
-											"const sourceAddress = pm.collectionVariables.get('PChainAddress')",
-											"const destinationAddress = pm.collectionVariables.get('CChainEVMAddress')",
-											"",
-											"const requestParams = {",
-											"    operations: [",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 0",
-											"            },",
-											"            \"type\": \"IMPORT\",",
-											"            \"account\": {",
-											"                \"address\": sourceAddress",
-											"            },",
-											"            \"coin_change\": {",
-											"                \"coin_identifier\": {",
-											"                    \"identifier\": \"XcmVCgMbsA7jhNc2njE1LZ8tY8EVXv5T2NNXKsMqQYWKg7cro:0\"",
-											"                },",
-											"                \"coin_action\": \"coin_spent\"",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"-8000000\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            }",
-											"        },",
-											"        {",
-											"            \"operation_identifier\": {",
-											"                \"index\": 1",
-											"            },",
-											"            \"type\": \"IMPORT\",",
-											"            \"account\": {",
-											"                \"address\": destinationAddress",
-											"            },",
-											"            \"amount\": {",
-											"                \"value\": \"7719250\",",
-											"                \"currency\": {",
-											"                    \"symbol\": \"AVAX\",",
-											"                    \"decimals\": 18",
-											"                }",
-											"            }",
-											"        }",
-											"    ],",
-											"    metadata: {}",
-											"};",
-											"",
-											"pm.environment.set('requestType', REQUEST_TYPE)",
-											"Utils.set(pm.environment, EnvVar.Operations, requestParams.operations);",
-											"Utils.set(pm.environment, EnvVar.PreprocessMetadata, requestParams.metadata);"
+											"pm.environment.set('requestType', 'c-chain-import')",
+											""
 										]
 									}
 								},
@@ -3829,7 +3463,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"account_identifier\": {\n        \"address\": \"{{PChainAddress}}\"\n    },\n    \"include_mempool\": true,\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 18\n        }\n    ]\n}",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"account_identifier\": {\n        \"address\": \"{{PChainAddress}}\"\n    },\n    \"include_mempool\": true,\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 9\n        }\n    ]\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -3856,7 +3490,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"account_identifier\": {\n        \"address\": \"{{PChainAddress}}\"\n    },\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 18\n        }\n    ]\n}",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"account_identifier\": {\n        \"address\": \"{{PChainAddress}}\"\n    },\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 9\n        }\n    ]\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -3947,7 +3581,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"account_identifier\": {\n        \"address\": \"{{CChainBech32Address}}\"\n    },\n    \"include_mempool\": true,\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 18\n        }\n    ]\n}",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"account_identifier\": {\n        \"address\": \"{{CChainBech32Address}}\"\n    },\n    \"include_mempool\": true,\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 9\n        }\n    ]\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -3974,7 +3608,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"account_identifier\": {\n        \"address\": \"{{CChainBech32Address}}\"\n    },\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 18\n        }\n    ]\n}",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"account_identifier\": {\n        \"address\": \"{{CChainBech32Address}}\"\n    },\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 9\n        }\n    ]\n}",
 									"options": {
 										"raw": {
 											"language": "json"
