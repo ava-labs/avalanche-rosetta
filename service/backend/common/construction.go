@@ -1,10 +1,13 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
@@ -287,4 +290,48 @@ func buildCredential(numSigs int, sigOffset *int, signatures []*types.Signature)
 		*sigOffset++
 	}
 	return cred, nil
+}
+
+func HashTx(rosettaTx *RosettaTx) (*types.TransactionIdentifierResponse, *types.Error) {
+	txHashBytes, err := rosettaTx.Tx.Hash()
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	hash, err := formatting.EncodeWithChecksum(formatting.CB58, txHashBytes)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	return &types.TransactionIdentifierResponse{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			Hash: hash,
+		},
+	}, nil
+}
+
+type TransactionIssuer interface {
+	IssueTx(ctx context.Context, txByte []byte) (ids.ID, error)
+}
+
+func SubmitTx(
+	ctx context.Context,
+	issuer TransactionIssuer,
+	rosettaTx *RosettaTx,
+) (*types.TransactionIdentifierResponse, *types.Error) {
+	bytes, err := rosettaTx.Tx.Marshal()
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	txID, err := issuer.IssueTx(ctx, bytes)
+	if err != nil {
+		return nil, service.WrapError(service.ErrClientError, err)
+	}
+
+	return &types.TransactionIdentifierResponse{
+		TransactionIdentifier: &types.TransactionIdentifier{
+			Hash: txID.String(),
+		},
+	}, nil
 }

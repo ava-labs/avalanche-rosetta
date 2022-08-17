@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -278,12 +279,33 @@ func getTxInputs(
 	}
 }
 
-func (b *Backend) ConstructionHash(ctx context.Context, req *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
-	return nil, service.ErrNotImplemented
+func (b *Backend) ConstructionHash(
+	ctx context.Context,
+	req *types.ConstructionHashRequest,
+) (*types.TransactionIdentifierResponse, *types.Error) {
+	rosettaTx, err := b.parsePayloadTxFromString(req.SignedTransaction)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	return common.HashTx(rosettaTx)
 }
 
-func (b *Backend) ConstructionSubmit(ctx context.Context, req *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error) {
-	return nil, service.ErrNotImplemented
+func (b *Backend) ConstructionSubmit(
+	ctx context.Context,
+	req *types.ConstructionSubmitRequest,
+) (*types.TransactionIdentifierResponse, *types.Error) {
+	rosettaTx, err := b.parsePayloadTxFromString(req.SignedTransaction)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	return common.SubmitTx(ctx, b, rosettaTx)
+}
+
+// Defining IssueTx here without rpc.Options... to be able to use it with common.SubmitTx
+func (b *Backend) IssueTx(ctx context.Context, txByte []byte) (ids.ID, error) {
+	return b.pClient.IssueTx(ctx, txByte)
 }
 
 func (b *Backend) parsePayloadTxFromString(transaction string) (*common.RosettaTx, error) {
