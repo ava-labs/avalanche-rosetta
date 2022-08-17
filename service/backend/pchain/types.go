@@ -1,6 +1,8 @@
 package pchain
 
 import (
+	"errors"
+
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/hashing"
@@ -12,6 +14,8 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 )
+
+var errInvalidTransaction = errors.New("invalid transaction")
 
 type AccountBalance struct {
 	Total              uint64
@@ -90,4 +94,24 @@ func (p pTxBuilder) BuildTx(operations []*types.Operation, metadataMap map[strin
 		Codec:        p.codec,
 		CodecVersion: p.codecVersion,
 	}, signers, nil
+}
+
+type pTxParser struct {
+	hrp      string
+	chainIDs map[string]string
+}
+
+func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*types.AccountIdentifier) ([]*types.Operation, error) {
+	pTx, ok := tx.Tx.(*pTx)
+	if !ok {
+		return nil, errInvalidTransaction
+	}
+
+	parser := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil)
+	transactions, err := parser.Parse(pTx.Tx.UnsignedTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return transactions.Operations, nil
 }

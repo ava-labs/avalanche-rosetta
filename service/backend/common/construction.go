@@ -6,6 +6,9 @@ import (
 
 	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
+	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/components/verify"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -14,7 +17,13 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
-var errNoOperationsToMatch = errors.New("no operations were passed to match")
+var (
+	errNoOperationsToMatch      = errors.New("no operations were passed to match")
+	errInvalidInput             = errors.New("invalid input")
+	errInvalidInputSignatureLen = errors.New("input signature length doesn't match credentials needed")
+	errInsufficientSignatures   = errors.New("insufficient signatures")
+	errInvalidSignatureLen      = errors.New("invalid signature length")
+)
 
 func DeriveBech32Address(fac *crypto.FactorySECP256K1R, chainIDAlias string, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	pub, err := fac.ToPublicKey(req.PublicKey.Bytes)
@@ -164,4 +173,118 @@ func BuildPayloads(
 		UnsignedTransaction: string(txJSON),
 		Payloads:            payloads,
 	}, nil
+}
+
+type TxParser interface {
+	ParseTx(tx *RosettaTx, inputAddresses map[string]*types.AccountIdentifier) ([]*types.Operation, error)
+}
+
+func Parse(parser TxParser, payloadsTx *RosettaTx, isSigned bool) (*types.ConstructionParseResponse, *types.Error) {
+	// Convert input tx into operations
+	inputAddresses := getInputAddresses(payloadsTx)
+	operations, err := parser.ParseTx(payloadsTx, inputAddresses)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, "incorrect transaction input")
+	}
+
+	// Generate AccountIdentifierSigners if request is signed
+	var signers []*types.AccountIdentifier
+	if isSigned {
+		payloadSigners, err := payloadsTx.GetAccountIdentifiers(operations)
+		if err != nil {
+			return nil, service.WrapError(service.ErrInvalidInput, err)
+		}
+
+		signers = payloadSigners
+	}
+
+	return &types.ConstructionParseResponse{
+		Operations:               operations,
+		AccountIdentifierSigners: signers,
+	}, nil
+}
+
+func getInputAddresses(tx *RosettaTx) map[string]*types.AccountIdentifier {
+	addresses := make(map[string]*types.AccountIdentifier)
+
+	for _, signer := range tx.AccountIdentifierSigners {
+		addresses[signer.CoinIdentifier] = signer.AccountIdentifier
+	}
+
+	return addresses
+}
+
+type TxCombiner interface {
+	CombineTx(tx AvaxTx, signatures []*types.Signature) (AvaxTx, *types.Error)
+}
+
+func Combine(
+	combiner TxCombiner,
+	rosettaTx *RosettaTx,
+	signatures []*types.Signature,
+) (*types.ConstructionCombineResponse, *types.Error) {
+	combinedTx, tErr := combiner.CombineTx(rosettaTx.Tx, signatures)
+	if tErr != nil {
+		return nil, tErr
+	}
+
+	signedTransaction, err := json.Marshal(&RosettaTx{
+		Tx:                       combinedTx,
+		AccountIdentifierSigners: rosettaTx.AccountIdentifierSigners,
+		DestinationChain:         rosettaTx.DestinationChain,
+		DestinationChainID:       rosettaTx.DestinationChainID,
+	})
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, "unable to encode signed transaction")
+	}
+
+	return &types.ConstructionCombineResponse{
+		SignedTransaction: string(signedTransaction),
+	}, nil
+}
+
+// Based on tx inputs, we can determine the number of signatures
+// required by each input and put correct number of signatures to
+// construct the signed tx.
+// See https://github.com/ava-labs/avalanchego/blob/v1.7.17/vms/platformvm/txs/tx.go#L99
+// for more details.
+func BuildCredentialList(ins []*avax.TransferableInput, signatures []*types.Signature) ([]verify.Verifiable, error) {
+	creds := make([]verify.Verifiable, len(ins))
+	sigOffset := 0
+	for i, transferInput := range ins {
+		input, ok := transferInput.In.(*secp256k1fx.TransferInput)
+		if !ok {
+			return nil, errInvalidInput
+		}
+
+		cred, err := buildCredential(len(input.SigIndices), &sigOffset, signatures)
+		if err != nil {
+			return nil, err
+		}
+
+		creds[i] = cred
+	}
+
+	if sigOffset != len(signatures) {
+		return nil, errInvalidInputSignatureLen
+	}
+
+	return creds, nil
+}
+
+func buildCredential(numSigs int, sigOffset *int, signatures []*types.Signature) (*secp256k1fx.Credential, error) {
+	cred := &secp256k1fx.Credential{}
+	cred.Sigs = make([][crypto.SECP256K1RSigLen]byte, numSigs)
+	for j := 0; j < numSigs; j++ {
+		if *sigOffset >= len(signatures) {
+			return nil, errInsufficientSignatures
+		}
+
+		if len(signatures[*sigOffset].Bytes) != crypto.SECP256K1RSigLen {
+			return nil, errInvalidSignatureLen
+		}
+		copy(cred.Sigs[j][:], signatures[*sigOffset].Bytes)
+		*sigOffset++
+	}
+	return cred, nil
 }
