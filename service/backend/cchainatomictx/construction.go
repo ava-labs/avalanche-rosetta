@@ -194,7 +194,12 @@ func (b *Backend) calculateSuggestedFee(ctx context.Context, gasUsed *big.Int) (
 }
 
 func (b *Backend) ConstructionPayloads(ctx context.Context, req *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
-	return nil, service.ErrNotImplemented
+	builder := cAtomicTxBuilder{
+		avaxAssetID:  b.avaxAssetID,
+		codec:        b.codec,
+		codecVersion: b.codecVersion,
+	}
+	return common.BuildPayloads(builder, req)
 }
 
 func (b *Backend) ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
