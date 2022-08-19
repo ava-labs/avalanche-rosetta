@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
@@ -134,6 +135,7 @@ func TestExportTxConstruction(t *testing.T) {
 
 	signedExportTxSignature, _ := hex.DecodeString("2acfc2cedd3c42978728518b13cc84a64f23784af591516e8dfe0cce544bc63c370ca6d64b2550f12f56a800b8a73ff8573131bf54e584de38c91fc14dd7336801")
 	signedExportTx := "0x000000000001000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d50000000000000000000000000000000000000000000000000000000000000000000000013158e80abd5a1e1aa716003c9db096792c37962100000000009896803d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000000000030000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000070000000000944dd20000000000000000000000010000000176da56a4600f1ba6f40fc3735f71e3f06c31d7590000000100000009000000012acfc2cedd3c42978728518b13cc84a64f23784af591516e8dfe0cce544bc63c370ca6d64b2550f12f56a800b8a73ff8573131bf54e584de38c91fc14dd733680149056c11"
+	signedExportTxHash := "pkSEF4YvVo6YjirHfmWvt9j2zrWdzEAGckDKrbyq1WbPtWdAX"
 
 	signatures := []*types.Signature{
 		{
@@ -253,9 +255,33 @@ func TestExportTxConstruction(t *testing.T) {
 		clientMock.AssertExpectations(t)
 	})
 
-	t.Run("hash endpoint", func(t *testing.T) {})
+	t.Run("hash endpoint", func(t *testing.T) {
+		resp, err := backend.ConstructionHash(ctx, &types.ConstructionHashRequest{
+			NetworkIdentifier: networkIdentifier,
+			SignedTransaction: wrappedSignedExportTx,
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
 
-	t.Run("submit endpoint", func(t *testing.T) {})
+		clientMock.AssertExpectations(t)
+	})
+
+	t.Run("submit endpoint", func(t *testing.T) {
+		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedExportTx)
+		txID, _ := ids.FromString(signedExportTxHash)
+
+		clientMock.On("IssueTx", ctx, signedTxBytes).Return(txID, nil)
+
+		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
+			NetworkIdentifier: networkIdentifier,
+			SignedTransaction: wrappedSignedExportTx,
+		})
+
+		assert.Nil(t, apiErr)
+		assert.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
+
+		clientMock.AssertExpectations(t)
+	})
 }
 
 func TestImportTxConstruction(t *testing.T) {
@@ -339,6 +365,7 @@ func TestImportTxConstruction(t *testing.T) {
 
 	signedImportTxSignature, _ := hex.DecodeString("a06d20d1d175b1e1d2b6e647ab5321717967de7e9367c28df8c0e20634ec7827019fe38e8d4f123f8e5286f3236db8dbb419e264628e2f17330a6c8da60d342401")
 	signedImportTx := "0x000000000000000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d500000000000000000000000000000000000000000000000000000000000000000000000288ae5dd070e6d74f16c26358cd4a8f43746d4d338b5b75b668741c6d95816af5000000023d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000050000000000e4e1c00000000100000000b9a824340e1b94f27500cdfcbf8eaa9d4ee5e57b2823cb8b158de17689916c74000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000500000000004c4b400000000100000000000000013158e80abd5a1e1aa716003c9db096792c37962100000000012c7a123d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000020000000900000001a06d20d1d175b1e1d2b6e647ab5321717967de7e9367c28df8c0e20634ec7827019fe38e8d4f123f8e5286f3236db8dbb419e264628e2f17330a6c8da60d3424010000000900000001a06d20d1d175b1e1d2b6e647ab5321717967de7e9367c28df8c0e20634ec7827019fe38e8d4f123f8e5286f3236db8dbb419e264628e2f17330a6c8da60d342401dc68b1fc"
+	signedImportTxHash := "2Rz6T1gteozqm5sCG52hDHk6m4iMY65R1LWfBCuPo3f595yrT7"
 
 	wrappedSignedImportTx := `{"tx":"` + signedImportTx + `","signers":` + importSigners + `}`
 
@@ -455,7 +482,31 @@ func TestImportTxConstruction(t *testing.T) {
 		clientMock.AssertExpectations(t)
 	})
 
-	t.Run("hash endpoint", func(t *testing.T) {})
+	t.Run("hash endpoint", func(t *testing.T) {
+		resp, err := backend.ConstructionHash(ctx, &types.ConstructionHashRequest{
+			NetworkIdentifier: networkIdentifier,
+			SignedTransaction: wrappedSignedImportTx,
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
 
-	t.Run("submit endpoint", func(t *testing.T) {})
+		clientMock.AssertExpectations(t)
+	})
+
+	t.Run("submit endpoint", func(t *testing.T) {
+		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedImportTx)
+		txID, _ := ids.FromString(signedImportTxHash)
+
+		clientMock.On("IssueTx", ctx, signedTxBytes).Return(txID, nil)
+
+		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
+			NetworkIdentifier: networkIdentifier,
+			SignedTransaction: wrappedSignedImportTx,
+		})
+
+		assert.Nil(t, apiErr)
+		assert.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
+
+		clientMock.AssertExpectations(t)
+	})
 }

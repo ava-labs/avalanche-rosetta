@@ -309,10 +309,26 @@ func getTxCreds(
 	return nil, errUnknownTxType
 }
 
-func (b *Backend) ConstructionHash(ctx context.Context, req *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error) {
-	return nil, service.ErrNotImplemented
+func (b *Backend) ConstructionHash(
+	ctx context.Context,
+	req *types.ConstructionHashRequest,
+) (*types.TransactionIdentifierResponse, *types.Error) {
+	rosettaTx, err := b.parsePayloadTxFromString(req.SignedTransaction)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	return common.HashTx(rosettaTx)
 }
 
-func (b *Backend) ConstructionSubmit(ctx context.Context, req *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error) {
-	return nil, service.ErrNotImplemented
+func (b *Backend) ConstructionSubmit(
+	ctx context.Context,
+	req *types.ConstructionSubmitRequest,
+) (*types.TransactionIdentifierResponse, *types.Error) {
+	rosettaTx, err := b.parsePayloadTxFromString(req.SignedTransaction)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	return common.SubmitTx(ctx, b.cClient, rosettaTx)
 }
