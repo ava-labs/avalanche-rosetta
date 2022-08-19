@@ -3,10 +3,10 @@ module github.com/ava-labs/avalanche-rosetta
 go 1.17
 
 require (
-	github.com/ava-labs/avalanchego v1.7.17
-	github.com/ava-labs/coreth v0.8.15
+	github.com/ava-labs/avalanchego v1.7.18
+	github.com/ava-labs/coreth v0.8.16-rc.2
 	github.com/coinbase/rosetta-sdk-go v0.6.5
-	github.com/ethereum/go-ethereum v1.10.20
+	github.com/ethereum/go-ethereum v1.10.21
 	github.com/stretchr/testify v1.7.2
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
@@ -54,7 +54,6 @@ require (
 	github.com/jessevdk/go-flags v1.5.0 // indirect
 	github.com/jrick/logrotate v1.0.0 // indirect
 	github.com/kkdai/bstream v1.0.0 // indirect
-	github.com/linxGnu/grocksdb v1.6.34 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
