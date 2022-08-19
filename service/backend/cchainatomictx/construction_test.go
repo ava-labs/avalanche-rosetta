@@ -132,6 +132,23 @@ func TestExportTxConstruction(t *testing.T) {
 	wrappedTxFormat := `{"tx":"%s","signers":%s,"destination_chain":"%s","destination_chain_id":"%s"}`
 	wrappedUnsignedExportTx := fmt.Sprintf(wrappedTxFormat, unsignedExportTx, exportSigners, "P", pChainID.String())
 
+	signedExportTxSignature, _ := hex.DecodeString("2acfc2cedd3c42978728518b13cc84a64f23784af591516e8dfe0cce544bc63c370ca6d64b2550f12f56a800b8a73ff8573131bf54e584de38c91fc14dd7336801")
+	signedExportTx := "0x000000000001000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d50000000000000000000000000000000000000000000000000000000000000000000000013158e80abd5a1e1aa716003c9db096792c37962100000000009896803d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000000000030000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000070000000000944dd20000000000000000000000010000000176da56a4600f1ba6f40fc3735f71e3f06c31d7590000000100000009000000012acfc2cedd3c42978728518b13cc84a64f23784af591516e8dfe0cce544bc63c370ca6d64b2550f12f56a800b8a73ff8573131bf54e584de38c91fc14dd733680149056c11"
+
+	signatures := []*types.Signature{
+		{
+			SigningPayload: &types.SigningPayload{
+				AccountIdentifier: cAccountIdentifier,
+				Bytes:             unsignedExportTxHash,
+				SignatureType:     types.EcdsaRecovery,
+			},
+			SignatureType: types.EcdsaRecovery,
+			Bytes:         signedExportTxSignature,
+		},
+	}
+
+	wrappedSignedExportTx := fmt.Sprintf(wrappedTxFormat, signedExportTx, exportSigners, "P", pChainID.String())
+
 	ctx := context.Background()
 	clientMock := &mocks.Client{}
 	backend := NewBackend(clientMock, avaxAssetID)
@@ -189,11 +206,52 @@ func TestExportTxConstruction(t *testing.T) {
 		clientMock.AssertExpectations(t)
 	})
 
-	t.Run("parse endpoint (unsigned)", func(t *testing.T) {})
+	t.Run("parse endpoint (unsigned)", func(t *testing.T) {
+		req := &types.ConstructionParseRequest{
+			NetworkIdentifier: networkIdentifier,
+			Transaction:       wrappedUnsignedExportTx,
+			Signed:            false,
+		}
 
-	t.Run("combine endpoint", func(t *testing.T) {})
+		resp, apiErr := backend.ConstructionParse(ctx, req)
 
-	t.Run("parse (signed) endpoint", func(t *testing.T) {})
+		assert.Nil(t, apiErr)
+		assert.Nil(t, resp.AccountIdentifierSigners)
+		assert.Equal(t, exportOperations, resp.Operations)
+
+		clientMock.AssertExpectations(t)
+	})
+
+	t.Run("combine endpoint", func(t *testing.T) {
+		req := &types.ConstructionCombineRequest{
+			NetworkIdentifier:   networkIdentifier,
+			UnsignedTransaction: wrappedUnsignedExportTx,
+			Signatures:          signatures,
+		}
+
+		resp, apiErr := backend.ConstructionCombine(ctx, req)
+
+		assert.Nil(t, apiErr)
+		assert.Equal(t, wrappedSignedExportTx, resp.SignedTransaction)
+
+		clientMock.AssertExpectations(t)
+	})
+
+	t.Run("parse (signed) endpoint", func(t *testing.T) {
+		req := &types.ConstructionParseRequest{
+			NetworkIdentifier: networkIdentifier,
+			Transaction:       wrappedSignedExportTx,
+			Signed:            true,
+		}
+
+		resp, apiErr := backend.ConstructionParse(ctx, req)
+
+		assert.Nil(t, apiErr)
+		assert.Equal(t, signers, resp.AccountIdentifierSigners)
+		assert.Equal(t, exportOperations, resp.Operations)
+
+		clientMock.AssertExpectations(t)
+	})
 
 	t.Run("hash endpoint", func(t *testing.T) {})
 
@@ -279,6 +337,24 @@ func TestImportTxConstruction(t *testing.T) {
 
 	wrappedUnsignedImportTx := `{"tx":"` + unsignedImportTx + `","signers":` + importSigners + `}`
 
+	signedImportTxSignature, _ := hex.DecodeString("a06d20d1d175b1e1d2b6e647ab5321717967de7e9367c28df8c0e20634ec7827019fe38e8d4f123f8e5286f3236db8dbb419e264628e2f17330a6c8da60d342401")
+	signedImportTx := "0x000000000000000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d500000000000000000000000000000000000000000000000000000000000000000000000288ae5dd070e6d74f16c26358cd4a8f43746d4d338b5b75b668741c6d95816af5000000023d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000050000000000e4e1c00000000100000000b9a824340e1b94f27500cdfcbf8eaa9d4ee5e57b2823cb8b158de17689916c74000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000500000000004c4b400000000100000000000000013158e80abd5a1e1aa716003c9db096792c37962100000000012c7a123d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000020000000900000001a06d20d1d175b1e1d2b6e647ab5321717967de7e9367c28df8c0e20634ec7827019fe38e8d4f123f8e5286f3236db8dbb419e264628e2f17330a6c8da60d3424010000000900000001a06d20d1d175b1e1d2b6e647ab5321717967de7e9367c28df8c0e20634ec7827019fe38e8d4f123f8e5286f3236db8dbb419e264628e2f17330a6c8da60d342401dc68b1fc"
+
+	wrappedSignedImportTx := `{"tx":"` + signedImportTx + `","signers":` + importSigners + `}`
+
+	signature := &types.Signature{
+		SigningPayload: &types.SigningPayload{
+			AccountIdentifier: pAccountIdentifier,
+			Bytes:             unsignedImportTxHash,
+			SignatureType:     types.EcdsaRecovery,
+		},
+		SignatureType: types.EcdsaRecovery,
+		Bytes:         signedImportTxSignature,
+	}
+
+	// two signatures, one for each input
+	signatures := []*types.Signature{signature, signature}
+
 	ctx := context.Background()
 	clientMock := &mocks.Client{}
 	backend := NewBackend(clientMock, avaxAssetID)
@@ -334,11 +410,50 @@ func TestImportTxConstruction(t *testing.T) {
 		clientMock.AssertExpectations(t)
 	})
 
-	t.Run("parse endpoint (unsigned)", func(t *testing.T) {})
+	t.Run("parse endpoint (unsigned)", func(t *testing.T) {
+		req := &types.ConstructionParseRequest{
+			NetworkIdentifier: networkIdentifier,
+			Transaction:       wrappedUnsignedImportTx,
+			Signed:            false,
+		}
 
-	t.Run("combine endpoint", func(t *testing.T) {})
+		resp, apiErr := backend.ConstructionParse(ctx, req)
 
-	t.Run("parse (signed) endpoint", func(t *testing.T) {})
+		assert.Nil(t, apiErr)
+		assert.Nil(t, resp.AccountIdentifierSigners)
+		assert.Equal(t, importOperations, resp.Operations)
+	})
+
+	t.Run("combine endpoint", func(t *testing.T) {
+		req := &types.ConstructionCombineRequest{
+			NetworkIdentifier:   networkIdentifier,
+			UnsignedTransaction: wrappedUnsignedImportTx,
+			Signatures:          signatures,
+		}
+
+		resp, apiErr := backend.ConstructionCombine(ctx, req)
+
+		assert.Nil(t, apiErr)
+		assert.Equal(t, wrappedSignedImportTx, resp.SignedTransaction)
+
+		clientMock.AssertExpectations(t)
+	})
+
+	t.Run("parse (signed) endpoint", func(t *testing.T) {
+		req := &types.ConstructionParseRequest{
+			NetworkIdentifier: networkIdentifier,
+			Transaction:       wrappedSignedImportTx,
+			Signed:            true,
+		}
+
+		resp, apiErr := backend.ConstructionParse(ctx, req)
+
+		assert.Nil(t, apiErr)
+		assert.Equal(t, signers, resp.AccountIdentifierSigners)
+		assert.Equal(t, importOperations, resp.Operations)
+
+		clientMock.AssertExpectations(t)
+	})
 
 	t.Run("hash endpoint", func(t *testing.T) {})
 
