@@ -3,6 +3,7 @@ package cchainatomictx
 import (
 	"testing"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 
@@ -19,7 +20,7 @@ func TestShouldHandleRequest(t *testing.T) {
 	cBech32Address := "C-avax18xxz9e8323836t5wtpqh6fmrsjnksd6mka3gh7"
 	cEvmAddress := "0x8cBE7BdCd93FD767349074CBdD6CB69127eb0950"
 
-	backend := NewBackend(nil)
+	backend := NewBackend(nil, ids.Empty)
 
 	t.Run("should handle c-chain bech32 request", func(t *testing.T) {
 		assert.True(t, backend.ShouldHandleRequest(

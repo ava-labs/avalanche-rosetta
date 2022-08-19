@@ -2,6 +2,7 @@ package cchainatomictx
 
 import (
 	"github.com/ava-labs/avalanchego/codec"
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -23,15 +24,17 @@ type Backend struct {
 	getUTXOsPageSize uint32
 	codec            codec.Manager
 	codecVersion     uint16
+	avaxAssetID      ids.ID
 }
 
-func NewBackend(cClient client.Client) *Backend {
+func NewBackend(cClient client.Client, avaxAssetID ids.ID) *Backend {
 	return &Backend{
 		fac:              &crypto.FactorySECP256K1R{},
 		cClient:          cClient,
 		getUTXOsPageSize: 1024,
 		codec:            evm.Codec,
 		codecVersion:     0,
+		avaxAssetID:      avaxAssetID,
 	}
 }
 
@@ -44,11 +47,11 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	case *types.ConstructionDeriveRequest:
 		return r.Metadata[mapper.MetaAddressFormat] == mapper.AddressFormatBech32
 	case *types.ConstructionMetadataRequest:
-		return false
+		return r.Options[cmapper.MetadataAtomicTxGas] != nil
 	case *types.ConstructionPreprocessRequest:
-		return false
+		return cmapper.IsAtomicOpType(r.Operations[0].Type)
 	case *types.ConstructionPayloadsRequest:
-		return false
+		return cmapper.IsAtomicOpType(r.Operations[0].Type)
 	case *types.ConstructionParseRequest:
 		return false
 	case *types.ConstructionCombineRequest:

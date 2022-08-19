@@ -170,7 +170,7 @@ func main() {
 	}
 	pChainBackend := pchain.NewBackend(pChainClient, pIndexerParser, avaxAssetID, networkP)
 
-	cChainAtomicTxBackend := cchainatomictx.NewBackend(apiClient)
+	cChainAtomicTxBackend := cchainatomictx.NewBackend(apiClient, avaxAssetID)
 
 	handler := configureRouter(serviceConfig, asserter, apiClient, pChainBackend, cChainAtomicTxBackend)
 	if cfg.LogRequests {

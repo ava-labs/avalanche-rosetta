@@ -13,6 +13,8 @@ import (
 
 	context "context"
 
+	ids "github.com/ava-labs/avalanchego/ids"
+
 	info "github.com/ava-labs/avalanchego/api/info"
 
 	interfaces "github.com/ava-labs/coreth/interfaces"
@@ -144,6 +146,29 @@ func (_m *Client) ChainID(_a0 context.Context) (*big.Int, error) {
 	return r0, r1
 }
 
+// EstimateBaseFee provides a mock function with given fields: ctx
+func (_m *Client) EstimateBaseFee(ctx context.Context) (*big.Int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 *big.Int
+	if rf, ok := ret.Get(0).(func(context.Context) *big.Int); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // EstimateGas provides a mock function with given fields: _a0, _a1
 func (_m *Client) EstimateGas(_a0 context.Context, _a1 interfaces.CallMsg) (uint64, error) {
 	ret := _m.Called(_a0, _a1)
@@ -195,6 +220,36 @@ func (_m *Client) GetAtomicUTXOs(ctx context.Context, addrs []string, sourceChai
 	return r0, r1, r2
 }
 
+// GetBlockchainID provides a mock function with given fields: _a0, _a1, _a2
+func (_m *Client) GetBlockchainID(_a0 context.Context, _a1 string, _a2 ...rpc.Option) (ids.ID, error) {
+	_va := make([]interface{}, len(_a2))
+	for _i := range _a2 {
+		_va[_i] = _a2[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, _a0, _a1)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 ids.ID
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...rpc.Option) ids.ID); ok {
+		r0 = rf(_a0, _a1, _a2...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(ids.ID)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, ...rpc.Option) error); ok {
+		r1 = rf(_a0, _a1, _a2...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetContractInfo provides a mock function with given fields: _a0, _a1
 func (_m *Client) GetContractInfo(_a0 common.Address, _a1 bool) (string, uint8, error) {
 	ret := _m.Called(_a0, _a1)
@@ -221,6 +276,34 @@ func (_m *Client) GetContractInfo(_a0 common.Address, _a1 bool) (string, uint8, 
 	}
 
 	return r0, r1, r2
+}
+
+// GetNetworkID provides a mock function with given fields: _a0, _a1
+func (_m *Client) GetNetworkID(_a0 context.Context, _a1 ...rpc.Option) (uint32, error) {
+	_va := make([]interface{}, len(_a1))
+	for _i := range _a1 {
+		_va[_i] = _a1[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, _a0)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(context.Context, ...rpc.Option) uint32); ok {
+		r0 = rf(_a0, _a1...)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, ...rpc.Option) error); ok {
+		r1 = rf(_a0, _a1...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetNetworkName provides a mock function with given fields: _a0, _a1
@@ -318,6 +401,29 @@ func (_m *Client) IsBootstrapped(_a0 context.Context, _a1 string, _a2 ...rpc.Opt
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, string, ...rpc.Option) error); ok {
 		r1 = rf(_a0, _a1, _a2...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IssueTx provides a mock function with given fields: ctx, txBytes
+func (_m *Client) IssueTx(ctx context.Context, txBytes []byte) (ids.ID, error) {
+	ret := _m.Called(ctx, txBytes)
+
+	var r0 ids.ID
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) ids.ID); ok {
+		r0 = rf(ctx, txBytes)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(ids.ID)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []byte) error); ok {
+		r1 = rf(ctx, txBytes)
 	} else {
 		r1 = ret.Error(1)
 	}
