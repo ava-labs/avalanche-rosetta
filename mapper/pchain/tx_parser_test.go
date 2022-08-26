@@ -133,14 +133,14 @@ func TestMapImportTx(t *testing.T) {
 	importTx, inputAccounts := buildImport()
 
 	assert.Equal(t, 0, len(importTx.Ins))
-	assert.Equal(t, 2, len(importTx.Outs))
+	assert.Equal(t, 3, len(importTx.Outs))
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
 	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(importTx)
 	assert.Nil(t, err)
 
-	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 1 // - 1 for the multisig output
+	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 2 // - 1 for the multisig output
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
 	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpImportAvax, OpTypeImport)

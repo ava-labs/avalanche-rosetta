@@ -410,7 +410,12 @@ func (t *TxParser) outsToOperations(
 		// Rosetta cannot handle multisig at the moment. In order to pass data validation,
 		// we treat multisig outputs like a burn and inputs line a mint and therefore
 		// not include them in the operations
-		if len(transferOutput.Addrs) > 1 {
+		//
+		// Additionally, it is possible to have outputs without any addresses
+		// (e.g. https://testnet.avascan.info/blockchain/p/block/81016)
+		//
+		// therefore we skip parsing operations unless there is exactly 1 address
+		if len(transferOutput.Addrs) != 1 {
 			continue
 		}
 
@@ -468,7 +473,12 @@ func (t *TxParser) utxosToOperations(
 		// Rosetta cannot handle multisig at the moment. In order to pass data validation,
 		// we treat multisig outputs like a burn and inputs line a mint and therefore
 		// not include them in the operations
-		if len(out.Addrs) > 1 {
+		//
+		// Additionally, it is possible to have outputs without any addresses
+		// (e.g. https://testnet.avascan.info/blockchain/p/block/81016)
+		//
+		// therefore we skip parsing operations unless there is exactly 1 address
+		if len(out.Addrs) != 1 {
 			continue
 		}
 
