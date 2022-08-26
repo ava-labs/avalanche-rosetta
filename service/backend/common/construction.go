@@ -275,6 +275,16 @@ func BuildCredentialList(ins []*avax.TransferableInput, signatures []*types.Sign
 	return creds, nil
 }
 
+func BuildSingletonCredentialList(signatures []*types.Signature) ([]verify.Verifiable, error) {
+	offset := 0
+	cred, err := buildCredential(1, &offset, signatures)
+	if err != nil {
+		return nil, err
+	}
+
+	return []verify.Verifiable{cred}, nil
+}
+
 func buildCredential(numSigs int, sigOffset *int, signatures []*types.Signature) (*secp256k1fx.Credential, error) {
 	cred := &secp256k1fx.Credential{}
 	cred.Sigs = make([][crypto.SECP256K1RSigLen]byte, numSigs)

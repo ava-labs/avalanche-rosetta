@@ -53,14 +53,19 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	case *types.ConstructionPayloadsRequest:
 		return cmapper.IsAtomicOpType(r.Operations[0].Type)
 	case *types.ConstructionParseRequest:
-		return false
+		return b.isCchainAtomicTx(r.Transaction)
 	case *types.ConstructionCombineRequest:
-		return false
+		return b.isCchainAtomicTx(r.UnsignedTransaction)
 	case *types.ConstructionHashRequest:
-		return false
+		return b.isCchainAtomicTx(r.SignedTransaction)
 	case *types.ConstructionSubmitRequest:
-		return false
+		return b.isCchainAtomicTx(r.SignedTransaction)
 	}
 
 	return false
+}
+
+func (b *Backend) isCchainAtomicTx(transaction string) bool {
+	_, err := b.parsePayloadTxFromString(transaction)
+	return err == nil
 }
