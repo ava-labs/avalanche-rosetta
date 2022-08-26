@@ -25,7 +25,7 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 	if req.AccountIdentifier == nil {
 		return nil, service.WrapError(service.ErrInvalidInput, "account identifier is not provided")
 	}
-	coins, wrappedErr := b.getAccountCoins(ctx, req.AccountIdentifier.Address)
+	blockIdentifier, coins, wrappedErr := b.getAccountCoins(ctx, req.AccountIdentifier.Address)
 	if wrappedErr != nil {
 		return nil, wrappedErr
 	}
@@ -45,8 +45,7 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 	}
 
 	return &types.AccountBalanceResponse{
-		// TODO: return block identifier once AvalancheGo exposes an API for it
-		// BlockIdentifier: ...
+		BlockIdentifier: blockIdentifier,
 		Balances: []*types.Amount{
 			{
 				Value:    strconv.FormatUint(balanceValue, 10),
@@ -60,34 +59,54 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 	if req.AccountIdentifier == nil {
 		return nil, service.WrapError(service.ErrInvalidInput, "account identifier is not provided")
 	}
-	coins, wrappedErr := b.getAccountCoins(ctx, req.AccountIdentifier.Address)
+	blockIdentifier, coins, wrappedErr := b.getAccountCoins(ctx, req.AccountIdentifier.Address)
 	if wrappedErr != nil {
 		return nil, wrappedErr
 	}
 
 	return &types.AccountCoinsResponse{
-		// TODO: return block identifier once AvalancheGo exposes an API for it
-		// BlockIdentifier: ...
-		Coins: common.SortUnique(coins),
+		BlockIdentifier: blockIdentifier,
+		Coins:           common.SortUnique(coins),
 	}, nil
 }
 
-func (b *Backend) getAccountCoins(ctx context.Context, address string) ([]*types.Coin, *types.Error) {
+func (b *Backend) getAccountCoins(ctx context.Context, address string) (*types.BlockIdentifier, []*types.Coin, *types.Error) {
 	var coins []*types.Coin
 	sourceChains := []string{
 		mapper.PChainNetworkIdentifier,
 		mapper.XChainNetworkIdentifier,
 	}
 
+	preHeader, err := b.cClient.HeaderByNumber(ctx, nil)
+	if err != nil {
+		return nil, nil, service.WrapError(service.ErrInternalError, err)
+	}
+
 	for _, chain := range sourceChains {
 		chainCoins, wrappedErr := b.fetchCoinsFromChain(ctx, address, chain)
 		if wrappedErr != nil {
-			return nil, wrappedErr
+			return nil, nil, wrappedErr
 		}
 		coins = append(coins, chainCoins...)
 	}
 
-	return coins, nil
+	postHeader, err := b.cClient.HeaderByNumber(ctx, nil)
+	if err != nil {
+		return nil, nil, service.WrapError(service.ErrInternalError, err)
+	}
+
+	// Since there is no API to return coins and block height at the time of query, we lookup block height before and after
+	// and fail the request if theyd differ since it means we don't know which block the coins are at
+	if preHeader.Number.Cmp(postHeader.Number) != 0 {
+		return nil, nil, service.WrapError(service.ErrInternalError, "new block received while fetching coins")
+	}
+
+	blockIdentifier := &types.BlockIdentifier{
+		Index: postHeader.Number.Int64(),
+		Hash:  postHeader.Hash().String(),
+	}
+
+	return blockIdentifier, coins, nil
 }
 
 func (b *Backend) fetchCoinsFromChain(ctx context.Context, address string, sourceChain string) ([]*types.Coin, *types.Error) {

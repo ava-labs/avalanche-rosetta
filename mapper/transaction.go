@@ -245,26 +245,18 @@ func CrossChainTransactions(
 		return nil, err
 	}
 
-	ops := []*types.Operation{}
 	for _, tx := range atomicTxs {
-		txOps, err := crossChainTransaction(len(ops), avaxAssetID, tx)
+		txOps, err := crossChainTransaction(0, avaxAssetID, tx)
 		if err != nil {
 			return nil, err
 		}
-		ops = append(ops, txOps...)
+		transactions = append(transactions, &types.Transaction{
+			TransactionIdentifier: &types.TransactionIdentifier{
+				Hash: tx.ID().String(),
+			},
+			Operations: txOps,
+		})
 	}
-
-	// TODO: migrate to using atomic transaction ID instead of marking as a block
-	// transaction
-	//
-	// NOTE: We need to be very careful about this because it will require
-	// integrators to re-index the chain to get the new result.
-	transactions = append(transactions, &types.Transaction{
-		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: block.Hash().String(),
-		},
-		Operations: ops,
-	})
 
 	return transactions, nil
 }

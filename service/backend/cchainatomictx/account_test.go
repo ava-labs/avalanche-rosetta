@@ -2,6 +2,7 @@ package cchainatomictx
 
 import (
 	"context"
+	"math/big"
 	"strconv"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -27,7 +29,10 @@ var utxos = []utxo{
 	{"2QmMXKS6rKQMnEh2XYZ4ZWCJmy8RpD3LyVZWxBG25t4N1JJqxY:1", 1_500_000},
 	{"2QmMXKS6rKQMnEh2XYZ4ZWCJmy8RpD3LyVZWxBG25t4N1JJqxY:1", 1_500_000}, // duplicate
 	{"23CLURk1Czf1aLui1VdcuWSiDeFskfp3Sn8TQG7t6NKfeQRYDj:4", 2_000_000}, // out of order
+}
 
+var blockHeader = &ethtypes.Header{
+	Number: big.NewInt(42),
 }
 
 func TestAccountBalance(t *testing.T) {
@@ -41,6 +46,8 @@ func TestAccountBalance(t *testing.T) {
 
 		utxos := [][]byte{utxo0Bytes, utxo1Bytes}
 
+		var nilBigInt *big.Int
+		evmMock.On("HeaderByNumber", mock.Anything, nilBigInt).Return(blockHeader, nil).Twice()
 		evmMock.
 			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, "P", backend.getUTXOsPageSize, "", "").
 			Return(utxos, api.Index{}, nil)
@@ -77,6 +84,8 @@ func TestAccountCoins(t *testing.T) {
 		utxo2Bytes := makeUtxoBytes(t, backend, utxos[2].id, utxos[2].amount)
 		utxo3Bytes := makeUtxoBytes(t, backend, utxos[3].id, utxos[3].amount)
 
+		var nilBigInt *big.Int
+		evmMock.On("HeaderByNumber", mock.Anything, nilBigInt).Return(blockHeader, nil).Twice()
 		evmMock.
 			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, "P", backend.getUTXOsPageSize, "", "").
 			Return([][]byte{utxo0Bytes, utxo1Bytes}, api.Index{Address: accountAddress, UTXO: utxos[1].id}, nil)

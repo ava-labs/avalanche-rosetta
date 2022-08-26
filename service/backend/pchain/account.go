@@ -63,6 +63,8 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 		balanceValue = balance.LockedNotStakeable
 	case pmapper.SubAccountTypeStaked:
 		balanceValue = balance.Staked
+	case pmapper.SubAccountTypeSharedMemory:
+		balanceValue = balance.Total
 	case "": // Defaults to total balance
 		balanceValue = balance.Total
 	default:
@@ -139,7 +141,7 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImpo
 		return 0, nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
 	}
 
-	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, true, fetchImportable)
+	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, !fetchImportable, fetchImportable)
 	if typedErr != nil {
 		return 0, nil, typedErr
 	}
