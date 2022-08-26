@@ -218,42 +218,7 @@ func (t *TxParser) parseAddSubnetValidatorTx(tx *platformvm.UnsignedAddSubnetVal
 }
 
 func (t *TxParser) parseCreateChainTx(tx *platformvm.UnsignedCreateChainTx) ([]*types.Operation, error) {
-	ops := []*types.Operation{}
-
-	ins, err := t.insToOperations(0, OpCreateChain, tx.Ins, OpTypeInput)
-	if err != nil {
-		return nil, err
-	}
-
-	ops = append(ops, ins...)
-
-	ops = append(ops, t.createChainToOperation(tx, len(ops))...)
-
-	outs, err := t.outsToOperations(len(ops), 0, OpCreateChain, tx.ID(), tx.Outs, OpTypeOutput, mapper.PChainNetworkIdentifier)
-	if err != nil {
-		return nil, err
-	}
-
-	ops = append(ops, outs...)
-
-	return ops, nil
-}
-
-func (*TxParser) createChainToOperation(tx *platformvm.UnsignedCreateChainTx, startIndex int) []*types.Operation {
-	return []*types.Operation{
-		{
-			OperationIdentifier: &types.OperationIdentifier{Index: int64(startIndex)},
-			Type:                OpCreateChain,
-			Status:              types.String(mapper.StatusSuccess),
-			Metadata: map[string]interface{}{
-				MetadataSubnetID:  tx.SubnetID.String(),
-				MetadataChainName: tx.ChainName,
-				MetadataVMID:      tx.VMID,
-				MetadataMemo:      tx.Memo,
-				MetadataOpType:    OpTypeCreateChain,
-			},
-		},
-	}
+	return t.baseTxToCombinedOperations(&tx.BaseTx, OpCreateChain)
 }
 
 func (t *TxParser) baseTxToCombinedOperations(tx *platformvm.BaseTx, txType string) ([]*types.Operation, error) {
