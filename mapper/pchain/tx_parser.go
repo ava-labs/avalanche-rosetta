@@ -10,6 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
+	pChainValidator "github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -162,6 +163,8 @@ func (t *TxParser) parseAddValidatorTx(tx *platformvm.UnsignedAddValidatorTx) ([
 	if err != nil {
 		return nil, err
 	}
+	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
+
 	ops = append(ops, stakeOuts...)
 
 	return ops, nil
@@ -177,6 +180,7 @@ func (t *TxParser) parseAddDelegatorTx(tx *platformvm.UnsignedAddDelegatorTx) ([
 	if err != nil {
 		return nil, err
 	}
+	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
 
 	ops = append(ops, stakeOuts...)
 
@@ -199,14 +203,29 @@ func (t *TxParser) parseRewardValidatorTx(tx *platformvm.UnsignedRewardValidator
 		return nil, err
 	}
 
-	// Add staking tx id to reward UTXOs
-	for _, out := range outs {
-		out.Metadata[MetadataStakingTxID] = id.String()
+	var validator *pChainValidator.Validator
+	switch utx := rewardOuts.Tx.UnsignedTx.(type) {
+	case *platformvm.UnsignedAddValidatorTx:
+		validator = &utx.Validator
+	case *platformvm.UnsignedAddDelegatorTx:
+		validator = &utx.Validator
 	}
+
+	addStakingMetadataToOperations(outs, validator)
 
 	ops = append(ops, outs...)
 
 	return ops, nil
+}
+
+func addStakingMetadataToOperations(outs []*types.Operation, validator *pChainValidator.Validator) {
+	if validator != nil {
+		for _, out := range outs {
+			out.Metadata[MetadataValidatorNodeID] = validator.NodeID.String()
+			out.Metadata[MetadataStakingStartTime] = validator.Start
+			out.Metadata[MetadataStakingEndTime] = validator.End
+		}
+	}
 }
 
 func (t *TxParser) parseCreateSubnetTx(tx *platformvm.UnsignedCreateSubnetTx) ([]*types.Operation, error) {
