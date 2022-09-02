@@ -10,6 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
+	pChainValidator "github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -162,6 +163,8 @@ func (t *TxParser) parseAddValidatorTx(tx *platformvm.UnsignedAddValidatorTx) ([
 	if err != nil {
 		return nil, err
 	}
+	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
+
 	ops = append(ops, stakeOuts...)
 
 	return ops, nil
@@ -177,6 +180,7 @@ func (t *TxParser) parseAddDelegatorTx(tx *platformvm.UnsignedAddDelegatorTx) ([
 	if err != nil {
 		return nil, err
 	}
+	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
 
 	ops = append(ops, stakeOuts...)
 
@@ -199,14 +203,29 @@ func (t *TxParser) parseRewardValidatorTx(tx *platformvm.UnsignedRewardValidator
 		return nil, err
 	}
 
-	// Add staking tx id to reward UTXOs
-	for _, out := range outs {
-		out.Metadata[MetadataStakingTxID] = id.String()
+	var validator *pChainValidator.Validator
+	switch utx := rewardOuts.Tx.UnsignedTx.(type) {
+	case *platformvm.UnsignedAddValidatorTx:
+		validator = &utx.Validator
+	case *platformvm.UnsignedAddDelegatorTx:
+		validator = &utx.Validator
 	}
+
+	addStakingMetadataToOperations(outs, validator)
 
 	ops = append(ops, outs...)
 
 	return ops, nil
+}
+
+func addStakingMetadataToOperations(outs []*types.Operation, validator *pChainValidator.Validator) {
+	if validator != nil {
+		for _, out := range outs {
+			out.Metadata[MetadataValidatorNodeID] = validator.NodeID.String()
+			out.Metadata[MetadataStakingStartTime] = validator.Start
+			out.Metadata[MetadataStakingEndTime] = validator.End
+		}
+	}
 }
 
 func (t *TxParser) parseCreateSubnetTx(tx *platformvm.UnsignedCreateSubnetTx) ([]*types.Operation, error) {
@@ -218,42 +237,7 @@ func (t *TxParser) parseAddSubnetValidatorTx(tx *platformvm.UnsignedAddSubnetVal
 }
 
 func (t *TxParser) parseCreateChainTx(tx *platformvm.UnsignedCreateChainTx) ([]*types.Operation, error) {
-	ops := []*types.Operation{}
-
-	ins, err := t.insToOperations(0, OpCreateChain, tx.Ins, OpTypeInput)
-	if err != nil {
-		return nil, err
-	}
-
-	ops = append(ops, ins...)
-
-	ops = append(ops, t.createChainToOperation(tx, len(ops))...)
-
-	outs, err := t.outsToOperations(len(ops), 0, OpCreateChain, tx.ID(), tx.Outs, OpTypeOutput, mapper.PChainNetworkIdentifier)
-	if err != nil {
-		return nil, err
-	}
-
-	ops = append(ops, outs...)
-
-	return ops, nil
-}
-
-func (*TxParser) createChainToOperation(tx *platformvm.UnsignedCreateChainTx, startIndex int) []*types.Operation {
-	return []*types.Operation{
-		{
-			OperationIdentifier: &types.OperationIdentifier{Index: int64(startIndex)},
-			Type:                OpCreateChain,
-			Status:              types.String(mapper.StatusSuccess),
-			Metadata: map[string]interface{}{
-				MetadataSubnetID:  tx.SubnetID.String(),
-				MetadataChainName: tx.ChainName,
-				MetadataVMID:      tx.VMID,
-				MetadataMemo:      tx.Memo,
-				MetadataOpType:    OpTypeCreateChain,
-			},
-		},
-	}
+	return t.baseTxToCombinedOperations(&tx.BaseTx, OpCreateChain)
 }
 
 func (t *TxParser) baseTxToCombinedOperations(tx *platformvm.BaseTx, txType string) ([]*types.Operation, error) {
@@ -410,7 +394,12 @@ func (t *TxParser) outsToOperations(
 		// Rosetta cannot handle multisig at the moment. In order to pass data validation,
 		// we treat multisig outputs like a burn and inputs line a mint and therefore
 		// not include them in the operations
-		if len(transferOutput.Addrs) > 1 {
+		//
+		// Additionally, it is possible to have outputs without any addresses
+		// (e.g. https://testnet.avascan.info/blockchain/p/block/81016)
+		//
+		// therefore we skip parsing operations unless there is exactly 1 address
+		if len(transferOutput.Addrs) != 1 {
 			continue
 		}
 
@@ -468,7 +457,12 @@ func (t *TxParser) utxosToOperations(
 		// Rosetta cannot handle multisig at the moment. In order to pass data validation,
 		// we treat multisig outputs like a burn and inputs line a mint and therefore
 		// not include them in the operations
-		if len(out.Addrs) > 1 {
+		//
+		// Additionally, it is possible to have outputs without any addresses
+		// (e.g. https://testnet.avascan.info/blockchain/p/block/81016)
+		//
+		// therefore we skip parsing operations unless there is exactly 1 address
+		if len(out.Addrs) != 1 {
 			continue
 		}
 

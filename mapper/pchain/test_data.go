@@ -49,6 +49,18 @@ func buildImport() (*platformvm.UnsignedImportTx, map[string]*types.AccountIdent
 							},
 						},
 					},
+					{ //  this will be skipped as it does not have any addresses
+						Asset: avax.Asset{ID: avaxAssetID},
+						FxID:  [32]byte{},
+						Out: &secp256k1fx.TransferOutput{
+							Amt: 1000000,
+							OutputOwners: secp256k1fx.OutputOwners{
+								Locktime:  0,
+								Threshold: 0,
+								Addrs:     []ids.ShortID{},
+							},
+						},
+					},
 				},
 				Ins:  nil,
 				Memo: []byte{},
