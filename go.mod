@@ -3,10 +3,10 @@ module github.com/ava-labs/avalanche-rosetta
 go 1.18
 
 require (
-	github.com/ava-labs/avalanchego v1.7.18
-	github.com/ava-labs/coreth v0.8.16-rc.2
+	github.com/ava-labs/avalanchego v1.8.0
+	github.com/ava-labs/coreth v0.9.0-rc.3
 	github.com/coinbase/rosetta-sdk-go v0.6.5
-	github.com/ethereum/go-ethereum v1.10.21
+	github.com/ethereum/go-ethereum v1.10.23
 	github.com/stretchr/testify v1.7.2
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
