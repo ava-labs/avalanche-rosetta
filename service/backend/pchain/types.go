@@ -6,7 +6,7 @@ import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/hashing"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -26,7 +26,7 @@ type AccountBalance struct {
 }
 
 type pTx struct {
-	Tx           *platformvm.Tx
+	Tx           *txs.Tx
 	Codec        codec.Manager
 	CodecVersion uint16
 }
@@ -36,7 +36,7 @@ func (p *pTx) Marshal() ([]byte, error) {
 }
 
 func (p *pTx) Unmarshal(bytes []byte) error {
-	tx := platformvm.Tx{}
+	tx := txs.Tx{}
 	_, err := p.Codec.Unmarshal(bytes, &tx)
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (p *pTx) Unmarshal(bytes []byte) error {
 }
 
 func (p *pTx) SigningPayload() ([]byte, error) {
-	unsignedAtomicBytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx.UnsignedTx)
+	unsignedAtomicBytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx.Unsigned)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*type
 	}
 
 	parser := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil)
-	transactions, err := parser.Parse(pTx.Tx.UnsignedTx)
+	transactions, err := parser.Parse(pTx.Tx.ID(), pTx.Tx.Unsigned)
 	if err != nil {
 		return nil, err
 	}

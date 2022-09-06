@@ -3,7 +3,7 @@ package pchain
 import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 )
 
 const (
@@ -106,7 +106,6 @@ type StakingMetadata struct {
 }
 
 type DependencyTx struct {
-	ID          ids.ID
-	Tx          *platformvm.Tx
+	Tx          *txs.Tx
 	RewardUTXOs []*avax.UTXO
 }

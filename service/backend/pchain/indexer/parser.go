@@ -13,7 +13,9 @@ import (
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/proposervm/block"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -57,7 +59,7 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 	errs.Add(aliaser.Alias(constants.PlatformChainID, mapper.PChainNetworkIdentifier))
 
 	return &parser{
-		codec:            platformvm.Codec,
+		codec:            blocks.Codec,
 		pChainClient:     pChainClient,
 		aliaser:          aliaser,
 		genesisTimestamp: time.Unix(genesisTimestamp, 0),
@@ -102,18 +104,16 @@ func (p *parser) Initialize(ctx context.Context) (*ParsedGenesisBlock, error) {
 	errs.Add(err)
 	p.avaxAssetID = avaxAssetID
 
-	genesis := &platformvm.Genesis{}
-	_, err = platformvm.GenesisCodec.Unmarshal(bytes, genesis)
+	genesisState, err := pGenesis.Parse(bytes)
 	errs.Add(err)
-	errs.Add(genesis.Initialize())
 
 	blockTime := new(time.Time)
-	p.genesisTimestamp = time.Unix(int64(genesis.Timestamp), 0)
+	p.genesisTimestamp = time.Unix(int64(genesisState.Timestamp), 0)
 	*blockTime = p.genesisTimestamp
 
-	var genesisTxs []*platformvm.Tx
-	genesisTxs = append(genesisTxs, genesis.Validators...)
-	genesisTxs = append(genesisTxs, genesis.Chains...)
+	var genesisTxs []*txs.Tx
+	genesisTxs = append(genesisTxs, genesisState.Validators...)
+	genesisTxs = append(genesisTxs, genesisState.Chains...)
 
 	// Genesis commit block's parent ID is the hash of genesis state
 	var genesisParentID ids.ID = hashing.ComputeHash256Array(bytes)
@@ -124,7 +124,7 @@ func (p *parser) Initialize(ctx context.Context) (*ParsedGenesisBlock, error) {
 		return nil, err
 	}
 
-	for _, utxo := range genesis.UTXOs {
+	for _, utxo := range genesisState.UTXOs {
 		utxo.UTXO.Out.InitCtx(p.ctx)
 	}
 
@@ -141,9 +141,9 @@ func (p *parser) Initialize(ctx context.Context) (*ParsedGenesisBlock, error) {
 			Proposer:  Proposer{},
 		},
 		GenesisBlockData: GenesisBlockData{
-			Message:       genesis.Message,
-			InitialSupply: genesis.InitialSupply,
-			UTXOs:         genesis.UTXOs,
+			Message:       genesisState.Message,
+			InitialSupply: genesisState.InitialSupply,
+			UTXOs:         genesisState.UTXOs,
 		},
 	}, errs.Err
 }
@@ -216,7 +216,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 		*blockTimestamp = time.Unix(genesisTimestamp, 0)
 	}
 
-	var blk platformvm.Block
+	var blk blocks.Block
 	ver, err := p.codec.Unmarshal(bytes, &blk)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
@@ -231,39 +231,60 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 	}
 
 	switch castBlk := blk.(type) {
-	case *platformvm.ProposalBlock:
+	case *blocks.ApricotProposalBlock:
 		errs.Add(common.InitializeTx(ver, p.codec, castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*platformvm.Tx{&castBlk.Tx}
-	case *platformvm.AtomicBlock:
+		parsedBlock.Txs = []*txs.Tx{castBlk.Tx}
+	case *blocks.BlueberryProposalBlock:
 		errs.Add(common.InitializeTx(ver, p.codec, castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*platformvm.Tx{&castBlk.Tx}
-	case *platformvm.StandardBlock:
-		var txs []*platformvm.Tx
+		parsedBlock.Txs = []*txs.Tx{castBlk.Tx}
+	case *blocks.ApricotAtomicBlock:
+		errs.Add(common.InitializeTx(ver, p.codec, castBlk.Tx))
 
-		for i, tx := range castBlk.Txs {
-			errs.Add(common.InitializeTx(ver, p.codec, *tx))
-			txs = append(txs, castBlk.Txs[i])
+		parsedBlock.ParentID = castBlk.PrntID
+		parsedBlock.Txs = []*txs.Tx{castBlk.Tx}
+	case *blocks.ApricotStandardBlock:
+		var blockTxs []*txs.Tx
+
+		for i, tx := range castBlk.Transactions {
+			errs.Add(common.InitializeTx(ver, p.codec, tx))
+			blockTxs = append(blockTxs, castBlk.Transactions[i])
 		}
 
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = txs
-	case *platformvm.AbortBlock:
+		parsedBlock.Txs = blockTxs
+	case *blocks.BlueberryStandardBlock:
+		var blockTxs []*txs.Tx
+
+		for i, tx := range castBlk.Transactions {
+			errs.Add(common.InitializeTx(ver, p.codec, tx))
+			blockTxs = append(blockTxs, castBlk.Transactions[i])
+		}
+
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*platformvm.Tx{}
-	case *platformvm.CommitBlock:
+		parsedBlock.Txs = blockTxs
+	case *blocks.ApricotAbortBlock:
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*platformvm.Tx{}
+		parsedBlock.Txs = []*txs.Tx{}
+	case *blocks.BlueberryAbortBlock:
+		parsedBlock.ParentID = castBlk.PrntID
+		parsedBlock.Txs = []*txs.Tx{}
+	case *blocks.BlueberryCommitBlock:
+		parsedBlock.ParentID = castBlk.PrntID
+		parsedBlock.Txs = []*txs.Tx{}
+	case *blocks.ApricotCommitBlock:
+		parsedBlock.ParentID = castBlk.PrntID
+		parsedBlock.Txs = []*txs.Tx{}
 	default:
 		errs.Add(fmt.Errorf("no handler exists for block type %T", castBlk))
 	}
 
 	// If the block has an advance time tx, use its timestamp as the block timestamp
 	for _, tx := range parsedBlock.Txs {
-		if att, ok := tx.UnsignedTx.(*platformvm.UnsignedAdvanceTimeTx); ok {
+		if att, ok := tx.Unsigned.(*txs.AdvanceTimeTx); ok {
 			*blockTimestamp = att.Timestamp()
 			break
 		}
@@ -275,7 +296,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 }
 
 func getProposerFromBytes(bytes []byte) (Proposer, []byte, error) {
-	proposer, err := block.Parse(bytes)
+	proposer, _, err := block.Parse(bytes)
 	if err != nil || proposer == nil {
 		return Proposer{}, bytes, nil
 	}

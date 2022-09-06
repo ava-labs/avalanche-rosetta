@@ -4,13 +4,13 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
-func buildImport() (*platformvm.UnsignedImportTx, map[string]*types.AccountIdentifier) {
+func buildImport() (*txs.ImportTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	sourceChain, _ := ids.FromString("2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm")
 	outAddr1, _ := address.ParseToID("P-fuji1xm0r37l6gyf2mly4pmzc0tz6wnwqkugedh95fk")
@@ -18,10 +18,9 @@ func buildImport() (*platformvm.UnsignedImportTx, map[string]*types.AccountIdent
 	outAddr3, _ := address.ParseToID("P-fuji1j3sw805usytrsymfwxxrcwfqguyarumn45cllj")
 	importAddr, _ := address.ParseToID("C-fuji1xm0r37l6gyf2mly4pmzc0tz6wnwqkugedh95fk")
 	importedTxID, _ := ids.FromString("2DtYhzCvo9LRYMRJ6sCtYJ4aNPRpsibp46ETNyY6H5Cox1VLvX")
-	impTx := &platformvm.UnsignedImportTx{
-		BaseTx: platformvm.BaseTx{
+	impTx := &txs.ImportTx{
+		BaseTx: txs.BaseTx{
 			BaseTx: avax.BaseTx{
-				Metadata:     avax.Metadata{},
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
 				Outs: []*avax.TransferableOutput{
@@ -90,16 +89,15 @@ func buildImport() (*platformvm.UnsignedImportTx, map[string]*types.AccountIdent
 	return impTx, inputTxAccounts
 }
 
-func buildExport() (*platformvm.UnsignedExportTx, map[string]*types.AccountIdentifier) {
+func buildExport() (*txs.ExportTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	outAddr, _ := address.ParseToID("P-fuji1wmd9dfrqpud6daq0cde47u0r7pkrr46ep60399")
 	exportOutAddr, _ := address.ParseToID("P-fuji1wmd9dfrqpud6daq0cde47u0r7pkrr46ep60399")
 	txID, _ := ids.FromString("27LaDkrUrMY1bhVf2i8RARCrRwFjeRw7vEu8ntLQXracgLzL1v")
 	destinationID, _ := ids.FromString("yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")
-	exTx := &platformvm.UnsignedExportTx{
-		BaseTx: platformvm.BaseTx{
+	exTx := &txs.ExportTx{
+		BaseTx: txs.BaseTx{
 			BaseTx: avax.BaseTx{
-				Metadata:     avax.Metadata{},
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
 				Outs: []*avax.TransferableOutput{{
@@ -147,17 +145,16 @@ func buildExport() (*platformvm.UnsignedExportTx, map[string]*types.AccountIdent
 	return exTx, inputTxAccounts
 }
 
-func buildAddDelegator() (*platformvm.UnsignedAddDelegatorTx, map[string]*types.AccountIdentifier) {
+func buildAddDelegator() (*txs.AddDelegatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	txID, _ := ids.FromString("2JQGX1MBdszAaeV6eApCZm7CBpc917qWiyQ2cygFRJ6WteDkre")
 	outAddr, _ := address.ParseToID("P-fuji1gdkq8g208e3j4epyjmx65jglsw7vauh86l47ac")
 	validatorID, _ := ids.NodeIDFromString("NodeID-BFa1padLXBj7VHa2JYvYGzcTBPQGjPhUy")
 	stakeAddr, _ := address.ParseToID("P-fuji1l022sue7g2kzvrcuxughl30xkss2cj0az3e5r2")
 	rewardAddr, _ := address.ParseToID("P-fuji1l022sue7g2kzvrcuxughl30xkss2cj0az3e5r2")
-	tx := &platformvm.UnsignedAddDelegatorTx{
-		BaseTx: platformvm.BaseTx{
+	tx := &txs.AddDelegatorTx{
+		BaseTx: txs.BaseTx{
 			BaseTx: avax.BaseTx{
-				Metadata:     avax.Metadata{},
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
 				Outs: []*avax.TransferableOutput{{
@@ -190,7 +187,7 @@ func buildAddDelegator() (*platformvm.UnsignedAddDelegatorTx, map[string]*types.
 			End:    1657872569,
 			Wght:   1000000000,
 		},
-		Stake: []*avax.TransferableOutput{{
+		StakeOuts: []*avax.TransferableOutput{{
 			Asset: avax.Asset{ID: avaxAssetID},
 			FxID:  [32]byte{},
 			Out: &secp256k1fx.TransferOutput{
@@ -202,7 +199,7 @@ func buildAddDelegator() (*platformvm.UnsignedAddDelegatorTx, map[string]*types.
 				},
 			},
 		}},
-		RewardsOwner: &secp256k1fx.OutputOwners{
+		DelegationRewardsOwner: &secp256k1fx.OutputOwners{
 			Locktime:  0,
 			Threshold: 1,
 			Addrs:     []ids.ShortID{rewardAddr},
@@ -215,17 +212,16 @@ func buildAddDelegator() (*platformvm.UnsignedAddDelegatorTx, map[string]*types.
 	return tx, inputTxAccounts
 }
 
-func buildValidatorTx() (*platformvm.UnsignedAddValidatorTx, map[string]*types.AccountIdentifier) {
+func buildValidatorTx() (*txs.AddValidatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 
 	txID, _ := ids.FromString("88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo")
 	stakeAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
 	rewardAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
 	validatorID, _ := ids.NodeIDFromString("NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX")
-	addvalidator := &platformvm.UnsignedAddValidatorTx{
-		BaseTx: platformvm.BaseTx{
+	addvalidator := &txs.AddValidatorTx{
+		BaseTx: txs.BaseTx{
 			BaseTx: avax.BaseTx{
-				Metadata:     avax.Metadata{},
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
 				Outs:         nil,
@@ -247,7 +243,7 @@ func buildValidatorTx() (*platformvm.UnsignedAddValidatorTx, map[string]*types.A
 			End:    1687620079,
 			Wght:   2000000000,
 		},
-		Stake: []*avax.TransferableOutput{{
+		StakeOuts: []*avax.TransferableOutput{{
 			Asset: avax.Asset{ID: avaxAssetID},
 			FxID:  [32]byte{},
 			Out: &secp256k1fx.TransferOutput{
@@ -264,7 +260,7 @@ func buildValidatorTx() (*platformvm.UnsignedAddValidatorTx, map[string]*types.A
 			Threshold: 1,
 			Addrs:     []ids.ShortID{rewardAddr},
 		},
-		Shares: 20000,
+		DelegationShares: 20000,
 	}
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}

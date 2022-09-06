@@ -5,8 +5,9 @@ import (
 	"errors"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -139,7 +140,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 func (b *Backend) parseTransactions(
 	ctx context.Context,
 	networkIdentifier *types.NetworkIdentifier,
-	txs []*platformvm.Tx,
+	txs []*txs.Tx,
 ) ([]*types.Transaction, error) {
 	dependencyTxs, err := b.fetchDependencyTxs(ctx, txs)
 	if err != nil {
@@ -153,12 +154,12 @@ func (b *Backend) parseTransactions(
 
 	transactions := []*types.Transaction{}
 	for _, tx := range txs {
-		err = common.InitializeTx(b.codecVersion, b.codec, *tx)
+		err = common.InitializeTx(b.codecVersion, b.codec, tx)
 		if err != nil {
 			return nil, errTxInitialize
 		}
 
-		t, err := parser.Parse(tx.UnsignedTx)
+		t, err := parser.Parse(tx.ID(), tx.Unsigned)
 		if err != nil {
 			return nil, err
 		}
@@ -168,11 +169,11 @@ func (b *Backend) parseTransactions(
 	return transactions, nil
 }
 
-func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*platformvm.Tx) (map[string]*pmapper.DependencyTx, error) {
+func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[string]*pmapper.DependencyTx, error) {
 	dependencyTxIDs := []ids.ID{}
 
 	for _, tx := range txs {
-		inputTxsIds, err := pmapper.GetDependencyTxIDs(tx.UnsignedTx)
+		inputTxsIds, err := pmapper.GetDependencyTxIDs(tx.Unsigned)
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +196,7 @@ func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*platformvm.Tx) 
 	close(dependencyTxChan)
 
 	for dTx := range dependencyTxChan {
-		dependencyTxs[dTx.ID.String()] = dTx
+		dependencyTxs[dTx.Tx.ID().String()] = dTx
 	}
 
 	return dependencyTxs, nil
@@ -208,7 +209,6 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 		allocationTx, err := b.buildGenesisAllocationTx()
 		if allocationTx != nil {
 			out <- &pmapper.DependencyTx{
-				ID: ids.Empty,
 				Tx: allocationTx,
 			}
 		}
@@ -220,13 +220,13 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 		return err
 	}
 
-	var tx platformvm.Tx
+	var tx txs.Tx
 	_, err = b.codec.Unmarshal(txBytes, &tx)
 	if err != nil {
 		return err
 	}
 
-	err = common.InitializeTx(0, platformvm.Codec, tx)
+	err = common.InitializeTx(0, blocks.Codec, &tx)
 	if err != nil {
 		return err
 	}
@@ -249,7 +249,6 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 		utxos = append(utxos, &utxo)
 	}
 	out <- &pmapper.DependencyTx{
-		ID:          txID,
 		Tx:          &tx,
 		RewardUTXOs: utxos,
 	}
@@ -336,7 +335,7 @@ func (b *Backend) getBlockHeight(ctx context.Context, hash string) (uint64, erro
 		return 0, err
 	}
 
-	var block platformvm.Block
+	var block blocks.Block
 	_, err = b.codec.Unmarshal(blockBytes, &block)
 	if err != nil {
 		return 0, err
@@ -367,14 +366,14 @@ func (b *Backend) getGenesisBlockAndTransactions(
 		return nil, nil, err
 	}
 
-	txs := []*platformvm.Tx{}
-	txs = append(txs, genesisBlock.Txs...)
+	genesisTxs := []*txs.Tx{}
+	genesisTxs = append(genesisTxs, genesisBlock.Txs...)
 
 	allocationTx, err := b.buildGenesisAllocationTx()
 	if err != nil {
 		return nil, nil, err
 	}
-	txs = append(txs, allocationTx)
+	genesisTxs = append(genesisTxs, allocationTx)
 
 	parser, err := b.newTxParser(ctx, networkIdentifier, nil)
 	if err != nil {
@@ -382,8 +381,8 @@ func (b *Backend) getGenesisBlockAndTransactions(
 	}
 
 	transactions := []*types.Transaction{}
-	for _, tx := range txs {
-		t, err := parser.Parse(tx.UnsignedTx)
+	for _, tx := range genesisTxs {
+		t, err := parser.Parse(tx.ID(), tx.Unsigned)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -397,7 +396,7 @@ func (b *Backend) getGenesisBlockAndTransactions(
 // Genesis allocation UTXOs are not part of a real transaction.
 // For convenience and compatibility with the rest of the parsing functionality
 // they are treated as outputs of an import tx with no inputs and id ids.Empty
-func (b *Backend) buildGenesisAllocationTx() (*platformvm.Tx, error) {
+func (b *Backend) buildGenesisAllocationTx() (*txs.Tx, error) {
 	outs := []*avax.TransferableOutput{}
 	for _, utxo := range b.genesisBlock.UTXOs {
 		outIntf := utxo.Out
@@ -423,10 +422,10 @@ func (b *Backend) buildGenesisAllocationTx() (*platformvm.Tx, error) {
 		})
 	}
 
-	allocationTx := &platformvm.UnsignedImportTx{}
+	allocationTx := &txs.ImportTx{}
 	allocationTx.Outs = outs
-	tx := &platformvm.Tx{
-		UnsignedTx: allocationTx,
+	tx := &txs.Tx{
+		Unsigned: allocationTx,
 	}
 	return tx, nil
 }

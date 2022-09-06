@@ -6,8 +6,8 @@ import (
 	"errors"
 
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/cb58"
 	"github.com/ava-labs/avalanchego/utils/crypto"
-	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
@@ -308,7 +308,7 @@ func HashTx(rosettaTx *RosettaTx) (*types.TransactionIdentifierResponse, *types.
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	hash, err := formatting.EncodeWithChecksum(formatting.CB58, txHashBytes)
+	hash, err := cb58.Encode(txHashBytes)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}

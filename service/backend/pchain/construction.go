@@ -9,7 +9,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -228,7 +228,7 @@ func (b *Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (co
 		return nil, service.WrapError(service.ErrInvalidInput, "invalid transaction")
 	}
 
-	ins, err := getTxInputs(pTx.Tx.UnsignedTx)
+	ins, err := getTxInputs(pTx.Tx.Unsigned)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
@@ -257,22 +257,22 @@ func (b *Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (co
 
 // getTxInputs fetches tx inputs based on the tx type.
 func getTxInputs(
-	unsignedTx platformvm.UnsignedTx,
+	unsignedTx txs.UnsignedTx,
 ) ([]*avax.TransferableInput, error) {
 	switch utx := unsignedTx.(type) {
-	case *platformvm.UnsignedAddValidatorTx:
+	case *txs.AddValidatorTx:
 		return utx.Ins, nil
-	case *platformvm.UnsignedAddSubnetValidatorTx:
+	case *txs.AddSubnetValidatorTx:
 		return utx.Ins, nil
-	case *platformvm.UnsignedAddDelegatorTx:
+	case *txs.AddDelegatorTx:
 		return utx.Ins, nil
-	case *platformvm.UnsignedCreateChainTx:
+	case *txs.CreateChainTx:
 		return utx.Ins, nil
-	case *platformvm.UnsignedCreateSubnetTx:
+	case *txs.CreateSubnetTx:
 		return utx.Ins, nil
-	case *platformvm.UnsignedImportTx:
+	case *txs.ImportTx:
 		return utx.ImportedInputs, nil
-	case *platformvm.UnsignedExportTx:
+	case *txs.ExportTx:
 		return utx.Ins, nil
 	default:
 		return nil, errUnknownTxType

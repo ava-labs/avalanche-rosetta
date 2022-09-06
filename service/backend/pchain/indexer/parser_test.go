@@ -9,7 +9,8 @@ import (
 
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
@@ -103,11 +104,11 @@ func TestGenesisBlockCreateChainTxs(t *testing.T) {
 
 	g.Txs = g.Txs[(len(g.Txs) - 2):]
 	for _, tx := range g.Txs {
-		castTx := tx.UnsignedTx.(*platformvm.UnsignedCreateChainTx)
+		castTx := tx.Unsigned.(*txs.CreateChainTx)
 		castTx.GenesisData = []byte{}
 	}
 
-	g.UTXOs = []*platformvm.GenesisUTXO{}
+	g.UTXOs = []*pGenesis.UTXO{}
 
 	j, err := stdjson.Marshal(g)
 	if err != nil {
@@ -171,7 +172,7 @@ func TestFixtures(t *testing.T) {
 	}
 }
 
-func initializeTxCtx(txs []*platformvm.Tx, networkID uint32) {
+func initializeTxCtx(txs []*txs.Tx, networkID uint32) {
 	aliaser := ids.NewAliaser()
 	_ = aliaser.Alias(constants.PlatformChainID, mapper.PChainNetworkIdentifier)
 	ctx := &snow.Context{
@@ -179,6 +180,6 @@ func initializeTxCtx(txs []*platformvm.Tx, networkID uint32) {
 		NetworkID: networkID,
 	}
 	for _, tx := range txs {
-		tx.UnsignedTx.InitCtx(ctx)
+		tx.Unsigned.InitCtx(ctx)
 	}
 }

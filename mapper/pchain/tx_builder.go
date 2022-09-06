@@ -8,7 +8,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/parser"
@@ -25,7 +25,7 @@ func BuildTx(
 	payloadMetadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*platformvm.Tx, []*types.AccountIdentifier, error) {
+) (*txs.Tx, []*types.AccountIdentifier, error) {
 	switch opType {
 	case OpImportAvax:
 		return buildImportTx(matches, payloadMetadata, codec, avaxAssetID)
@@ -45,7 +45,7 @@ func buildImportTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*platformvm.Tx, []*types.AccountIdentifier, error) {
+) (*txs.Tx, []*types.AccountIdentifier, error) {
 	blockchainID := metadata.BlockchainID
 	sourceChainID := metadata.SourceChainID
 
@@ -59,8 +59,8 @@ func buildImportTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	tx := &platformvm.Tx{UnsignedTx: &platformvm.UnsignedImportTx{
-		BaseTx: platformvm.BaseTx{BaseTx: avax.BaseTx{
+	tx := &txs.Tx{Unsigned: &txs.ImportTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
@@ -78,7 +78,7 @@ func buildExportTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*platformvm.Tx, []*types.AccountIdentifier, error) {
+) (*txs.Tx, []*types.AccountIdentifier, error) {
 	if metadata.ExportMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -95,8 +95,8 @@ func buildExportTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	tx := &platformvm.Tx{UnsignedTx: &platformvm.UnsignedExportTx{
-		BaseTx: platformvm.BaseTx{BaseTx: avax.BaseTx{
+	tx := &txs.Tx{Unsigned: &txs.ExportTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
@@ -114,7 +114,7 @@ func buildAddValidatorTx(
 	sMetadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*platformvm.Tx, []*types.AccountIdentifier, error) {
+) (*txs.Tx, []*types.AccountIdentifier, error) {
 	if sMetadata.StakingMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -150,23 +150,23 @@ func buildAddValidatorTx(
 		return nil, nil, fmt.Errorf("parse memo failed: %w", err)
 	}
 
-	tx := &platformvm.Tx{UnsignedTx: &platformvm.UnsignedAddValidatorTx{
-		BaseTx: platformvm.BaseTx{BaseTx: avax.BaseTx{
+	tx := &txs.Tx{Unsigned: &txs.AddValidatorTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    sMetadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
 			Memo:         memo,
 		}},
-		Stake: stakeOutputs,
+		StakeOuts: stakeOutputs,
 		Validator: validator.Validator{
 			NodeID: nodeID,
 			Start:  sMetadata.Start,
 			End:    sMetadata.End,
 			Wght:   sumOutputAmounts(stakeOutputs),
 		},
-		RewardsOwner: rewardsOwner,
-		Shares:       sMetadata.Shares,
+		RewardsOwner:     rewardsOwner,
+		DelegationShares: sMetadata.Shares,
 	}}
 
 	return tx, signers, nil
@@ -177,7 +177,7 @@ func buildAddDelegatorTx(
 	sMetadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*platformvm.Tx, []*types.AccountIdentifier, error) {
+) (*txs.Tx, []*types.AccountIdentifier, error) {
 	if sMetadata.StakingMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -208,22 +208,22 @@ func buildAddDelegatorTx(
 		return nil, nil, fmt.Errorf("parse memo failed: %w", err)
 	}
 
-	tx := &platformvm.Tx{UnsignedTx: &platformvm.UnsignedAddDelegatorTx{
-		BaseTx: platformvm.BaseTx{BaseTx: avax.BaseTx{
+	tx := &txs.Tx{Unsigned: &txs.AddDelegatorTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    sMetadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
 			Memo:         memo,
 		}},
-		Stake: stakeOutputs,
+		StakeOuts: stakeOutputs,
 		Validator: validator.Validator{
 			NodeID: nodeID,
 			Start:  sMetadata.Start,
 			End:    sMetadata.End,
 			Wght:   sumOutputAmounts(stakeOutputs),
 		},
-		RewardsOwner: rewardsOwner,
+		DelegationRewardsOwner: rewardsOwner,
 	}}
 
 	return tx, signers, nil
