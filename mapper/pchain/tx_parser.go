@@ -87,6 +87,18 @@ func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, er
 	case *txs.AddSubnetValidatorTx:
 		txType = OpAddSubnetValidator
 		ops, err = t.parseAddSubnetValidatorTx(txID, unsignedTx)
+	case *txs.AddPermissionlessValidatorTx:
+		txType = OpAddPermissionlessValidator
+		ops, err = t.parseAddPermissionlessValidatorTx(txID, unsignedTx)
+	case *txs.AddPermissionlessDelegatorTx:
+		txType = OpAddPermissionlessDelegator
+		ops, err = t.parseAddPermissionlessDelegatorTx(txID, unsignedTx)
+	case *txs.RemoveSubnetValidatorTx:
+		txType = OpRemoveSubnetValidator
+		ops, err = t.parseRemoveSubnetValidatorTx(txID, unsignedTx)
+	case *txs.TransformSubnetTx:
+		txType = OpTransformSubnetValidator
+		ops, err = t.parseTransformSubnetTx(txID, unsignedTx)
 	case *txs.AdvanceTimeTx:
 		txType = OpAdvanceTime
 		// no op tx
@@ -170,6 +182,23 @@ func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) ([]*
 	return ops, nil
 }
 
+func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPermissionlessValidatorTx) ([]*types.Operation, error) {
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddValidator)
+	if err != nil {
+		return nil, err
+	}
+
+	stakeOuts, err := t.outsToOperations(len(ops), len(tx.Outs), OpAddPermissionlessValidator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	if err != nil {
+		return nil, err
+	}
+	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
+
+	ops = append(ops, stakeOuts...)
+
+	return ops, nil
+}
+
 func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) ([]*types.Operation, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddDelegator)
 	if err != nil {
@@ -177,6 +206,23 @@ func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) ([]*
 	}
 
 	stakeOuts, err := t.outsToOperations(len(ops), len(tx.Outs), OpAddDelegator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	if err != nil {
+		return nil, err
+	}
+	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
+
+	ops = append(ops, stakeOuts...)
+
+	return ops, nil
+}
+
+func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPermissionlessDelegatorTx) ([]*types.Operation, error) {
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddDelegator)
+	if err != nil {
+		return nil, err
+	}
+
+	stakeOuts, err := t.outsToOperations(len(ops), len(tx.Outs), OpAddPermissionlessDelegator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -234,6 +280,14 @@ func (t *TxParser) parseCreateSubnetTx(txID ids.ID, tx *txs.CreateSubnetTx) ([]*
 
 func (t *TxParser) parseAddSubnetValidatorTx(txID ids.ID, tx *txs.AddSubnetValidatorTx) ([]*types.Operation, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddSubnetValidator)
+}
+
+func (t *TxParser) parseRemoveSubnetValidatorTx(txID ids.ID, tx *txs.RemoveSubnetValidatorTx) ([]*types.Operation, error) {
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpRemoveSubnetValidator)
+}
+
+func (t *TxParser) parseTransformSubnetTx(txID ids.ID, tx *txs.TransformSubnetTx) ([]*types.Operation, error) {
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpTransformSubnetValidator)
 }
 
 func (t *TxParser) parseCreateChainTx(txID ids.ID, tx *txs.CreateChainTx) ([]*types.Operation, error) {
