@@ -66,6 +66,9 @@ func (b *Backend) ConstructionMetadata(
 		metadata, suggestedFee, err = b.buildExportMetadata(ctx, req.Options)
 	case pmapper.OpAddValidator, pmapper.OpAddDelegator:
 		metadata, suggestedFee, err = b.buildStakingMetadata(req.Options)
+		metadata.Threshold = opMetadata.Threshold
+		metadata.Locktime = opMetadata.Locktime
+
 	default:
 		return nil, service.WrapError(
 			service.ErrInternalError,
