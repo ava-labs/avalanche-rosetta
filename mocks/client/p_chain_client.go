@@ -395,7 +395,7 @@ func (_m *PChainClient) GetRewardUTXOs(_a0 context.Context, _a1 *api.GetTxArgs, 
 }
 
 // GetStake provides a mock function with given fields: ctx, addrs, options
-func (_m *PChainClient) GetStake(ctx context.Context, addrs []ids.ShortID, options ...rpc.Option) (uint64, [][]byte, error) {
+func (_m *PChainClient) GetStake(ctx context.Context, addrs []ids.ShortID, options ...rpc.Option) (map[ids.ID]uint64, [][]byte, error) {
 	_va := make([]interface{}, len(options))
 	for _i := range options {
 		_va[_i] = options[_i]
@@ -405,11 +405,13 @@ func (_m *PChainClient) GetStake(ctx context.Context, addrs []ids.ShortID, optio
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 uint64
-	if rf, ok := ret.Get(0).(func(context.Context, []ids.ShortID, ...rpc.Option) uint64); ok {
+	var r0 map[ids.ID]uint64
+	if rf, ok := ret.Get(0).(func(context.Context, []ids.ShortID, ...rpc.Option) map[ids.ID]uint64); ok {
 		r0 = rf(ctx, addrs, options...)
 	} else {
-		r0 = ret.Get(0).(uint64)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[ids.ID]uint64)
+		}
 	}
 
 	var r1 [][]byte

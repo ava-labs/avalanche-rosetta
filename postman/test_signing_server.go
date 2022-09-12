@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ava-labs/avalanchego/utils/cb58"
 	"github.com/ava-labs/avalanchego/utils/crypto"
-	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
@@ -99,7 +99,7 @@ func (s *signingServer) run() {
 
 func parsePrivateKeyString(keyStr string) (*crypto.PrivateKeySECP256K1R, *crypto.PublicKeySECP256K1R, error) {
 	parts := strings.Split(keyStr, "-")
-	pkBytes, err := formatting.Decode(formatting.CB58, parts[1])
+	pkBytes, err := cb58.Decode(parts[1])
 	if err != nil {
 		return nil, nil, err
 	}

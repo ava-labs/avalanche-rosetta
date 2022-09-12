@@ -69,16 +69,16 @@ func TestMapOutOperation(t *testing.T) {
 }
 
 func TestMapAddValidatorTx(t *testing.T) {
-	addvalidatorTx, inputAccounts := buildValidatorTx()
+	addValidatorTx, inputAccounts := buildValidatorTx()
 
-	assert.Equal(t, 1, len(addvalidatorTx.Ins))
-	assert.Equal(t, 0, len(addvalidatorTx.Outs))
+	assert.Equal(t, 1, len(addValidatorTx.Ins))
+	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
 	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(addvalidatorTx)
+	rosettaTransaction, err := parser.Parse(ids.Empty, addValidatorTx)
 	assert.Nil(t, err)
 
-	total := len(addvalidatorTx.Ins) + len(addvalidatorTx.Outs) + len(addvalidatorTx.Stake)
+	total := len(addValidatorTx.Ins) + len(addValidatorTx.Outs) + len(addValidatorTx.StakeOuts)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
 	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpAddValidator, OpTypeStakeOutput)
@@ -94,13 +94,13 @@ func TestMapAddDelegatorTx(t *testing.T) {
 
 	assert.Equal(t, 1, len(addDelegatorTx.Ins))
 	assert.Equal(t, 1, len(addDelegatorTx.Outs))
-	assert.Equal(t, 1, len(addDelegatorTx.Stake))
+	assert.Equal(t, 1, len(addDelegatorTx.StakeOuts))
 
 	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(addDelegatorTx)
+	rosettaTransaction, err := parser.Parse(ids.Empty, addDelegatorTx)
 	assert.Nil(t, err)
 
-	total := len(addDelegatorTx.Ins) + len(addDelegatorTx.Outs) + len(addDelegatorTx.Stake)
+	total := len(addDelegatorTx.Ins) + len(addDelegatorTx.Outs) + len(addDelegatorTx.StakeOuts)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
 	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpAddDelegator, OpTypeStakeOutput)
@@ -137,7 +137,7 @@ func TestMapImportTx(t *testing.T) {
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
 	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(importTx)
+	rosettaTransaction, err := parser.Parse(ids.Empty, importTx)
 	assert.Nil(t, err)
 
 	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 2 // - 1 for the multisig output
@@ -162,7 +162,7 @@ func TestMapExportTx(t *testing.T) {
 	assert.Equal(t, 1, len(exportTx.ExportedOutputs))
 
 	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(exportTx)
+	rosettaTransaction, err := parser.Parse(ids.Empty, exportTx)
 	assert.Nil(t, err)
 
 	total := len(exportTx.Ins) + len(exportTx.Outs) + len(exportTx.ExportedOutputs)

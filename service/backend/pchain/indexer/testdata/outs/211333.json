@@ -1,6 +1,6 @@
 {
   "id": "VjXMGrfyxyLZ4GGs3VC5H6mzteQtGVLZpkUs1dwFQnKJRawGt",
-  "type": "*platformvm.ProposalBlock",
+  "type": "*blocks.ApricotProposalBlock",
   "parent": "2JxSSBZAQLj8M6oBdUp129J6KSRDFcsyT6GP5k741qNJx6GDNd",
   "timestamp": 1599696000000,
   "height": 211334,
@@ -43,7 +43,7 @@
           "start": 1603645071,
           "end": 1605373011,
           "weight": 20000,
-          "subnet": "jwz8ycZ8V2yHH5b1ysqtZvxtB5UCq34VoHx6C6uy9Gs4GeQ5t"
+          "subnetID": "jwz8ycZ8V2yHH5b1ysqtZvxtB5UCq34VoHx6C6uy9Gs4GeQ5t"
         },
         "subnetAuthorization": {
           "signatureIndices": [

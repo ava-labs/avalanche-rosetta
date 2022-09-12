@@ -90,7 +90,7 @@ func DecodeUTXOID(s string) (*avax.UTXOID, error) {
 }
 
 func EncodeBytes(bytes []byte) (string, error) {
-	return formatting.EncodeWithChecksum(formatting.Hex, bytes)
+	return formatting.Encode(formatting.Hex, bytes)
 }
 
 func DecodeToBytes(binaryData string) ([]byte, error) {

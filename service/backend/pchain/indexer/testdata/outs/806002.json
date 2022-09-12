@@ -1,6 +1,6 @@
 {
   "id": "2uJMNgW7j7T2Gwp98aHQTgMY47aYC8GZ2hmEGR92k6wM4UCxbC",
-  "type": "*platformvm.AtomicBlock",
+  "type": "*blocks.ApricotAtomicBlock",
   "parent": "pgCNn9vUpsy4mkY4i3tnAsgmBsYALw92YsXyXxtPph4QPyUtV",
   "timestamp": 1632356898000,
   "height": 806003,

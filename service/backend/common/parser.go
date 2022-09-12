@@ -3,17 +3,17 @@ package common
 import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 )
 
 // initializes tx to have tx identifier generated
-func InitializeTx(version uint16, c codec.Manager, tx platformvm.Tx) error {
+func InitializeTx(version uint16, c codec.Manager, tx *txs.Tx) error {
 	errs := wrappers.Errs{}
 
-	unsignedBytes, err := c.Marshal(version, &tx.UnsignedTx)
+	unsignedBytes, err := c.Marshal(version, tx.Unsigned)
 	errs.Add(err)
 
-	signedBytes, err := c.Marshal(version, &tx)
+	signedBytes, err := c.Marshal(version, tx)
 	errs.Add(err)
 
 	tx.Initialize(unsignedBytes, signedBytes)

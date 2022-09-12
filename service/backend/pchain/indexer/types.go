@@ -2,23 +2,24 @@ package indexer
 
 import (
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/genesis"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 )
 
 type ParsedBlock struct {
-	BlockID   ids.ID           `json:"id"`
-	BlockType string           `json:"type"`
-	ParentID  ids.ID           `json:"parent"`
-	Timestamp int64            `json:"timestamp"`
-	Height    uint64           `json:"height"`
-	Txs       []*platformvm.Tx `json:"transactions"`
+	BlockID   ids.ID    `json:"id"`
+	BlockType string    `json:"type"`
+	ParentID  ids.ID    `json:"parent"`
+	Timestamp int64     `json:"timestamp"`
+	Height    uint64    `json:"height"`
+	Txs       []*txs.Tx `json:"transactions"`
 	Proposer  `json:"proposer"`
 }
 
 type GenesisBlockData struct {
-	Message       string                    `json:"message"`
-	InitialSupply uint64                    `json:"initialSupply"`
-	UTXOs         []*platformvm.GenesisUTXO `json:"utxos"`
+	Message       string          `json:"message"`
+	InitialSupply uint64          `json:"initialSupply"`
+	UTXOs         []*genesis.UTXO `json:"utxos"`
 }
 
 type ParsedGenesisBlock struct {
