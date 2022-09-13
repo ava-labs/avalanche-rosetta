@@ -27,7 +27,6 @@ const (
 	OpTypeOutput      = "OUTPUT"
 	OpTypeStakeOutput = "STAKE"
 	OpTypeReward      = "REWARD"
-	OpTypeCreateChain = "CREATE_CHAIN"
 
 	MetadataOpType           = "type"
 	MetadataTxType           = "tx_type"
@@ -36,6 +35,8 @@ const (
 	MetadataStakingStartTime = "staking_start_time"
 	MetadataStakingEndTime   = "staking_end_time"
 	MetadataMessage          = "message"
+	MetadataImportIns        = "imported_inputs"
+	MetadataExportOuts       = "exported_outputs"
 
 	SubAccountTypeSharedMemory       = "shared_memory"
 	SubAccountTypeUnlocked           = "unlocked"

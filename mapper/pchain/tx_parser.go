@@ -28,8 +28,6 @@ var (
 	errOutputTypeAssertion      = errors.New("output type assertion failed")
 )
 
-type OperationFilter func(operation *types.Operation) (bool, error)
-
 type TxParser struct {
 	isConstruction  bool
 	hrp             string
@@ -59,7 +57,7 @@ func NewTxParser(
 }
 
 func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, error) {
-	var ops []*types.Operation
+	var ops *txOps
 	var txType string
 	var err error
 	switch unsignedTx := tx.(type) {
@@ -109,18 +107,28 @@ func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, er
 		return nil, err
 	}
 
+	txMetadata := map[string]interface{}{
+		MetadataTxType: txType,
+	}
+
+	if ops.ImportIns != nil {
+		txMetadata[mapper.MetadataImportedInputs] = ops.ImportIns
+	}
+
+	if ops.ExportOuts != nil {
+		txMetadata[MetadataExportOuts] = ops.ExportOuts
+	}
+
 	return &types.Transaction{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: txID.String(),
 		},
-		Operations: ops,
-		Metadata: map[string]interface{}{
-			MetadataTxType: txType,
-		},
+		Operations: ops.IncludedOperations(),
+		Metadata:   txMetadata,
 	}, nil
 }
 
-func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) ([]*types.Operation, error) {
+func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpExportAvax)
 	if err != nil {
 		return nil, err
@@ -132,109 +140,96 @@ func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) ([]*types.Operat
 		return nil, errUnknownDestinationChain
 	}
 
-	exportedOuts, err := t.outsToOperations(len(ops), len(tx.Outs), OpExportAvax, txID, tx.ExportedOutputs, OpTypeExport, chainIDAlias)
+	err = t.outsToOperations(ops, OpExportAvax, txID, tx.ExportedOutputs, OpTypeExport, chainIDAlias)
 	if err != nil {
 		return nil, err
 	}
-	ops = append(ops, exportedOuts...)
 
 	return ops, nil
 }
 
-func (t *TxParser) parseImportTx(txID ids.ID, tx *txs.ImportTx) ([]*types.Operation, error) {
-	ops := []*types.Operation{}
+func (t *TxParser) parseImportTx(txID ids.ID, tx *txs.ImportTx) (*txOps, error) {
+	ops := newTxOps(t.isConstruction)
 
-	ins, err := t.insToOperations(0, OpImportAvax, tx.Ins, OpTypeInput)
+	err := t.insToOperations(ops, OpImportAvax, tx.Ins, OpTypeInput)
 	if err != nil {
 		return nil, err
 	}
 
-	ops = append(ops, ins...)
-	importedIns, err := t.insToOperations(len(ops), OpImportAvax, tx.ImportedInputs, OpTypeImport)
+	err = t.insToOperations(ops, OpImportAvax, tx.ImportedInputs, OpTypeImport)
 	if err != nil {
 		return nil, err
 	}
 
-	ops = append(ops, importedIns...)
-	outs, err := t.outsToOperations(len(ops), 0, OpImportAvax, txID, tx.Outs, OpTypeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpImportAvax, txID, tx.Outs, OpTypeOutput, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
 	}
-	ops = append(ops, outs...)
 
 	return ops, nil
 }
 
-func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) ([]*types.Operation, error) {
+func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddValidator)
 	if err != nil {
 		return nil, err
 	}
 
-	stakeOuts, err := t.outsToOperations(len(ops), len(tx.Outs), OpAddValidator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpAddValidator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
 	}
-	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
-
-	ops = append(ops, stakeOuts...)
+	addMetadataToStakeOuts(ops, &tx.Validator)
 
 	return ops, nil
 }
 
-func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPermissionlessValidatorTx) ([]*types.Operation, error) {
+func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPermissionlessValidatorTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddValidator)
 	if err != nil {
 		return nil, err
 	}
 
-	stakeOuts, err := t.outsToOperations(len(ops), len(tx.Outs), OpAddPermissionlessValidator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpAddPermissionlessValidator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
 	}
-	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
-
-	ops = append(ops, stakeOuts...)
+	addMetadataToStakeOuts(ops, &tx.Validator)
 
 	return ops, nil
 }
 
-func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) ([]*types.Operation, error) {
+func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddDelegator)
 	if err != nil {
 		return nil, err
 	}
 
-	stakeOuts, err := t.outsToOperations(len(ops), len(tx.Outs), OpAddDelegator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpAddDelegator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
 	}
-	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
-
-	ops = append(ops, stakeOuts...)
+	addMetadataToStakeOuts(ops, &tx.Validator)
 
 	return ops, nil
 }
 
-func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPermissionlessDelegatorTx) ([]*types.Operation, error) {
+func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPermissionlessDelegatorTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddDelegator)
 	if err != nil {
 		return nil, err
 	}
 
-	stakeOuts, err := t.outsToOperations(len(ops), len(tx.Outs), OpAddPermissionlessDelegator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpAddPermissionlessDelegator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
 	}
-	addStakingMetadataToOperations(stakeOuts, &tx.Validator)
-
-	ops = append(ops, stakeOuts...)
+	addMetadataToStakeOuts(ops, &tx.Validator)
 
 	return ops, nil
 }
 
-func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) ([]*types.Operation, error) {
-	ops := []*types.Operation{}
+func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, error) {
 	stakingTxID := tx.TxID
 
 	if t.dependencyTxs == nil {
@@ -244,7 +239,8 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) ([]*types.O
 	if rewardOuts == nil {
 		return nil, errNoMatchingRewardOutputs
 	}
-	outs, err := t.utxosToOperations(0, OpRewardValidator, rewardOuts.RewardUTXOs, OpTypeReward, mapper.PChainNetworkIdentifier)
+	ops := newTxOps(t.isConstruction)
+	err := t.utxosToOperations(ops, OpRewardValidator, rewardOuts.RewardUTXOs, OpTypeReward, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -256,17 +252,14 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) ([]*types.O
 	case *txs.AddDelegatorTx:
 		validator = &utx.Validator
 	}
-
-	addStakingMetadataToOperations(outs, validator)
-
-	ops = append(ops, outs...)
+	addMetadataToStakeOuts(ops, validator)
 
 	return ops, nil
 }
 
-func addStakingMetadataToOperations(outs []*types.Operation, validator *pChainValidator.Validator) {
+func addMetadataToStakeOuts(ops *txOps, validator *pChainValidator.Validator) {
 	if validator != nil {
-		for _, out := range outs {
+		for _, out := range ops.StakeOuts {
 			out.Metadata[MetadataValidatorNodeID] = validator.NodeID.String()
 			out.Metadata[MetadataStakingStartTime] = validator.Start
 			out.Metadata[MetadataStakingEndTime] = validator.End
@@ -274,74 +267,48 @@ func addStakingMetadataToOperations(outs []*types.Operation, validator *pChainVa
 	}
 }
 
-func (t *TxParser) parseCreateSubnetTx(txID ids.ID, tx *txs.CreateSubnetTx) ([]*types.Operation, error) {
+func (t *TxParser) parseCreateSubnetTx(txID ids.ID, tx *txs.CreateSubnetTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpCreateSubnet)
 }
 
-func (t *TxParser) parseAddSubnetValidatorTx(txID ids.ID, tx *txs.AddSubnetValidatorTx) ([]*types.Operation, error) {
+func (t *TxParser) parseAddSubnetValidatorTx(txID ids.ID, tx *txs.AddSubnetValidatorTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddSubnetValidator)
 }
 
-func (t *TxParser) parseRemoveSubnetValidatorTx(txID ids.ID, tx *txs.RemoveSubnetValidatorTx) ([]*types.Operation, error) {
+func (t *TxParser) parseRemoveSubnetValidatorTx(txID ids.ID, tx *txs.RemoveSubnetValidatorTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpRemoveSubnetValidator)
 }
 
-func (t *TxParser) parseTransformSubnetTx(txID ids.ID, tx *txs.TransformSubnetTx) ([]*types.Operation, error) {
+func (t *TxParser) parseTransformSubnetTx(txID ids.ID, tx *txs.TransformSubnetTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpTransformSubnetValidator)
 }
 
-func (t *TxParser) parseCreateChainTx(txID ids.ID, tx *txs.CreateChainTx) ([]*types.Operation, error) {
+func (t *TxParser) parseCreateChainTx(txID ids.ID, tx *txs.CreateChainTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpCreateChain)
 }
 
-func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType string) ([]*types.Operation, error) {
-	ops := []*types.Operation{}
+func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType string) (*txOps, error) {
+	ops := newTxOps(t.isConstruction)
 
-	ins, err := t.insToOperations(0, txType, tx.Ins, OpTypeInput)
+	err := t.insToOperations(ops, txType, tx.Ins, OpTypeInput)
 	if err != nil {
 		return nil, err
 	}
 
-	outs, err := t.outsToOperations(len(ins), 0, txType, txID, tx.Outs, OpTypeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, txType, txID, tx.Outs, OpTypeOutput, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
 	}
-
-	ops = append(ops, ins...)
-	ops = append(ops, outs...)
 
 	return ops, nil
 }
 
-func (t *TxParser) shouldSkipOperation(metaType string) bool {
-	// Do not skip any operation for construction parse
-	if t.isConstruction {
-		return false
-	}
-
-	switch metaType {
-	case OpTypeImport,
-		OpTypeExport,
-		OpTypeCreateChain:
-		// ignore import, export and create-chain operations
-		return true
-	default:
-		return false
-	}
-}
-
 func (t *TxParser) insToOperations(
-	startIndex int,
+	inOps *txOps,
 	opType string,
 	txIns []*avax.TransferableInput,
 	metaType string,
-) ([]*types.Operation, error) {
-	ins := make([]*types.Operation, 0)
-
-	if t.shouldSkipOperation(metaType) {
-		return ins, nil
-	}
-
+) error {
 	status := types.String(mapper.StatusSuccess)
 	if t.isConstruction {
 		status = nil
@@ -358,7 +325,7 @@ func (t *TxParser) insToOperations(
 
 		opMetadata, err := mapper.MarshalJSONMap(metadata)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// If dependency txs are provided, which is the case for /block endpoints
@@ -366,7 +333,7 @@ func (t *TxParser) insToOperations(
 		if t.dependencyTxs != nil {
 			isMultisig, err := t.isMultisig(in.UTXOID)
 			if err != nil {
-				return nil, errFailedToCheckMultisig
+				return errFailedToCheckMultisig
 			}
 			if isMultisig {
 				continue
@@ -376,13 +343,13 @@ func (t *TxParser) insToOperations(
 		utxoID := in.UTXOID.String()
 		account, ok := t.inputTxAccounts[utxoID]
 		if !ok {
-			return nil, errNoMatchingInputAddresses
+			return errNoMatchingInputAddresses
 		}
 
 		inputAmount := new(big.Int).SetUint64(in.In.Amount())
 		inOp := &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
-				Index: int64(startIndex),
+				Index: int64(inOps.Len()),
 			},
 			Type:    opType,
 			Status:  status,
@@ -398,27 +365,20 @@ func (t *TxParser) insToOperations(
 			Metadata: opMetadata,
 		}
 
-		ins = append(ins, inOp)
-		startIndex++
+		inOps.Append(inOp, metaType)
 	}
-	return ins, nil
+	return nil
 }
 
 func (t *TxParser) outsToOperations(
-	startIndex int,
-	outIndexOffset int,
+	outOps *txOps,
 	opType string,
 	txID ids.ID,
 	txOut []*avax.TransferableOutput,
 	metaType string,
 	chainIDAlias string,
-) ([]*types.Operation, error) {
-	outs := []*types.Operation{}
-
-	if t.shouldSkipOperation(metaType) {
-		return outs, nil
-	}
-
+) error {
+	outIndexOffset := outOps.OutputLen()
 	status := types.String(mapper.StatusSuccess)
 	if t.isConstruction {
 		status = nil
@@ -433,7 +393,7 @@ func (t *TxParser) outsToOperations(
 
 		transferOutput, ok := transferOut.(*secp256k1fx.TransferOutput)
 		if !ok {
-			return nil, errOutputTypeAssertion
+			return errOutputTypeAssertion
 		}
 
 		// Rosetta cannot handle multisig at the moment. In order to pass data validation,
@@ -451,7 +411,7 @@ func (t *TxParser) outsToOperations(
 		outOp, err := t.buildOutputOperation(
 			transferOutput,
 			status,
-			startIndex,
+			outOps.Len(),
 			txID,
 			uint32(outIndexOffset+outIndex),
 			opType,
@@ -459,29 +419,22 @@ func (t *TxParser) outsToOperations(
 			chainIDAlias,
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		outs = append(outs, outOp)
-		startIndex++
+		outOps.Append(outOp, metaType)
 	}
 
-	return outs, nil
+	return nil
 }
 
 func (t *TxParser) utxosToOperations(
-	startIndex int,
+	outOps *txOps,
 	opType string,
 	utxos []*avax.UTXO,
 	metaType string,
 	chainIDAlias string,
-) ([]*types.Operation, error) {
-	outs := []*types.Operation{}
-
-	if t.shouldSkipOperation(metaType) {
-		return outs, nil
-	}
-
+) error {
 	status := types.String(mapper.StatusSuccess)
 	if t.isConstruction {
 		status = nil
@@ -496,7 +449,7 @@ func (t *TxParser) utxosToOperations(
 		out, ok := outIntf.(*secp256k1fx.TransferOutput)
 
 		if !ok {
-			return nil, errOutputTypeAssertion
+			return errOutputTypeAssertion
 		}
 
 		// Rosetta cannot handle multisig at the moment. In order to pass data validation,
@@ -514,7 +467,7 @@ func (t *TxParser) utxosToOperations(
 		outOp, err := t.buildOutputOperation(
 			out,
 			status,
-			startIndex,
+			outOps.Len(),
 			utxo.TxID,
 			utxo.OutputIndex,
 			opType,
@@ -522,14 +475,13 @@ func (t *TxParser) utxosToOperations(
 			chainIDAlias,
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		outs = append(outs, outOp)
-		startIndex++
+		outOps.Append(outOp, metaType)
 	}
 
-	return outs, nil
+	return nil
 }
 
 func (t *TxParser) buildOutputOperation(
@@ -721,5 +673,63 @@ func mapUTXOs(txID ids.ID, outs []*avax.TransferableOutput, utxos map[uint32]*av
 			Asset: out.Asset,
 			Out:   out.Out,
 		}
+	}
+}
+
+type txOps struct {
+	isConstruction bool
+	Ins            []*types.Operation
+	Outs           []*types.Operation
+	StakeOuts      []*types.Operation
+	ImportIns      []*types.Operation
+	ExportOuts     []*types.Operation
+}
+
+func newTxOps(isConstruction bool) *txOps {
+	return &txOps{isConstruction: isConstruction}
+}
+
+func (t *txOps) IncludedOperations() []*types.Operation {
+	ops := []*types.Operation{}
+	ops = append(ops, t.Ins...)
+	ops = append(ops, t.Outs...)
+	ops = append(ops, t.StakeOuts...)
+	return ops
+}
+
+// Used to populate operation identifier
+func (t *txOps) Len() int {
+	return len(t.Ins) + len(t.Outs) + len(t.StakeOuts)
+}
+
+// Used to populate coin identifier
+func (t *txOps) OutputLen() int {
+	return len(t.Outs) + len(t.StakeOuts)
+}
+
+func (t *txOps) Append(op *types.Operation, metaType string) {
+	switch metaType {
+	case OpTypeImport:
+		if t.isConstruction {
+			t.Ins = append(t.Ins, op)
+		} else {
+			// removing operation identifier as these will be skipped in the final operations list
+			op.OperationIdentifier = nil
+			t.ImportIns = append(t.ImportIns, op)
+		}
+	case OpTypeExport:
+		if t.isConstruction {
+			t.Outs = append(t.Outs, op)
+		} else {
+			// removing operation identifier as these will be skipped in the final operations list
+			op.OperationIdentifier = nil
+			t.ExportOuts = append(t.ExportOuts, op)
+		}
+	case OpTypeStakeOutput, OpTypeReward:
+		t.StakeOuts = append(t.StakeOuts, op)
+	case OpTypeOutput:
+		t.Outs = append(t.Outs, op)
+	case OpTypeInput:
+		t.Ins = append(t.Ins, op)
 	}
 }
