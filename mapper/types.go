@@ -46,8 +46,10 @@ const (
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
 
-	MetaAddressFormat   = "address_format"
-	AddressFormatBech32 = "bech32"
+	MetadataImportedInputs  = "imported_inputs"
+	MetadataExportedOutputs = "exported_outputs"
+	MetadataAddressFormat   = "address_format"
+	AddressFormatBech32     = "bech32"
 )
 
 var (

@@ -50,7 +50,7 @@ func TestShouldHandleRequest(t *testing.T) {
 		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionDeriveRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			Metadata: map[string]interface{}{
-				mapper.MetaAddressFormat: mapper.AddressFormatBech32,
+				mapper.MetadataAddressFormat: mapper.AddressFormatBech32,
 			},
 		}))
 		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionMetadataRequest{

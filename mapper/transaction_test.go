@@ -1,9 +1,13 @@
 package mapper
 
 import (
+	"encoding/hex"
 	"testing"
 
+	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/vms/components/avax"
 	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
@@ -236,5 +240,78 @@ func TestERC721Ops(t *testing.T) {
 				},
 			},
 		}, erc721Ops(log, 1))
+	})
+}
+
+func TestCrossChainExportedOuts(t *testing.T) {
+	t.Run("Cross chain exported outputs in metadata", func(t *testing.T) {
+		var (
+			rawIdx      = 0
+			avaxAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
+			hexTx       = "000000000001000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d50000000000000000000000000000000000000000000000000000000000000000000000013158e80abd5a1e1aa716003c9db096792c3796210000000000138aee3d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000000000003b000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000700000000000f424000000000000000000000000100000001c83ea4dc195a9275a349e4f616cbb45e23eab2fb00000001000000090000000167fb4fdaa15ce6804e680dc182f0e702259e6f9572a9f5fe0fc6053094951f612a3d9e8128d08be17ae5122d1790160ac8f2e6d21c4b7dde702624eb6219de7301"
+			decodeTx, _ = hex.DecodeString(hexTx)
+			tx          = &evm.Tx{}
+
+			networkIdentifier = &types.NetworkIdentifier{
+				Network: FujiNetwork,
+			}
+			chainIDToAliasMapping = map[ids.ID]string{
+				ids.Empty: PChainNetworkIdentifier,
+			}
+			metaBytes, _         = hex.DecodeString("000000000001000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d50000000000000000000000000000000000000000000000000000000000000000000000013158e80abd5a1e1aa716003c9db096792c3796210000000000138aee3d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000000000003b000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000700000000000f424000000000000000000000000100000001c83ea4dc195a9275a349e4f616cbb45e23eab2fb00000001000000090000000167fb4fdaa15ce6804e680dc182f0e702259e6f9572a9f5fe0fc6053094951f612a3d9e8128d08be17ae5122d1790160ac8f2e6d21c4b7dde702624eb6219de7301")
+			metaUnsignedBytes, _ = hex.DecodeString("000000000001000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d50000000000000000000000000000000000000000000000000000000000000000000000013158e80abd5a1e1aa716003c9db096792c3796210000000000138aee3d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000000000003b000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000700000000000f424000000000000000000000000100000001c83ea4dc195a9275a349e4f616cbb45e23eab2fb")
+			meta                 = &avax.Metadata{}
+		)
+
+		meta.Initialize(metaUnsignedBytes, metaBytes)
+		_, err := evm.Codec.Unmarshal(decodeTx, tx)
+		assert.Nil(t, err)
+		ops, exportedOuts, err := crossChainTransaction(networkIdentifier, chainIDToAliasMapping, rawIdx, avaxAssetID, tx)
+		assert.Nil(t, err)
+
+		assert.Equal(t, []*types.Operation{
+			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 0,
+				},
+				Type:   OpExport,
+				Status: types.String(StatusSuccess),
+				Account: &types.AccountIdentifier{
+					Address: "0x3158e80abD5A1e1aa716003C9Db096792C379621",
+				},
+				Amount: &types.Amount{
+					Value:    "-1280750000000000",
+					Currency: AvaxCurrency,
+				},
+				Metadata: map[string]interface{}{
+					"tx":                "7QUPqUAMdny53bVptZ2DgxLLN4qZ5X7MnBPseUKYnoh5C5v47",
+					"blockchain_id":     "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp",
+					"network_id":        uint32(5),
+					"destination_chain": "11111111111111111111111111111111LpoYY",
+					"meta":              *meta,
+					"asset_id":          "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK",
+				},
+			},
+		}, ops)
+
+		assert.Equal(t, []*types.Operation{
+			{
+				Type:   OpExport,
+				Status: types.String(StatusSuccess),
+				Account: &types.AccountIdentifier{
+					Address: "P-fuji1eql2fhqet2f8tg6funmpdja5tc374vhmdj2xz2",
+				},
+				Amount: &types.Amount{
+					Value:    "1000000",
+					Currency: AtomicAvaxCurrency,
+				},
+				CoinChange: &types.CoinChange{
+					CoinIdentifier: &types.CoinIdentifier{
+						Identifier: "7QUPqUAMdny53bVptZ2DgxLLN4qZ5X7MnBPseUKYnoh5C5v47:0",
+					},
+					CoinAction: types.CoinCreated,
+				},
+			},
+		}, exportedOuts)
 	})
 }

@@ -111,19 +111,24 @@ func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, er
 		MetadataTxType: txType,
 	}
 
-	if ops.ImportIns != nil {
-		txMetadata[mapper.MetadataImportedInputs] = ops.ImportIns
-	}
+	var operations []*types.Operation
+	if ops != nil {
+		if ops.ImportIns != nil {
+			txMetadata[mapper.MetadataImportedInputs] = ops.ImportIns
+		}
 
-	if ops.ExportOuts != nil {
-		txMetadata[MetadataExportOuts] = ops.ExportOuts
+		if ops.ExportOuts != nil {
+			txMetadata[mapper.MetadataExportedOutputs] = ops.ExportOuts
+		}
+
+		operations = ops.IncludedOperations()
 	}
 
 	return &types.Transaction{
 		TransactionIdentifier: &types.TransactionIdentifier{
 			Hash: txID.String(),
 		},
-		Operations: ops.IncludedOperations(),
+		Operations: operations,
 		Metadata:   txMetadata,
 	}, nil
 }

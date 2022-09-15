@@ -35,8 +35,6 @@ const (
 	MetadataStakingStartTime = "staking_start_time"
 	MetadataStakingEndTime   = "staking_end_time"
 	MetadataMessage          = "message"
-	MetadataImportIns        = "imported_inputs"
-	MetadataExportOuts       = "exported_outputs"
 
 	SubAccountTypeSharedMemory       = "shared_memory"
 	SubAccountTypeUnlocked           = "unlocked"

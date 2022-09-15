@@ -184,7 +184,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	assert.Equal(t, types.CoinCreated, rosettaTransaction.Operations[0].CoinChange.CoinAction)
 
 	// Verify that export output are properly generated
-	importInputs, ok := rosettaTransaction.Metadata[MetadataImportIns].([]*types.Operation)
+	importInputs, ok := rosettaTransaction.Metadata[mapper.MetadataImportedInputs].([]*types.Operation)
 	assert.True(t, ok)
 
 	// setting isConstruction to true in order to include imported input in the operations
@@ -246,7 +246,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	assert.Equal(t, OpExportAvax, txType)
 
 	// Verify that export output are properly generated
-	exportOutputs, ok := rosettaTransaction.Metadata[MetadataExportOuts].([]*types.Operation)
+	exportOutputs, ok := rosettaTransaction.Metadata[mapper.MetadataExportedOutputs].([]*types.Operation)
 	assert.True(t, ok)
 
 	// setting isConstruction to true in order to include exported output in the operations
