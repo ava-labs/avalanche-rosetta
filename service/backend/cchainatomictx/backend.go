@@ -45,7 +45,7 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	case *types.AccountCoinsRequest:
 		return cmapper.IsCChainBech32Address(r.AccountIdentifier)
 	case *types.ConstructionDeriveRequest:
-		return r.Metadata[mapper.MetaAddressFormat] == mapper.AddressFormatBech32
+		return r.Metadata[mapper.MetadataAddressFormat] == mapper.AddressFormatBech32
 	case *types.ConstructionMetadataRequest:
 		return r.Options[cmapper.MetadataAtomicTxGas] != nil
 	case *types.ConstructionPreprocessRequest:

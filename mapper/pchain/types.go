@@ -27,7 +27,6 @@ const (
 	OpTypeOutput      = "OUTPUT"
 	OpTypeStakeOutput = "STAKE"
 	OpTypeReward      = "REWARD"
-	OpTypeCreateChain = "CREATE_CHAIN"
 
 	MetadataOpType           = "type"
 	MetadataTxType           = "tx_type"

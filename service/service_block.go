@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
@@ -114,7 +115,7 @@ func (s *BlockService) Block(
 		return nil, terr
 	}
 
-	crosstx, terr := s.parseCrossChainTransactions(block)
+	crosstx, terr := s.parseCrossChainTransactions(request.NetworkIdentifier, block)
 	if terr != nil {
 		return nil, terr
 	}
@@ -225,11 +226,16 @@ func (s *BlockService) fetchTransaction(
 }
 
 func (s *BlockService) parseCrossChainTransactions(
+	networkIdentifier *types.NetworkIdentifier,
 	block *corethTypes.Block,
 ) ([]*types.Transaction, *types.Error) {
 	result := []*types.Transaction{}
 
-	crossTxs, err := mapper.CrossChainTransactions(s.config.AvaxAssetID, block, s.config.AP5Activation)
+	// This map is used to create addresses for cross chain export outputs
+	chainIDToAliasMapping := map[ids.ID]string{
+		ids.Empty: mapper.PChainNetworkIdentifier,
+	}
+	crossTxs, err := mapper.CrossChainTransactions(networkIdentifier, chainIDToAliasMapping, s.config.AvaxAssetID, block, s.config.AP5Activation)
 	if err != nil {
 		return nil, WrapError(ErrInternalError, err)
 	}
