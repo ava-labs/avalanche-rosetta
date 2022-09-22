@@ -11,6 +11,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/avalanchego/vms/avm"
 	"github.com/ava-labs/avalanchego/vms/platformvm"
+	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
 )
 
 // Interface compliance
@@ -56,7 +57,7 @@ type PChainClient interface {
 	// info.Client methods
 	IsBootstrapped(context.Context, string, ...rpc.Option) (bool, error)
 	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)
-	GetNodeID(context.Context, ...rpc.Option) (ids.NodeID, error)
+	GetNodeID(context.Context, ...rpc.Option) (ids.NodeID, *signer.ProofOfPossession, error)
 	GetNetworkID(context.Context, ...rpc.Option) (uint32, error)
 	GetBlockchainID(context.Context, string, ...rpc.Option) (ids.ID, error)
 	GetTxFee(context.Context, ...rpc.Option) (*info.GetTxFeeResponse, error)
