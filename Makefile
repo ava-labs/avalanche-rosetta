@@ -11,17 +11,17 @@ DOCKER_ORG          ?= avaplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.8.5
+AVALANCHE_VERSION   ?= v1.8.6
 
 build:
-	go build -o ./rosetta-server ./cmd/server
-	go build -o ./rosetta-runner ./cmd/runner
+	export CGO_CFLAGS="-O -D__BLST_PORTABLE__" && go build -o ./rosetta-server ./cmd/server
+	export CGO_CFLAGS="-O -D__BLST_PORTABLE__" && go build -o ./rosetta-runner ./cmd/runner
 
 setup:
 	go mod download
 
 test:
-	go test -v -cover -race ./...
+	export CGO_CFLAGS="-O -D__BLST_PORTABLE__" && go test -v -cover -race ./...
 
 docker-build:
 	docker build \
