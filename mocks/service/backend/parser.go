@@ -14,15 +14,17 @@ type Parser struct {
 	mock.Mock
 }
 
-// GetPlatformHeight provides a mock function with given fields: ctx
-func (_m *Parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
+// GetGenesisBlock provides a mock function with given fields: ctx
+func (_m *Parser) GetGenesisBlock(ctx context.Context) (*indexer.ParsedGenesisBlock, error) {
 	ret := _m.Called(ctx)
 
-	var r0 uint64
-	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+	var r0 *indexer.ParsedGenesisBlock
+	if rf, ok := ret.Get(0).(func(context.Context) *indexer.ParsedGenesisBlock); ok {
 		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(uint64)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*indexer.ParsedGenesisBlock)
+		}
 	}
 
 	var r1 error
@@ -35,17 +37,15 @@ func (_m *Parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 	return r0, r1
 }
 
-// Initialize provides a mock function with given fields: ctx
-func (_m *Parser) Initialize(ctx context.Context) (*indexer.ParsedGenesisBlock, error) {
+// GetPlatformHeight provides a mock function with given fields: ctx
+func (_m *Parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 	ret := _m.Called(ctx)
 
-	var r0 *indexer.ParsedGenesisBlock
-	if rf, ok := ret.Get(0).(func(context.Context) *indexer.ParsedGenesisBlock); ok {
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
 		r0 = rf(ctx)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*indexer.ParsedGenesisBlock)
-		}
+		r0 = ret.Get(0).(uint64)
 	}
 
 	var r1 error

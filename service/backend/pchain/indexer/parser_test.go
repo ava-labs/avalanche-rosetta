@@ -91,7 +91,7 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	g, err = p.Initialize(ctx)
+	g, err = p.GetGenesisBlock(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -133,7 +133,7 @@ func TestGenesisBlockParseTxs(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	g, err := p.Initialize(ctx)
+	g, err := p.GetGenesisBlock(ctx)
 	if err != nil {
 		panic(err)
 	}
