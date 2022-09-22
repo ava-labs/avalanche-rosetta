@@ -333,22 +333,30 @@ func (t *TxParser) insToOperations(
 			return err
 		}
 
-		// If dependency txs are provided, which is the case for /block endpoints
-		// check whether the input UTXO is multisig. If so, skip it.
-		if t.dependencyTxs != nil {
-			isMultisig, err := t.isMultisig(in.UTXOID)
-			if err != nil {
-				return errFailedToCheckMultisig
-			}
-			if isMultisig {
-				continue
-			}
-		}
-
 		utxoID := in.UTXOID.String()
-		account, ok := t.inputTxAccounts[utxoID]
-		if !ok {
-			return errNoMatchingInputAddresses
+
+		var account *types.AccountIdentifier
+
+		// Check if the dependency is not multisig and extract account id from it
+		// for non-imported inputs or when tx is being constructed
+		if t.isConstruction || metaType != OpTypeImport {
+			// If dependency txs are provided, which is the case for /block endpoints
+			// check whether the input UTXO is multisig. If so, skip it.
+			if t.dependencyTxs != nil {
+				isMultisig, err := t.isMultisig(in.UTXOID)
+				if err != nil {
+					return errFailedToCheckMultisig
+				}
+				if isMultisig {
+					continue
+				}
+			}
+
+			var ok bool
+			account, ok = t.inputTxAccounts[utxoID]
+			if !ok {
+				return errNoMatchingInputAddresses
+			}
 		}
 
 		inputAmount := new(big.Int).SetUint64(in.In.Amount())
