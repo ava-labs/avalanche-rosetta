@@ -20,6 +20,7 @@ import (
 var (
 	errUnknownDestinationChain  = errors.New("unknown destination chain")
 	errNoDependencyTxs          = errors.New("no dependency txs provided")
+	errUnknownDependencyTx      = errors.New("unknown dependency tx type")
 	errNoMatchingRewardOutputs  = errors.New("no matching reward outputs")
 	errNoMatchingInputAddresses = errors.New("no matching input addresses")
 	errNoOutputAddresses        = errors.New("no output addresses")
@@ -603,7 +604,11 @@ func GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
 	case *txs.AddValidatorTx:
 		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
+	case *txs.AddPermissionlessValidatorTx:
+		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
 	case *txs.AddDelegatorTx:
+		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
+	case *txs.AddPermissionlessDelegatorTx:
 		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
 	case *txs.CreateSubnetTx:
 		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
@@ -611,8 +616,14 @@ func GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
 	case *txs.AddSubnetValidatorTx:
 		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
+	case *txs.TransformSubnetTx:
+		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
+	case *txs.RemoveSubnetValidatorTx:
+		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
 	case *txs.RewardValidatorTx:
 		txIds = append(txIds, unsignedTx.TxID)
+	default:
+		return nil, errUnknownDependencyTx
 	}
 
 	ids.SortIDs(txIds)
@@ -626,7 +637,7 @@ func getUniqueTxIds(ins []*avax.TransferableInput) []ids.ID {
 		txnIDs[in.UTXOID.TxID.String()] = in.UTXOID.TxID
 	}
 
-	uniqueTxnIDs := []ids.ID{}
+	uniqueTxnIDs := make([]ids.ID, 0, len(txnIDs))
 	for _, txnID := range txnIDs {
 		uniqueTxnIDs = append(uniqueTxnIDs, txnID)
 	}
@@ -646,14 +657,24 @@ func getUTXOMap(d *DependencyTx) map[uint32]*avax.UTXO {
 		case *txs.AddValidatorTx:
 			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
 			mapUTXOs(d.Tx.ID(), unsignedTx.Stake(), utxos)
+		case *txs.AddPermissionlessValidatorTx:
+			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
+			mapUTXOs(d.Tx.ID(), unsignedTx.Stake(), utxos)
 		case *txs.AddDelegatorTx:
+			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
+			mapUTXOs(d.Tx.ID(), unsignedTx.Stake(), utxos)
+		case *txs.AddPermissionlessDelegatorTx:
 			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
 			mapUTXOs(d.Tx.ID(), unsignedTx.Stake(), utxos)
 		case *txs.CreateSubnetTx:
 			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-		case *txs.CreateChainTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
 		case *txs.AddSubnetValidatorTx:
+			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
+		case *txs.TransformSubnetTx:
+			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
+		case *txs.RemoveSubnetValidatorTx:
+			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
+		case *txs.CreateChainTx:
 			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
 		}
 	}

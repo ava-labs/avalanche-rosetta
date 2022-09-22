@@ -21,7 +21,6 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 )
 
 var (
@@ -125,8 +124,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		}
 	}
 
-	for i := range transactions {
-		transaction := transactions[i]
+	for _, transaction := range transactions {
 		if transaction.TransactionIdentifier.Hash == request.TransactionIdentifier.Hash {
 			return &types.BlockTransactionResponse{
 				Transaction: transaction,
@@ -152,9 +150,9 @@ func (b *Backend) parseTransactions(
 		return nil, err
 	}
 
-	transactions := []*types.Transaction{}
+	transactions := make([]*types.Transaction, 0, len(txs))
 	for _, tx := range txs {
-		err = common.InitializeTx(b.codecVersion, b.codec, tx)
+		err = b.initializeTx(tx)
 		if err != nil {
 			return nil, errTxInitialize
 		}
@@ -184,8 +182,8 @@ func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[st
 	eg, ctx := errgroup.WithContext(ctx)
 
 	dependencyTxs := make(map[string]*pmapper.DependencyTx)
-	for i := range dependencyTxIDs {
-		txID := dependencyTxIDs[i]
+	for _, txID := range dependencyTxIDs {
+		txID := txID
 		eg.Go(func() error {
 			return b.fetchDependencyTx(ctx, txID, dependencyTxChan)
 		})
@@ -226,7 +224,7 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 		return err
 	}
 
-	err = common.InitializeTx(0, blocks.Codec, &tx)
+	err = b.initializeTx(&tx)
 	if err != nil {
 		return err
 	}
@@ -366,8 +364,7 @@ func (b *Backend) getGenesisBlockAndTransactions(
 		return nil, nil, err
 	}
 
-	genesisTxs := []*txs.Tx{}
-	genesisTxs = append(genesisTxs, genesisBlock.Txs...)
+	genesisTxs := genesisBlock.Txs
 
 	allocationTx, err := b.buildGenesisAllocationTx()
 	if err != nil {
@@ -380,7 +377,7 @@ func (b *Backend) getGenesisBlockAndTransactions(
 		return nil, nil, err
 	}
 
-	transactions := []*types.Transaction{}
+	transactions := make([]*types.Transaction, 0, len(genesisTxs))
 	for _, tx := range genesisTxs {
 		t, err := parser.Parse(tx.ID(), tx.Unsigned)
 		if err != nil {
@@ -428,4 +425,21 @@ func (b *Backend) buildGenesisAllocationTx() (*txs.Tx, error) {
 		Unsigned: allocationTx,
 	}
 	return tx, nil
+}
+
+// initializes tx to have tx identifier generated
+func (b *Backend) initializeTx(tx *txs.Tx) error {
+	unsignedBytes, err := b.codec.Marshal(b.codecVersion, tx.Unsigned)
+	if err != nil {
+		return err
+	}
+
+	signedBytes, err := b.codec.Marshal(b.codecVersion, tx)
+	if err != nil {
+		return err
+	}
+
+	tx.Initialize(unsignedBytes, signedBytes)
+
+	return nil
 }

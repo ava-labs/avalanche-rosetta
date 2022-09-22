@@ -7,6 +7,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -48,7 +49,7 @@ func NewBackend(
 		pClient:           pClient,
 		getUTXOsPageSize:  1024,
 		codec:             blocks.Codec,
-		codecVersion:      0,
+		codecVersion:      txs.Version,
 		indexerParser:     indexerParser,
 		avaxAssetID:       assetID,
 	}
@@ -92,7 +93,7 @@ func (b *Backend) getGenesisBlock(ctx context.Context) (*indexer.ParsedGenesisBl
 	if b.genesisBlock != nil {
 		return b.genesisBlock, nil
 	}
-	genesisBlock, err := b.indexerParser.Initialize(ctx)
+	genesisBlock, err := b.indexerParser.GetGenesisBlock(ctx)
 	if err != nil {
 		return nil, err
 	}
