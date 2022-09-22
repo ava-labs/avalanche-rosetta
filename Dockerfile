@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Build avalanche
 # ------------------------------------------------------------------------------
-FROM golang:1.18.1 AS avalanche
+FROM golang:1.19.1 AS avalanche
 
 ARG AVALANCHE_VERSION
 
@@ -16,7 +16,7 @@ RUN git checkout $AVALANCHE_VERSION && \
 # ------------------------------------------------------------------------------
 # Build avalanche rosetta
 # ------------------------------------------------------------------------------
-FROM golang:1.18.1 AS rosetta
+FROM golang:1.19.1 AS rosetta
 
 ARG ROSETTA_VERSION
 
