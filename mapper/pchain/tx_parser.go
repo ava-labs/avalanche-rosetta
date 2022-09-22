@@ -20,7 +20,6 @@ import (
 var (
 	errUnknownDestinationChain  = errors.New("unknown destination chain")
 	errNoDependencyTxs          = errors.New("no dependency txs provided")
-	errUnknownDependencyTx      = errors.New("unknown dependency tx type")
 	errNoMatchingRewardOutputs  = errors.New("no matching reward outputs")
 	errNoMatchingInputAddresses = errors.New("no matching input addresses")
 	errNoOutputAddresses        = errors.New("no output addresses")
@@ -622,8 +621,10 @@ func GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
 	case *txs.RewardValidatorTx:
 		txIds = append(txIds, unsignedTx.TxID)
+	case *txs.AdvanceTimeTx:
+		// advance time txs do not have inputs
 	default:
-		return nil, errUnknownDependencyTx
+		log.Printf("unknown type %T", unsignedTx)
 	}
 
 	ids.SortIDs(txIds)
