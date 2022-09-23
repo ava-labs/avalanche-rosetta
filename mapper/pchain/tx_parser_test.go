@@ -1,6 +1,7 @@
 package pchain
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -187,15 +188,24 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	importInputs, ok := rosettaTransaction.Metadata[mapper.MetadataImportedInputs].([]*types.Operation)
 	assert.True(t, ok)
 
-	// setting isConstruction to true in order to include imported input in the operations
-	parser = NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
-	rosettaTransactionWithImportOperations, err := parser.Parse(ids.Empty, importTx)
-	assert.Nil(t, err)
+	importedInput := importTx.ImportedInputs[0]
+	expectedImportedInputs := []*types.Operation{{
+		OperationIdentifier: nil,
+		Type:                OpImportAvax,
+		Status:              types.String(mapper.StatusSuccess),
+		Account:             nil,
+		Amount:              mapper.AtomicAvaxAmount(big.NewInt(-int64(importedInput.Input().Amount()))),
+		CoinChange: &types.CoinChange{
+			CoinIdentifier: &types.CoinIdentifier{Identifier: importedInput.UTXOID.String()},
+			CoinAction:     types.CoinSpent,
+		},
+		Metadata: map[string]interface{}{
+			"type":     OpTypeImport,
+			"locktime": 0.0,
+		},
+	}}
 
-	inOp := rosettaTransactionWithImportOperations.Operations[0]
-	inOp.Status = types.String(mapper.StatusSuccess)
-	inOp.OperationIdentifier = nil
-	assert.Equal(t, []*types.Operation{inOp}, importInputs)
+	assert.Equal(t, expectedImportedInputs, importInputs)
 }
 
 func TestMapExportTx(t *testing.T) {
