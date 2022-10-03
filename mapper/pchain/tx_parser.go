@@ -201,6 +201,12 @@ func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPer
 	}
 	addMetadataToStakeOuts(ops, &tx.Validator)
 
+	if tx.Signer != nil {
+		for _, out := range ops.StakeOuts {
+			out.Metadata[MetadataSigner] = tx.Signer
+		}
+	}
+
 	return ops, nil
 }
 

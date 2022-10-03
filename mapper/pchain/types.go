@@ -35,6 +35,7 @@ const (
 	MetadataStakingStartTime = "staking_start_time"
 	MetadataStakingEndTime   = "staking_end_time"
 	MetadataMessage          = "message"
+	MetadataSigner           = "signer"
 
 	SubAccountTypeSharedMemory       = "shared_memory"
 	SubAccountTypeUnlocked           = "unlocked"
