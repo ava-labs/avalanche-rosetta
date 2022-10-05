@@ -234,7 +234,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 				break
 			}
 		}
-	case *blocks.BlueberryProposalBlock:
+	case *blocks.BanffProposalBlock:
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
@@ -252,7 +252,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Transactions
 
-	case *blocks.BlueberryStandardBlock:
+	case *blocks.BanffStandardBlock:
 		for _, tx := range castBlk.Transactions {
 			errs.Add(p.initializeTx(tx))
 		}
@@ -262,11 +262,11 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 	case *blocks.ApricotAbortBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
-	case *blocks.BlueberryAbortBlock:
+	case *blocks.BanffAbortBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
 		blockTimestamp = castBlk.Timestamp()
-	case *blocks.BlueberryCommitBlock:
+	case *blocks.BanffCommitBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
 		blockTimestamp = castBlk.Timestamp()
