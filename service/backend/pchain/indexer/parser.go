@@ -225,7 +225,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{castBlk.Tx}
+		parsedBlock.Txs = castBlk.Txs()
 
 		// If the block has an advance time tx, use its timestamp as the block timestamp
 		for _, tx := range parsedBlock.Txs {
@@ -238,13 +238,14 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{castBlk.Tx}
+		parsedBlock.Txs = castBlk.Txs()
+		parsedBlock.Txs = append(parsedBlock.Txs, castBlk.Transactions...)
 		blockTimestamp = castBlk.Timestamp()
 	case *blocks.ApricotAtomicBlock:
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{castBlk.Tx}
+		parsedBlock.Txs = castBlk.Txs()
 	case *blocks.ApricotStandardBlock:
 		for _, tx := range castBlk.Transactions {
 			errs.Add(p.initializeTx(tx))
