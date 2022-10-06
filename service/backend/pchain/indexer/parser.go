@@ -277,6 +277,12 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 		errs.Add(fmt.Errorf("no handler exists for block type %T", castBlk))
 	}
 
+	// If no timestamp was found in a given block (pre-Banff) we fallback to proposer timestamp as used by Snowman++
+	// if available.
+	//
+	// For pre-Snowman++, proposer timestamp does not exist either. In that case, fallback to the genesis timestamp.
+	// This is needed as opposed to simply return 0 timestamp as Rosetta validation expects timestamps to be available
+	// after 1/1/2000.
 	if blockTimestamp.IsZero() {
 		if proposer.Timestamp > genesisTimestamp {
 			blockTimestamp = time.Unix(proposer.Timestamp, 0)
