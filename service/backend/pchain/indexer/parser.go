@@ -13,10 +13,11 @@ import (
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+
+	pBlocks "github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/ava-labs/avalanchego/vms/proposervm/block"
+	proposerBlk "github.com/ava-labs/avalanchego/vms/proposervm/block"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -59,7 +60,7 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 	errs.Add(aliaser.Alias(constants.PlatformChainID, mapper.PChainNetworkIdentifier))
 
 	return &parser{
-		codec:            blocks.Codec,
+		codec:            pBlocks.Codec,
 		codecVersion:     txs.Version,
 		pChainClient:     pChainClient,
 		aliaser:          aliaser,
@@ -206,7 +207,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 		return nil, errParserUninitialized
 	}
 
-	blk, err := blocks.Parse(p.codec, bytes)
+	blk, err := pBlocks.Parse(p.codec, bytes)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
 	}
@@ -221,7 +222,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 	blockTimestamp := time.Time{}
 
 	switch castBlk := blk.(type) {
-	case *blocks.ApricotProposalBlock:
+	case *pBlocks.ApricotProposalBlock:
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
@@ -234,44 +235,44 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 				break
 			}
 		}
-	case *blocks.BanffProposalBlock:
+	case *pBlocks.BanffProposalBlock:
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Txs()
 		parsedBlock.Txs = append(parsedBlock.Txs, castBlk.Transactions...)
 		blockTimestamp = castBlk.Timestamp()
-	case *blocks.ApricotAtomicBlock:
+	case *pBlocks.ApricotAtomicBlock:
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Txs()
-	case *blocks.ApricotStandardBlock:
+	case *pBlocks.ApricotStandardBlock:
 		for _, tx := range castBlk.Transactions {
 			errs.Add(p.initializeTx(tx))
 		}
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Transactions
 
-	case *blocks.BanffStandardBlock:
+	case *pBlocks.BanffStandardBlock:
 		for _, tx := range castBlk.Transactions {
 			errs.Add(p.initializeTx(tx))
 		}
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Transactions
 		blockTimestamp = castBlk.Timestamp()
-	case *blocks.ApricotAbortBlock:
+	case *pBlocks.ApricotAbortBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
-	case *blocks.BanffAbortBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{}
-		blockTimestamp = castBlk.Timestamp()
-	case *blocks.BanffCommitBlock:
+	case *pBlocks.BanffAbortBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
 		blockTimestamp = castBlk.Timestamp()
-	case *blocks.ApricotCommitBlock:
+	case *pBlocks.BanffCommitBlock:
+		parsedBlock.ParentID = castBlk.PrntID
+		parsedBlock.Txs = []*txs.Tx{}
+		blockTimestamp = castBlk.Timestamp()
+	case *pBlocks.ApricotCommitBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
 	default:
@@ -297,13 +298,13 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 }
 
 func getProposerFromBytes(bytes []byte) (Proposer, []byte, error) {
-	proposer, _, err := block.Parse(bytes)
+	proposer, _, err := proposerBlk.Parse(bytes)
 	if err != nil || proposer == nil {
 		return Proposer{}, bytes, nil
 	}
 
 	switch castBlock := proposer.(type) {
-	case block.SignedBlock:
+	case proposerBlk.SignedBlock:
 		return Proposer{
 			ID:           castBlock.ID(),
 			NodeID:       castBlock.Proposer(),
@@ -311,7 +312,7 @@ func getProposerFromBytes(bytes []byte) (Proposer, []byte, error) {
 			Timestamp:    castBlock.Timestamp().Unix(),
 			ParentID:     castBlock.ParentID(),
 		}, castBlock.Block(), nil
-	case block.Block:
+	case proposerBlk.Block:
 		return Proposer{}, castBlock.Block(), nil
 	default:
 		return Proposer{}, bytes, fmt.Errorf("no handler exists for proposer block type %T", castBlock)
