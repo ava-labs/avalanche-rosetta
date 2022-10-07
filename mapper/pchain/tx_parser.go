@@ -18,6 +18,8 @@ import (
 )
 
 var (
+	errNilChainIDs              = errors.New("chain ids cannot be nil")
+	errNilInputTxAccounts       = errors.New("input tx accounts cannot be nil")
 	errUnknownDestinationChain  = errors.New("unknown destination chain")
 	errNoDependencyTxs          = errors.New("no dependency txs provided")
 	errNoMatchingRewardOutputs  = errors.New("no matching reward outputs")
@@ -42,9 +44,13 @@ func NewTxParser(
 	chainIDs map[string]string,
 	inputTxAccounts map[string]*types.AccountIdentifier,
 	dependencyTxs map[string]*DependencyTx,
-) *TxParser {
+) (*TxParser, error) {
+	if chainIDs == nil {
+		return nil, errNilChainIDs
+	}
+
 	if inputTxAccounts == nil {
-		inputTxAccounts = make(map[string]*types.AccountIdentifier)
+		return nil, errNilInputTxAccounts
 	}
 
 	return &TxParser{
@@ -53,7 +59,7 @@ func NewTxParser(
 		chainIDs:        chainIDs,
 		inputTxAccounts: inputTxAccounts,
 		dependencyTxs:   dependencyTxs,
-	}
+	}, nil
 }
 
 func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, error) {
