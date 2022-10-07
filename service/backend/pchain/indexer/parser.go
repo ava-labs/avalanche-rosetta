@@ -168,6 +168,9 @@ func (p *parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBl
 		return nil, err
 	}
 
+	// in P-chain container indices start from 0 while corresponding block indices start from 1
+	// therefore containers are looked up with index - 1
+	// genesis does not cause a problem here as it is handled in a separate code path
 	container, err := p.pChainClient.GetContainerByIndex(ctx, index-1)
 	if err != nil {
 		return nil, err
