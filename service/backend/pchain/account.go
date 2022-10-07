@@ -268,7 +268,7 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(
 	// fetch preHeight before the balance fetch
 	preHeight, err := b.pClient.GetHeight(ctx)
 	if err != nil {
-		return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get postHeight")
+		return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get chain height pre-lookup")
 	}
 
 	var sourceChains []string
@@ -308,7 +308,7 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(
 	// fetch postHeight after the balance fetch and compare with preHeight
 	postHeight, err := b.pClient.GetHeight(ctx)
 	if err != nil {
-		return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get postHeight")
+		return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get chain height post-lookup")
 	}
 	if postHeight != preHeight {
 		return 0, nil, nil, service.WrapError(service.ErrInternalError, "new block added while fetching utxos")
