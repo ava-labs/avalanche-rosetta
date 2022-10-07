@@ -13,10 +13,11 @@ import (
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+
+	pBlocks "github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/ava-labs/avalanchego/vms/proposervm/block"
+	proposerBlk "github.com/ava-labs/avalanchego/vms/proposervm/block"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -59,7 +60,7 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 	errs.Add(aliaser.Alias(constants.PlatformChainID, mapper.PChainNetworkIdentifier))
 
 	return &parser{
-		codec:            blocks.Codec,
+		codec:            pBlocks.Codec,
 		codecVersion:     txs.Version,
 		pChainClient:     pChainClient,
 		aliaser:          aliaser,
@@ -167,6 +168,9 @@ func (p *parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBl
 		return nil, err
 	}
 
+	// in P-chain container indices start from 0 while corresponding block indices start from 1
+	// therefore containers are looked up with index - 1
+	// genesis does not cause a problem here as it is handled in a separate code path
 	container, err := p.pChainClient.GetContainerByIndex(ctx, index-1)
 	if err != nil {
 		return nil, err
@@ -206,7 +210,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 		return nil, errParserUninitialized
 	}
 
-	blk, err := blocks.Parse(p.codec, bytes)
+	blk, err := pBlocks.Parse(p.codec, bytes)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
 	}
@@ -221,11 +225,11 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 	blockTimestamp := time.Time{}
 
 	switch castBlk := blk.(type) {
-	case *blocks.ApricotProposalBlock:
+	case *pBlocks.ApricotProposalBlock:
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{castBlk.Tx}
+		parsedBlock.Txs = castBlk.Txs()
 
 		// If the block has an advance time tx, use its timestamp as the block timestamp
 		for _, tx := range parsedBlock.Txs {
@@ -234,49 +238,56 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 				break
 			}
 		}
-	case *blocks.BlueberryProposalBlock:
+	case *pBlocks.BanffProposalBlock:
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{castBlk.Tx}
+		parsedBlock.Txs = castBlk.Txs()
+		parsedBlock.Txs = append(parsedBlock.Txs, castBlk.Transactions...)
 		blockTimestamp = castBlk.Timestamp()
-	case *blocks.ApricotAtomicBlock:
+	case *pBlocks.ApricotAtomicBlock:
 		errs.Add(p.initializeTx(castBlk.Tx))
 
 		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{castBlk.Tx}
-	case *blocks.ApricotStandardBlock:
+		parsedBlock.Txs = castBlk.Txs()
+	case *pBlocks.ApricotStandardBlock:
 		for _, tx := range castBlk.Transactions {
 			errs.Add(p.initializeTx(tx))
 		}
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Transactions
 
-	case *blocks.BlueberryStandardBlock:
+	case *pBlocks.BanffStandardBlock:
 		for _, tx := range castBlk.Transactions {
 			errs.Add(p.initializeTx(tx))
 		}
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Transactions
 		blockTimestamp = castBlk.Timestamp()
-	case *blocks.ApricotAbortBlock:
+	case *pBlocks.ApricotAbortBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
-	case *blocks.BlueberryAbortBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{}
-		blockTimestamp = castBlk.Timestamp()
-	case *blocks.BlueberryCommitBlock:
+	case *pBlocks.BanffAbortBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
 		blockTimestamp = castBlk.Timestamp()
-	case *blocks.ApricotCommitBlock:
+	case *pBlocks.BanffCommitBlock:
+		parsedBlock.ParentID = castBlk.PrntID
+		parsedBlock.Txs = []*txs.Tx{}
+		blockTimestamp = castBlk.Timestamp()
+	case *pBlocks.ApricotCommitBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
 	default:
 		errs.Add(fmt.Errorf("no handler exists for block type %T", castBlk))
 	}
 
+	// If no timestamp was found in a given block (pre-Banff) we fallback to proposer timestamp as used by Snowman++
+	// if available.
+	//
+	// For pre-Snowman++, proposer timestamp does not exist either. In that case, fallback to the genesis timestamp.
+	// This is needed as opposed to simply return 0 timestamp as Rosetta validation expects timestamps to be available
+	// after 1/1/2000.
 	if blockTimestamp.IsZero() {
 		if proposer.Timestamp > genesisTimestamp {
 			blockTimestamp = time.Unix(proposer.Timestamp, 0)
@@ -290,13 +301,13 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 }
 
 func getProposerFromBytes(bytes []byte) (Proposer, []byte, error) {
-	proposer, _, err := block.Parse(bytes)
+	proposer, _, err := proposerBlk.Parse(bytes)
 	if err != nil || proposer == nil {
 		return Proposer{}, bytes, nil
 	}
 
 	switch castBlock := proposer.(type) {
-	case block.SignedBlock:
+	case proposerBlk.SignedBlock:
 		return Proposer{
 			ID:           castBlock.ID(),
 			NodeID:       castBlock.Proposer(),
@@ -304,7 +315,7 @@ func getProposerFromBytes(bytes []byte) (Proposer, []byte, error) {
 			Timestamp:    castBlock.Timestamp().Unix(),
 			ParentID:     castBlock.ParentID(),
 		}, castBlock.Block(), nil
-	case block.Block:
+	case proposerBlk.Block:
 		return Proposer{}, castBlock.Block(), nil
 	default:
 		return Proposer{}, bytes, fmt.Errorf("no handler exists for proposer block type %T", castBlock)

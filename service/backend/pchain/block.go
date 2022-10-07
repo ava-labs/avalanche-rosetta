@@ -348,10 +348,12 @@ func (b *Backend) isGenesisBlockRequest(ctx context.Context, index int64, hash s
 		return false, err
 	}
 
+	// if hash is provided, make sure it matches genesis block hash
 	if hash != "" {
 		return hash == genesisBlock.BlockID.String(), nil
 	}
 
+	// if hash is omitted, check if the height matches the genesis block height
 	return index == int64(genesisBlock.Height), nil
 }
 

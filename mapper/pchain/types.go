@@ -54,6 +54,10 @@ var (
 		OpCreateChain,
 		OpCreateSubnet,
 		OpAddSubnetValidator,
+		OpRemoveSubnetValidator,
+		OpTransformSubnetValidator,
+		OpAddPermissionlessValidator,
+		OpAddPermissionlessDelegator,
 	}
 	CallMethods = []string{}
 )
