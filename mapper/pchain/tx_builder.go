@@ -13,11 +13,15 @@ import (
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/ethereum/go-ethereum/common/math"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
-var errInvalidMetadata = errors.New("invalid metadata")
+var (
+	errInvalidMetadata      = errors.New("invalid metadata")
+	errOutputAmountOverflow = errors.New("sum of output amounts caused overflow")
+)
 
 func BuildTx(
 	opType string,
@@ -150,6 +154,11 @@ func buildAddValidatorTx(
 		return nil, nil, fmt.Errorf("parse memo failed: %w", err)
 	}
 
+	weight, err := sumOutputAmounts(stakeOutputs)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	tx := &txs.Tx{Unsigned: &txs.AddValidatorTx{
 		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
@@ -163,7 +172,7 @@ func buildAddValidatorTx(
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,
-			Wght:   sumOutputAmounts(stakeOutputs),
+			Wght:   weight,
 		},
 		RewardsOwner:     rewardsOwner,
 		DelegationShares: metadata.Shares,
@@ -208,6 +217,11 @@ func buildAddDelegatorTx(
 		return nil, nil, fmt.Errorf("parse memo failed: %w", err)
 	}
 
+	weight, err := sumOutputAmounts(stakeOutputs)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	tx := &txs.Tx{Unsigned: &txs.AddDelegatorTx{
 		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
@@ -221,7 +235,7 @@ func buildAddDelegatorTx(
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,
-			Wght:   sumOutputAmounts(stakeOutputs),
+			Wght:   weight,
 		},
 		DelegationRewardsOwner: rewardsOwner,
 	}}
@@ -383,10 +397,14 @@ func buildOutputs(
 	return outs, stakeOutputs, exported, nil
 }
 
-func sumOutputAmounts(stakeOutputs []*avax.TransferableOutput) uint64 {
+func sumOutputAmounts(stakeOutputs []*avax.TransferableOutput) (uint64, error) {
 	var stakeOutputAmountSum uint64
 	for _, out := range stakeOutputs {
-		stakeOutputAmountSum += out.Output().Amount()
+		outAmount := out.Output().Amount()
+		if outAmount > math.MaxUint64-stakeOutputAmountSum {
+			return 0, errOutputAmountOverflow
+		}
+		stakeOutputAmountSum += outAmount
 	}
-	return stakeOutputAmountSum
+	return stakeOutputAmountSum, nil
 }
