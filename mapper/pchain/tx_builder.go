@@ -111,25 +111,25 @@ func buildExportTx(
 
 func buildAddValidatorTx(
 	matches []*parser.Match,
-	sMetadata Metadata,
+	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
 ) (*txs.Tx, []*types.AccountIdentifier, error) {
-	if sMetadata.StakingMetadata == nil {
+	if metadata.StakingMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
 
-	blockchainID := sMetadata.BlockchainID
+	blockchainID := metadata.BlockchainID
 
-	nodeID, err := ids.NodeIDFromString(sMetadata.NodeID)
+	nodeID, err := ids.NodeIDFromString(metadata.NodeID)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	rewardsOwner, err := buildOutputOwner(
-		sMetadata.RewardAddresses,
-		sMetadata.Locktime,
-		sMetadata.Threshold,
+		metadata.RewardAddresses,
+		metadata.Locktime,
+		metadata.Threshold,
 	)
 	if err != nil {
 		return nil, nil, err
@@ -145,14 +145,14 @@ func buildAddValidatorTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	memo, err := mapper.DecodeToBytes(sMetadata.Memo)
+	memo, err := mapper.DecodeToBytes(metadata.Memo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parse memo failed: %w", err)
 	}
 
 	tx := &txs.Tx{Unsigned: &txs.AddValidatorTx{
 		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
-			NetworkID:    sMetadata.NetworkID,
+			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
@@ -161,12 +161,12 @@ func buildAddValidatorTx(
 		StakeOuts: stakeOutputs,
 		Validator: validator.Validator{
 			NodeID: nodeID,
-			Start:  sMetadata.Start,
-			End:    sMetadata.End,
+			Start:  metadata.Start,
+			End:    metadata.End,
 			Wght:   sumOutputAmounts(stakeOutputs),
 		},
 		RewardsOwner:     rewardsOwner,
-		DelegationShares: sMetadata.Shares,
+		DelegationShares: metadata.Shares,
 	}}
 
 	return tx, signers, nil
@@ -174,21 +174,21 @@ func buildAddValidatorTx(
 
 func buildAddDelegatorTx(
 	matches []*parser.Match,
-	sMetadata Metadata,
+	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
 ) (*txs.Tx, []*types.AccountIdentifier, error) {
-	if sMetadata.StakingMetadata == nil {
+	if metadata.StakingMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
 
-	blockchainID := sMetadata.BlockchainID
+	blockchainID := metadata.BlockchainID
 
-	nodeID, err := ids.NodeIDFromString(sMetadata.NodeID)
+	nodeID, err := ids.NodeIDFromString(metadata.NodeID)
 	if err != nil {
 		return nil, nil, err
 	}
-	rewardsOwner, err := buildOutputOwner(sMetadata.RewardAddresses, sMetadata.Locktime, sMetadata.Threshold)
+	rewardsOwner, err := buildOutputOwner(metadata.RewardAddresses, metadata.Locktime, metadata.Threshold)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -203,14 +203,14 @@ func buildAddDelegatorTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	memo, err := mapper.DecodeToBytes(sMetadata.Memo)
+	memo, err := mapper.DecodeToBytes(metadata.Memo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parse memo failed: %w", err)
 	}
 
 	tx := &txs.Tx{Unsigned: &txs.AddDelegatorTx{
 		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
-			NetworkID:    sMetadata.NetworkID,
+			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
@@ -219,8 +219,8 @@ func buildAddDelegatorTx(
 		StakeOuts: stakeOutputs,
 		Validator: validator.Validator{
 			NodeID: nodeID,
-			Start:  sMetadata.Start,
-			End:    sMetadata.End,
+			Start:  metadata.Start,
+			End:    metadata.End,
 			Wght:   sumOutputAmounts(stakeOutputs),
 		},
 		DelegationRewardsOwner: rewardsOwner,
