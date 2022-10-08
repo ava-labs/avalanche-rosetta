@@ -18,16 +18,17 @@ import (
 )
 
 var (
-	errNilChainIDs              = errors.New("chain ids cannot be nil")
-	errNilInputTxAccounts       = errors.New("input tx accounts cannot be nil")
-	errUnknownDestinationChain  = errors.New("unknown destination chain")
-	errNoDependencyTxs          = errors.New("no dependency txs provided")
-	errNoMatchingRewardOutputs  = errors.New("no matching reward outputs")
-	errNoMatchingInputAddresses = errors.New("no matching input addresses")
-	errNoOutputAddresses        = errors.New("no output addresses")
-	errFailedToGetUTXOAddresses = errors.New("failed to get utxo addresses")
-	errFailedToCheckMultisig    = errors.New("failed to check utxo for multisig")
-	errOutputTypeAssertion      = errors.New("output type assertion failed")
+	errNilChainIDs                    = errors.New("chain ids cannot be nil")
+	errNilInputTxAccounts             = errors.New("input tx accounts cannot be nil")
+	errUnknownDestinationChain        = errors.New("unknown destination chain")
+	errNoDependencyTxs                = errors.New("no dependency txs provided")
+	errNoMatchingRewardOutputs        = errors.New("no matching reward outputs")
+	errNoMatchingInputAddresses       = errors.New("no matching input addresses")
+	errNoOutputAddresses              = errors.New("no output addresses")
+	errFailedToGetUTXOAddresses       = errors.New("failed to get utxo addresses")
+	errFailedToCheckMultisig          = errors.New("failed to check utxo for multisig")
+	errOutputTypeAssertion            = errors.New("output type assertion failed")
+	errUnknownRewardSourceTransaction = errors.New("unknown source tx type for reward tx")
 )
 
 type TxParser struct {
@@ -268,6 +269,12 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 		validator = &utx.Validator
 	case *txs.AddDelegatorTx:
 		validator = &utx.Validator
+	case *txs.AddPermissionlessValidatorTx:
+		validator = &utx.Validator
+	case *txs.AddPermissionlessDelegatorTx:
+		validator = &utx.Validator
+	default:
+		return nil, errUnknownRewardSourceTransaction
 	}
 	addMetadataToStakeOuts(ops, validator)
 
