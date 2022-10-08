@@ -10,7 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	pChainValidator "github.com/ava-labs/avalanchego/vms/platformvm/validator"
+	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -64,9 +64,12 @@ func NewTxParser(
 }
 
 func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, error) {
-	var ops *txOps
-	var txType string
-	var err error
+	var (
+		ops    *txOps
+		txType string
+		err    error
+	)
+
 	switch unsignedTx := tx.(type) {
 	case *txs.ExportTx:
 		txType = OpExportAvax
@@ -263,31 +266,33 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 		return nil, err
 	}
 
-	var validator *pChainValidator.Validator
+	var v *validator.Validator
 	switch utx := rewardOuts.Tx.Unsigned.(type) {
 	case *txs.AddValidatorTx:
-		validator = &utx.Validator
+		v = &utx.Validator
 	case *txs.AddDelegatorTx:
-		validator = &utx.Validator
+		v = &utx.Validator
 	case *txs.AddPermissionlessValidatorTx:
-		validator = &utx.Validator
+		v = &utx.Validator
 	case *txs.AddPermissionlessDelegatorTx:
-		validator = &utx.Validator
+		v = &utx.Validator
 	default:
 		return nil, errUnknownRewardSourceTransaction
 	}
-	addMetadataToStakeOuts(ops, validator)
+	addMetadataToStakeOuts(ops, v)
 
 	return ops, nil
 }
 
-func addMetadataToStakeOuts(ops *txOps, validator *pChainValidator.Validator) {
-	if validator != nil {
-		for _, out := range ops.StakeOuts {
-			out.Metadata[MetadataValidatorNodeID] = validator.NodeID.String()
-			out.Metadata[MetadataStakingStartTime] = validator.Start
-			out.Metadata[MetadataStakingEndTime] = validator.End
-		}
+func addMetadataToStakeOuts(ops *txOps, validator *validator.Validator) {
+	if validator == nil {
+		return
+	}
+
+	for _, out := range ops.StakeOuts {
+		out.Metadata[MetadataValidatorNodeID] = validator.NodeID.String()
+		out.Metadata[MetadataStakingStartTime] = validator.Start
+		out.Metadata[MetadataStakingEndTime] = validator.End
 	}
 }
 
@@ -704,6 +709,8 @@ func getUTXOMap(d *DependencyTx) map[uint32]*avax.UTXO {
 			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
 		case *txs.CreateChainTx:
 			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
+		default:
+			// no utxos extracted from unsupported transaction types
 		}
 	}
 
