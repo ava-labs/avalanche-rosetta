@@ -8,7 +8,6 @@ import (
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	pBlocks "github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -145,7 +144,7 @@ func (b *Backend) processUtxos(sourceChain string, utxos [][]byte) ([]*types.Coi
 	coins := make([]*types.Coin, 0)
 	for _, utxoBytes := range utxos {
 		utxo := avax.UTXO{}
-		_, err := pBlocks.Codec.Unmarshal(utxoBytes, &utxo)
+		_, err := b.codec.Unmarshal(utxoBytes, &utxo)
 		if err != nil {
 			return nil, errUnableToParseUTXO
 		}
