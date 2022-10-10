@@ -242,6 +242,12 @@ func crossChainTransaction(
 	default:
 		return nil, nil, fmt.Errorf("unsupported transaction: %T", t)
 	}
+
+	for i, exportedOut := range exportedOuts {
+		exportedOut.OperationIdentifier = &types.OperationIdentifier{
+			Index: idx + int64(i),
+		}
+	}
 	return ops, exportedOuts, nil
 }
 
