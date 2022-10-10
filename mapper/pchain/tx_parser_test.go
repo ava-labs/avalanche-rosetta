@@ -28,7 +28,7 @@ func TestMapInOperation(t *testing.T) {
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
 	avaxIn := addValidatorTx.Ins[0]
-	parser := NewTxParser(false, constants.FujiHRP, chainIDs, inputAccounts, nil)
+	parser, _ := NewTxParser(false, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	inOps := newTxOps(false)
 	err := parser.insToOperations(inOps, OpAddValidator, []*avax.TransferableInput{avaxIn}, OpTypeInput)
 	assert.Nil(t, err)
@@ -55,7 +55,7 @@ func TestMapOutOperation(t *testing.T) {
 
 	avaxOut := addDelegatorTx.Outs[0]
 
-	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
+	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	outOps := newTxOps(false)
 	err := parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, mapper.PChainNetworkIdentifier)
 	assert.Nil(t, err)
@@ -81,7 +81,7 @@ func TestMapAddValidatorTx(t *testing.T) {
 	assert.Equal(t, 1, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
-	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
+	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, addValidatorTx)
 	assert.Nil(t, err)
 
@@ -103,7 +103,7 @@ func TestMapAddDelegatorTx(t *testing.T) {
 	assert.Equal(t, 1, len(addDelegatorTx.Outs))
 	assert.Equal(t, 1, len(addDelegatorTx.StakeOuts))
 
-	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
+	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, addDelegatorTx)
 	assert.Nil(t, err)
 
@@ -143,7 +143,7 @@ func TestMapImportTx(t *testing.T) {
 	assert.Equal(t, 3, len(importTx.Outs))
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
-	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
+	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, importTx)
 	assert.Nil(t, err)
 
@@ -168,7 +168,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	assert.Equal(t, 3, len(importTx.Outs))
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
-	parser := NewTxParser(false, constants.FujiHRP, chainIDs, inputAccounts, nil)
+	parser, _ := NewTxParser(false, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, importTx)
 	assert.Nil(t, err)
 
@@ -215,7 +215,7 @@ func TestMapExportTx(t *testing.T) {
 	assert.Equal(t, 1, len(exportTx.Outs))
 	assert.Equal(t, 1, len(exportTx.ExportedOutputs))
 
-	parser := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
+	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, exportTx)
 	assert.Nil(t, err)
 
@@ -237,7 +237,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	assert.Equal(t, 1, len(exportTx.Outs))
 	assert.Equal(t, 1, len(exportTx.ExportedOutputs))
 
-	parser := NewTxParser(false, constants.FujiHRP, chainIDs, inputAccounts, nil)
+	parser, _ := NewTxParser(false, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, exportTx)
 	assert.Nil(t, err)
 
@@ -260,7 +260,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	assert.True(t, ok)
 
 	// setting isConstruction to true in order to include exported output in the operations
-	parser = NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
+	parser, _ = NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil)
 	rosettaTransactionWithExportOperations, err := parser.Parse(ids.Empty, exportTx)
 	assert.Nil(t, err)
 

@@ -107,7 +107,11 @@ func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*type
 		return nil, errInvalidTransaction
 	}
 
-	parser := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil)
+	parser, err := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	transactions, err := parser.Parse(pTx.Tx.ID(), pTx.Tx.Unsigned)
 	if err != nil {
 		return nil, err

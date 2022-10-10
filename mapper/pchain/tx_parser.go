@@ -10,7 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	pChainValidator "github.com/ava-labs/avalanchego/vms/platformvm/validator"
+	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -18,14 +18,17 @@ import (
 )
 
 var (
-	errUnknownDestinationChain  = errors.New("unknown destination chain")
-	errNoDependencyTxs          = errors.New("no dependency txs provided")
-	errNoMatchingRewardOutputs  = errors.New("no matching reward outputs")
-	errNoMatchingInputAddresses = errors.New("no matching input addresses")
-	errNoOutputAddresses        = errors.New("no output addresses")
-	errFailedToGetUTXOAddresses = errors.New("failed to get utxo addresses")
-	errFailedToCheckMultisig    = errors.New("failed to check utxo for multisig")
-	errOutputTypeAssertion      = errors.New("output type assertion failed")
+	errNilChainIDs                    = errors.New("chain ids cannot be nil")
+	errNilInputTxAccounts             = errors.New("input tx accounts cannot be nil")
+	errUnknownDestinationChain        = errors.New("unknown destination chain")
+	errNoDependencyTxs                = errors.New("no dependency txs provided")
+	errNoMatchingRewardOutputs        = errors.New("no matching reward outputs")
+	errNoMatchingInputAddresses       = errors.New("no matching input addresses")
+	errNoOutputAddresses              = errors.New("no output addresses")
+	errFailedToGetUTXOAddresses       = errors.New("failed to get utxo addresses")
+	errFailedToCheckMultisig          = errors.New("failed to check utxo for multisig")
+	errOutputTypeAssertion            = errors.New("output type assertion failed")
+	errUnknownRewardSourceTransaction = errors.New("unknown source tx type for reward tx")
 )
 
 type TxParser struct {
@@ -42,9 +45,13 @@ func NewTxParser(
 	chainIDs map[string]string,
 	inputTxAccounts map[string]*types.AccountIdentifier,
 	dependencyTxs map[string]*DependencyTx,
-) *TxParser {
+) (*TxParser, error) {
+	if chainIDs == nil {
+		return nil, errNilChainIDs
+	}
+
 	if inputTxAccounts == nil {
-		inputTxAccounts = make(map[string]*types.AccountIdentifier)
+		return nil, errNilInputTxAccounts
 	}
 
 	return &TxParser{
@@ -53,13 +60,16 @@ func NewTxParser(
 		chainIDs:        chainIDs,
 		inputTxAccounts: inputTxAccounts,
 		dependencyTxs:   dependencyTxs,
-	}
+	}, nil
 }
 
 func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, error) {
-	var ops *txOps
-	var txType string
-	var err error
+	var (
+		ops    *txOps
+		txType string
+		err    error
+	)
+
 	switch unsignedTx := tx.(type) {
 	case *txs.ExportTx:
 		txType = OpExportAvax
@@ -256,25 +266,33 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 		return nil, err
 	}
 
-	var validator *pChainValidator.Validator
+	var v *validator.Validator
 	switch utx := rewardOuts.Tx.Unsigned.(type) {
 	case *txs.AddValidatorTx:
-		validator = &utx.Validator
+		v = &utx.Validator
 	case *txs.AddDelegatorTx:
-		validator = &utx.Validator
+		v = &utx.Validator
+	case *txs.AddPermissionlessValidatorTx:
+		v = &utx.Validator
+	case *txs.AddPermissionlessDelegatorTx:
+		v = &utx.Validator
+	default:
+		return nil, errUnknownRewardSourceTransaction
 	}
-	addMetadataToStakeOuts(ops, validator)
+	addMetadataToStakeOuts(ops, v)
 
 	return ops, nil
 }
 
-func addMetadataToStakeOuts(ops *txOps, validator *pChainValidator.Validator) {
-	if validator != nil {
-		for _, out := range ops.StakeOuts {
-			out.Metadata[MetadataValidatorNodeID] = validator.NodeID.String()
-			out.Metadata[MetadataStakingStartTime] = validator.Start
-			out.Metadata[MetadataStakingEndTime] = validator.End
-		}
+func addMetadataToStakeOuts(ops *txOps, validator *validator.Validator) {
+	if validator == nil {
+		return
+	}
+
+	for _, out := range ops.StakeOuts {
+		out.Metadata[MetadataValidatorNodeID] = validator.NodeID.String()
+		out.Metadata[MetadataStakingStartTime] = validator.Start
+		out.Metadata[MetadataStakingEndTime] = validator.End
 	}
 }
 
@@ -691,6 +709,8 @@ func getUTXOMap(d *DependencyTx) map[uint32]*avax.UTXO {
 			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
 		case *txs.CreateChainTx:
 			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
+		default:
+			// no utxos extracted from unsupported transaction types
 		}
 	}
 
