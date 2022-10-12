@@ -61,7 +61,7 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 
 	return &parser{
 		codec:            pBlocks.Codec,
-		codecVersion:     txs.Version,
+		codecVersion:     pBlocks.Version,
 		pChainClient:     pChainClient,
 		aliaser:          aliaser,
 		genesisTimestamp: time.Unix(genesisTimestamp, 0),

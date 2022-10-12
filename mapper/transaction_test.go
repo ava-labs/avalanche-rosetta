@@ -296,6 +296,9 @@ func TestCrossChainExportedOuts(t *testing.T) {
 
 		assert.Equal(t, []*types.Operation{
 			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 1,
+				},
 				Type:   OpExport,
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{

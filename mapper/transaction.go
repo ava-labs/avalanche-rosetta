@@ -242,6 +242,15 @@ func crossChainTransaction(
 	default:
 		return nil, nil, fmt.Errorf("unsupported transaction: %T", t)
 	}
+
+	// Adding operation identifiers to exported outs here since OperationIdentifier is a required field in the spec.
+	// As Rosetta does not allow gaps in operation identifiers within the same transaction,
+	// setting the identifier is deferred to here and all operations in the transaction are given sequential indices
+	for i, exportedOut := range exportedOuts {
+		exportedOut.OperationIdentifier = &types.OperationIdentifier{
+			Index: idx + int64(i),
+		}
+	}
 	return ops, exportedOuts, nil
 }
 
