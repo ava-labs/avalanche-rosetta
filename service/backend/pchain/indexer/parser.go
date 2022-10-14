@@ -23,9 +23,11 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
-var errParserUninitialized = errors.New("uninitialized parser")
+var (
+	errParserUninitialized = errors.New("uninitialized parser")
 
-const genesisTimestamp = 1599696000
+	genesisTimestamp = time.Date(2020, time.September, 10, 0, 0, 0, 0, time.UTC).Unix()
+)
 
 // Parser defines the interface for a P-chain indexer parser
 type Parser interface {
