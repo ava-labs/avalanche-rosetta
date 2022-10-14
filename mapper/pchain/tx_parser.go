@@ -131,15 +131,18 @@ func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, er
 
 	var operations []*types.Operation
 	if ops != nil {
+		operations = ops.IncludedOperations()
+		idx := len(operations)
 		if ops.ImportIns != nil {
-			txMetadata[mapper.MetadataImportedInputs] = ops.ImportIns
+			importedInputs := addOperationIdentifiers(ops.ImportIns, idx)
+			idx += len(importedInputs)
+			txMetadata[mapper.MetadataImportedInputs] = importedInputs
 		}
 
 		if ops.ExportOuts != nil {
-			txMetadata[mapper.MetadataExportedOutputs] = ops.ExportOuts
+			exportedOutputs := addOperationIdentifiers(ops.ExportOuts, idx)
+			txMetadata[mapper.MetadataExportedOutputs] = exportedOutputs
 		}
-
-		operations = ops.IncludedOperations()
 	}
 
 	return &types.Transaction{
@@ -149,6 +152,17 @@ func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, er
 		Operations: operations,
 		Metadata:   txMetadata,
 	}, nil
+}
+
+func addOperationIdentifiers(operations []*types.Operation, startIdx int) []*types.Operation {
+	result := make([]*types.Operation, 0, len(operations))
+	for idx, operation := range operations {
+		operation := operation
+		operation.OperationIdentifier = &types.OperationIdentifier{Index: int64(startIdx + idx)}
+		result = append(result, operation)
+	}
+
+	return result
 }
 
 func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) {

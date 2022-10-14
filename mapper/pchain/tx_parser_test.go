@@ -190,7 +190,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 
 	importedInput := importTx.ImportedInputs[0]
 	expectedImportedInputs := []*types.Operation{{
-		OperationIdentifier: nil,
+		OperationIdentifier: &types.OperationIdentifier{Index: 1},
 		Type:                OpImportAvax,
 		Status:              types.String(mapper.StatusSuccess),
 		Account:             nil,
@@ -267,7 +267,6 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	out := rosettaTransactionWithExportOperations.Operations[2]
 	out.Status = types.String(mapper.StatusSuccess)
 	out.CoinChange = exportOutputs[0].CoinChange
-	out.OperationIdentifier = nil
 	assert.Equal(t, []*types.Operation{out}, exportOutputs)
 }
 
