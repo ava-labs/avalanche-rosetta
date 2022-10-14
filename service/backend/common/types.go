@@ -14,7 +14,7 @@ type AvaxTx interface {
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
 	SigningPayload() ([]byte, error)
-	Hash() ([]byte, error)
+	Hash() (ids.ID, error)
 }
 
 type RosettaTx struct {

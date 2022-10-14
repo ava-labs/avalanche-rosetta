@@ -45,14 +45,19 @@ func (c *cAtomicTx) SigningPayload() ([]byte, error) {
 	return hash, nil
 }
 
-func (c *cAtomicTx) Hash() ([]byte, error) {
-	bytes, err := c.Codec.Marshal(c.CodecVersion, &c.Tx)
+func (c *cAtomicTx) Hash() (ids.ID, error) {
+	unsignedBytes, err := c.Codec.Marshal(c.CodecVersion, &c.Tx.UnsignedAtomicTx)
 	if err != nil {
-		return nil, err
+		return ids.Empty, err
 	}
 
-	hash := hashing.ComputeHash256(bytes)
-	return hash, nil
+	signedBytes, err := c.Codec.Marshal(c.CodecVersion, &c.Tx)
+	if err != nil {
+		return ids.Empty, err
+	}
+
+	c.Tx.Initialize(unsignedBytes, signedBytes)
+	return c.Tx.ID(), nil
 }
 
 type cAtomicTxBuilder struct {

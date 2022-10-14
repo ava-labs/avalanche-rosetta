@@ -55,14 +55,19 @@ func (p *pTx) SigningPayload() ([]byte, error) {
 	return hash, nil
 }
 
-func (p *pTx) Hash() ([]byte, error) {
-	bytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx)
+func (p *pTx) Hash() (ids.ID, error) {
+	unsignedBytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx.Unsigned)
 	if err != nil {
-		return nil, err
+		return ids.Empty, err
 	}
 
-	hash := hashing.ComputeHash256(bytes)
-	return hash, nil
+	signedBytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx)
+	if err != nil {
+		return ids.Empty, err
+	}
+
+	p.Tx.Initialize(unsignedBytes, signedBytes)
+	return p.Tx.ID(), nil
 }
 
 type pTxBuilder struct {

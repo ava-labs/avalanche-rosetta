@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/cb58"
 	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
@@ -302,16 +301,14 @@ func buildCredential(numSigs int, sigOffset *int, signatures []*types.Signature)
 	return cred, nil
 }
 
+// Generates a transaction id for the given RosettaTx
 func HashTx(rosettaTx *RosettaTx) (*types.TransactionIdentifierResponse, *types.Error) {
-	txHashBytes, err := rosettaTx.Tx.Hash()
+	txID, err := rosettaTx.Tx.Hash()
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	hash, err := cb58.Encode(txHashBytes)
-	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
-	}
+	hash := txID.String()
 
 	return &types.TransactionIdentifierResponse{
 		TransactionIdentifier: &types.TransactionIdentifier{
