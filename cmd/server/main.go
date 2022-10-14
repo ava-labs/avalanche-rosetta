@@ -157,7 +157,7 @@ func main() {
 	)
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
-	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))
+	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router)) //nolint:gosec
 }
 
 func configureRouter(
