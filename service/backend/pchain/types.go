@@ -103,8 +103,9 @@ func (p pTxBuilder) BuildTx(operations []*types.Operation, metadataMap map[strin
 }
 
 type pTxParser struct {
-	hrp      string
-	chainIDs map[string]string
+	hrp         string
+	chainIDs    map[string]string
+	avaxAssetID ids.ID
 }
 
 func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*types.AccountIdentifier) ([]*types.Operation, error) {
@@ -113,7 +114,7 @@ func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*type
 		return nil, errInvalidTransaction
 	}
 
-	parser, err := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil)
+	parser, err := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil, nil, p.avaxAssetID)
 	if err != nil {
 		return nil, err
 	}

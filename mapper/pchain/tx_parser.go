@@ -1,7 +1,9 @@
 package pchain
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"log"
 	"math/big"
 
@@ -14,10 +16,12 @@ import (
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 var (
+	errNilPChainClient                = errors.New("pchain client can only be nil during construction")
 	errNilChainIDs                    = errors.New("chain ids cannot be nil")
 	errNilInputTxAccounts             = errors.New("input tx accounts cannot be nil")
 	errUnknownDestinationChain        = errors.New("unknown destination chain")
@@ -29,6 +33,7 @@ var (
 	errFailedToCheckMultisig          = errors.New("failed to check utxo for multisig")
 	errOutputTypeAssertion            = errors.New("output type assertion failed")
 	errUnknownRewardSourceTransaction = errors.New("unknown source tx type for reward tx")
+	errUnsupportedAssetInConstruction = errors.New("unsupported asset passed during construction")
 )
 
 // TxParser parses P-chain transactions and generate corresponding Rosetta operations
@@ -43,6 +48,10 @@ type TxParser struct {
 	dependencyTxs map[string]*DependencyTx
 	// inputTxAccounts contain utxo id to account identifier mappings
 	inputTxAccounts map[string]*types.AccountIdentifier
+	// pChainClient holds a P-chain client, used to lookup asset descriptions for non-AVAX assets
+	pChainClient client.PChainClient
+	// avaxAssetID contains asset id for AVAX currency
+	avaxAssetID ids.ID
 }
 
 // NewTxParser returns a new transaction parser
@@ -52,6 +61,8 @@ func NewTxParser(
 	chainIDs map[string]string,
 	inputTxAccounts map[string]*types.AccountIdentifier,
 	dependencyTxs map[string]*DependencyTx,
+	pChainClient client.PChainClient,
+	avaxAssetID ids.ID,
 ) (*TxParser, error) {
 	if chainIDs == nil {
 		return nil, errNilChainIDs
@@ -61,12 +72,18 @@ func NewTxParser(
 		return nil, errNilInputTxAccounts
 	}
 
+	if !isConstruction && pChainClient == nil {
+		return nil, errNilPChainClient
+	}
+
 	return &TxParser{
 		isConstruction:  isConstruction,
 		hrp:             hrp,
 		chainIDs:        chainIDs,
 		inputTxAccounts: inputTxAccounts,
 		dependencyTxs:   dependencyTxs,
+		pChainClient:    pChainClient,
+		avaxAssetID:     avaxAssetID,
 	}, nil
 }
 
@@ -405,7 +422,15 @@ func (t *TxParser) insToOperations(
 			}
 		}
 
-		inputAmount := new(big.Int).SetUint64(in.In.Amount())
+		bigAmount := new(big.Int).SetUint64(in.In.Amount())
+		// Negating input amount
+		inputAmount := new(big.Int).Neg(bigAmount)
+
+		amount, err := t.buildAmount(inputAmount, in.AssetID())
+		if err != nil {
+			return err
+		}
+
 		inOp := &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: int64(inOps.Len()),
@@ -413,8 +438,7 @@ func (t *TxParser) insToOperations(
 			Type:    opType,
 			Status:  status,
 			Account: account,
-			// Negating input amount
-			Amount: mapper.AtomicAvaxAmount(new(big.Int).Neg(inputAmount)),
+			Amount:  amount,
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{
 					Identifier: utxoID,
@@ -427,6 +451,23 @@ func (t *TxParser) insToOperations(
 		inOps.Append(inOp, metaType)
 	}
 	return nil
+}
+
+func (t *TxParser) buildAmount(value *big.Int, assetID ids.ID) (*types.Amount, error) {
+	if assetID == t.avaxAssetID {
+		return mapper.AtomicAvaxAmount(value), nil
+	}
+
+	if t.isConstruction {
+		return nil, errUnsupportedAssetInConstruction
+	}
+
+	currency, err := t.lookupCurrency(assetID)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapper.Amount(value, currency), nil
 }
 
 func (t *TxParser) outsToOperations(
@@ -469,6 +510,7 @@ func (t *TxParser) outsToOperations(
 
 		outOp, err := t.buildOutputOperation(
 			transferOutput,
+			out.AssetID(),
 			status,
 			outOps.Len(),
 			txID,
@@ -525,6 +567,7 @@ func (t *TxParser) utxosToOperations(
 
 		outOp, err := t.buildOutputOperation(
 			out,
+			utxo.AssetID(),
 			status,
 			outOps.Len(),
 			utxo.TxID,
@@ -545,6 +588,7 @@ func (t *TxParser) utxosToOperations(
 
 func (t *TxParser) buildOutputOperation(
 	out *secp256k1fx.TransferOutput,
+	assetID ids.ID,
 	status *string,
 	startIndex int,
 	txID ids.ID,
@@ -586,6 +630,11 @@ func (t *TxParser) buildOutputOperation(
 		}
 	}
 
+	amount, err := t.buildAmount(outBigAmount, assetID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.Operation{
 		Type: opType,
 		OperationIdentifier: &types.OperationIdentifier{
@@ -594,7 +643,7 @@ func (t *TxParser) buildOutputOperation(
 		CoinChange: coinChange,
 		Status:     status,
 		Account:    &types.AccountIdentifier{Address: outAddrFormat},
-		Amount:     mapper.AtomicAvaxAmount(outBigAmount),
+		Amount:     amount,
 		Metadata:   opMetadata,
 	}, nil
 }
@@ -618,6 +667,18 @@ func (t *TxParser) isMultisig(utxoid avax.UTXOID) (bool, error) {
 	isMultisig := len(addressable.Addresses()) != 1
 
 	return isMultisig, nil
+}
+
+func (t *TxParser) lookupCurrency(assetID ids.ID) (*types.Currency, error) {
+	asset, err := t.pChainClient.GetAssetDescription(context.Background(), assetID.String())
+	if err != nil {
+		return nil, fmt.Errorf("error while looking up currency: %w", err)
+	}
+
+	return &types.Currency{
+		Symbol:   asset.Symbol,
+		Decimals: int32(asset.Denomination),
+	}, nil
 }
 
 // GetAccountsFromUTXOs extracts destination accounts from given dependency transactions

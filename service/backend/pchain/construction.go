@@ -214,8 +214,9 @@ func (b *Backend) ConstructionParse(ctx context.Context, req *types.Construction
 	}
 
 	txParser := pTxParser{
-		hrp:      hrp,
-		chainIDs: chainIDs,
+		hrp:         hrp,
+		chainIDs:    chainIDs,
+		avaxAssetID: b.avaxAssetID,
 	}
 
 	return common.Parse(txParser, rosettaTx, req.Signed)

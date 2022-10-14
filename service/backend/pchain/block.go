@@ -274,7 +274,7 @@ func (b *Backend) newTxParser(
 		return nil, err
 	}
 
-	return pmapper.NewTxParser(false, hrp, chainIDs, inputAddresses, dependencyTxs)
+	return pmapper.NewTxParser(false, hrp, chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
 }
 
 func (b *Backend) getChainIDs(ctx context.Context) (map[string]string, error) {

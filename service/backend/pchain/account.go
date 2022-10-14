@@ -43,13 +43,18 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 		return nil, service.WrapError(service.ErrNotSupported, "historical balance lookups are not supported")
 	}
 
+	currencyAssetIDs, wrappedErr := b.buildCurrencyAssetIDs(ctx, req.Currencies)
+	if wrappedErr != nil {
+		return nil, wrappedErr
+	}
+
 	var balanceType string
 	if req.AccountIdentifier.SubAccount != nil {
 		balanceType = req.AccountIdentifier.SubAccount.Address
 	}
 	fetchImportable := balanceType == pmapper.SubAccountTypeSharedMemory
 
-	height, balance, typedErr := b.fetchBalance(ctx, req.AccountIdentifier.Address, fetchImportable)
+	height, balance, typedErr := b.fetchBalance(ctx, req.AccountIdentifier.Address, fetchImportable, currencyAssetIDs)
 	if typedErr != nil {
 		return nil, typedErr
 	}
@@ -101,7 +106,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 		return nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
 	}
 
-	currencyAssetIDs, wrappedErr := b.buildCurrencyAssetIDs(ctx, req)
+	currencyAssetIDs, wrappedErr := b.buildCurrencyAssetIDs(ctx, req.Currencies)
 	if err != nil {
 		return nil, wrappedErr
 	}
@@ -112,7 +117,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 	}
 	fetchSharedMemory := subAccountAddress == pmapper.SubAccountTypeSharedMemory
 
-	height, utxos, _, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, false, fetchSharedMemory)
+	height, utxos, _, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, false, fetchSharedMemory, nil)
 	if typedErr != nil {
 		return nil, typedErr
 	}
@@ -137,13 +142,13 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 	}, nil
 }
 
-func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImportable bool) (uint64, *AccountBalance, *types.Error) {
+func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImportable bool, currencyAssetIds map[ids.ID]struct{}) (uint64, *AccountBalance, *types.Error) {
 	addr, err := address.ParseToID(addrString)
 	if err != nil {
 		return 0, nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
 	}
 
-	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, !fetchImportable, fetchImportable)
+	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, !fetchImportable, fetchImportable, currencyAssetIds)
 	if typedErr != nil {
 		return 0, nil, typedErr
 	}
@@ -240,9 +245,9 @@ utxoFor:
 	return accountBalance, nil
 }
 
-func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, req *types.AccountCoinsRequest) (map[ids.ID]struct{}, *types.Error) {
+func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, currencies []*types.Currency) (map[ids.ID]struct{}, *types.Error) {
 	currencyAssetIDs := make(map[ids.ID]struct{})
-	for _, reqCurrency := range req.Currencies {
+	for _, reqCurrency := range currencies {
 		description, err := b.pClient.GetAssetDescription(ctx, reqCurrency.Symbol)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, "unable to get asset description")
@@ -261,12 +266,7 @@ func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, req *types.AccountC
 // Since these APIs don't return the corresponding block height or hash,
 // which is needed for both /account/balance and /account/coins, chain height is checked before and after
 // and if they differ, an error is returned.
-func (b *Backend) fetchUTXOsAndStakedOutputs(
-	ctx context.Context,
-	addr ids.ShortID,
-	fetchStaked bool,
-	fetchSharedMemory bool,
-) (uint64, []avax.UTXO, [][]byte, *types.Error) {
+func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.ShortID, fetchStaked bool, fetchSharedMemory bool, currencyAssetIds map[ids.ID]struct{}) (uint64, []avax.UTXO, [][]byte, *types.Error) {
 	// fetch preHeight before the balance fetch
 	preHeight, err := b.pClient.GetHeight(ctx)
 	if err != nil {
@@ -317,7 +317,7 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(
 	}
 
 	// parse UTXO bytes to UTXO structs
-	utxos, err := b.parseUTXOs(utxoBytes)
+	utxos, err := b.parseUTXOs(utxoBytes, currencyAssetIds)
 	if err != nil {
 		return 0, nil, nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -357,7 +357,7 @@ func (b *Backend) calculateStakedAmount(stakeUTXOs [][]byte) (uint64, error) {
 	return staked, nil
 }
 
-func (b *Backend) parseUTXOs(utxoBytes [][]byte) ([]avax.UTXO, error) {
+func (b *Backend) parseUTXOs(utxoBytes [][]byte, currencyAssetIDs map[ids.ID]struct{}) ([]avax.UTXO, error) {
 	utxos := []avax.UTXO{}
 
 	// when results are paginated, duplicate UTXOs may be provided. guarantee uniqueness
@@ -367,6 +367,11 @@ func (b *Backend) parseUTXOs(utxoBytes [][]byte) ([]avax.UTXO, error) {
 		_, err := b.codec.Unmarshal(bytes, &utxo)
 		if err != nil {
 			return nil, errUnableToParseUTXO
+		}
+
+		// Skip UTXO if req.Currencies is specified, but it doesn't contain the UTXOs asset
+		if _, ok := currencyAssetIDs[utxo.AssetID()]; len(currencyAssetIDs) > 0 && !ok {
+			continue
 		}
 
 		if _, ok := utxoIDs[utxo.UTXOID.String()]; ok {
@@ -428,7 +433,7 @@ func (b *Backend) processUtxos(currencyAssetIDs map[ids.ID]struct{}, utxos []ava
 	coins := []*types.Coin{}
 
 	for _, utxo := range utxos {
-		// Skip UTXO if req.Currencies is specified but it doesn't contain the UTXOs asset
+		// Skip UTXO if req.Currencies is specified, but it doesn't contain the UTXOs asset
 		if _, ok := currencyAssetIDs[utxo.AssetID()]; len(currencyAssetIDs) > 0 && !ok {
 			continue
 		}

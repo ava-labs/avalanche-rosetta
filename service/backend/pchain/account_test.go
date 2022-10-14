@@ -51,6 +51,14 @@ func TestAccountBalance(t *testing.T) {
 		utxo1Id, _ := ids.FromString(utxos[1].id)
 		stakeUtxoBytes := makeStakeUtxoBytes(t, backend, utxos[1].amount)
 
+		// Mock on GetAssetDescription
+		mockAssetDescription := &avm.GetAssetDescriptionReply{
+			Name:         "Avalanche",
+			Symbol:       mapper.AtomicAvaxCurrency.Symbol,
+			Denomination: 9,
+		}
+		pChainMock.Mock.On("GetAssetDescription", ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
+
 		// once before other calls, once after
 		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
 		// Make sure pagination works as well
