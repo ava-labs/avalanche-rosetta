@@ -27,6 +27,7 @@ type Backend struct {
 	avaxAssetID      ids.ID
 }
 
+// NewBackend creates a C-chain atomic transaction service backend
 func NewBackend(cClient client.Client, avaxAssetID ids.ID) *Backend {
 	return &Backend{
 		fac:              &crypto.FactorySECP256K1R{},
@@ -38,6 +39,7 @@ func NewBackend(cClient client.Client, avaxAssetID ids.ID) *Backend {
 	}
 }
 
+// ShouldHandleRequest returns whether a given request should be handled by this backend
 func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	switch r := req.(type) {
 	case *types.AccountBalanceRequest:

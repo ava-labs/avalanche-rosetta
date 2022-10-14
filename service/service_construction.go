@@ -30,15 +30,30 @@ const (
 	transferDataLength  = 68                          // 4 (method id) + 2*32 (args)
 )
 
+// ConstructionBackend represents a backend that implements /construction family of apis for a subset of requests.
+// Endpoint handlers in this file delegates requests to corresponding backends based on the request.
+// Each backend implements a ShouldHandleRequest method to determine whether that backend should handle the given request.
+//
+// P-chain and C-chain atomic transaction logic are implemented in pchain.Backend and cchainatomictx.Backend respectively.
+// Eventually, the C-chain non-atomic transaction logic implemented in this file should be extracted to its own backend as well.
 type ConstructionBackend interface {
+	// ShouldHandleRequest returns whether a given request should be handled by this backend
 	ShouldHandleRequest(req interface{}) bool
+	// ConstructionDerive implements /construction/derive endpoint for this backend
 	ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error)
+	// ConstructionPreprocess implements /construction/preprocess endpoint for this backend
 	ConstructionPreprocess(ctx context.Context, req *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error)
+	// ConstructionMetadata implements /construction/metadata endpoint for this backend
 	ConstructionMetadata(ctx context.Context, req *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error)
+	// ConstructionPayloads implements /construction/payloads endpoint for this backend
 	ConstructionPayloads(ctx context.Context, req *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error)
+	// ConstructionParse implements /construction/parse endpoint for this backend
 	ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error)
+	// ConstructionCombine implements /construction/combine endpoint for this backend
 	ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error)
+	// ConstructionHash implements /construction/hash endpoint for this backend
 	ConstructionHash(ctx context.Context, req *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error)
+	// ConstructionSubmit implements /construction/submit endpoint for this backend
 	ConstructionSubmit(ctx context.Context, req *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error)
 }
 

@@ -17,6 +17,7 @@ import (
 
 var errInvalidTransaction = errors.New("invalid transaction")
 
+// AccountBalance contains P-chain account balances
 type AccountBalance struct {
 	Total              uint64
 	Unlocked           uint64
@@ -55,14 +56,19 @@ func (p *pTx) SigningPayload() ([]byte, error) {
 	return hash, nil
 }
 
-func (p *pTx) Hash() ([]byte, error) {
-	bytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx)
+func (p *pTx) Hash() (ids.ID, error) {
+	unsignedBytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx.Unsigned)
 	if err != nil {
-		return nil, err
+		return ids.Empty, err
 	}
 
-	hash := hashing.ComputeHash256(bytes)
-	return hash, nil
+	signedBytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx)
+	if err != nil {
+		return ids.Empty, err
+	}
+
+	p.Tx.Initialize(unsignedBytes, signedBytes)
+	return p.Tx.ID(), nil
 }
 
 type pTxBuilder struct {
@@ -97,8 +103,9 @@ func (p pTxBuilder) BuildTx(operations []*types.Operation, metadataMap map[strin
 }
 
 type pTxParser struct {
-	hrp      string
-	chainIDs map[string]string
+	hrp         string
+	chainIDs    map[string]string
+	avaxAssetID ids.ID
 }
 
 func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*types.AccountIdentifier) ([]*types.Operation, error) {
@@ -107,7 +114,7 @@ func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*type
 		return nil, errInvalidTransaction
 	}
 
-	parser, err := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil)
+	parser, err := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil, nil, p.avaxAssetID)
 	if err != nil {
 		return nil, err
 	}

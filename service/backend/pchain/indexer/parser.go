@@ -23,15 +23,23 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
-var errParserUninitialized = errors.New("uninitialized parser")
+var (
+	errParserUninitialized = errors.New("uninitialized parser")
 
-const genesisTimestamp = 1599696000
+	genesisTimestamp = time.Date(2020, time.September, 10, 0, 0, 0, 0, time.UTC).Unix()
+)
 
+// Parser defines the interface for a P-chain indexer parser
 type Parser interface {
+	// GetGenesisBlock parses and returns the Genesis block
 	GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error)
+	// GetPlatformHeight returns the current block height of P-chain
 	GetPlatformHeight(ctx context.Context) (uint64, error)
+	// ParseCurrentBlock parses and returns the current tip of P-chain
 	ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error)
+	// ParseBlockAtIndex parses and returns the block at the specified index
 	ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBlock, error)
+	// ParseBlockAtIndex parses and returns the block with the specified hash
 	ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error)
 }
 
@@ -53,6 +61,7 @@ type parser struct {
 	genesisTimestamp time.Time
 }
 
+// NewParser creates a new P-chain indexer parser
 func NewParser(pChainClient client.PChainClient) (Parser, error) {
 	errs := wrappers.Errs{}
 
@@ -168,7 +177,7 @@ func (p *parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBl
 		return nil, err
 	}
 
-	// in P-chain container indices start from 0 while corresponding block indices start from 1
+	// P-chain indexer container indices start from 0 while corresponding block indices start from 1
 	// therefore containers are looked up with index - 1
 	// genesis does not cause a problem here as it is handled in a separate code path
 	container, err := p.pChainClient.GetContainerByIndex(ctx, index-1)

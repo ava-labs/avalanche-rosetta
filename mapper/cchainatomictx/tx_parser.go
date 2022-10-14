@@ -20,16 +20,23 @@ var (
 	errNoMatchingInputAddresses = errors.New("no matching input addresses")
 )
 
+// TxParser parses C-chain atomic transactions and generate corresponding Rosetta operations
 type TxParser struct {
-	hrp             string
-	chainIDs        map[string]string
+	// hrp used for address formatting
+	hrp string
+	// chainIDs contain chain id to chain id alias mappings
+	chainIDs map[string]string
+	// inputTxAccounts contain utxo id to account identifier mappings
 	inputTxAccounts map[string]*types.AccountIdentifier
 }
 
+// NewTxParser returns a new transaction parser
 func NewTxParser(hrp string, chainIDs map[string]string, inputTxAccounts map[string]*types.AccountIdentifier) *TxParser {
 	return &TxParser{hrp: hrp, chainIDs: chainIDs, inputTxAccounts: inputTxAccounts}
 }
 
+// Parse converts the given atomic evm tx to corresponding Rosetta operations
+// This method is only used during construction.
 func (t *TxParser) Parse(tx evm.Tx) ([]*types.Operation, error) {
 	switch unsignedTx := tx.UnsignedAtomicTx.(type) {
 	case *evm.UnsignedExportTx:

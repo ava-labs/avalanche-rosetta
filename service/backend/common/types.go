@@ -10,25 +10,25 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
+// AvaxTx encapsulates P-chain and C-chain atomic transactions in order to reuse common logic between them
 type AvaxTx interface {
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
 	SigningPayload() ([]byte, error)
-	Hash() ([]byte, error)
+	Hash() (ids.ID, error)
 }
 
+// RosettaTx wraps a transaction along with the input addresses and destination chain information.
+// It is used during construction between /construction/payloads and /construction/parse since parse needs this information
+// but C-chain atomic and P-chain tx formats strip this information and only retain UTXO ids.
 type RosettaTx struct {
-	// The body of this transaction
-	Tx AvaxTx
-
-	// AccountIdentifierSigners used by /construction/parse
-
+	Tx                       AvaxTx
 	AccountIdentifierSigners []Signer
-
-	DestinationChain   string
-	DestinationChainID *ids.ID
+	DestinationChain         string
+	DestinationChainID       *ids.ID
 }
 
+// Signer contains details of coin identifiers and the accounts signing those coins
 type Signer struct {
 	CoinIdentifier    string                   `json:"coin_identifier,omitempty"`
 	AccountIdentifier *types.AccountIdentifier `json:"account_identifier"`
@@ -88,6 +88,7 @@ func (t *RosettaTx) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// GetAccountIdentifiers extracts input account identifiers from given Rosetta operations
 func (t *RosettaTx) GetAccountIdentifiers(operations []*types.Operation) ([]*types.AccountIdentifier, error) {
 	signers := []*types.AccountIdentifier{}
 

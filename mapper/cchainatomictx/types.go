@@ -12,6 +12,7 @@ const (
 	MetadataSourceChain = "source_chain"
 )
 
+// Metadata contains metadata values returned by /construction/metadata for C-chain atomic transactions
 type Metadata struct {
 	NetworkID          uint32  `json:"network_id,omitempty"`
 	CChainID           ids.ID  `json:"c_chain_id,omitempty"`
@@ -21,6 +22,7 @@ type Metadata struct {
 	Nonce              uint64  `json:"nonce"`
 }
 
+// Options contains response values returned by /construction/preprocess for C-chain atomic transactions
 type Options struct {
 	AtomicTxGas      *big.Int `json:"atomic_tx_gas"`
 	From             string   `json:"from,omitempty"`

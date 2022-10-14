@@ -62,6 +62,7 @@ var (
 	CallMethods = []string{}
 )
 
+// OperationMetadata contains metadata fields specific to individual Rosetta operations as opposed to transactions
 type OperationMetadata struct {
 	Type       string   `json:"type"`
 	SigIndices []uint32 `json:"sig_indices,omitempty"`
@@ -69,11 +70,13 @@ type OperationMetadata struct {
 	Threshold  uint32   `json:"threshold,omitempty"`
 }
 
+// ImportExportOptions contain response fields returned by /construction/preprocess for P-chain Import/Export transactions
 type ImportExportOptions struct {
 	SourceChain      string `json:"source_chain"`
 	DestinationChain string `json:"destination_chain"`
 }
 
+// StakingOptions contain response fields returned by /construction/preprocess for P-chain AddValidator/AddDelegator transactions
 type StakingOptions struct {
 	NodeID          string   `json:"node_id"`
 	Start           uint64   `json:"start"`
@@ -85,6 +88,7 @@ type StakingOptions struct {
 	RewardAddresses []string `json:"reward_addresses"`
 }
 
+// Metadata contains metadata values returned by /construction/metadata for P-chain transactions
 type Metadata struct {
 	NetworkID    uint32 `json:"network_id"`
 	BlockchainID ids.ID `json:"blockchain_id"`
@@ -93,15 +97,18 @@ type Metadata struct {
 	*StakingMetadata
 }
 
+// ImportMetadata contain response fields returned by /construction/metadata for P-chain Import transactions
 type ImportMetadata struct {
 	SourceChainID ids.ID `json:"source_chain_id"`
 }
 
+// ExportMetadata contain response fields returned by /construction/metadata for P-chain Export transactions
 type ExportMetadata struct {
 	DestinationChain   string `json:"destination_chain"`
 	DestinationChainID ids.ID `json:"destination_chain_id"`
 }
 
+// StakingMetadata contain response fields returned by /construction/metadata for P-chain AddValidator/AddDelegator transactions
 type StakingMetadata struct {
 	NodeID          string   `json:"node_id"`
 	RewardAddresses []string `json:"reward_addresses"`
@@ -113,6 +120,7 @@ type StakingMetadata struct {
 	Memo            string   `json:"memo"`
 }
 
+// DependencyTx represents a transaction some of whose output is used as an input to another transaction
 type DependencyTx struct {
 	Tx          *txs.Tx
 	RewardUTXOs []*avax.UTXO

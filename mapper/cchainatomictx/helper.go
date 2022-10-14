@@ -7,6 +7,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
+// IsCChainBech32Address checks whether a given account identifier contains a C-chain Bech32 type address
 func IsCChainBech32Address(accountIdentifier *types.AccountIdentifier) bool {
 	if chainID, _, _, err := address.Parse(accountIdentifier.Address); err == nil {
 		return chainID == mapper.CChainNetworkIdentifier
@@ -14,6 +15,7 @@ func IsCChainBech32Address(accountIdentifier *types.AccountIdentifier) bool {
 	return false
 }
 
+// IsAtomicOpType determines whether a given C-chain operation is an atomic one
 func IsAtomicOpType(t string) bool {
 	return t == mapper.OpExport || t == mapper.OpImport
 }

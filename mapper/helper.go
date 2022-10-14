@@ -66,7 +66,7 @@ func MarshalJSONMap(i interface{}) (map[string]interface{}, error) {
 	return m, nil
 }
 
-// Parse string into avax.UTXOID
+// DecodeUTXOID decodes given string into avax.UTXOID
 func DecodeUTXOID(s string) (*avax.UTXOID, error) {
 	split := strings.Split(s, ":")
 	if len(split) != 2 {
@@ -89,10 +89,12 @@ func DecodeUTXOID(s string) (*avax.UTXOID, error) {
 	}, nil
 }
 
+// EncodeBytes encodes given bytes to string
 func EncodeBytes(bytes []byte) (string, error) {
 	return formatting.Encode(formatting.Hex, bytes)
 }
 
+// DecodeToBytes decodes given string into bytes using the same encoding as EncodeBytes
 func DecodeToBytes(binaryData string) ([]byte, error) {
 	return formatting.Decode(formatting.Hex, binaryData)
 }

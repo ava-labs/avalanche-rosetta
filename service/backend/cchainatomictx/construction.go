@@ -28,10 +28,12 @@ var (
 	errNoTxGiven     = errors.New("no transaction was given")
 )
 
+// ConstructionDerive implements /construction/derive endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	return common.DeriveBech32Address(b.fac, mapper.CChainNetworkIdentifier, req)
 }
 
+// ConstructionPreprocess implements /construction/preprocess endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionPreprocess(
 	ctx context.Context,
 	req *types.ConstructionPreprocessRequest,
@@ -119,6 +121,7 @@ func (b *Backend) estimateGasUsed(opType string, matches []*parser.Match) (uint6
 	return tx.GasUsed(true)
 }
 
+// ConstructionMetadata implements /construction/metadata endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionMetadata(
 	ctx context.Context,
 	req *types.ConstructionMetadataRequest,
@@ -203,6 +206,7 @@ func (b *Backend) calculateSuggestedFee(ctx context.Context, gasUsed *big.Int) (
 	return mapper.AtomicAvaxAmount(suggestedFee), nil
 }
 
+// ConstructionPayloads implements /construction/payloads endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionPayloads(ctx context.Context, req *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
 	builder := cAtomicTxBuilder{
 		avaxAssetID:  b.avaxAssetID,
@@ -212,6 +216,7 @@ func (b *Backend) ConstructionPayloads(ctx context.Context, req *types.Construct
 	return common.BuildPayloads(builder, req)
 }
 
+// ConstructionParse implements /construction/parse endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.Transaction)
 	if err != nil {
@@ -257,6 +262,7 @@ func (b *Backend) parsePayloadTxFromString(transaction string) (*common.RosettaT
 	return payloadsTx, nil
 }
 
+// ConstructionCombine implements /construction/combine endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.UnsignedTransaction)
 	if err != nil {
@@ -266,6 +272,7 @@ func (b *Backend) ConstructionCombine(ctx context.Context, req *types.Constructi
 	return common.Combine(b, rosettaTx, req.Signatures)
 }
 
+// CombineTx implements C-chain atomic transaction specific logic for combining unsigned transactions and signatures
 func (b *Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (common.AvaxTx, *types.Error) {
 	cTx, ok := tx.(*cAtomicTx)
 	if !ok {
@@ -309,6 +316,7 @@ func getTxCreds(
 	return nil, errUnknownTxType
 }
 
+// ConstructionHash implements /construction/hash endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionHash(
 	ctx context.Context,
 	req *types.ConstructionHashRequest,
@@ -321,6 +329,7 @@ func (b *Backend) ConstructionHash(
 	return common.HashTx(rosettaTx)
 }
 
+// ConstructionSubmit implements /construction/submit endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionSubmit(
 	ctx context.Context,
 	req *types.ConstructionSubmitRequest,

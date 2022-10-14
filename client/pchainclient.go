@@ -17,6 +17,9 @@ import (
 // Interface compliance
 var _ PChainClient = &pchainClient{}
 
+// PChainClient contains all client methods used to interact with avalanchego in order to support P-chain operations in Rosetta.
+//
+// These methods are cloned from the underlying avalanchego client interfaces, following the example of Client interface used to support C-chain operations.
 type PChainClient interface {
 	// indexer.Client methods
 	GetContainerByIndex(ctx context.Context, index uint64, options ...rpc.Option) (indexer.Container, error)
