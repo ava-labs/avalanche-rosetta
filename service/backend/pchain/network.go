@@ -10,10 +10,13 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
+// NetworkIdentifier returns P-chain network identifier
+// used by /network/list endpoint to list available networks
 func (b *Backend) NetworkIdentifier() *types.NetworkIdentifier {
 	return b.networkIdentifier
 }
 
+// NetworkStatus implements /network/status endpoint for P-chain
 func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
 	// Fetch peers
 	infoPeers, err := b.pClient.Peers(ctx)
@@ -61,6 +64,7 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 	}, nil
 }
 
+// NetworkOptions implements /network/options endpoint for P-chain
 func (b *Backend) NetworkOptions(ctx context.Context, request *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{

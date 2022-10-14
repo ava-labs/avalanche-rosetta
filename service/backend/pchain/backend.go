@@ -36,6 +36,7 @@ type Backend struct {
 	avaxAssetID            ids.ID
 }
 
+// NewBackend creates a P-chain service backend
 func NewBackend(
 	pClient client.PChainClient,
 	indexerParser indexer.Parser,
@@ -54,6 +55,7 @@ func NewBackend(
 	}
 }
 
+// ShouldHandleRequest returns whether a given request should be handled by this backend
 func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	switch r := req.(type) {
 	case *types.AccountBalanceRequest:

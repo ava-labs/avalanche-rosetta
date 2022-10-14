@@ -27,6 +27,7 @@ var (
 	errInvalidSignatureLen      = errors.New("invalid signature length")
 )
 
+// DeriveBech32Address derives Bech32 addresses for the given chain using public key and hrp provided in the request
 func DeriveBech32Address(fac *crypto.FactorySECP256K1R, chainIDAlias string, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	pub, err := fac.ToPublicKey(req.PublicKey.Bytes)
 	if err != nil {
@@ -50,6 +51,10 @@ func DeriveBech32Address(fac *crypto.FactorySECP256K1R, chainIDAlias string, req
 	}, nil
 }
 
+// MatchOperations defines the operation Rosetta parser matching rules and parses the input operations
+//
+// We require 2 types of operations; inputs with negative amounts and outputs with positive amounts
+// parser guarantees there will be 2 matches.
 func MatchOperations(operations []*types.Operation) ([]*parser.Match, error) {
 	if len(operations) == 0 {
 		return nil, errNoOperationsToMatch
@@ -103,10 +108,13 @@ func MatchOperations(operations []*types.Operation) ([]*parser.Match, error) {
 	return parser.MatchOperations(descriptions, operations)
 }
 
+// TxBuilder implements backend specific transaction construction logic
 type TxBuilder interface {
 	BuildTx(matches []*types.Operation, rawMetadata map[string]interface{}) (AvaxTx, []*types.AccountIdentifier, *types.Error)
 }
 
+// BuildPayloads performs transaction construction in /construction/payloads call and returns the unsigned transaction as well as the signing payloads.
+// Chain specific logic is abstracted using the TxBuilder interface's BuildTx method.
 func BuildPayloads(
 	txBuilder TxBuilder,
 	req *types.ConstructionPayloadsRequest,
@@ -177,10 +185,13 @@ func BuildPayloads(
 	}, nil
 }
 
+// TxParser implements backend specific transaction parsing logic
 type TxParser interface {
 	ParseTx(tx *RosettaTx, inputAddresses map[string]*types.AccountIdentifier) ([]*types.Operation, error)
 }
 
+// Parse contains transaction parsing logic for /construction/parse endpoint
+// Chain specific logic is abstracted using TxParser interface's ParseTx method
 func Parse(parser TxParser, payloadsTx *RosettaTx, isSigned bool) (*types.ConstructionParseResponse, *types.Error) {
 	// Convert input tx into operations
 	inputAddresses := getInputAddresses(payloadsTx)
@@ -216,10 +227,13 @@ func getInputAddresses(tx *RosettaTx) map[string]*types.AccountIdentifier {
 	return addresses
 }
 
+// TxCombiner implements backend specific transaction submission logic
 type TxCombiner interface {
 	CombineTx(tx AvaxTx, signatures []*types.Signature) (AvaxTx, *types.Error)
 }
 
+// Combine combines unsigned transactions with the provided signatures as part of /construction/combine call.
+// Chain spacific logic is abstracted in TxCombiner interface's CombineTx method.
 func Combine(
 	combiner TxCombiner,
 	rosettaTx *RosettaTx,
@@ -245,10 +259,13 @@ func Combine(
 	}, nil
 }
 
+// BuildCredentialList builds a list of *secp256k1fx.Credentials using the given signatures
+//
 // Based on tx inputs, we can determine the number of signatures
 // required by each input and put correct number of signatures to
 // construct the signed tx.
-// See https://github.com/ava-labs/avalanchego/blob/v1.7.17/vms/platformvm/txs/tx.go#L99
+//
+// See https://github.com/ava-labs/avalanchego/blob/v1.9.0/vms/platformvm/txs/tx.go#L104
 // for more details.
 func BuildCredentialList(ins []*avax.TransferableInput, signatures []*types.Signature) ([]verify.Verifiable, error) {
 	creds := make([]verify.Verifiable, len(ins))
@@ -274,6 +291,7 @@ func BuildCredentialList(ins []*avax.TransferableInput, signatures []*types.Sign
 	return creds, nil
 }
 
+// BuildSingletonCredentialList builds a list of a single *secp256k1fx.Credential using the given signatures
 func BuildSingletonCredentialList(signatures []*types.Signature) ([]verify.Verifiable, error) {
 	offset := 0
 	cred, err := buildCredential(1, &offset, signatures)
@@ -301,7 +319,7 @@ func buildCredential(numSigs int, sigOffset *int, signatures []*types.Signature)
 	return cred, nil
 }
 
-// Generates a transaction id for the given RosettaTx
+// HashTx generates a transaction id for the given RosettaTx
 func HashTx(rosettaTx *RosettaTx) (*types.TransactionIdentifierResponse, *types.Error) {
 	txID, err := rosettaTx.Tx.Hash()
 	if err != nil {
@@ -317,10 +335,13 @@ func HashTx(rosettaTx *RosettaTx) (*types.TransactionIdentifierResponse, *types.
 	}, nil
 }
 
+// TransactionIssuer implements chain specific transaction submission logic
 type TransactionIssuer interface {
 	IssueTx(ctx context.Context, txByte []byte) (ids.ID, error)
 }
 
+// SubmitTx broadcasts given Rosetta tx on chain and returns the transaction id.
+// Chain specific logic is abstracted using the TransactionIssuer interface's IssueTx method.
 func SubmitTx(
 	ctx context.Context,
 	issuer TransactionIssuer,

@@ -6,6 +6,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 )
 
+// ParsedBlock contains block details parsed from indexer containers
 type ParsedBlock struct {
 	BlockID   ids.ID    `json:"id"`
 	BlockType string    `json:"type"`
@@ -16,17 +17,20 @@ type ParsedBlock struct {
 	Proposer  `json:"proposer"`
 }
 
+// GenesisBlockData contains Genesis state details
 type GenesisBlockData struct {
 	Message       string          `json:"message"`
 	InitialSupply uint64          `json:"initialSupply"`
 	UTXOs         []*genesis.UTXO `json:"utxos"`
 }
 
+// ParsedGenesisBlock contains Genesis state details
 type ParsedGenesisBlock struct {
 	ParsedBlock
 	GenesisBlockData `json:"data"`
 }
 
+// Proposer contains the details of block proposers
 type Proposer struct {
 	ID           ids.ID     `json:"id"`
 	ParentID     ids.ID     `json:"parent"`

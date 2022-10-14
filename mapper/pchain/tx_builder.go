@@ -23,6 +23,8 @@ var (
 	errOutputAmountOverflow = errors.New("sum of output amounts caused overflow")
 )
 
+// BuildTx constructs a P-chain Tx based on the provided operation type, Rosetta matches and metadata
+// This method is only used during construction.
 func BuildTx(
 	opType string,
 	matches []*parser.Match,
@@ -319,6 +321,7 @@ func buildInputs(
 	return ins, imported, signers, nil
 }
 
+// ParseOpMetadata creates an OperationMetadata from given generic metadata map
 func ParseOpMetadata(metadata map[string]interface{}) (*OperationMetadata, error) {
 	var operationMetadata OperationMetadata
 	if err := mapper.UnmarshalJSONMap(metadata, &operationMetadata); err != nil {

@@ -34,6 +34,7 @@ var (
 	errUnlockedStakeableOverflow  = errors.New("overflow while calculating unlocked stakeable balance")
 )
 
+// AccountBalance implements /account/balance endpoint for P-chain
 func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
 	if req.AccountIdentifier == nil {
 		return nil, service.WrapError(service.ErrInvalidInput, "account identifier is not provided")
@@ -90,6 +91,7 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 	}, nil
 }
 
+// AccountCoins implements /account/coins endpoint for P-chain
 func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error) {
 	if req.AccountIdentifier == nil {
 		return nil, service.WrapError(service.ErrInvalidInput, "account identifier is not provided")

@@ -17,6 +17,7 @@ import (
 
 var errInvalidTransaction = errors.New("invalid transaction")
 
+// AccountBalance contains P-chain account balances
 type AccountBalance struct {
 	Total              uint64
 	Unlocked           uint64

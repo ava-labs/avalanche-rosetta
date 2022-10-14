@@ -20,6 +20,8 @@ import (
 
 var errMissingCoinIdentifier = errors.New("input operation does not have coin identifier")
 
+// BuildTx constructs an evm tx based on the provided operation type, Rosetta matches and metadata
+// This method is only used during construction.
 func BuildTx(opType string, matches []*parser.Match, metadata Metadata, codec codec.Manager, avaxAssetID ids.ID) (*evm.Tx, []*types.AccountIdentifier, error) {
 	switch opType {
 	case mapper.OpExport:

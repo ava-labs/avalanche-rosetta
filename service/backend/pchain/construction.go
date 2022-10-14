@@ -24,10 +24,12 @@ var (
 	errNoTxGiven     = errors.New("no transaction was given")
 )
 
+// ConstructionDerive implements /construction/derive endpoint for P-chain
 func (b *Backend) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	return common.DeriveBech32Address(b.fac, mapper.PChainNetworkIdentifier, req)
 }
 
+// ConstructionPreprocess implements /construction/preprocess endpoint for P-chain
 func (b *Backend) ConstructionPreprocess(
 	ctx context.Context,
 	req *types.ConstructionPreprocessRequest,
@@ -48,6 +50,7 @@ func (b *Backend) ConstructionPreprocess(
 	}, nil
 }
 
+// ConstructionMetadata implements /construction/metadata endpoint for P-chain
 func (b *Backend) ConstructionMetadata(
 	ctx context.Context,
 	req *types.ConstructionMetadataRequest,
@@ -183,6 +186,7 @@ func (b *Backend) getBaseTxFee(ctx context.Context) (*types.Amount, error) {
 	return suggestedFee, nil
 }
 
+// ConstructionPayloads implements /construction/payloads endpoint for P-chain
 func (b *Backend) ConstructionPayloads(ctx context.Context, req *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
 	builder := pTxBuilder{
 		avaxAssetID:  b.avaxAssetID,
@@ -192,6 +196,7 @@ func (b *Backend) ConstructionPayloads(ctx context.Context, req *types.Construct
 	return common.BuildPayloads(builder, req)
 }
 
+// ConstructionParse implements /construction/parse endpoint for P-chain
 func (b *Backend) ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.Transaction)
 	if err != nil {
@@ -216,6 +221,7 @@ func (b *Backend) ConstructionParse(ctx context.Context, req *types.Construction
 	return common.Parse(txParser, rosettaTx, req.Signed)
 }
 
+// ConstructionCombine implements /construction/combine endpoint for P-chain
 func (b *Backend) ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.UnsignedTransaction)
 	if err != nil {
@@ -225,6 +231,7 @@ func (b *Backend) ConstructionCombine(ctx context.Context, req *types.Constructi
 	return common.Combine(b, rosettaTx, req.Signatures)
 }
 
+// CombineTx implements P-chain specific logic for combining unsigned transactions and signatures
 func (b *Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (common.AvaxTx, *types.Error) {
 	pTx, ok := tx.(*pTx)
 	if !ok {
@@ -282,6 +289,7 @@ func getTxInputs(
 	}
 }
 
+// ConstructionHash implements /construction/hash endpoint for P-chain
 func (b *Backend) ConstructionHash(
 	ctx context.Context,
 	req *types.ConstructionHashRequest,
@@ -294,6 +302,7 @@ func (b *Backend) ConstructionHash(
 	return common.HashTx(rosettaTx)
 }
 
+// ConstructionSubmit implements /construction/submit endpoint for P-chain
 func (b *Backend) ConstructionSubmit(
 	ctx context.Context,
 	req *types.ConstructionSubmitRequest,
@@ -306,7 +315,7 @@ func (b *Backend) ConstructionSubmit(
 	return common.SubmitTx(ctx, b, rosettaTx)
 }
 
-// Defining IssueTx here without rpc.Options... to be able to use it with common.SubmitTx
+// IssueTx broadcasts given transaction on P-chain
 func (b *Backend) IssueTx(ctx context.Context, txByte []byte) (ids.ID, error) {
 	return b.pClient.IssueTx(ctx, txByte)
 }

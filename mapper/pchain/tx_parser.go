@@ -31,14 +31,21 @@ var (
 	errUnknownRewardSourceTransaction = errors.New("unknown source tx type for reward tx")
 )
 
+// TxParser parses P-chain transactions and generate corresponding Rosetta operations
 type TxParser struct {
-	isConstruction  bool
-	hrp             string
-	chainIDs        map[string]string
-	dependencyTxs   map[string]*DependencyTx
+	// isConstruction indicates if parsing is done as part of construction or /block endpoints
+	isConstruction bool
+	// hrp used for address formatting
+	hrp string
+	// chainIDs contain chain id to chain id alias mappings
+	chainIDs map[string]string
+	// dependencyTxs contain transaction id to dependence transaction mapping
+	dependencyTxs map[string]*DependencyTx
+	// inputTxAccounts contain utxo id to account identifier mappings
 	inputTxAccounts map[string]*types.AccountIdentifier
 }
 
+// NewTxParser returns a new transaction parser
 func NewTxParser(
 	isConstruction bool,
 	hrp string,
@@ -63,6 +70,7 @@ func NewTxParser(
 	}, nil
 }
 
+// Parse converts the given unsigned P-chain tx to corresponding Rosetta Transaction
 func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, error) {
 	var (
 		ops    *txOps
@@ -598,6 +606,7 @@ func (t *TxParser) isMultisig(utxoid avax.UTXOID) (bool, error) {
 	return isMultisig, nil
 }
 
+// GetAccountsFromUTXOs extracts destination accounts from given dependency transactions
 func GetAccountsFromUTXOs(hrp string, dependencyTxs map[string]*DependencyTx) (map[string]*types.AccountIdentifier, error) {
 	addresses := make(map[string]*types.AccountIdentifier)
 	for _, dependencyTx := range dependencyTxs {
@@ -626,6 +635,9 @@ func GetAccountsFromUTXOs(hrp string, dependencyTxs map[string]*DependencyTx) (m
 	return addresses, nil
 }
 
+// GetDependencyTxIDs generates the list of transaction ids used in the inputs to given unsigned transaction
+// this list is then used to fetch the dependency transactions in order to extract source addresses
+// as this information is not part of the transaction objects on chain.
 func GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 	var txIds []ids.ID
 	switch unsignedTx := tx.(type) {

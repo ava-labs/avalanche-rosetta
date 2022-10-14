@@ -18,9 +18,18 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
+// AccountBackend represents a backend that implements /account family of apis for a subset of requests.
+// Endpoint handlers in this file delegates requests to corresponding backends based on the request.
+// Each backend implements a ShouldHandleRequest method to determine whether that backend should handle the given request.
+//
+// P-chain and C-chain atomic transaction logic are implemented in pchain.Backend and cchainatomictx.Backend respectively.
+// Eventually, the C-chain non-atomic transaction logic implemented in this file should be extracted to its own backend as well.
 type AccountBackend interface {
+	// ShouldHandleRequest returns whether a given request should be handled by this backend
 	ShouldHandleRequest(req interface{}) bool
+	// AccountBalance implements /account/balance endpoint for this backend
 	AccountBalance(ctx context.Context, req *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error)
+	// AccountCoins implements /account/coins endpoint for this backend
 	AccountCoins(ctx context.Context, req *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error)
 }
 

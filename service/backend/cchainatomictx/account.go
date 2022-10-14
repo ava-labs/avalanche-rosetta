@@ -20,6 +20,9 @@ var (
 	errUnableToGetUTXOOutput = errors.New("unable to get UTXO output")
 )
 
+// AccountBalance implements /account/balance endpoint for C-chain atomic transaction balance
+//
+// This endpoint is called if the account is in Bech32 format for a C-chain request
 func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
 	if req.AccountIdentifier == nil {
 		return nil, service.WrapError(service.ErrInvalidInput, "account identifier is not provided")
@@ -54,6 +57,9 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 	}, nil
 }
 
+// AccountCoins implements /account/coins endpoint for C-chain atomic transaction UTXOs
+//
+// This endpoint is called if the account is in Bech32 format for a C-chain request
 func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error) {
 	if req.AccountIdentifier == nil {
 		return nil, service.WrapError(service.ErrInvalidInput, "account identifier is not provided")
