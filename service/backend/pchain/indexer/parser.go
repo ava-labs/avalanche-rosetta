@@ -49,6 +49,8 @@ type parser struct {
 	codec        codec.Manager
 	codecVersion uint16
 
+	// TODO ABENEGIA: I am not really sure what is the purpose of this ctx?
+	// Can't we use the one provided in every method of Parser interface?
 	ctx *snow.Context
 
 	pChainClient client.PChainClient
@@ -71,6 +73,8 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 
 func (p *parser) initCtx(ctx context.Context) error {
 	if p.ctx == nil {
+		// TODO ABENEGIA: Can we call GetNetworkID in the constructor
+		// to avoid calling initCtx all the time?
 		networkID, err := p.pChainClient.GetNetworkID(ctx)
 		if err != nil {
 			return err
@@ -218,8 +222,6 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 
 	switch castBlk := blk.(type) {
 	case *pBlocks.ApricotProposalBlock:
-		errs.Add(p.initializeTx(castBlk.Tx))
-
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Txs()
 
@@ -230,46 +232,44 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 				break
 			}
 		}
-	case *pBlocks.BanffProposalBlock:
-		errs.Add(p.initializeTx(castBlk.Tx))
 
+	case *pBlocks.BanffProposalBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Txs()
 		parsedBlock.Txs = append(parsedBlock.Txs, castBlk.Transactions...)
 		blockTimestamp = castBlk.Timestamp()
-	case *pBlocks.ApricotAtomicBlock:
-		errs.Add(p.initializeTx(castBlk.Tx))
 
+	case *pBlocks.ApricotAtomicBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Txs()
+
 	case *pBlocks.ApricotStandardBlock:
-		for _, tx := range castBlk.Transactions {
-			errs.Add(p.initializeTx(tx))
-		}
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Transactions
 
 	case *pBlocks.BanffStandardBlock:
-		for _, tx := range castBlk.Transactions {
-			errs.Add(p.initializeTx(tx))
-		}
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = castBlk.Transactions
 		blockTimestamp = castBlk.Timestamp()
+
 	case *pBlocks.ApricotAbortBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
+
 	case *pBlocks.BanffAbortBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
 		blockTimestamp = castBlk.Timestamp()
+
 	case *pBlocks.BanffCommitBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
 		blockTimestamp = castBlk.Timestamp()
+
 	case *pBlocks.ApricotCommitBlock:
 		parsedBlock.ParentID = castBlk.PrntID
 		parsedBlock.Txs = []*txs.Tx{}
+
 	default:
 		errs.Add(fmt.Errorf("no handler exists for block type %T", castBlk))
 	}
@@ -312,21 +312,4 @@ func getProposerFromBytes(bytes []byte) (Proposer, []byte, error) {
 	default:
 		return Proposer{}, bytes, fmt.Errorf("no handler exists for proposer block type %T", castBlock)
 	}
-}
-
-// initializes tx to have tx identifier generated
-func (p *parser) initializeTx(tx *txs.Tx) error {
-	unsignedBytes, err := p.codec.Marshal(p.codecVersion, tx.Unsigned)
-	if err != nil {
-		return err
-	}
-
-	signedBytes, err := p.codec.Marshal(p.codecVersion, tx)
-	if err != nil {
-		return err
-	}
-
-	tx.Initialize(unsignedBytes, signedBytes)
-
-	return nil
 }
