@@ -57,7 +57,7 @@ func main() {
 		log.Fatal("config validation error:", err)
 	}
 
-	apiClient, err := client.NewClient(context.Background(), cfg.RPCEndpoint)
+	apiClient, err := client.NewClient(context.Background(), cfg.RPCBaseUrl)
 	if err != nil {
 		log.Fatal("client init error:", err)
 	}
@@ -163,7 +163,7 @@ func main() {
 		log.Fatal("parse asset id failed:", err)
 	}
 
-	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCEndpoint, cfg.IndexerEndpoint)
+	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCBaseUrl, cfg.IndexerBaseUrl)
 	pIndexerParser, err := indexer.NewParser(pChainClient)
 	if err != nil {
 		log.Fatal("unable to initialize p-chain indexer parser:", err)
@@ -185,7 +185,7 @@ func main() {
 		service.BlockchainName,
 		cfg.ChainID,
 		cfg.NetworkName,
-		cfg.RPCEndpoint,
+		cfg.RPCBaseUrl,
 	)
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
