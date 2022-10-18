@@ -22,8 +22,8 @@ var (
 
 type config struct {
 	Mode             string `json:"mode"`
-	RPCBaseUrl       string `json:"rpc_base_url"`
-	IndexerBaseUrl   string `json:"indexer_base_url"`
+	RPCBaseURL       string `json:"rpc_base_url"`
+	IndexerBaseURL   string `json:"indexer_base_url"`
 	ListenAddr       string `json:"listen_addr"`
 	NetworkName      string `json:"network_name"`
 	ChainID          int64  `json:"chain_id"`
@@ -58,12 +58,12 @@ func (c *config) applyDefaults() {
 		c.IngestionMode = service.StandardIngestion
 	}
 
-	if c.RPCBaseUrl == "" {
-		c.RPCBaseUrl = "http://localhost:9650"
+	if c.RPCBaseURL == "" {
+		c.RPCBaseURL = "http://localhost:9650"
 	}
 
-	if c.IndexerBaseUrl == "" {
-		c.IndexerBaseUrl = c.RPCBaseUrl
+	if c.IndexerBaseURL == "" {
+		c.IndexerBaseURL = c.RPCBaseURL
 	}
 
 	if c.ListenAddr == "" {
