@@ -90,7 +90,6 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 }
 
 func (b *Backend) getGenesisBlock(ctx context.Context) (*indexer.ParsedGenesisBlock, error) {
-	// Initializing parser gives parsed genesis block
 	if b.genesisBlock != nil {
 		return b.genesisBlock, nil
 	}
@@ -99,14 +98,9 @@ func (b *Backend) getGenesisBlock(ctx context.Context) (*indexer.ParsedGenesisBl
 		return nil, err
 	}
 	b.genesisBlock = genesisBlock
-	b.genesisBlockIdentifier = b.buildGenesisBlockIdentifier(genesisBlock)
-
-	return genesisBlock, nil
-}
-
-func (b *Backend) buildGenesisBlockIdentifier(genesisBlock *indexer.ParsedGenesisBlock) *types.BlockIdentifier {
-	return &types.BlockIdentifier{
+	b.genesisBlockIdentifier = &types.BlockIdentifier{
 		Index: int64(genesisBlock.Height),
 		Hash:  genesisBlock.BlockID.String(),
 	}
+	return genesisBlock, nil
 }
