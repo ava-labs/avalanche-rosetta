@@ -78,14 +78,14 @@ type pchainClient struct {
 }
 
 // NewPChainClient returns a new client for Avalanche APIs related to P-chain
-func NewPChainClient(ctx context.Context, endpoint, indexerEndpoint string) PChainClient {
-	endpoint = strings.TrimSuffix(endpoint, "/")
+func NewPChainClient(ctx context.Context, rpcBaseURL, indexerBaseURL string) PChainClient {
+	rpcBaseURL = strings.TrimSuffix(rpcBaseURL, "/")
 
 	return pchainClient{
-		platformvmClient: platformvm.NewClient(endpoint),
-		xChainClient:     avm.NewClient(endpoint, "X"),
-		infoClient:       info.NewClient(endpoint),
-		indexerClient:    indexer.NewClient(indexerEndpoint + "/ext/index/P/block"),
+		platformvmClient: platformvm.NewClient(rpcBaseURL),
+		xChainClient:     avm.NewClient(rpcBaseURL, "X"),
+		infoClient:       info.NewClient(rpcBaseURL),
+		indexerClient:    indexer.NewClient(indexerBaseURL + "/ext/index/P/block"),
 	}
 }
 
