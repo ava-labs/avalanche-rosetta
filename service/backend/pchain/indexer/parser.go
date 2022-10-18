@@ -42,9 +42,8 @@ type Parser interface {
 var _ Parser = &parser{}
 
 type parser struct {
-	networkID   uint32
-	avaxAssetID ids.ID
-	aliaser     ids.Aliaser
+	networkID uint32
+	aliaser   ids.Aliaser
 
 	codec        codec.Manager
 	codecVersion uint16
@@ -105,9 +104,8 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 
 	errs := wrappers.Errs{}
 
-	bytes, avaxAssetID, err := genesis.FromConfig(genesis.GetConfig(p.networkID))
+	bytes, _, err := genesis.FromConfig(genesis.GetConfig(p.networkID))
 	errs.Add(err)
-	p.avaxAssetID = avaxAssetID
 
 	genesisState, err := pGenesis.Parse(bytes)
 	errs.Add(err)
