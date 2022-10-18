@@ -53,7 +53,7 @@ func main() {
 	if err != nil {
 		log.Fatal("config read error:", err)
 	}
-	if err := cfg.Validate(); err != nil {
+	if err := cfg.validate(); err != nil {
 		log.Fatal("config validation error:", err)
 	}
 
@@ -68,7 +68,7 @@ func main() {
 	//
 	// TODO: Only perform this check after the underlying node is bootstrapped
 	if cfg.Mode == service.ModeOnline && cfg.ValidateERC20Whitelist {
-		if err := cfg.ValidateWhitelistOnlyValidErc20s(apiClient); err != nil {
+		if err := cfg.validateWhitelistOnlyValidErc20s(apiClient); err != nil {
 			log.Fatal("token whitelist validation error:", err)
 		}
 	}

@@ -12,7 +12,6 @@ import (
 )
 
 var (
-	errMissingRPC              = errors.New("avalanche rpc endpoint is not provided")
 	errInvalidMode             = errors.New("invalid rosetta mode")
 	errGenesisBlockRequired    = errors.New("genesis block hash is not provided")
 	errInvalidTokenAddress     = errors.New("invalid token address provided")
@@ -50,7 +49,7 @@ func readConfig(path string) (*config, error) {
 	return cfg, err
 }
 
-func (c *config) ApplyDefaults() {
+func (c *config) applyDefaults() {
 	if c.Mode == "" {
 		c.Mode = service.ModeOnline
 	}
@@ -72,12 +71,8 @@ func (c *config) ApplyDefaults() {
 	}
 }
 
-func (c *config) Validate() error {
-	c.ApplyDefaults()
-
-	if c.RPCEndpoint == "" {
-		return errMissingRPC
-	}
+func (c *config) validate() error {
+	c.applyDefaults()
 
 	if !(c.Mode == service.ModeOffline || c.Mode == service.ModeOnline) {
 		return errInvalidMode
@@ -105,7 +100,7 @@ func (c *config) Validate() error {
 	return nil
 }
 
-func (c *config) ValidateWhitelistOnlyValidErc20s(cli client.Client) error {
+func (c *config) validateWhitelistOnlyValidErc20s(cli client.Client) error {
 	for _, token := range c.TokenWhiteList {
 		ethAddress := ethcommon.HexToAddress(token)
 		symbol, decimals, err := cli.GetContractInfo(ethAddress, true)

@@ -45,6 +45,7 @@ Start the server by running the following command:
 ```bash
 ./rosetta-server -config=./config.json
 ```
+
 ## Configuration
 
 Full configuration example:
@@ -154,7 +155,7 @@ Run the construction check for ERC-20s:
 make check-testnet-construction-erc20
 ```
 
-## Rebuild the ContractInfoToken.go autogen file.
+## Rebuild the ContractInfoToken.go autogen file
 
 ```bash
 abigen --abi contractInfo.abi --pkg main --type ContractInfoToken --out client/contractInfoToken.go
