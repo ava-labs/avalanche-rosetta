@@ -52,8 +52,6 @@ type parser struct {
 	ctx *snow.Context
 
 	pChainClient client.PChainClient
-
-	genesisTimestamp time.Time
 }
 
 // NewParser creates a new P-chain indexer parser
@@ -64,11 +62,10 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 	errs.Add(aliaser.Alias(constants.PlatformChainID, mapper.PChainNetworkIdentifier))
 
 	return &parser{
-		codec:            pBlocks.Codec,
-		codecVersion:     pBlocks.Version,
-		pChainClient:     pChainClient,
-		aliaser:          aliaser,
-		genesisTimestamp: time.Unix(genesisTimestamp, 0),
+		codec:        pBlocks.Codec,
+		codecVersion: pBlocks.Version,
+		pChainClient: pChainClient,
+		aliaser:      aliaser,
 	}, errs.Err
 }
 
@@ -111,7 +108,7 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 	genesisState, err := pGenesis.Parse(bytes)
 	errs.Add(err)
 
-	p.genesisTimestamp = time.Unix(int64(genesisState.Timestamp), 0)
+	genesisTimestamp := time.Unix(int64(genesisState.Timestamp), 0)
 
 	var genesisTxs []*txs.Tx
 	genesisTxs = append(genesisTxs, genesisState.Validators...)
@@ -138,7 +135,7 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 			Height:    0,
 			BlockID:   genesisBlockID,
 			BlockType: "GenesisBlock",
-			Timestamp: p.genesisTimestamp.UnixMilli(),
+			Timestamp: genesisTimestamp.UnixMilli(),
 			Txs:       genesisTxs,
 			Proposer:  Proposer{},
 		},
