@@ -2,7 +2,6 @@ package indexer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -23,11 +22,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
-var (
-	errParserUninitialized = errors.New("uninitialized parser")
-
-	genesisTimestamp = time.Date(2020, time.September, 10, 0, 0, 0, 0, time.UTC).Unix()
-)
+var genesisTimestamp = time.Date(2020, time.September, 10, 0, 0, 0, 0, time.UTC).Unix()
 
 // Parser defines the interface for a P-chain indexer parser
 type Parser interface {
@@ -95,8 +90,7 @@ func (p *parser) initCtx(ctx context.Context) error {
 }
 
 func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
-	err := p.initCtx(ctx)
-	if err != nil {
+	if err := p.initCtx(ctx); err != nil {
 		return 0, err
 	}
 
@@ -104,8 +98,7 @@ func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 }
 
 func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error) {
-	err := p.initCtx(ctx)
-	if err != nil {
+	if err := p.initCtx(ctx); err != nil {
 		return nil, err
 	}
 
@@ -158,8 +151,7 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 }
 
 func (p *parser) ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error) {
-	err := p.initCtx(ctx)
-	if err != nil {
+	if err := p.initCtx(ctx); err != nil {
 		return nil, err
 	}
 
@@ -172,8 +164,7 @@ func (p *parser) ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error) {
 }
 
 func (p *parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBlock, error) {
-	err := p.initCtx(ctx)
-	if err != nil {
+	if err := p.initCtx(ctx); err != nil {
 		return nil, err
 	}
 
@@ -189,8 +180,7 @@ func (p *parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBl
 }
 
 func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
-	err := p.initCtx(ctx)
-	if err != nil {
+	if err := p.initCtx(ctx); err != nil {
 		return nil, err
 	}
 
@@ -213,10 +203,6 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 	proposer, bytes, err := getProposerFromBytes(proposerBytes)
 	if err != nil {
 		return nil, fmt.Errorf("fetching proposer from block bytes errored with %w", err)
-	}
-
-	if p.genesisTimestamp.IsZero() {
-		return nil, errParserUninitialized
 	}
 
 	blk, err := pBlocks.Parse(p.codec, bytes)

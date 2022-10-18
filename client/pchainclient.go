@@ -27,7 +27,6 @@ type PChainClient interface {
 	GetLastAccepted(context.Context, ...rpc.Option) (indexer.Container, error)
 
 	// platformvm.Client methods
-
 	GetUTXOs(
 		ctx context.Context,
 		addrs []ids.ShortID,
@@ -54,7 +53,6 @@ type PChainClient interface {
 	GetStake(ctx context.Context, addrs []ids.ShortID, options ...rpc.Option) (map[ids.ID]uint64, [][]byte, error)
 
 	// avm.Client methods
-
 	GetAssetDescription(ctx context.Context, assetID string, options ...rpc.Option) (*avm.GetAssetDescriptionReply, error)
 
 	// info.Client methods
