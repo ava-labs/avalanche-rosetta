@@ -200,13 +200,17 @@ func (p *parser) parseContainer(container indexer.Container) (*ParsedBlock, erro
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
 	}
 
+	txes := blk.Txs()
+	if txes == nil {
+		txes = []*txs.Tx{}
+	}
 	return &ParsedBlock{
 		BlockID:   blk.ID(),
 		BlockType: fmt.Sprintf("%T", blk),
 		ParentID:  blk.Parent(),
 		Timestamp: container.Timestamp,
 		Height:    blk.Height(),
-		Txs:       blk.Txs(),
+		Txs:       txes,
 		Proposer:  proBlkData,
 	}, nil
 }
