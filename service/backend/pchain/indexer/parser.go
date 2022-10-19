@@ -48,8 +48,6 @@ type parser struct {
 	codec        codec.Manager
 	codecVersion uint16
 
-	// TODO ABENEGIA: I am not really sure what is the purpose of this ctx?
-	// Can't we use the one provided in every method of Parser interface?
 	ctx *snow.Context
 
 	pChainClient client.PChainClient
@@ -57,51 +55,35 @@ type parser struct {
 
 // NewParser creates a new P-chain indexer parser
 func NewParser(pChainClient client.PChainClient) (Parser, error) {
-	errs := wrappers.Errs{}
-
 	aliaser := ids.NewAliaser()
-	errs.Add(aliaser.Alias(constants.PlatformChainID, mapper.PChainNetworkIdentifier))
+	err := aliaser.Alias(constants.PlatformChainID, mapper.PChainNetworkIdentifier)
+	if err != nil {
+		return nil, err
+	}
+
+	networkID, err := pChainClient.GetNetworkID(context.Background())
+	if err != nil {
+		return nil, err
+	}
 
 	return &parser{
 		codec:        pBlocks.Codec,
 		codecVersion: pBlocks.Version,
 		pChainClient: pChainClient,
 		aliaser:      aliaser,
-	}, errs.Err
-}
-
-func (p *parser) initCtx(ctx context.Context) error {
-	if p.ctx == nil {
-		// TODO ABENEGIA: Can we call GetNetworkID in the constructor
-		// to avoid calling initCtx all the time?
-		networkID, err := p.pChainClient.GetNetworkID(ctx)
-		if err != nil {
-			return err
-		}
-
-		p.networkID = networkID
-		p.ctx = &snow.Context{
-			BCLookup:  p.aliaser,
+		networkID:    networkID,
+		ctx: &snow.Context{
+			BCLookup:  aliaser,
 			NetworkID: networkID,
-		}
-	}
-
-	return nil
+		},
+	}, nil
 }
 
 func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
-	if err := p.initCtx(ctx); err != nil {
-		return 0, err
-	}
-
 	return p.pChainClient.GetHeight(ctx)
 }
 
 func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error) {
-	if err := p.initCtx(ctx); err != nil {
-		return nil, err
-	}
-
 	errs := wrappers.Errs{}
 
 	bytes, _, err := genesis.FromConfig(genesis.GetConfig(p.networkID))
@@ -150,10 +132,6 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 }
 
 func (p *parser) ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error) {
-	if err := p.initCtx(ctx); err != nil {
-		return nil, err
-	}
-
 	height, err := p.GetPlatformHeight(ctx)
 	if err != nil {
 		return nil, err
@@ -163,10 +141,6 @@ func (p *parser) ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error) {
 }
 
 func (p *parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBlock, error) {
-	if err := p.initCtx(ctx); err != nil {
-		return nil, err
-	}
-
 	// P-chain indexer container indices start from 0 while corresponding block indices start from 1
 	// therefore containers are looked up with index - 1
 	// genesis does not cause a problem here as it is handled in a separate code path
@@ -179,10 +153,6 @@ func (p *parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBl
 }
 
 func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
-	if err := p.initCtx(ctx); err != nil {
-		return nil, err
-	}
-
 	hashID, err := ids.FromString(hash)
 	if err != nil {
 		return nil, err
