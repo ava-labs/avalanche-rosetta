@@ -72,7 +72,15 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 }
 
 func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
-	return p.pChainClient.GetHeight(ctx)
+	container, err := p.pChainClient.GetLastAccepted(ctx)
+	if err != nil {
+		return 0, err
+	}
+	blk, err := p.parseContainer(container)
+	if err != nil {
+		return 0, err
+	}
+	return blk.Height, nil
 }
 
 func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error) {
