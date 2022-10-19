@@ -40,6 +40,11 @@ type Parser interface {
 var _ Parser = &parser{}
 
 type parser struct {
+	// ideally parser should rely only on pchain indexer apis.
+	// The full PChainClient is currently needed just to retrieve
+	// NetworkID.
+	// TODO: reduce pChainClient to indexer methods only
+	// TODO: consider introducing a cache for parsed blocks
 	pChainClient client.PChainClient
 
 	codec        codec.Manager
