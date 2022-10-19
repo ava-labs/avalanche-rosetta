@@ -11,7 +11,6 @@ import (
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
 
 	pBlocks "github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
@@ -48,8 +47,6 @@ type parser struct {
 	codec        codec.Manager
 	codecVersion uint16
 
-	ctx *snow.Context
-
 	pChainClient client.PChainClient
 }
 
@@ -72,10 +69,6 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 		pChainClient: pChainClient,
 		aliaser:      aliaser,
 		networkID:    networkID,
-		ctx: &snow.Context{
-			BCLookup:  aliaser,
-			NetworkID: networkID,
-		},
 	}, nil
 }
 
@@ -84,13 +77,15 @@ func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 }
 
 func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error) {
-	errs := wrappers.Errs{}
-
 	bytes, _, err := genesis.FromConfig(genesis.GetConfig(p.networkID))
-	errs.Add(err)
+	if err != nil {
+		return nil, err
+	}
 
 	genesisState, err := pGenesis.Parse(bytes)
-	errs.Add(err)
+	if err != nil {
+		return nil, err
+	}
 
 	genesisTimestamp := time.Unix(int64(genesisState.Timestamp), 0)
 
@@ -107,8 +102,12 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 		return nil, err
 	}
 
+	genesisCtx := &snow.Context{
+		BCLookup:  p.aliaser,
+		NetworkID: p.networkID,
+	}
 	for _, utxo := range genesisState.UTXOs {
-		utxo.UTXO.Out.InitCtx(p.ctx)
+		utxo.UTXO.Out.InitCtx(genesisCtx)
 	}
 
 	genesisBlockID := genesisChildBlock.ParentID
@@ -128,7 +127,7 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 			InitialSupply: genesisState.InitialSupply,
 			UTXOs:         genesisState.UTXOs,
 		},
-	}, errs.Err
+	}, nil
 }
 
 func (p *parser) ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error) {
@@ -167,8 +166,6 @@ func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 }
 
 func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
-	errs := wrappers.Errs{}
-
 	proposer, bytes, err := getProposerFromBytes(proposerBytes)
 	if err != nil {
 		return nil, fmt.Errorf("fetching proposer from block bytes errored with %w", err)
@@ -179,7 +176,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
 	}
 
-	parsedBlock := ParsedBlock{
+	parsedBlock := &ParsedBlock{
 		Height:    blk.Height(),
 		BlockID:   blk.ID(),
 		BlockType: fmt.Sprintf("%T", blk),
@@ -239,7 +236,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 		parsedBlock.Txs = []*txs.Tx{}
 
 	default:
-		errs.Add(fmt.Errorf("no handler exists for block type %T", castBlk))
+		return nil, fmt.Errorf("no handler exists for block type %T", castBlk)
 	}
 
 	// If no timestamp was found in a given block (pre-Banff) we fallback to proposer timestamp as used by Snowman++
@@ -257,7 +254,7 @@ func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
 	}
 	parsedBlock.Timestamp = blockTimestamp.UnixMilli()
 
-	return &parsedBlock, errs.Err
+	return parsedBlock, nil
 }
 
 func getProposerFromBytes(bytes []byte) (Proposer, []byte, error) {
