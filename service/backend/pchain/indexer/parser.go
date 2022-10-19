@@ -8,6 +8,7 @@ import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/indexer"
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
@@ -20,8 +21,6 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
-
-var genesisTimestamp = time.Date(2020, time.September, 10, 0, 0, 0, 0, time.UTC).Unix()
 
 // Parser defines the interface for a P-chain indexer parser
 type Parser interface {
@@ -41,13 +40,13 @@ type Parser interface {
 var _ Parser = &parser{}
 
 type parser struct {
-	networkID uint32
-	aliaser   ids.Aliaser
+	pChainClient client.PChainClient
 
 	codec        codec.Manager
 	codecVersion uint16
 
-	pChainClient client.PChainClient
+	networkID uint32
+	aliaser   ids.Aliaser
 }
 
 // NewParser creates a new P-chain indexer parser
@@ -64,11 +63,11 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 	}
 
 	return &parser{
+		pChainClient: pChainClient,
 		codec:        pBlocks.Codec,
 		codecVersion: pBlocks.Version,
-		pChainClient: pChainClient,
-		aliaser:      aliaser,
 		networkID:    networkID,
+		aliaser:      aliaser,
 	}, nil
 }
 
@@ -102,6 +101,7 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 		return nil, err
 	}
 
+	// genesis gets its own context to unlock caching
 	genesisCtx := &snow.Context{
 		BCLookup:  p.aliaser,
 		NetworkID: p.networkID,
@@ -148,7 +148,7 @@ func (p *parser) ParseBlockAtHeight(ctx context.Context, height uint64) (*Parsed
 		return nil, err
 	}
 
-	return p.parseBlockBytes(container.Bytes)
+	return p.parseContainer(container)
 }
 
 func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
@@ -162,119 +162,51 @@ func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 		return nil, err
 	}
 
-	return p.parseBlockBytes(container.Bytes)
+	return p.parseContainer(container)
 }
 
-func (p *parser) parseBlockBytes(proposerBytes []byte) (*ParsedBlock, error) {
-	proposer, bytes, err := getProposerFromBytes(proposerBytes)
-	if err != nil {
-		return nil, fmt.Errorf("fetching proposer from block bytes errored with %w", err)
+// [parseContainer] parses blocks are retrieved from index api.
+// [parseContainer] tries to parse container asProposerVM block first.
+// In case of failure, it tries to parsing it as a pre-proposerVM block.
+func (p *parser) parseContainer(container indexer.Container) (*ParsedBlock, error) {
+	blkBytes := container.Bytes
+	pChainBlkBytes := blkBytes
+	proBlkData := Proposer{}
+
+	proBlk, _, err := proposerBlk.Parse(blkBytes)
+	if err == nil {
+		// inner proposerVM bytes, to be parsed as P-chain block
+		pChainBlkBytes = proBlk.Block()
+
+		// retrieve relevant proposer data
+		if b, ok := proBlk.(proposerBlk.SignedBlock); ok {
+			proBlkData = Proposer{
+				ID:           b.ID(),
+				ParentID:     b.ParentID(),
+				NodeID:       b.Proposer(),
+				PChainHeight: b.PChainHeight(),
+				Timestamp:    b.Timestamp().Unix(),
+			}
+		} else {
+			proBlkData = Proposer{
+				ID:       proBlk.ID(),
+				ParentID: proBlk.ParentID(),
+			}
+		}
 	}
 
-	blk, err := pBlocks.Parse(p.codec, bytes)
+	blk, err := pBlocks.Parse(p.codec, pChainBlkBytes)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
 	}
 
-	parsedBlock := &ParsedBlock{
-		Height:    blk.Height(),
+	return &ParsedBlock{
 		BlockID:   blk.ID(),
 		BlockType: fmt.Sprintf("%T", blk),
-		Proposer:  proposer,
-	}
-
-	blockTimestamp := time.Time{}
-
-	switch castBlk := blk.(type) {
-	case *pBlocks.ApricotProposalBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = castBlk.Txs()
-
-		// If the block has an advance time tx, use its timestamp as the block timestamp
-		for _, tx := range parsedBlock.Txs {
-			if att, ok := tx.Unsigned.(*txs.AdvanceTimeTx); ok {
-				blockTimestamp = att.Timestamp()
-				break
-			}
-		}
-
-	case *pBlocks.BanffProposalBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = castBlk.Txs()
-		parsedBlock.Txs = append(parsedBlock.Txs, castBlk.Transactions...)
-		blockTimestamp = castBlk.Timestamp()
-
-	case *pBlocks.ApricotAtomicBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = castBlk.Txs()
-
-	case *pBlocks.ApricotStandardBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = castBlk.Transactions
-
-	case *pBlocks.BanffStandardBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = castBlk.Transactions
-		blockTimestamp = castBlk.Timestamp()
-
-	case *pBlocks.ApricotAbortBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{}
-
-	case *pBlocks.BanffAbortBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{}
-		blockTimestamp = castBlk.Timestamp()
-
-	case *pBlocks.BanffCommitBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{}
-		blockTimestamp = castBlk.Timestamp()
-
-	case *pBlocks.ApricotCommitBlock:
-		parsedBlock.ParentID = castBlk.PrntID
-		parsedBlock.Txs = []*txs.Tx{}
-
-	default:
-		return nil, fmt.Errorf("no handler exists for block type %T", castBlk)
-	}
-
-	// If no timestamp was found in a given block (pre-Banff) we fallback to proposer timestamp as used by Snowman++
-	// if available.
-	//
-	// For pre-Snowman++, proposer timestamp does not exist either. In that case, fallback to the genesis timestamp.
-	// This is needed as opposed to simply return 0 timestamp as Rosetta validation expects timestamps to be available
-	// after 1/1/2000.
-	if blockTimestamp.IsZero() {
-		if proposer.Timestamp > genesisTimestamp {
-			blockTimestamp = time.Unix(proposer.Timestamp, 0)
-		} else {
-			blockTimestamp = time.Unix(genesisTimestamp, 0)
-		}
-	}
-	parsedBlock.Timestamp = blockTimestamp.UnixMilli()
-
-	return parsedBlock, nil
-}
-
-func getProposerFromBytes(bytes []byte) (Proposer, []byte, error) {
-	proposer, _, err := proposerBlk.Parse(bytes)
-	if err != nil || proposer == nil {
-		return Proposer{}, bytes, nil
-	}
-
-	switch castBlock := proposer.(type) {
-	case proposerBlk.SignedBlock:
-		return Proposer{
-			ID:           castBlock.ID(),
-			NodeID:       castBlock.Proposer(),
-			PChainHeight: castBlock.PChainHeight(),
-			Timestamp:    castBlock.Timestamp().Unix(),
-			ParentID:     castBlock.ParentID(),
-		}, castBlock.Block(), nil
-	case proposerBlk.Block:
-		return Proposer{}, castBlock.Block(), nil
-	default:
-		return Proposer{}, bytes, fmt.Errorf("no handler exists for proposer block type %T", castBlock)
-	}
+		ParentID:  blk.Parent(),
+		Timestamp: container.Timestamp,
+		Height:    blk.Height(),
+		Txs:       blk.Txs(),
+		Proposer:  proBlkData,
+	}, nil
 }
