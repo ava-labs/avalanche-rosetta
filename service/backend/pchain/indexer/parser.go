@@ -32,9 +32,9 @@ type Parser interface {
 	GetPlatformHeight(ctx context.Context) (uint64, error)
 	// ParseCurrentBlock parses and returns the current tip of P-chain
 	ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error)
-	// ParseBlockAtIndex parses and returns the block at the specified index
-	ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBlock, error)
-	// ParseBlockAtIndex parses and returns the block with the specified hash
+	// ParseBlockAtHeight parses and returns the block at the specified index
+	ParseBlockAtHeight(ctx context.Context, height uint64) (*ParsedBlock, error)
+	// ParseBlockWithHash parses and returns the block with the specified hash
 	ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error)
 }
 
@@ -102,7 +102,7 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 	var genesisParentID ids.ID = hashing.ComputeHash256Array(bytes)
 
 	// Genesis Block is not indexed by the indexer, but its block ID can be accessed from block 0's parent id
-	genesisChildBlock, err := p.ParseBlockAtIndex(ctx, 1)
+	genesisChildBlock, err := p.ParseBlockAtHeight(ctx, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -137,14 +137,14 @@ func (p *parser) ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error) {
 		return nil, err
 	}
 
-	return p.ParseBlockAtIndex(ctx, height)
+	return p.ParseBlockAtHeight(ctx, height)
 }
 
-func (p *parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*ParsedBlock, error) {
-	// P-chain indexer container indices start from 0 while corresponding block indices start from 1
-	// therefore containers are looked up with index - 1
-	// genesis does not cause a problem here as it is handled in a separate code path
-	container, err := p.pChainClient.GetContainerByIndex(ctx, index-1)
+func (p *parser) ParseBlockAtHeight(ctx context.Context, height uint64) (*ParsedBlock, error) {
+	// P-chain indexer does not include genesis and store block at height 1 with index 0.
+	// Therefore containers are looked up with index = height - 1.
+	// Note that genesis does not cause a problem here as it is handled in a separate code path
+	container, err := p.pChainClient.GetContainerByIndex(ctx, height-1)
 	if err != nil {
 		return nil, err
 	}

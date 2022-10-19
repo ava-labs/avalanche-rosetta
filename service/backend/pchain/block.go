@@ -319,7 +319,7 @@ func (b *Backend) getBlockDetails(ctx context.Context, index int64, hash string)
 		blockHeight = height
 	}
 
-	return b.indexerParser.ParseBlockAtIndex(ctx, blockHeight)
+	return b.indexerParser.ParseBlockAtHeight(ctx, blockHeight)
 }
 
 func (b *Backend) getBlockHeight(ctx context.Context, hash string) (uint64, error) {

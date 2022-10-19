@@ -40,7 +40,7 @@ func TestAccountBalance(t *testing.T) {
 	ctx := context.Background()
 	pChainMock := &mocks.PChainClient{}
 	parserMock := &idxmocks.Parser{}
-	parserMock.Mock.On("ParseBlockAtIndex", ctx, blockHeight).Return(parsedBlock, nil)
+	parserMock.Mock.On("ParseBlockAtHeight", ctx, blockHeight).Return(parsedBlock, nil)
 	backend := NewBackend(pChainMock, parserMock, avaxAssetID, nil)
 	backend.getUTXOsPageSize = 2
 
@@ -197,7 +197,7 @@ func TestAccountCoins(t *testing.T) {
 	ctx := context.Background()
 	pChainMock := &mocks.PChainClient{}
 	parserMock := &idxmocks.Parser{}
-	parserMock.Mock.On("ParseBlockAtIndex", ctx, blockHeight).Return(parsedBlock, nil)
+	parserMock.Mock.On("ParseBlockAtHeight", ctx, blockHeight).Return(parsedBlock, nil)
 	backend := NewBackend(pChainMock, parserMock, avaxAssetID, nil)
 
 	t.Run("Account Coins Test regular coins", func(t *testing.T) {

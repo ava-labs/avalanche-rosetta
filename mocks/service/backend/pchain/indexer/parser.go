@@ -58,13 +58,13 @@ func (_m *Parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 	return r0, r1
 }
 
-// ParseBlockAtIndex provides a mock function with given fields: ctx, index
-func (_m *Parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*indexer.ParsedBlock, error) {
-	ret := _m.Called(ctx, index)
+// ParseBlockAtHeight provides a mock function with given fields: ctx, height
+func (_m *Parser) ParseBlockAtHeight(ctx context.Context, height uint64) (*indexer.ParsedBlock, error) {
+	ret := _m.Called(ctx, height)
 
 	var r0 *indexer.ParsedBlock
 	if rf, ok := ret.Get(0).(func(context.Context, uint64) *indexer.ParsedBlock); ok {
-		r0 = rf(ctx, index)
+		r0 = rf(ctx, height)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*indexer.ParsedBlock)
@@ -73,7 +73,7 @@ func (_m *Parser) ParseBlockAtIndex(ctx context.Context, index uint64) (*indexer
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
-		r1 = rf(ctx, index)
+		r1 = rf(ctx, height)
 	} else {
 		r1 = ret.Error(1)
 	}

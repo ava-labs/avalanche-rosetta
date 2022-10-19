@@ -156,7 +156,7 @@ func TestFixtures(t *testing.T) {
 		// +1 because we do -1 inside parseBlockAtIndex
 		// and ins/outs are based on container ids
 		// instead of block ids
-		block, err := p.ParseBlockAtIndex(ctx, idx+1)
+		block, err := p.ParseBlockAtHeight(ctx, idx+1)
 		if err != nil {
 			panic(err)
 		}
