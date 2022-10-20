@@ -8,7 +8,6 @@ import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/indexer"
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
@@ -81,7 +80,7 @@ func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	blk, err := p.parseContainer(container)
+	blk, err := p.parseContainer(container.Bytes, container.Timestamp)
 	if err != nil {
 		return 0, err
 	}
@@ -161,7 +160,7 @@ func (p *parser) ParseBlockAtHeight(ctx context.Context, height uint64) (*Parsed
 		return nil, err
 	}
 
-	return p.parseContainer(container)
+	return p.parseContainer(container.Bytes, container.Timestamp)
 }
 
 func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
@@ -175,14 +174,13 @@ func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 		return nil, err
 	}
 
-	return p.parseContainer(container)
+	return p.parseContainer(container.Bytes, container.Timestamp)
 }
 
 // [parseContainer] parses blocks are retrieved from index api.
 // [parseContainer] tries to parse container asProposerVM block first.
 // In case of failure, it tries to parsing it as a pre-proposerVM block.
-func (p *parser) parseContainer(container indexer.Container) (*ParsedBlock, error) {
-	blkBytes := container.Bytes
+func (p *parser) parseContainer(blkBytes []byte, blkTime int64) (*ParsedBlock, error) {
 	pChainBlkBytes := blkBytes
 	proBlkData := Proposer{}
 
@@ -221,7 +219,7 @@ func (p *parser) parseContainer(container indexer.Container) (*ParsedBlock, erro
 		BlockID:   blk.ID(),
 		BlockType: fmt.Sprintf("%T", blk),
 		ParentID:  blk.Parent(),
-		Timestamp: container.Timestamp,
+		Timestamp: blkTime,
 		Height:    blk.Height(),
 		Txs:       txes,
 		Proposer:  proBlkData,
