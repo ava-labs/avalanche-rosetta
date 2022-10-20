@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -21,18 +22,18 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
+var errMissingBlockIndexHash = errors.New("a positive block index, a block hash or both must be specified")
+
 // Parser defines the interface for a P-chain indexer parser
 type Parser interface {
 	// GetGenesisBlock parses and returns the Genesis block
 	GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error)
+	// ParseNonGenesisBlock returns the block with provided hash or height
+	ParseNonGenesisBlock(ctx context.Context, hash string, height uint64) (*ParsedBlock, error)
 	// GetPlatformHeight returns the current block height of P-chain
 	GetPlatformHeight(ctx context.Context) (uint64, error)
 	// ParseCurrentBlock parses and returns the current tip of P-chain
 	ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error)
-	// ParseBlockAtHeight parses and returns the block at the specified index
-	ParseBlockAtHeight(ctx context.Context, height uint64) (*ParsedBlock, error)
-	// ParseBlockWithHash parses and returns the block with the specified hash
-	ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error)
 }
 
 // Interface compliance
@@ -108,7 +109,7 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 	var genesisParentID ids.ID = hashing.ComputeHash256Array(bytes)
 
 	// Genesis Block is not indexed by the indexer, but its block ID can be accessed from block 0's parent id
-	genesisChildBlock, err := p.ParseBlockAtHeight(ctx, 1)
+	genesisChildBlock, err := p.parseBlockAtHeight(ctx, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -148,10 +149,22 @@ func (p *parser) ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error) {
 		return nil, err
 	}
 
-	return p.ParseBlockAtHeight(ctx, height)
+	return p.parseBlockAtHeight(ctx, height)
 }
 
-func (p *parser) ParseBlockAtHeight(ctx context.Context, height uint64) (*ParsedBlock, error) {
+func (p *parser) ParseNonGenesisBlock(ctx context.Context, hash string, height uint64) (*ParsedBlock, error) {
+	if height <= 0 && hash == "" {
+		return nil, errMissingBlockIndexHash
+	}
+
+	if hash != "" {
+		return p.parseBlockWithHash(ctx, hash)
+	}
+
+	return p.parseBlockAtHeight(ctx, uint64(height))
+}
+
+func (p *parser) parseBlockAtHeight(ctx context.Context, height uint64) (*ParsedBlock, error) {
 	// P-chain indexer does not include genesis and store block at height 1 with index 0.
 	// Therefore containers are looked up with index = height - 1.
 	// Note that genesis does not cause a problem here as it is handled in a separate code path
@@ -163,7 +176,7 @@ func (p *parser) ParseBlockAtHeight(ctx context.Context, height uint64) (*Parsed
 	return p.parseContainer(container.Bytes, container.Timestamp)
 }
 
-func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
+func (p *parser) parseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
 	hashID, err := ids.FromString(hash)
 	if err != nil {
 		return nil, err

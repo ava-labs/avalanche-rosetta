@@ -2,7 +2,6 @@ package pchain
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -23,8 +22,6 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
-
-var errMissingBlockIndexHash = errors.New("a positive block index, a block hash or both must be specified")
 
 // Block implements the /block endpoint
 func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*types.BlockResponse, *types.Error) {
@@ -65,7 +62,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 		}, nil
 	}
 
-	block, err := b.getBlock(ctx, blockIndex, hash)
+	block, err := b.indexerParser.ParseNonGenesisBlock(ctx, hash, uint64(blockIndex))
 	if err != nil {
 		return nil, service.WrapError(service.ErrClientError, err)
 	}
@@ -109,7 +106,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
 	} else {
-		block, err := b.getBlock(ctx, request.BlockIdentifier.Index, request.BlockIdentifier.Hash)
+		block, err := b.indexerParser.ParseNonGenesisBlock(ctx, request.BlockIdentifier.Hash, uint64(request.BlockIdentifier.Index))
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
@@ -286,18 +283,6 @@ func (b *Backend) getChainIDs(ctx context.Context) (map[string]string, error) {
 	}
 
 	return b.chainIDs, nil
-}
-
-func (b *Backend) getBlock(ctx context.Context, index int64, hash string) (*indexer.ParsedBlock, error) {
-	if index <= 0 && hash == "" {
-		return nil, errMissingBlockIndexHash
-	}
-
-	if hash != "" {
-		return b.indexerParser.ParseBlockWithHash(ctx, hash)
-	}
-
-	return b.indexerParser.ParseBlockAtHeight(ctx, uint64(index))
 }
 
 func (b *Backend) isGenesisBlockRequest(ctx context.Context, index int64, hash string) (bool, error) {
