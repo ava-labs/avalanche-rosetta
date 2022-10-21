@@ -23,18 +23,17 @@ var (
 )
 
 type Backend struct {
-	fac                    *crypto.FactorySECP256K1R
-	networkID              *types.NetworkIdentifier
-	networkHRP             string
-	pClient                client.PChainClient
-	indexerParser          indexer.Parser
-	getUTXOsPageSize       uint32
-	codec                  codec.Manager
-	codecVersion           uint16
-	genesisBlock           *indexer.ParsedGenesisBlock
-	genesisBlockIdentifier *types.BlockIdentifier
-	chainIDs               map[string]string
-	avaxAssetID            ids.ID
+	genesisHandler
+	fac              *crypto.FactorySECP256K1R
+	networkID        *types.NetworkIdentifier
+	networkHRP       string
+	pClient          client.PChainClient
+	indexerParser    indexer.Parser
+	getUTXOsPageSize uint32
+	codec            codec.Manager
+	codecVersion     uint16
+	chainIDs         map[string]string
+	avaxAssetID      ids.ID
 }
 
 // NewBackend creates a P-chain service backend
@@ -44,7 +43,13 @@ func NewBackend(
 	assetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
 ) (*Backend, error) {
+	genHandler, err := newGenesisHandler(indexerParser)
+	if err != nil {
+		return nil, err
+	}
+
 	backEnd := &Backend{
+		genesisHandler:   genHandler,
 		fac:              &crypto.FactorySECP256K1R{},
 		networkID:        networkIdentifier,
 		pClient:          pClient,
@@ -55,16 +60,14 @@ func NewBackend(
 		avaxAssetID:      assetID,
 	}
 
-	err := backEnd.initChainIDs()
-	if err != nil {
+	if err = backEnd.initChainIDs(); err != nil {
+		return nil, err
+	}
+	if backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier); err != nil {
 		return nil, err
 	}
 
-	backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier)
-	if err != nil {
-		return nil, err
-	}
-	return backEnd, err
+	return backEnd, nil
 }
 
 // ShouldHandleRequest returns whether a given request should be handled by this backend
@@ -99,22 +102,6 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	}
 
 	return false
-}
-
-func (b *Backend) getGenesisBlock(ctx context.Context) (*indexer.ParsedGenesisBlock, error) {
-	if b.genesisBlock != nil {
-		return b.genesisBlock, nil
-	}
-	genesisBlock, err := b.indexerParser.GetGenesisBlock(ctx)
-	if err != nil {
-		return nil, err
-	}
-	b.genesisBlock = genesisBlock
-	b.genesisBlockIdentifier = &types.BlockIdentifier{
-		Index: int64(genesisBlock.Height),
-		Hash:  genesisBlock.BlockID.String(),
-	}
-	return genesisBlock, nil
 }
 
 func (b *Backend) initChainIDs() error {
