@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -103,18 +104,8 @@ func main() {
 		log.Fatal("invalid ChainID:", cfg.ChainID)
 	}
 
-	if cfg.NetworkName == "" {
-		log.Println("network name is not provided, fetching from rpc...")
-
-		if cfg.Mode == service.ModeOffline {
-			log.Fatal("cant fetch network name in offline mode")
-		}
-
-		networkName, err := cChainClient.GetNetworkName(context.Background())
-		if err != nil {
-			log.Fatal("cant fetch network name:", err)
-		}
-		cfg.NetworkName = networkName
+	if err := validateNetworkName(cfg, cChainClient); err != nil {
+		log.Fatal("invalid network name:", err)
 	}
 
 	networkP := &types.NetworkIdentifier{
@@ -194,6 +185,32 @@ func main() {
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
 	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))
+}
+
+func validateNetworkName(cfg *config, cChainClient client.Client) error {
+	if cfg.Mode == service.ModeOffline && cfg.NetworkName == "" {
+		return fmt.Errorf("network name is not provided, can't fetch network name in offline mode")
+	}
+
+	log.Println("fetching network name from rpc...")
+	networkName, err := cChainClient.GetNetworkName(context.Background())
+	if err != nil {
+		return fmt.Errorf("cant fetch network name: %w", err)
+	}
+
+	if cfg.NetworkName == "" {
+		log.Printf("network name is not provided, set to %s", networkName)
+		cfg.NetworkName = networkName
+		return nil
+	}
+
+	if cfg.NetworkName != networkName {
+		return fmt.Errorf("configured network name %s does not match with avalanche go client one %s",
+			cfg.NetworkName,
+			networkName,
+		)
+	}
+	return nil
 }
 
 func configureRouter(
