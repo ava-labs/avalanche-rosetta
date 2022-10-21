@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
@@ -153,7 +152,7 @@ func (b *Backend) parseRosettaTxs(
 
 	transactions := make([]*types.Transaction, 0, len(txs))
 	for _, tx := range txs {
-		if err != tx.Sign(blocks.Codec, nil) {
+		if err != tx.Sign(b.codec, nil) {
 			return nil, fmt.Errorf("failed tx initialization, %w", err)
 		}
 
@@ -263,7 +262,13 @@ func (b *Backend) isGenesisBlockRequest(ctx context.Context, index int64, hash s
 		return false, err
 	}
 
-	return hash == genesisBlock.BlockID.String() || index == int64(genesisBlock.Height), nil
+	// if hash is provided, make sure it matches genesis block hash
+	if hash != "" {
+		return hash == genesisBlock.BlockID.String(), nil
+	}
+
+	// if hash is omitted, check if the height matches the genesis block height
+	return index == int64(genesisBlock.Height), nil
 }
 
 func (b *Backend) getGenesisTransactions(genesisBlock *indexer.ParsedGenesisBlock) ([]*types.Transaction, error) {
@@ -329,5 +334,5 @@ func (b *Backend) buildGenesisAllocationTx() (*txs.Tx, error) {
 	tx := &txs.Tx{
 		Unsigned: allocationTx,
 	}
-	return tx, tx.Sign(blocks.Codec, nil)
+	return tx, tx.Sign(b.codec, nil)
 }
