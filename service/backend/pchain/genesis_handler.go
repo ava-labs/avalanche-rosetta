@@ -20,6 +20,8 @@ type genesisHandler interface {
 	getGenesisBlock() *indexer.ParsedGenesisBlock
 	getGenesisIdentifier() *types.BlockIdentifier
 
+	// [getFullGenesisTxs] returns proper genesis txs + genesis allocation tx
+	getFullGenesisTxs() ([]*txs.Tx, error)
 	buildGenesisAllocationTx() (*txs.Tx, error)
 }
 
@@ -73,6 +75,16 @@ func (gh *gHandler) getGenesisBlock() *indexer.ParsedGenesisBlock {
 
 func (gh *gHandler) getGenesisIdentifier() *types.BlockIdentifier {
 	return gh.genesisIdentifier
+}
+
+func (gh *gHandler) getFullGenesisTxs() ([]*txs.Tx, error) {
+	res := gh.genesisBlk.Txs
+	allocationTx, err := gh.buildGenesisAllocationTx()
+	if err != nil {
+		return nil, err
+	}
+	res = append(res, allocationTx)
+	return res, nil
 }
 
 // Genesis allocation UTXOs are not part of a real transaction.

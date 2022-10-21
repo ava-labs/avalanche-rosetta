@@ -9,7 +9,6 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/service"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/utils/formatting"
@@ -33,12 +32,16 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 
 	isGenesisBlockRequest := b.isGenesisBlockRequest(blockIndex, hash)
 	if isGenesisBlockRequest {
-		genesisBlock := b.getGenesisBlock()
-		transactions, err := b.getGenesisTransactions(genesisBlock)
+		genesisTxs, err := b.getFullGenesisTxs()
+		if err != nil {
+			return nil, service.WrapError(service.ErrClientError, err)
+		}
+		rosettaTxs, err := b.parseRosettaTxs(genesisTxs, nil)
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
 
+		genesisBlock := b.getGenesisBlock()
 		return &types.BlockResponse{
 			Block: &types.Block{
 				BlockIdentifier: b.getGenesisIdentifier(),
@@ -46,7 +49,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 				// This is done as the genesis state hash cannot be used as a transaction id for the /block apis
 				// and the operations found in the genesis state are returned as operations of the genesis block.
 				ParentBlockIdentifier: b.getGenesisIdentifier(),
-				Transactions:          transactions,
+				Transactions:          rosettaTxs,
 				Timestamp:             genesisBlock.Timestamp,
 				Metadata: map[string]interface{}{
 					pmapper.MetadataMessage: genesisBlock.Message,
@@ -61,7 +64,11 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 	}
 	blockIndex = int64(block.Height)
 
-	rosettaTxs, err := b.parseRosettaTxs(ctx, block.Txs)
+	dependencyTxs, err := b.fetchDependencyTxs(ctx, block.Txs)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+	rosettaTxs, err := b.parseRosettaTxs(block.Txs, dependencyTxs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -89,12 +96,13 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	var (
 		isGenesisRequest = b.isGenesisBlockRequest(request.BlockIdentifier.Index, request.BlockIdentifier.Hash)
 		rosettaTxs       []*types.Transaction
-		err              error
 	)
 	if isGenesisRequest {
-		genesisBlock := b.getGenesisBlock()
-
-		rosettaTxs, err = b.getGenesisTransactions(genesisBlock)
+		genesisTxs, err := b.getFullGenesisTxs()
+		if err != nil {
+			return nil, service.WrapError(service.ErrClientError, err)
+		}
+		rosettaTxs, err = b.parseRosettaTxs(genesisTxs, nil)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -103,8 +111,11 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
-
-		rosettaTxs, err = b.parseRosettaTxs(ctx, block.Txs)
+		dependencyTxs, err := b.fetchDependencyTxs(ctx, block.Txs)
+		if err != nil {
+			return nil, service.WrapError(service.ErrInternalError, err)
+		}
+		rosettaTxs, err = b.parseRosettaTxs(block.Txs, dependencyTxs)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -119,36 +130,6 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	}
 
 	return nil, service.ErrTransactionNotFound
-}
-
-func (b *Backend) parseRosettaTxs(
-	ctx context.Context,
-	txs []*txs.Tx,
-) ([]*types.Transaction, error) {
-	dependencyTxs, err := b.fetchDependencyTxs(ctx, txs)
-	if err != nil {
-		return nil, err
-	}
-
-	parser, err := b.newTxParser(dependencyTxs)
-	if err != nil {
-		return nil, err
-	}
-
-	transactions := make([]*types.Transaction, 0, len(txs))
-	for _, tx := range txs {
-		if err != tx.Sign(b.codec, nil) {
-			return nil, fmt.Errorf("failed tx initialization, %w", err)
-		}
-
-		t, err := parser.Parse(tx.ID(), tx.Unsigned)
-		if err != nil {
-			return nil, err
-		}
-
-		transactions = append(transactions, t)
-	}
-	return transactions, nil
 }
 
 func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[string]*pmapper.DependencyTx, error) {
@@ -241,22 +222,21 @@ func (b *Backend) newTxParser(dependencyTxs map[string]*pmapper.DependencyTx) (*
 	return pmapper.NewTxParser(false, b.networkHRP, b.chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
 }
 
-func (b *Backend) getGenesisTransactions(genesisBlock *indexer.ParsedGenesisBlock) ([]*types.Transaction, error) {
-	genesisTxs := genesisBlock.Txs
-
-	allocationTx, err := b.buildGenesisAllocationTx()
-	if err != nil {
-		return nil, err
-	}
-	genesisTxs = append(genesisTxs, allocationTx)
-
-	parser, err := b.newTxParser(nil)
+func (b *Backend) parseRosettaTxs(
+	txs []*txs.Tx,
+	dependencyTxs map[string]*pmapper.DependencyTx,
+) ([]*types.Transaction, error) {
+	parser, err := b.newTxParser(dependencyTxs)
 	if err != nil {
 		return nil, err
 	}
 
-	transactions := make([]*types.Transaction, 0, len(genesisTxs))
-	for _, tx := range genesisTxs {
+	transactions := make([]*types.Transaction, 0, len(txs))
+	for _, tx := range txs {
+		if err != tx.Sign(b.codec, nil) {
+			return nil, fmt.Errorf("failed tx initialization, %w", err)
+		}
+
 		t, err := parser.Parse(tx.ID(), tx.Unsigned)
 		if err != nil {
 			return nil, err
@@ -264,6 +244,5 @@ func (b *Backend) getGenesisTransactions(genesisBlock *indexer.ParsedGenesisBloc
 
 		transactions = append(transactions, t)
 	}
-
 	return transactions, nil
 }
