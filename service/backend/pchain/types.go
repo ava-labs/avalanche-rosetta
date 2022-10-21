@@ -104,7 +104,7 @@ func (p pTxBuilder) BuildTx(operations []*types.Operation, metadataMap map[strin
 
 type pTxParser struct {
 	hrp         string
-	chainIDs    map[string]string
+	chainIDs    map[ids.ID]string
 	avaxAssetID ids.ID
 }
 

@@ -41,8 +41,8 @@ type TxParserConfig struct {
 	IsConstruction bool
 	// Hrp used for address formatting
 	Hrp string
-	// ChainIDs contain chain id to chain id alias mappings
-	ChainIDs map[string]string
+	// ChainIDs maps chain id to chain id alias mappings
+	ChainIDs map[ids.ID]string
 	// AvaxAssetID contains asset id for AVAX currency
 	AvaxAssetID ids.ID
 	// PChainClient holds a P-chain client, used to lookup asset descriptions for non-AVAX assets
@@ -185,8 +185,7 @@ func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) 
 		return nil, err
 	}
 
-	chainID := tx.DestinationChain.String()
-	chainIDAlias, ok := t.cfg.ChainIDs[chainID]
+	chainIDAlias, ok := t.cfg.ChainIDs[tx.DestinationChain]
 	if !ok {
 		return nil, errUnknownDestinationChain
 	}

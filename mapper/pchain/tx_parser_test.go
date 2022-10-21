@@ -16,10 +16,10 @@ import (
 
 var (
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
-	cChainID       = "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp"
-	chainIDs       = map[string]string{
-		ids.Empty.String(): mapper.PChainNetworkIdentifier,
-		cChainID:           mapper.CChainNetworkIdentifier,
+	cChainID, _    = ids.FromString("yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")
+	chainIDs       = map[ids.ID]string{
+		ids.Empty: mapper.PChainNetworkIdentifier,
+		cChainID:  mapper.CChainNetworkIdentifier,
 	}
 
 	pchainClient = &mocks.PChainClient{}
