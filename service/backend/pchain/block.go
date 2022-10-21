@@ -2,9 +2,9 @@ package pchain
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -32,11 +32,19 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 
 	isGenesisBlockRequest := b.isGenesisBlockRequest(blockIndex, hash)
 	if isGenesisBlockRequest {
+		parserCfg := pmapper.TxParserConfig{
+			IsConstruction: false,
+			Hrp:            b.networkHRP,
+			ChainIDs:       b.chainIDs,
+			AvaxAssetID:    b.avaxAssetID,
+			PChainClient:   b.pClient,
+		}
+
 		genesisTxs, err := b.getFullGenesisTxs()
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
-		rosettaTxs, err := b.parseRosettaTxs(genesisTxs, nil)
+		rosettaTxs, err := parseRosettaTxs(parserCfg, blocks.GenesisCodec, genesisTxs, nil)
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
@@ -68,7 +76,15 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
-	rosettaTxs, err := b.parseRosettaTxs(block.Txs, dependencyTxs)
+	parserCfg := pmapper.TxParserConfig{
+		IsConstruction: false,
+		Hrp:            b.networkHRP,
+		ChainIDs:       b.chainIDs,
+		AvaxAssetID:    b.avaxAssetID,
+		PChainClient:   b.pClient,
+	}
+
+	rosettaTxs, err := parseRosettaTxs(parserCfg, blocks.Codec, block.Txs, dependencyTxs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -98,11 +114,19 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		rosettaTxs       []*types.Transaction
 	)
 	if isGenesisRequest {
+		parserCfg := pmapper.TxParserConfig{
+			IsConstruction: false,
+			Hrp:            b.networkHRP,
+			ChainIDs:       b.chainIDs,
+			AvaxAssetID:    b.avaxAssetID,
+			PChainClient:   b.pClient,
+		}
+
 		genesisTxs, err := b.getFullGenesisTxs()
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
-		rosettaTxs, err = b.parseRosettaTxs(genesisTxs, nil)
+		rosettaTxs, err = parseRosettaTxs(parserCfg, blocks.GenesisCodec, genesisTxs, nil)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -115,7 +139,15 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
-		rosettaTxs, err = b.parseRosettaTxs(block.Txs, dependencyTxs)
+
+		parserCfg := pmapper.TxParserConfig{
+			IsConstruction: false,
+			Hrp:            b.networkHRP,
+			ChainIDs:       b.chainIDs,
+			AvaxAssetID:    b.avaxAssetID,
+			PChainClient:   b.pClient,
+		}
+		rosettaTxs, err = parseRosettaTxs(parserCfg, blocks.Codec, block.Txs, dependencyTxs)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -211,45 +243,4 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 	}
 
 	return nil
-}
-
-func (b *Backend) newTxParser(dependencyTxs map[string]*pmapper.DependencyTx) (*pmapper.TxParser, error) {
-	inputAddresses, err := pmapper.GetAccountsFromUTXOs(b.networkHRP, dependencyTxs)
-	if err != nil {
-		return nil, err
-	}
-
-	parserCfg := pmapper.TxParserConfig{
-		IsConstruction: false,
-		Hrp:            b.networkHRP,
-		ChainIDs:       b.chainIDs,
-		AvaxAssetID:    b.avaxAssetID,
-		PChainClient:   b.pClient,
-	}
-	return pmapper.NewTxParser(parserCfg, inputAddresses, dependencyTxs)
-}
-
-func (b *Backend) parseRosettaTxs(
-	txs []*txs.Tx,
-	dependencyTxs map[string]*pmapper.DependencyTx,
-) ([]*types.Transaction, error) {
-	parser, err := b.newTxParser(dependencyTxs)
-	if err != nil {
-		return nil, err
-	}
-
-	transactions := make([]*types.Transaction, 0, len(txs))
-	for _, tx := range txs {
-		if err != tx.Sign(b.codec, nil) {
-			return nil, fmt.Errorf("failed tx initialization, %w", err)
-		}
-
-		t, err := parser.Parse(tx.ID(), tx.Unsigned)
-		if err != nil {
-			return nil, err
-		}
-
-		transactions = append(transactions, t)
-	}
-	return transactions, nil
 }
