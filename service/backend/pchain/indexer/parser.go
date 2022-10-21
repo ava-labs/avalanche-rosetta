@@ -161,7 +161,7 @@ func (p *parser) ParseNonGenesisBlock(ctx context.Context, hash string, height u
 		return p.parseBlockWithHash(ctx, hash)
 	}
 
-	return p.parseBlockAtHeight(ctx, uint64(height))
+	return p.parseBlockAtHeight(ctx, height)
 }
 
 func (p *parser) parseBlockAtHeight(ctx context.Context, height uint64) (*ParsedBlock, error) {

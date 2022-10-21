@@ -138,7 +138,7 @@ func (b *Backend) parseRosettaTxs(
 		return nil, err
 	}
 
-	parser, err := b.newTxParser(ctx, networkIdentifier, dependencyTxs)
+	parser, err := b.newTxParser(networkIdentifier, dependencyTxs)
 	if err != nil {
 		return nil, err
 	}
@@ -241,16 +241,10 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 }
 
 func (b *Backend) newTxParser(
-	ctx context.Context,
 	networkIdentifier *types.NetworkIdentifier,
 	dependencyTxs map[string]*pmapper.DependencyTx,
 ) (*pmapper.TxParser, error) {
 	hrp, err := mapper.GetHRP(networkIdentifier)
-	if err != nil {
-		return nil, err
-	}
-
-	chainIDs, err := b.getChainIDs(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -260,29 +254,7 @@ func (b *Backend) newTxParser(
 		return nil, err
 	}
 
-	return pmapper.NewTxParser(false, hrp, chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
-}
-
-func (b *Backend) getChainIDs(ctx context.Context) (map[string]string, error) {
-	if b.chainIDs == nil {
-		b.chainIDs = map[string]string{
-			ids.Empty.String(): mapper.PChainNetworkIdentifier,
-		}
-
-		cChainID, err := b.pClient.GetBlockchainID(ctx, mapper.CChainNetworkIdentifier)
-		if err != nil {
-			return nil, err
-		}
-		b.chainIDs[cChainID.String()] = mapper.CChainNetworkIdentifier
-
-		xChainID, err := b.pClient.GetBlockchainID(ctx, mapper.XChainNetworkIdentifier)
-		if err != nil {
-			return nil, err
-		}
-		b.chainIDs[xChainID.String()] = mapper.XChainNetworkIdentifier
-	}
-
-	return b.chainIDs, nil
+	return pmapper.NewTxParser(false, hrp, b.chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
 }
 
 func (b *Backend) isGenesisBlockRequest(ctx context.Context, index int64, hash string) (bool, error) {
@@ -311,7 +283,7 @@ func (b *Backend) getGenesisBlockAndTransactions(
 	}
 	genesisTxs = append(genesisTxs, allocationTx)
 
-	parser, err := b.newTxParser(ctx, networkIdentifier, nil)
+	parser, err := b.newTxParser(networkIdentifier, nil)
 	if err != nil {
 		return nil, nil, err
 	}

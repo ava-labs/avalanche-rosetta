@@ -168,7 +168,10 @@ func main() {
 	if err != nil {
 		log.Fatal("unable to initialize p-chain indexer parser:", err)
 	}
-	pChainBackend := pchain.NewBackend(pChainClient, pIndexerParser, avaxAssetID, networkP)
+	pChainBackend, err := pchain.NewBackend(pChainClient, pIndexerParser, avaxAssetID, networkP)
+	if err != nil {
+		log.Fatal("unable to initialize p-chain backend:", err)
+	}
 
 	cChainAtomicTxBackend := cchainatomictx.NewBackend(apiClient, avaxAssetID)
 
