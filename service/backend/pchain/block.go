@@ -19,7 +19,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
 
@@ -41,7 +40,12 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 	}
 
 	if isGenesisBlockRequest {
-		genesisBlock, transactions, err := b.getGenesisBlockAndTransactions(ctx, request.NetworkIdentifier)
+		genesisBlock, err := b.getGenesisBlock(ctx)
+		if err != nil {
+			return nil, service.WrapError(service.ErrClientError, err)
+		}
+
+		transactions, err := b.getGenesisTransactions(genesisBlock)
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
@@ -68,7 +72,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 	}
 	blockIndex = int64(block.Height)
 
-	rosettaTxs, err := b.parseRosettaTxs(ctx, request.NetworkIdentifier, block.Txs)
+	rosettaTxs, err := b.parseRosettaTxs(ctx, block.Txs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -101,7 +105,12 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	var rosettaTxs []*types.Transaction
 
 	if isGenesisBlockRequest {
-		_, rosettaTxs, err = b.getGenesisBlockAndTransactions(ctx, request.NetworkIdentifier)
+		genesisBlock, err := b.getGenesisBlock(ctx)
+		if err != nil {
+			return nil, service.WrapError(service.ErrClientError, err)
+		}
+
+		rosettaTxs, err = b.getGenesisTransactions(genesisBlock)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -111,7 +120,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
 
-		rosettaTxs, err = b.parseRosettaTxs(ctx, request.NetworkIdentifier, block.Txs)
+		rosettaTxs, err = b.parseRosettaTxs(ctx, block.Txs)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -130,7 +139,6 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 
 func (b *Backend) parseRosettaTxs(
 	ctx context.Context,
-	networkIdentifier *types.NetworkIdentifier,
 	txs []*txs.Tx,
 ) ([]*types.Transaction, error) {
 	dependencyTxs, err := b.fetchDependencyTxs(ctx, txs)
@@ -138,7 +146,7 @@ func (b *Backend) parseRosettaTxs(
 		return nil, err
 	}
 
-	parser, err := b.newTxParser(networkIdentifier, dependencyTxs)
+	parser, err := b.newTxParser(dependencyTxs)
 	if err != nil {
 		return nil, err
 	}
@@ -240,21 +248,13 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 	return nil
 }
 
-func (b *Backend) newTxParser(
-	networkIdentifier *types.NetworkIdentifier,
-	dependencyTxs map[string]*pmapper.DependencyTx,
-) (*pmapper.TxParser, error) {
-	hrp, err := mapper.GetHRP(networkIdentifier)
+func (b *Backend) newTxParser(dependencyTxs map[string]*pmapper.DependencyTx) (*pmapper.TxParser, error) {
+	inputAddresses, err := pmapper.GetAccountsFromUTXOs(b.networkHRP, dependencyTxs)
 	if err != nil {
 		return nil, err
 	}
 
-	inputAddresses, err := pmapper.GetAccountsFromUTXOs(hrp, dependencyTxs)
-	if err != nil {
-		return nil, err
-	}
-
-	return pmapper.NewTxParser(false, hrp, b.chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
+	return pmapper.NewTxParser(false, b.networkHRP, b.chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
 }
 
 func (b *Backend) isGenesisBlockRequest(ctx context.Context, index int64, hash string) (bool, error) {
@@ -266,39 +266,31 @@ func (b *Backend) isGenesisBlockRequest(ctx context.Context, index int64, hash s
 	return hash == genesisBlock.BlockID.String() || index == int64(genesisBlock.Height), nil
 }
 
-func (b *Backend) getGenesisBlockAndTransactions(
-	ctx context.Context,
-	networkIdentifier *types.NetworkIdentifier,
-) (*indexer.ParsedGenesisBlock, []*types.Transaction, error) {
-	genesisBlock, err := b.getGenesisBlock(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-
+func (b *Backend) getGenesisTransactions(genesisBlock *indexer.ParsedGenesisBlock) ([]*types.Transaction, error) {
 	genesisTxs := genesisBlock.Txs
 
 	allocationTx, err := b.buildGenesisAllocationTx()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	genesisTxs = append(genesisTxs, allocationTx)
 
-	parser, err := b.newTxParser(networkIdentifier, nil)
+	parser, err := b.newTxParser(nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	transactions := make([]*types.Transaction, 0, len(genesisTxs))
 	for _, tx := range genesisTxs {
 		t, err := parser.Parse(tx.ID(), tx.Unsigned)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		transactions = append(transactions, t)
 	}
 
-	return genesisBlock, transactions, nil
+	return transactions, nil
 }
 
 // Genesis allocation UTXOs are not part of a real transaction.
