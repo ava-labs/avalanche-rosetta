@@ -31,9 +31,8 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 		return nil, service.WrapError(service.ErrClientError, err)
 	}
 
-	genesisBlock := b.getGenesisBlock()
-
 	if !ready {
+		genesisBlock := b.getGenesisBlock()
 		return &types.NetworkStatusResponse{
 			CurrentBlockIdentifier: b.getGenesisIdentifier(),
 			CurrentBlockTimestamp:  genesisBlock.Timestamp,
