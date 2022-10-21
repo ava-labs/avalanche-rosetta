@@ -32,7 +32,7 @@ func parseRosettaTxs(
 			return nil, fmt.Errorf("failed tx initialization, %w", err)
 		}
 
-		t, err := parser.Parse(tx.ID(), tx.Unsigned)
+		t, err := parser.Parse(tx)
 		if err != nil {
 			return nil, err
 		}

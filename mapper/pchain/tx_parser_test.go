@@ -26,7 +26,7 @@ var (
 )
 
 func TestMapInOperation(t *testing.T) {
-	addValidatorTx, inputAccounts := buildValidatorTx()
+	_, addValidatorTx, inputAccounts := buildValidatorTx()
 
 	assert.Equal(t, 1, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
@@ -59,7 +59,7 @@ func TestMapInOperation(t *testing.T) {
 }
 
 func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
-	importTx, inputAccounts := buildImport()
+	_, importTx, inputAccounts := buildImport()
 
 	avaxIn := importTx.ImportedInputs[0]
 
@@ -80,7 +80,7 @@ func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
 }
 
 func TestMapOutOperation(t *testing.T) {
-	addDelegatorTx, inputAccounts := buildAddDelegator()
+	_, addDelegatorTx, inputAccounts := buildAddDelegator()
 
 	assert.Equal(t, 1, len(addDelegatorTx.Ins))
 	assert.Equal(t, 1, len(addDelegatorTx.Outs))
@@ -115,7 +115,7 @@ func TestMapOutOperation(t *testing.T) {
 }
 
 func TestMapAddValidatorTx(t *testing.T) {
-	addValidatorTx, inputAccounts := buildValidatorTx()
+	signedTx, addValidatorTx, inputAccounts := buildValidatorTx()
 
 	assert.Equal(t, 1, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
@@ -128,7 +128,7 @@ func TestMapAddValidatorTx(t *testing.T) {
 		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(ids.Empty, addValidatorTx)
+	rosettaTransaction, err := parser.Parse(signedTx)
 	assert.Nil(t, err)
 
 	total := len(addValidatorTx.Ins) + len(addValidatorTx.Outs) + len(addValidatorTx.StakeOuts)
@@ -143,7 +143,7 @@ func TestMapAddValidatorTx(t *testing.T) {
 }
 
 func TestMapAddDelegatorTx(t *testing.T) {
-	addDelegatorTx, inputAccounts := buildAddDelegator()
+	signedTx, addDelegatorTx, inputAccounts := buildAddDelegator()
 
 	assert.Equal(t, 1, len(addDelegatorTx.Ins))
 	assert.Equal(t, 1, len(addDelegatorTx.Outs))
@@ -157,7 +157,7 @@ func TestMapAddDelegatorTx(t *testing.T) {
 		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(ids.Empty, addDelegatorTx)
+	rosettaTransaction, err := parser.Parse(signedTx)
 	assert.Nil(t, err)
 
 	total := len(addDelegatorTx.Ins) + len(addDelegatorTx.Outs) + len(addDelegatorTx.StakeOuts)
@@ -190,7 +190,7 @@ func TestMapAddDelegatorTx(t *testing.T) {
 }
 
 func TestMapImportTx(t *testing.T) {
-	importTx, inputAccounts := buildImport()
+	signedTx, importTx, inputAccounts := buildImport()
 
 	assert.Equal(t, 0, len(importTx.Ins))
 	assert.Equal(t, 3, len(importTx.Outs))
@@ -204,7 +204,7 @@ func TestMapImportTx(t *testing.T) {
 		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(ids.Empty, importTx)
+	rosettaTransaction, err := parser.Parse(signedTx)
 	assert.Nil(t, err)
 
 	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 2 // - 1 for the multisig output
@@ -222,7 +222,7 @@ func TestMapImportTx(t *testing.T) {
 }
 
 func TestMapNonConstructionImportTx(t *testing.T) {
-	importTx, inputAccounts := buildImport()
+	signedTx, importTx, inputAccounts := buildImport()
 
 	assert.Equal(t, 0, len(importTx.Ins))
 	assert.Equal(t, 3, len(importTx.Outs))
@@ -236,7 +236,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(ids.Empty, importTx)
+	rosettaTransaction, err := parser.Parse(signedTx)
 	assert.Nil(t, err)
 
 	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 3 // - 1 for the multisig output
@@ -276,7 +276,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 }
 
 func TestMapExportTx(t *testing.T) {
-	exportTx, inputAccounts := buildExport()
+	signedTx, exportTx, inputAccounts := buildExport()
 
 	assert.Equal(t, 1, len(exportTx.Ins))
 	assert.Equal(t, 1, len(exportTx.Outs))
@@ -290,7 +290,7 @@ func TestMapExportTx(t *testing.T) {
 		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(ids.Empty, exportTx)
+	rosettaTransaction, err := parser.Parse(signedTx)
 	assert.Nil(t, err)
 
 	total := len(exportTx.Ins) + len(exportTx.Outs) + len(exportTx.ExportedOutputs)
@@ -305,7 +305,7 @@ func TestMapExportTx(t *testing.T) {
 }
 
 func TestMapNonConstructionExportTx(t *testing.T) {
-	exportTx, inputAccounts := buildExport()
+	signedTx, exportTx, inputAccounts := buildExport()
 
 	assert.Equal(t, 1, len(exportTx.Ins))
 	assert.Equal(t, 1, len(exportTx.Outs))
@@ -319,7 +319,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
-	rosettaTransaction, err := parser.Parse(ids.Empty, exportTx)
+	rosettaTransaction, err := parser.Parse(signedTx)
 	assert.Nil(t, err)
 
 	total := len(exportTx.Ins) + len(exportTx.Outs)
@@ -349,7 +349,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 		PChainClient:   pchainClient,
 	}
 	parser, _ = NewTxParser(parserCfg, inputAccounts, nil)
-	rosettaTransactionWithExportOperations, err := parser.Parse(ids.Empty, exportTx)
+	rosettaTransactionWithExportOperations, err := parser.Parse(signedTx)
 	assert.Nil(t, err)
 
 	out := rosettaTransactionWithExportOperations.Operations[2]

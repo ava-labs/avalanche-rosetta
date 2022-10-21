@@ -85,14 +85,15 @@ func NewTxParser(
 }
 
 // Parse converts the given unsigned P-chain tx to corresponding Rosetta Transaction
-func (t *TxParser) Parse(txID ids.ID, tx txs.UnsignedTx) (*types.Transaction, error) {
+func (t *TxParser) Parse(signedTx *txs.Tx) (*types.Transaction, error) {
 	var (
 		ops    *txOps
 		txType string
 		err    error
 	)
 
-	switch unsignedTx := tx.(type) {
+	txID := signedTx.ID()
+	switch unsignedTx := signedTx.Unsigned.(type) {
 	case *txs.ExportTx:
 		txType = OpExportAvax
 		ops, err = t.parseExportTx(txID, unsignedTx)

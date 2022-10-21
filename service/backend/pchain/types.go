@@ -126,7 +126,7 @@ func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*type
 		return nil, err
 	}
 
-	transactions, err := parser.Parse(pTx.Tx.ID(), pTx.Tx.Unsigned)
+	transactions, err := parser.Parse(pTx.Tx)
 	if err != nil {
 		return nil, err
 	}
