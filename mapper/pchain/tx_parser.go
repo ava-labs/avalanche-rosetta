@@ -36,35 +36,36 @@ var (
 	errUnsupportedAssetInConstruction = errors.New("unsupported asset passed during construction")
 )
 
+type TxParserConfig struct {
+	// IsConstruction indicates if parsing is done as part of construction or /block endpoints
+	IsConstruction bool
+	// Hrp used for address formatting
+	Hrp string
+	// ChainIDs contain chain id to chain id alias mappings
+	ChainIDs map[string]string
+	// AvaxAssetID contains asset id for AVAX currency
+	AvaxAssetID ids.ID
+	// PChainClient holds a P-chain client, used to lookup asset descriptions for non-AVAX assets
+	PChainClient client.PChainClient
+}
+
 // TxParser parses P-chain transactions and generate corresponding Rosetta operations
 type TxParser struct {
-	// isConstruction indicates if parsing is done as part of construction or /block endpoints
-	isConstruction bool
-	// hrp used for address formatting
-	hrp string
-	// chainIDs contain chain id to chain id alias mappings
-	chainIDs map[string]string
+	cfg TxParserConfig
+
 	// dependencyTxs contain transaction id to dependence transaction mapping
 	dependencyTxs map[string]*DependencyTx
 	// inputTxAccounts contain utxo id to account identifier mappings
 	inputTxAccounts map[string]*types.AccountIdentifier
-	// pChainClient holds a P-chain client, used to lookup asset descriptions for non-AVAX assets
-	pChainClient client.PChainClient
-	// avaxAssetID contains asset id for AVAX currency
-	avaxAssetID ids.ID
 }
 
 // NewTxParser returns a new transaction parser
 func NewTxParser(
-	isConstruction bool,
-	hrp string,
-	chainIDs map[string]string,
+	cfg TxParserConfig,
 	inputTxAccounts map[string]*types.AccountIdentifier,
 	dependencyTxs map[string]*DependencyTx,
-	pChainClient client.PChainClient,
-	avaxAssetID ids.ID,
 ) (*TxParser, error) {
-	if chainIDs == nil {
+	if cfg.ChainIDs == nil {
 		return nil, errNilChainIDs
 	}
 
@@ -72,18 +73,14 @@ func NewTxParser(
 		return nil, errNilInputTxAccounts
 	}
 
-	if !isConstruction && pChainClient == nil {
+	if !cfg.IsConstruction && cfg.PChainClient == nil {
 		return nil, errNilPChainClient
 	}
 
 	return &TxParser{
-		isConstruction:  isConstruction,
-		hrp:             hrp,
-		chainIDs:        chainIDs,
+		cfg:             cfg,
 		inputTxAccounts: inputTxAccounts,
 		dependencyTxs:   dependencyTxs,
-		pChainClient:    pChainClient,
-		avaxAssetID:     avaxAssetID,
 	}, nil
 }
 
@@ -189,7 +186,7 @@ func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) 
 	}
 
 	chainID := tx.DestinationChain.String()
-	chainIDAlias, ok := t.chainIDs[chainID]
+	chainIDAlias, ok := t.cfg.ChainIDs[chainID]
 	if !ok {
 		return nil, errUnknownDestinationChain
 	}
@@ -203,7 +200,7 @@ func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) 
 }
 
 func (t *TxParser) parseImportTx(txID ids.ID, tx *txs.ImportTx) (*txOps, error) {
-	ops := newTxOps(t.isConstruction)
+	ops := newTxOps(t.cfg.IsConstruction)
 
 	err := t.insToOperations(ops, OpImportAvax, tx.Ins, OpTypeInput)
 	if err != nil {
@@ -299,7 +296,7 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 	if rewardOuts == nil {
 		return nil, errNoMatchingRewardOutputs
 	}
-	ops := newTxOps(t.isConstruction)
+	ops := newTxOps(t.cfg.IsConstruction)
 	err := t.utxosToOperations(ops, OpRewardValidator, rewardOuts.RewardUTXOs, OpTypeReward, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
@@ -356,7 +353,7 @@ func (t *TxParser) parseCreateChainTx(txID ids.ID, tx *txs.CreateChainTx) (*txOp
 }
 
 func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType string) (*txOps, error) {
-	ops := newTxOps(t.isConstruction)
+	ops := newTxOps(t.cfg.IsConstruction)
 
 	err := t.insToOperations(ops, txType, tx.Ins, OpTypeInput)
 	if err != nil {
@@ -378,7 +375,7 @@ func (t *TxParser) insToOperations(
 	metaType string,
 ) error {
 	status := types.String(mapper.StatusSuccess)
-	if t.isConstruction {
+	if t.cfg.IsConstruction {
 		status = nil
 	}
 
@@ -402,7 +399,7 @@ func (t *TxParser) insToOperations(
 
 		// Check if the dependency is not multisig and extract account id from it
 		// for non-imported inputs or when tx is being constructed
-		if t.isConstruction || metaType != OpTypeImport {
+		if t.cfg.IsConstruction || metaType != OpTypeImport {
 			// If dependency txs are provided, which is the case for /block endpoints
 			// check whether the input UTXO is multisig. If so, skip it.
 			if t.dependencyTxs != nil {
@@ -454,11 +451,11 @@ func (t *TxParser) insToOperations(
 }
 
 func (t *TxParser) buildAmount(value *big.Int, assetID ids.ID) (*types.Amount, error) {
-	if assetID == t.avaxAssetID {
+	if assetID == t.cfg.AvaxAssetID {
 		return mapper.AtomicAvaxAmount(value), nil
 	}
 
-	if t.isConstruction {
+	if t.cfg.IsConstruction {
 		return nil, errUnsupportedAssetInConstruction
 	}
 
@@ -480,7 +477,7 @@ func (t *TxParser) outsToOperations(
 ) error {
 	outIndexOffset := outOps.OutputLen()
 	status := types.String(mapper.StatusSuccess)
-	if t.isConstruction {
+	if t.cfg.IsConstruction {
 		status = nil
 	}
 
@@ -537,7 +534,7 @@ func (t *TxParser) utxosToOperations(
 	chainIDAlias string,
 ) error {
 	status := types.String(mapper.StatusSuccess)
-	if t.isConstruction {
+	if t.cfg.IsConstruction {
 		status = nil
 	}
 
@@ -600,7 +597,7 @@ func (t *TxParser) buildOutputOperation(
 	}
 
 	outAddrID := out.Addrs[0]
-	outAddrFormat, err := address.Format(chainIDAlias, t.hrp, outAddrID[:])
+	outAddrFormat, err := address.Format(chainIDAlias, t.cfg.Hrp, outAddrID[:])
 	if err != nil {
 		return nil, err
 	}
@@ -623,7 +620,7 @@ func (t *TxParser) buildOutputOperation(
 	// Do not add coin change during construction as txid is not yet generated
 	// and therefore UTXO ids would be incorrect
 	var coinChange *types.CoinChange
-	if !t.isConstruction {
+	if !t.cfg.IsConstruction {
 		coinChange = &types.CoinChange{
 			CoinIdentifier: &types.CoinIdentifier{Identifier: utxoID.String()},
 			CoinAction:     types.CoinCreated,
@@ -670,7 +667,7 @@ func (t *TxParser) isMultisig(utxoid avax.UTXOID) (bool, error) {
 }
 
 func (t *TxParser) lookupCurrency(assetID ids.ID) (*types.Currency, error) {
-	asset, err := t.pChainClient.GetAssetDescription(context.Background(), assetID.String())
+	asset, err := t.cfg.PChainClient.GetAssetDescription(context.Background(), assetID.String())
 	if err != nil {
 		return nil, fmt.Errorf("error while looking up currency: %w", err)
 	}

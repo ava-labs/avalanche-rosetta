@@ -114,7 +114,14 @@ func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*type
 		return nil, errInvalidTransaction
 	}
 
-	parser, err := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil, nil, p.avaxAssetID)
+	parserCfg := pmapper.TxParserConfig{
+		IsConstruction: true,
+		Hrp:            p.hrp,
+		ChainIDs:       p.chainIDs,
+		AvaxAssetID:    p.avaxAssetID,
+		PChainClient:   nil,
+	}
+	parser, err := pmapper.NewTxParser(parserCfg, inputAddresses, nil)
 	if err != nil {
 		return nil, err
 	}

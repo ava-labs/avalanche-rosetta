@@ -32,7 +32,14 @@ func TestMapInOperation(t *testing.T) {
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
 	avaxIn := addValidatorTx.Ins[0]
-	parser, _ := NewTxParser(false, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, avaxAssetID)
+	parserCfg := TxParserConfig{
+		IsConstruction: false,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	inOps := newTxOps(false)
 	err := parser.insToOperations(inOps, OpAddValidator, []*avax.TransferableInput{avaxIn}, OpTypeInput)
 	assert.Nil(t, err)
@@ -55,8 +62,18 @@ func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
 	importTx, inputAccounts := buildImport()
 
 	avaxIn := importTx.ImportedInputs[0]
-	// passing empty as AVAX id, so that actual avax id in import transaction will not match with AVAX transaction
-	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, ids.Empty)
+
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+
+		// passing empty as AVAX id, so that
+		// actual avax id in import transaction will not match with AVAX transaction
+		AvaxAssetID:  ids.Empty,
+		PChainClient: pchainClient,
+	}
+	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	inOps := newTxOps(true)
 	err := parser.insToOperations(inOps, OpImportAvax, []*avax.TransferableInput{avaxIn}, OpTypeInput)
 	assert.ErrorIs(t, errUnsupportedAssetInConstruction, err)
@@ -70,7 +87,14 @@ func TestMapOutOperation(t *testing.T) {
 
 	avaxOut := addDelegatorTx.Outs[0]
 
-	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, avaxAssetID)
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	outOps := newTxOps(false)
 	err := parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, mapper.PChainNetworkIdentifier)
 	assert.Nil(t, err)
@@ -96,7 +120,14 @@ func TestMapAddValidatorTx(t *testing.T) {
 	assert.Equal(t, 1, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
-	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, avaxAssetID)
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, addValidatorTx)
 	assert.Nil(t, err)
 
@@ -118,7 +149,14 @@ func TestMapAddDelegatorTx(t *testing.T) {
 	assert.Equal(t, 1, len(addDelegatorTx.Outs))
 	assert.Equal(t, 1, len(addDelegatorTx.StakeOuts))
 
-	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, avaxAssetID)
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, addDelegatorTx)
 	assert.Nil(t, err)
 
@@ -158,7 +196,14 @@ func TestMapImportTx(t *testing.T) {
 	assert.Equal(t, 3, len(importTx.Outs))
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
-	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, avaxAssetID)
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, importTx)
 	assert.Nil(t, err)
 
@@ -183,7 +228,14 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	assert.Equal(t, 3, len(importTx.Outs))
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
-	parser, _ := NewTxParser(false, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, avaxAssetID)
+	parserCfg := TxParserConfig{
+		IsConstruction: false,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, importTx)
 	assert.Nil(t, err)
 
@@ -230,7 +282,14 @@ func TestMapExportTx(t *testing.T) {
 	assert.Equal(t, 1, len(exportTx.Outs))
 	assert.Equal(t, 1, len(exportTx.ExportedOutputs))
 
-	parser, _ := NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, avaxAssetID)
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, exportTx)
 	assert.Nil(t, err)
 
@@ -252,7 +311,14 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	assert.Equal(t, 1, len(exportTx.Outs))
 	assert.Equal(t, 1, len(exportTx.ExportedOutputs))
 
-	parser, _ := NewTxParser(false, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, avaxAssetID)
+	parserCfg := TxParserConfig{
+		IsConstruction: false,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(ids.Empty, exportTx)
 	assert.Nil(t, err)
 
@@ -275,7 +341,14 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	assert.True(t, ok)
 
 	// setting isConstruction to true in order to include exported output in the operations
-	parser, _ = NewTxParser(true, constants.FujiHRP, chainIDs, inputAccounts, nil, pchainClient, avaxAssetID)
+	parserCfg = TxParserConfig{
+		IsConstruction: true,
+		Hrp:            constants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, _ = NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransactionWithExportOperations, err := parser.Parse(ids.Empty, exportTx)
 	assert.Nil(t, err)
 

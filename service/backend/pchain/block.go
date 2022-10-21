@@ -219,7 +219,14 @@ func (b *Backend) newTxParser(dependencyTxs map[string]*pmapper.DependencyTx) (*
 		return nil, err
 	}
 
-	return pmapper.NewTxParser(false, b.networkHRP, b.chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
+	parserCfg := pmapper.TxParserConfig{
+		IsConstruction: false,
+		Hrp:            b.networkHRP,
+		ChainIDs:       b.chainIDs,
+		AvaxAssetID:    b.avaxAssetID,
+		PChainClient:   b.pClient,
+	}
+	return pmapper.NewTxParser(parserCfg, inputAddresses, dependencyTxs)
 }
 
 func (b *Backend) parseRosettaTxs(
