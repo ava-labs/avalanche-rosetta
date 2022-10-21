@@ -93,7 +93,7 @@ func (c cAtomicTxBuilder) BuildTx(operations []*types.Operation, metadata map[st
 
 type cAtomicTxParser struct {
 	hrp      string
-	chainIDs map[string]string
+	chainIDs map[ids.ID]string
 }
 
 func (c cAtomicTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*types.AccountIdentifier) ([]*types.Operation, error) {

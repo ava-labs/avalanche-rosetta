@@ -749,9 +749,9 @@ func GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 }
 
 func getUniqueTxIds(ins []*avax.TransferableInput) []ids.ID {
-	txnIDs := make(map[string]ids.ID)
+	txnIDs := make(map[ids.ID]ids.ID)
 	for _, in := range ins {
-		txnIDs[in.UTXOID.TxID.String()] = in.UTXOID.TxID
+		txnIDs[in.UTXOID.TxID] = in.UTXOID.TxID
 	}
 
 	uniqueTxnIDs := make([]ids.ID, 0, len(txnIDs))

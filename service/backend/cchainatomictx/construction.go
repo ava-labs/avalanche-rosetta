@@ -228,9 +228,9 @@ func (b *Backend) ConstructionParse(ctx context.Context, req *types.Construction
 		return nil, service.WrapError(service.ErrInvalidInput, "incorrect network identifier")
 	}
 
-	chainIDs := map[string]string{}
+	chainIDs := map[ids.ID]string{}
 	if rosettaTx.DestinationChainID != nil {
-		chainIDs[rosettaTx.DestinationChainID.String()] = rosettaTx.DestinationChain
+		chainIDs[*rosettaTx.DestinationChainID] = rosettaTx.DestinationChain
 	}
 
 	txParser := cAtomicTxParser{

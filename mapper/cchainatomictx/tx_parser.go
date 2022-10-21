@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
@@ -24,14 +25,14 @@ var (
 type TxParser struct {
 	// hrp used for address formatting
 	hrp string
-	// chainIDs contain chain id to chain id alias mappings
-	chainIDs map[string]string
+	// chainIDs maps chain id to chain id alias mappings
+	chainIDs map[ids.ID]string
 	// inputTxAccounts contain utxo id to account identifier mappings
 	inputTxAccounts map[string]*types.AccountIdentifier
 }
 
 // NewTxParser returns a new transaction parser
-func NewTxParser(hrp string, chainIDs map[string]string, inputTxAccounts map[string]*types.AccountIdentifier) *TxParser {
+func NewTxParser(hrp string, chainIDs map[ids.ID]string, inputTxAccounts map[string]*types.AccountIdentifier) *TxParser {
 	return &TxParser{hrp: hrp, chainIDs: chainIDs, inputTxAccounts: inputTxAccounts}
 }
 
@@ -52,7 +53,7 @@ func (t *TxParser) parseExportTx(exportTx *evm.UnsignedExportTx) ([]*types.Opera
 	operations := []*types.Operation{}
 	ins := t.insToOperations(0, mapper.OpExport, exportTx.Ins)
 
-	destinationChainID := exportTx.DestinationChain.String()
+	destinationChainID := exportTx.DestinationChain
 	chainAlias, ok := t.chainIDs[destinationChainID]
 	if !ok {
 		return nil, errUnknownDestinationChain
