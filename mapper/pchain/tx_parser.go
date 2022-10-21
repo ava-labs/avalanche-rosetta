@@ -53,8 +53,8 @@ type TxParserConfig struct {
 type TxParser struct {
 	cfg TxParserConfig
 
-	// dependencyTxs contain transaction id to dependence transaction mapping
-	dependencyTxs map[string]*DependencyTx
+	// dependencyTxs maps transaction id to dependence transaction mapping
+	dependencyTxs map[ids.ID]*DependencyTx
 	// inputTxAccounts contain utxo id to account identifier mappings
 	inputTxAccounts map[string]*types.AccountIdentifier
 }
@@ -63,7 +63,7 @@ type TxParser struct {
 func NewTxParser(
 	cfg TxParserConfig,
 	inputTxAccounts map[string]*types.AccountIdentifier,
-	dependencyTxs map[string]*DependencyTx,
+	dependencyTxs map[ids.ID]*DependencyTx,
 ) (*TxParser, error) {
 	if cfg.ChainIDs == nil {
 		return nil, errNilChainIDs
@@ -292,7 +292,7 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 	if t.dependencyTxs == nil {
 		return nil, errNoDependencyTxs
 	}
-	rewardOuts := t.dependencyTxs[stakingTxID.String()]
+	rewardOuts := t.dependencyTxs[stakingTxID]
 	if rewardOuts == nil {
 		return nil, errNoMatchingRewardOutputs
 	}
@@ -646,7 +646,7 @@ func (t *TxParser) buildOutputOperation(
 }
 
 func (t *TxParser) isMultisig(utxoid avax.UTXOID) (bool, error) {
-	dependencyTx, ok := t.dependencyTxs[utxoid.TxID.String()]
+	dependencyTx, ok := t.dependencyTxs[utxoid.TxID]
 	if !ok {
 		return false, errFailedToCheckMultisig
 	}
@@ -679,7 +679,7 @@ func (t *TxParser) lookupCurrency(assetID ids.ID) (*types.Currency, error) {
 }
 
 // GetAccountsFromUTXOs extracts destination accounts from given dependency transactions
-func GetAccountsFromUTXOs(hrp string, dependencyTxs map[string]*DependencyTx) (map[string]*types.AccountIdentifier, error) {
+func GetAccountsFromUTXOs(hrp string, dependencyTxs map[ids.ID]*DependencyTx) (map[string]*types.AccountIdentifier, error) {
 	addresses := make(map[string]*types.AccountIdentifier)
 	for _, dependencyTx := range dependencyTxs {
 		utxoMap := getUTXOMap(dependencyTx)

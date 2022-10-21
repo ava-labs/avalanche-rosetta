@@ -5,6 +5,7 @@ import (
 
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanchego/codec"
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
@@ -13,7 +14,7 @@ func parseRosettaTxs(
 	parserCfg pmapper.TxParserConfig,
 	c codec.Manager,
 	txs []*txs.Tx,
-	dependencyTxs map[string]*pmapper.DependencyTx,
+	dependencyTxs map[ids.ID]*pmapper.DependencyTx,
 ) ([]*types.Transaction, error) {
 	inputAddresses, err := pmapper.GetAccountsFromUTXOs(parserCfg.Hrp, dependencyTxs)
 	if err != nil {

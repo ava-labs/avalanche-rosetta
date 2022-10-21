@@ -164,7 +164,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	return nil, service.ErrTransactionNotFound
 }
 
-func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[string]*pmapper.DependencyTx, error) {
+func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[ids.ID]*pmapper.DependencyTx, error) {
 	dependencyTxIDs := []ids.ID{}
 
 	for _, tx := range txs {
@@ -178,7 +178,7 @@ func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[st
 	dependencyTxChan := make(chan *pmapper.DependencyTx, len(dependencyTxIDs))
 	eg, ctx := errgroup.WithContext(ctx)
 
-	dependencyTxs := make(map[string]*pmapper.DependencyTx)
+	dependencyTxs := make(map[ids.ID]*pmapper.DependencyTx)
 	for _, txID := range dependencyTxIDs {
 		txID := txID
 		eg.Go(func() error {
@@ -191,7 +191,7 @@ func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[st
 	close(dependencyTxChan)
 
 	for dTx := range dependencyTxChan {
-		dependencyTxs[dTx.Tx.ID().String()] = dTx
+		dependencyTxs[dTx.Tx.ID()] = dTx
 	}
 
 	return dependencyTxs, nil
