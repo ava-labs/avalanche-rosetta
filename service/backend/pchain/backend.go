@@ -13,6 +13,8 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
+
+	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
 
 var (
@@ -34,6 +36,7 @@ type Backend struct {
 	codecVersion     uint16
 	chainIDs         map[ids.ID]string
 	avaxAssetID      ids.ID
+	txParserCfg      pmapper.TxParserConfig
 }
 
 // NewBackend creates a P-chain service backend
@@ -65,6 +68,14 @@ func NewBackend(
 	}
 	if backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier); err != nil {
 		return nil, err
+	}
+
+	backEnd.txParserCfg = pmapper.TxParserConfig{
+		IsConstruction: false,
+		Hrp:            backEnd.networkHRP,
+		ChainIDs:       backEnd.chainIDs,
+		AvaxAssetID:    backEnd.avaxAssetID,
+		PChainClient:   backEnd.pClient,
 	}
 
 	return backEnd, nil
