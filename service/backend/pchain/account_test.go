@@ -16,6 +16,7 @@ import (
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
+	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
 
@@ -43,7 +44,7 @@ func TestAccountBalance(t *testing.T) {
 	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
-	backend, err := NewBackend(pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(service.ModeOnline, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 	backend.getUTXOsPageSize = 2
 
@@ -203,7 +204,7 @@ func TestAccountCoins(t *testing.T) {
 	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
-	backend, err := NewBackend(pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(service.ModeOnline, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	t.Run("Account Coins Test regular coins", func(t *testing.T) {

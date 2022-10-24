@@ -39,6 +39,7 @@ type Backend struct {
 
 // NewBackend creates a P-chain service backend
 func NewBackend(
+	nodeMode string,
 	pClient client.PChainClient,
 	indexerParser indexer.Parser,
 	assetID ids.ID,
@@ -52,14 +53,17 @@ func NewBackend(
 		codec:            blocks.Codec,
 		codecVersion:     blocks.Version,
 		indexerParser:    indexerParser,
+		chainIDs:         map[string]string{},
 		avaxAssetID:      assetID,
 	}
 
-	err := backEnd.initChainIDs()
-	if err != nil {
-		return nil, err
+	if nodeMode == service.ModeOnline {
+		if err := backEnd.initChainIDs(); err != nil {
+			return nil, err
+		}
 	}
 
+	var err error
 	backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier)
 	if err != nil {
 		return nil, err

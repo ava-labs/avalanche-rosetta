@@ -72,8 +72,6 @@ func (c *config) applyDefaults() {
 }
 
 func (c *config) validate() error {
-	c.applyDefaults()
-
 	if !(c.Mode == service.ModeOffline || c.Mode == service.ModeOnline) {
 		return errInvalidMode
 	}
