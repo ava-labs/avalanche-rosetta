@@ -5,13 +5,14 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 )
 
-// DependencyTx represents a transaction dependency
+// DependencyTx represents a single dependency of a give transaction
 type DependencyTx struct {
 	// [Tx] has some of its outputs spent as
 	// input from a tx dependent on it
 	Tx *txs.Tx
 
 	// Staker txs are rewarded at the end of staking period
+	// with some utxos appended to staker txs.
 	// [RewardUTXOs] collects those reward utxos
 	RewardUTXOs []*avax.UTXO
 
