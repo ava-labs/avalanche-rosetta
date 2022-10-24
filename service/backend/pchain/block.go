@@ -107,7 +107,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
 	var (
 		targetTxs     []*txs.Tx
-		dependencyTxs map[ids.ID]*pmapper.DependencyTx
+		dependencyTxs pmapper.BlockTxDependencies
 		targetCodec   codec.Manager
 	)
 
@@ -150,7 +150,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	return nil, service.ErrTransactionNotFound
 }
 
-func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[ids.ID]*pmapper.DependencyTx, error) {
+func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (pmapper.BlockTxDependencies, error) {
 	dependencyTxIDs := []ids.ID{}
 
 	for _, tx := range txs {
@@ -164,7 +164,7 @@ func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[id
 	dependencyTxChan := make(chan *pmapper.DependencyTx, len(dependencyTxIDs))
 	eg, ctx := errgroup.WithContext(ctx)
 
-	dependencyTxs := make(map[ids.ID]*pmapper.DependencyTx)
+	dependencyTxs := make(pmapper.BlockTxDependencies)
 	for _, txID := range dependencyTxIDs {
 		txID := txID
 		eg.Go(func() error {

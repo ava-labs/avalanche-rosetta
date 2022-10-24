@@ -54,7 +54,7 @@ type TxParser struct {
 	cfg TxParserConfig
 
 	// dependencyTxs maps transaction id to dependence transaction mapping
-	dependencyTxs map[ids.ID]*DependencyTx
+	dependencyTxs BlockTxDependencies
 	// inputTxAccounts contain utxo id to account identifier mappings
 	inputTxAccounts map[string]*types.AccountIdentifier
 }
@@ -63,7 +63,7 @@ type TxParser struct {
 func NewTxParser(
 	cfg TxParserConfig,
 	inputTxAccounts map[string]*types.AccountIdentifier,
-	dependencyTxs map[ids.ID]*DependencyTx,
+	dependencyTxs BlockTxDependencies,
 ) (*TxParser, error) {
 	if cfg.ChainIDs == nil {
 		return nil, errNilChainIDs
@@ -679,7 +679,7 @@ func (t *TxParser) lookupCurrency(assetID ids.ID) (*types.Currency, error) {
 }
 
 // GetAccountsFromUTXOs extracts destination accounts from given dependency transactions
-func GetAccountsFromUTXOs(hrp string, dependencyTxs map[ids.ID]*DependencyTx) (map[string]*types.AccountIdentifier, error) {
+func GetAccountsFromUTXOs(hrp string, dependencyTxs BlockTxDependencies) (map[string]*types.AccountIdentifier, error) {
 	addresses := make(map[string]*types.AccountIdentifier)
 	for _, dependencyTx := range dependencyTxs {
 		utxoMap := dependencyTx.GetUtxos()

@@ -1,9 +1,12 @@
 package pchain
 
 import (
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 )
+
+type BlockTxDependencies map[ids.ID]*DependencyTx
 
 // DependencyTx represents a single dependency of a give transaction
 type DependencyTx struct {
