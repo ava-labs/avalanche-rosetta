@@ -2,8 +2,6 @@ package pchain
 
 import (
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 )
 
 const (
@@ -118,10 +116,4 @@ type StakingMetadata struct {
 	Locktime        uint64   `json:"locktime"`
 	Threshold       uint32   `json:"threshold"`
 	Memo            string   `json:"memo"`
-}
-
-// DependencyTx represents a transaction some of whose output is used as an input to another transaction
-type DependencyTx struct {
-	Tx          *txs.Tx
-	RewardUTXOs []*avax.UTXO
 }
