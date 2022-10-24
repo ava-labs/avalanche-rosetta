@@ -117,15 +117,31 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 	}
 	fetchSharedMemory := subAccountAddress == pmapper.SubAccountTypeSharedMemory
 
-	height, utxos, _, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, false, fetchSharedMemory, nil)
+	// utxos from fetchUTXOsAndStakedOutputs are guarateed to:
+	// 1. be unique (no duplicates)
+	// 2. containt only assetIDs
+	// 3. have not multisign utxos
+	// by parseAndFilterUTXOs call in fetchUTXOsAndStakedOutputs
+	height, utxos, _, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, false, fetchSharedMemory, assetIDs)
 	if typedErr != nil {
 		return nil, typedErr
 	}
 
-	// convert raw UTXO bytes to Rosetta Coins
-	coins, err := b.processUtxos(assetIDs, utxos)
-	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, err)
+	// convert UTXOs to Rosetta Coins
+	coins := []*types.Coin{}
+	for _, utxo := range utxos {
+		amounter, ok := utxo.Out.(avax.Amounter)
+		if !ok {
+			return nil, service.WrapError(service.ErrInternalError, errUnableToGetUTXOOut)
+		}
+		coin := &types.Coin{
+			CoinIdentifier: &types.CoinIdentifier{Identifier: utxo.UTXOID.String()},
+			Amount: &types.Amount{
+				Value:    strconv.FormatUint(amounter.Amount(), 10),
+				Currency: mapper.AtomicAvaxCurrency,
+			},
+		}
+		coins = append(coins, coin)
 	}
 
 	block, err := b.indexerParser.ParseNonGenesisBlock(ctx, "", height)
@@ -133,12 +149,14 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 		return nil, service.WrapError(service.ErrInvalidInput, "unable to get height")
 	}
 
+	// this is needed just for sorting. Uniqueness is guaranteed by utxos uniqueness
+	coins = common.SortUnique(coins)
 	return &types.AccountCoinsResponse{
 		BlockIdentifier: &types.BlockIdentifier{
 			Index: int64(height),
 			Hash:  block.BlockID.String(),
 		},
-		Coins: common.SortUnique(coins),
+		Coins: coins,
 	}, nil
 }
 
@@ -374,10 +392,10 @@ func (b *Backend) parseAndFilterUTXOs(utxoBytes [][]byte, assetIDs ids.Set) ([]a
 			continue
 		}
 
+		// remove duplicates
 		if utxoIDs.Contains(utxo.UTXOID.InputID()) {
 			continue
 		}
-
 		utxoIDs.Add(utxo.UTXOID.InputID())
 
 		// Skip multisig UTXOs
@@ -427,30 +445,4 @@ func (b *Backend) getAccountUTXOs(ctx context.Context, addr ids.ShortID, sourceC
 	}
 
 	return utxos, nil
-}
-
-func (b *Backend) processUtxos(assetIDs ids.Set, utxos []avax.UTXO) ([]*types.Coin, error) {
-	coins := []*types.Coin{}
-
-	for _, utxo := range utxos {
-		// Skip UTXO if req.Currencies is specified, but it doesn't contain the UTXOs asset
-		if assetIDs.Len() > 0 && !assetIDs.Contains(utxo.AssetID()) {
-			continue
-		}
-
-		amounter, ok := utxo.Out.(avax.Amounter)
-		if !ok {
-			return nil, errUnableToGetUTXOOut
-		}
-
-		coin := &types.Coin{
-			CoinIdentifier: &types.CoinIdentifier{Identifier: utxo.UTXOID.String()},
-			Amount: &types.Amount{
-				Value:    strconv.FormatUint(amounter.Amount(), 10),
-				Currency: mapper.AtomicAvaxCurrency,
-			},
-		}
-		coins = append(coins, coin)
-	}
-	return coins, nil
 }

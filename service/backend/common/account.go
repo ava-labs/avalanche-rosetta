@@ -13,8 +13,8 @@ import (
 // paginated getUTXOs calls may have duplicate UTXOs in different pages, this helper eliminates them.
 func SortUnique(coins []*types.Coin) []*types.Coin {
 	coinsMap := make(map[string]*types.Coin)
-	for i, coin := range coins {
-		coinsMap[coin.CoinIdentifier.Identifier] = coins[i]
+	for _, coin := range coins {
+		coinsMap[coin.CoinIdentifier.Identifier] = coin
 	}
 
 	uniqueCoinIdentifiers := make([]string, 0, len(coinsMap))
