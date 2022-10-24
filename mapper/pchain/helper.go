@@ -3,24 +3,23 @@ package pchain
 import (
 	"fmt"
 
-	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
-func parseRosettaTxs(
-	parserCfg pmapper.TxParserConfig,
+func ParseRosettaTxs(
+	parserCfg TxParserConfig,
 	c codec.Manager,
 	txs []*txs.Tx,
-	dependencyTxs pmapper.BlockTxDependencies,
+	dependencyTxs BlockTxDependencies,
 ) ([]*types.Transaction, error) {
 	inputAddresses, err := dependencyTxs.GetReferencedAccounts(parserCfg.Hrp)
 	if err != nil {
 		return nil, err
 	}
 
-	parser, err := pmapper.NewTxParser(parserCfg, inputAddresses, dependencyTxs)
+	parser, err := NewTxParser(parserCfg, inputAddresses, dependencyTxs)
 	if err != nil {
 		return nil, err
 	}

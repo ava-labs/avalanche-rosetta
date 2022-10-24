@@ -44,7 +44,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
-		rosettaTxs, err := parseRosettaTxs(b.txParserCfg, blocks.GenesisCodec, genesisTxs, nil)
+		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, blocks.GenesisCodec, genesisTxs, nil)
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
@@ -73,7 +73,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
 
-		rosettaTxs, err := parseRosettaTxs(b.txParserCfg, blocks.Codec, block.Txs, dependencyTxs)
+		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, blocks.Codec, block.Txs, dependencyTxs)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -135,7 +135,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		targetCodec = blocks.Codec
 	}
 
-	rosettaTxs, err := parseRosettaTxs(b.txParserCfg, targetCodec, targetTxs, dependencyTxs)
+	rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, targetCodec, targetTxs, dependencyTxs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
