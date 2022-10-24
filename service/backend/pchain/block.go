@@ -151,21 +151,20 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 }
 
 func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (pmapper.BlockTxDependencies, error) {
-	dependencyTxIDs := []ids.ID{}
-
+	blockDeps := make(pmapper.BlockTxDependencies)
+	depsTxIDs := []ids.ID{}
 	for _, tx := range txs {
-		inputTxsIds, err := pmapper.GetDependencyTxIDs(tx.Unsigned)
+		inputTxsIds, err := blockDeps.GetDependencyTxIDs(tx.Unsigned)
 		if err != nil {
 			return nil, err
 		}
-		dependencyTxIDs = append(dependencyTxIDs, inputTxsIds...)
+		depsTxIDs = append(depsTxIDs, inputTxsIds...)
 	}
 
-	dependencyTxChan := make(chan *pmapper.DependencyTx, len(dependencyTxIDs))
+	dependencyTxChan := make(chan *pmapper.DependencyTx, len(depsTxIDs))
 	eg, ctx := errgroup.WithContext(ctx)
 
-	dependencyTxs := make(pmapper.BlockTxDependencies)
-	for _, txID := range dependencyTxIDs {
+	for _, txID := range depsTxIDs {
 		txID := txID
 		eg.Go(func() error {
 			return b.fetchDependencyTx(ctx, txID, dependencyTxChan)
@@ -177,10 +176,10 @@ func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (pmappe
 	close(dependencyTxChan)
 
 	for dTx := range dependencyTxChan {
-		dependencyTxs[dTx.Tx.ID()] = dTx
+		blockDeps[dTx.Tx.ID()] = dTx
 	}
 
-	return dependencyTxs, nil
+	return blockDeps, nil
 }
 
 func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *pmapper.DependencyTx) error {

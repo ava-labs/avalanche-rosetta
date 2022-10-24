@@ -1,12 +1,99 @@
 package pchain
 
 import (
+	"fmt"
+
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 type BlockTxDependencies map[ids.ID]*DependencyTx
+
+// GetDependencyTxIDs generates the list of transaction ids used in the inputs to given unsigned transaction
+// this list is then used to fetch the dependency transactions in order to extract source addresses
+// as this information is not part of the transaction objects on chain.
+func (bd BlockTxDependencies) GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
+	// collect tx inputs
+	var ins []*avax.TransferableInput
+	switch unsignedTx := tx.(type) {
+	case *txs.ExportTx:
+		ins = unsignedTx.Ins
+	case *txs.ImportTx:
+		ins = unsignedTx.Ins
+	case *txs.AddValidatorTx:
+		ins = unsignedTx.Ins
+	case *txs.AddPermissionlessValidatorTx:
+		ins = unsignedTx.Ins
+	case *txs.AddDelegatorTx:
+		ins = unsignedTx.Ins
+	case *txs.AddPermissionlessDelegatorTx:
+		ins = unsignedTx.Ins
+	case *txs.CreateSubnetTx:
+		ins = unsignedTx.Ins
+	case *txs.CreateChainTx:
+		ins = unsignedTx.Ins
+	case *txs.AddSubnetValidatorTx:
+		ins = unsignedTx.Ins
+	case *txs.TransformSubnetTx:
+		ins = unsignedTx.Ins
+	case *txs.RemoveSubnetValidatorTx:
+		ins = unsignedTx.Ins
+
+	case *txs.RewardValidatorTx:
+		return []ids.ID{unsignedTx.TxID}, nil
+	case *txs.AdvanceTimeTx:
+		// advance time txs do not have inputs
+	default:
+		return nil, fmt.Errorf("unknown tx type %T", unsignedTx)
+	}
+
+	// extract txIDs and filter out duplicates
+	txIDs := make(map[ids.ID]ids.ID)
+	for _, in := range ins {
+		txIDs[in.UTXOID.TxID] = in.UTXOID.TxID
+	}
+	uniqueTxIDs := make([]ids.ID, 0, len(txIDs))
+	for _, txnID := range txIDs {
+		uniqueTxIDs = append(uniqueTxIDs, txnID)
+	}
+
+	ids.SortIDs(uniqueTxIDs)
+
+	return uniqueTxIDs, nil
+}
+
+// GetAccountsFromUTXOs extracts destination accounts from given dependency transactions
+func (bd BlockTxDependencies) GetAccountsFromUTXOs(hrp string) (map[string]*types.AccountIdentifier, error) {
+	addresses := make(map[string]*types.AccountIdentifier)
+	for _, dependencyTx := range bd {
+		utxoMap := dependencyTx.GetUtxos()
+
+		for _, utxo := range utxoMap {
+			addressable, ok := utxo.Out.(avax.Addressable)
+			if !ok {
+				return nil, errFailedToGetUTXOAddresses
+			}
+
+			addrs := addressable.Addresses()
+
+			if len(addrs) != 1 {
+				continue
+			}
+
+			addr, err := address.Format(mapper.PChainNetworkIdentifier, hrp, addrs[0])
+			addresses[utxo.UTXOID.String()] = &types.AccountIdentifier{Address: addr}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return addresses, nil
+}
 
 // DependencyTx represents a single dependency of a give transaction
 type DependencyTx struct {

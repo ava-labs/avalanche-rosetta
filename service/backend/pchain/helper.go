@@ -15,7 +15,7 @@ func parseRosettaTxs(
 	txs []*txs.Tx,
 	dependencyTxs pmapper.BlockTxDependencies,
 ) ([]*types.Transaction, error) {
-	inputAddresses, err := pmapper.GetAccountsFromUTXOs(parserCfg.Hrp, dependencyTxs)
+	inputAddresses, err := dependencyTxs.GetAccountsFromUTXOs(parserCfg.Hrp)
 	if err != nil {
 		return nil, err
 	}
