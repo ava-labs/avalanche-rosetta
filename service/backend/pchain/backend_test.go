@@ -35,7 +35,7 @@ func TestShouldHandleRequest(t *testing.T) {
 	clientMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	testData := []struct {
