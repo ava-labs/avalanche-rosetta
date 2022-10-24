@@ -53,6 +53,10 @@ func main() {
 	if err != nil {
 		log.Fatal("config read error:", err)
 	}
+
+	// set defaults for unspecified configs
+	cfg.applyDefaults()
+
 	if err := cfg.validate(); err != nil {
 		log.Fatal("config validation error:", err)
 	}

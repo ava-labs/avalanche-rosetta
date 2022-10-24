@@ -221,9 +221,14 @@ func (p *parser) parseContainer(container indexer.Container) (*ParsedBlock, erro
 		BlockID:   blk.ID(),
 		BlockType: fmt.Sprintf("%T", blk),
 		ParentID:  blk.Parent(),
-		Timestamp: container.Timestamp,
-		Height:    blk.Height(),
-		Txs:       txes,
-		Proposer:  proBlkData,
+
+		// TODO: we are considering different ways to build timestamp
+		// e.g. using Banff blocks timestamps/proposerVM timestamp.
+		// Update once agreement is reached
+		Timestamp: time.Unix(container.Timestamp, 0).UnixMilli(),
+
+		Height:   blk.Height(),
+		Txs:      txes,
+		Proposer: proBlkData,
 	}, nil
 }
