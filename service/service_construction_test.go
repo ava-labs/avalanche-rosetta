@@ -9,6 +9,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
+	"github.com/ava-labs/avalanche-rosetta/service/chain/p"
 	"github.com/ava-labs/coreth/interfaces"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -238,7 +239,9 @@ func TestContructionHash(t *testing.T) {
 }
 
 func TestConstructionDerive(t *testing.T) {
-	service := ConstructionService{}
+	service := ConstructionService{
+		p: p.NewClient(),
+	}
 
 	t.Run("no public key", func(t *testing.T) {
 		resp, err := service.ConstructionDerive(
@@ -282,6 +285,33 @@ func TestConstructionDerive(t *testing.T) {
 		assert.Equal(
 			t,
 			"0x156daFC6e9A1304fD5C9AB686acB4B3c802FE3f7",
+			resp.AccountIdentifier.Address,
+		)
+	})
+
+	t.Run("p-chain address", func(t *testing.T) {
+		src := "02e0d4392cfa224d4be19db416b3cf62e90fb2b7015e7b62a95c8cb490514943f6"
+		b, _ := hex.DecodeString(src)
+
+		resp, err := service.ConstructionDerive(
+			context.Background(),
+			&types.ConstructionDeriveRequest{
+				NetworkIdentifier: &types.NetworkIdentifier{
+					Network: mapper.FujiNetwork,
+					SubNetworkIdentifier: &types.SubNetworkIdentifier{
+						Network: mapper.PChainNetworkIdentifier,
+					},
+				},
+				PublicKey: &types.PublicKey{
+					Bytes:     b,
+					CurveType: types.Secp256k1,
+				},
+			},
+		)
+		assert.Nil(t, err)
+		assert.Equal(
+			t,
+			"P-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl",
 			resp.AccountIdentifier.Address,
 		)
 	})

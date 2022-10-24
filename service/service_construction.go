@@ -6,20 +6,20 @@ import (
 	"fmt"
 	"math/big"
 
+	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/interfaces"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
-	"golang.org/x/crypto/sha3"
-
-	ethtypes "github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/ava-labs/avalanche-rosetta/service/chain/p"
 )
 
 const (
@@ -33,6 +33,7 @@ const (
 type ConstructionService struct {
 	config *Config
 	client client.Client
+	p      *p.Client
 }
 
 // NewConstructionService returns a new construction servicer
@@ -40,6 +41,7 @@ func NewConstructionService(config *Config, client client.Client) server.Constru
 	return &ConstructionService{
 		config: config,
 		client: client,
+		p:      p.NewClient(),
 	}
 }
 
@@ -220,6 +222,15 @@ func (s ConstructionService) ConstructionDerive(
 ) (*types.ConstructionDeriveResponse, *types.Error) {
 	if req.PublicKey == nil {
 		return nil, wrapError(errInvalidInput, "public key is not provided")
+	}
+
+	if mapper.IsPChain(req.NetworkIdentifier) {
+		res, err := s.p.DeriveAddress(ctx, req)
+		if err != nil {
+			return nil, wrapError(errInternalError, "p chain address derivation failed")
+		}
+
+		return res, nil
 	}
 
 	key, err := ethcrypto.DecompressPubkey(req.PublicKey.Bytes)
