@@ -11,7 +11,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
-type BlockTxDependencies map[ids.ID]*DependencyTx
+type BlockTxDependencies map[ids.ID]*SingleTxDependency
 
 // GetDependencyTxIDs generates the list of transaction ids used in the inputs to given unsigned transaction
 // this list is then used to fetch the dependency transactions in order to extract source addresses
@@ -66,8 +66,8 @@ func (bd BlockTxDependencies) GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, e
 	return uniqueTxIDs, nil
 }
 
-// GetAccountsFromUTXOs extracts destination accounts from given dependency transactions
-func (bd BlockTxDependencies) GetAccountsFromUTXOs(hrp string) (map[string]*types.AccountIdentifier, error) {
+// GetReferencedAccounts extracts destination accounts from given dependency transactions
+func (bd BlockTxDependencies) GetReferencedAccounts(hrp string) (map[string]*types.AccountIdentifier, error) {
 	addresses := make(map[string]*types.AccountIdentifier)
 	for _, dependencyTx := range bd {
 		utxoMap := dependencyTx.GetUtxos()
@@ -95,8 +95,8 @@ func (bd BlockTxDependencies) GetAccountsFromUTXOs(hrp string) (map[string]*type
 	return addresses, nil
 }
 
-// DependencyTx represents a single dependency of a give transaction
-type DependencyTx struct {
+// SingleTxDependency represents a single dependency of a give transaction
+type SingleTxDependency struct {
 	// [Tx] has some of its outputs spent as
 	// input from a tx dependent on it
 	Tx *txs.Tx
@@ -111,7 +111,7 @@ type DependencyTx struct {
 	utxosMap map[avax.UTXOID]*avax.UTXO
 }
 
-func (d *DependencyTx) GetUtxos() map[avax.UTXOID]*avax.UTXO {
+func (d *SingleTxDependency) GetUtxos() map[avax.UTXOID]*avax.UTXO {
 	if d.utxosMap != nil {
 		return d.utxosMap
 	}

@@ -161,7 +161,7 @@ func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (pmappe
 		depsTxIDs = append(depsTxIDs, inputTxsIds...)
 	}
 
-	dependencyTxChan := make(chan *pmapper.DependencyTx, len(depsTxIDs))
+	dependencyTxChan := make(chan *pmapper.SingleTxDependency, len(depsTxIDs))
 	eg, ctx := errgroup.WithContext(ctx)
 
 	for _, txID := range depsTxIDs {
@@ -182,13 +182,13 @@ func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (pmappe
 	return blockDeps, nil
 }
 
-func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *pmapper.DependencyTx) error {
+func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *pmapper.SingleTxDependency) error {
 	// Genesis state contains initial allocation UTXOs. These are not technically part of a transaction.
 	// As a result, their UTXO id uses zero value transaction id. In that case, return genesis allocation data
 	if txID == ids.Empty {
 		allocationTx, err := b.buildGenesisAllocationTx()
 		if allocationTx != nil {
-			out <- &pmapper.DependencyTx{
+			out <- &pmapper.SingleTxDependency{
 				Tx: allocationTx,
 			}
 		}
@@ -222,7 +222,7 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 		}
 		utxos = append(utxos, &utxo)
 	}
-	out <- &pmapper.DependencyTx{
+	out <- &pmapper.SingleTxDependency{
 		Tx:          tx,
 		RewardUTXOs: utxos,
 	}
