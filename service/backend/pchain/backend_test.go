@@ -32,7 +32,7 @@ func TestShouldHandleRequest(t *testing.T) {
 	clientMock := &mocks.PChainClient{}
 	clientMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
 	clientMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
-	backend, err := NewBackend(clientMock, nil, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(service.ModeOnline, clientMock, nil, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	testData := []struct {
