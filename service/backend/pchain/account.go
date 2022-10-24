@@ -106,7 +106,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 		return nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
 	}
 
-	currencyAssetIDs, wrappedErr := b.buildCurrencyAssetIDs(ctx, req.Currencies)
+	assetIDs, wrappedErr := b.buildCurrencyAssetIDs(ctx, req.Currencies)
 	if err != nil {
 		return nil, wrappedErr
 	}
@@ -123,7 +123,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 	}
 
 	// convert raw UTXO bytes to Rosetta Coins
-	coins, err := b.processUtxos(currencyAssetIDs, utxos)
+	coins, err := b.processUtxos(assetIDs, utxos)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -142,13 +142,13 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 	}, nil
 }
 
-func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImportable bool, currencyAssetIds map[ids.ID]struct{}) (uint64, *AccountBalance, *types.Error) {
+func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImportable bool, assetIds ids.Set) (uint64, *AccountBalance, *types.Error) {
 	addr, err := address.ParseToID(addrString)
 	if err != nil {
 		return 0, nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
 	}
 
-	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, !fetchImportable, fetchImportable, currencyAssetIds)
+	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, !fetchImportable, fetchImportable, assetIds)
 	if typedErr != nil {
 		return 0, nil, typedErr
 	}
@@ -245,8 +245,8 @@ utxoFor:
 	return accountBalance, nil
 }
 
-func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, currencies []*types.Currency) (map[ids.ID]struct{}, *types.Error) {
-	currencyAssetIDs := make(map[ids.ID]struct{})
+func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, currencies []*types.Currency) (ids.Set, *types.Error) {
+	assetIDs := ids.NewSet(len(currencies))
 	for _, reqCurrency := range currencies {
 		description, err := b.pClient.GetAssetDescription(ctx, reqCurrency.Symbol)
 		if err != nil {
@@ -255,10 +255,10 @@ func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, currencies []*types
 		if int32(description.Denomination) != reqCurrency.Decimals {
 			return nil, service.WrapError(service.ErrInvalidInput, "incorrect currency decimals")
 		}
-		currencyAssetIDs[description.AssetID] = struct{}{}
+		assetIDs.Add(description.AssetID)
 	}
 
-	return currencyAssetIDs, nil
+	return assetIDs, nil
 }
 
 // Fetches UTXOs and staked outputs for the given account.
@@ -266,7 +266,7 @@ func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, currencies []*types
 // Since these APIs don't return the corresponding block height or hash,
 // which is needed for both /account/balance and /account/coins, chain height is checked before and after
 // and if they differ, an error is returned.
-func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.ShortID, fetchStaked bool, fetchSharedMemory bool, currencyAssetIds map[ids.ID]struct{}) (uint64, []avax.UTXO, [][]byte, *types.Error) {
+func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.ShortID, fetchStaked bool, fetchSharedMemory bool, assetIds ids.Set) (uint64, []avax.UTXO, [][]byte, *types.Error) {
 	// fetch preHeight before the balance fetch
 	preHeight, err := b.pClient.GetHeight(ctx)
 	if err != nil {
@@ -317,7 +317,7 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.Short
 	}
 
 	// parse UTXO bytes to UTXO structs
-	utxos, err := b.parseUTXOs(utxoBytes, currencyAssetIds)
+	utxos, err := b.parseAndFilterUTXOs(utxoBytes, assetIds)
 	if err != nil {
 		return 0, nil, nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -357,11 +357,11 @@ func (b *Backend) calculateStakedAmount(stakeUTXOs [][]byte) (uint64, error) {
 	return staked, nil
 }
 
-func (b *Backend) parseUTXOs(utxoBytes [][]byte, currencyAssetIDs map[ids.ID]struct{}) ([]avax.UTXO, error) {
+func (b *Backend) parseAndFilterUTXOs(utxoBytes [][]byte, assetIDs ids.Set) ([]avax.UTXO, error) {
 	utxos := []avax.UTXO{}
 
 	// when results are paginated, duplicate UTXOs may be provided. guarantee uniqueness
-	utxoIDs := make(map[string]struct{})
+	utxoIDs := ids.NewSet(len(utxoBytes))
 	for _, bytes := range utxoBytes {
 		utxo := avax.UTXO{}
 		_, err := b.codec.Unmarshal(bytes, &utxo)
@@ -370,15 +370,15 @@ func (b *Backend) parseUTXOs(utxoBytes [][]byte, currencyAssetIDs map[ids.ID]str
 		}
 
 		// Skip UTXO if req.Currencies is specified, but it doesn't contain the UTXOs asset
-		if _, ok := currencyAssetIDs[utxo.AssetID()]; len(currencyAssetIDs) > 0 && !ok {
+		if assetIDs.Len() > 0 && !assetIDs.Contains(utxo.AssetID()) {
 			continue
 		}
 
-		if _, ok := utxoIDs[utxo.UTXOID.String()]; ok {
+		if utxoIDs.Contains(utxo.UTXOID.InputID()) {
 			continue
 		}
 
-		utxoIDs[utxo.UTXOID.String()] = struct{}{}
+		utxoIDs.Add(utxo.UTXOID.InputID())
 
 		// Skip multisig UTXOs
 		addressable, ok := utxo.Out.(avax.Addressable)
@@ -429,12 +429,12 @@ func (b *Backend) getAccountUTXOs(ctx context.Context, addr ids.ShortID, sourceC
 	return utxos, nil
 }
 
-func (b *Backend) processUtxos(currencyAssetIDs map[ids.ID]struct{}, utxos []avax.UTXO) ([]*types.Coin, error) {
+func (b *Backend) processUtxos(assetIDs ids.Set, utxos []avax.UTXO) ([]*types.Coin, error) {
 	coins := []*types.Coin{}
 
 	for _, utxo := range utxos {
 		// Skip UTXO if req.Currencies is specified, but it doesn't contain the UTXOs asset
-		if _, ok := currencyAssetIDs[utxo.AssetID()]; len(currencyAssetIDs) > 0 && !ok {
+		if assetIDs.Len() > 0 && !assetIDs.Contains(utxo.AssetID()) {
 			continue
 		}
 
