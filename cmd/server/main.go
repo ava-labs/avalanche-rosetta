@@ -192,8 +192,12 @@ func main() {
 }
 
 func validateNetworkName(cfg *config, cChainClient client.Client) error {
-	if cfg.Mode == service.ModeOffline && cfg.NetworkName == "" {
-		return fmt.Errorf("network name is not provided, can't fetch network name in offline mode")
+	if cfg.Mode == service.ModeOffline {
+		if cfg.NetworkName == "" {
+			return fmt.Errorf("network name is not provided, can't fetch network name in offline mode")
+		}
+
+		return nil
 	}
 
 	log.Println("fetching network name from rpc...")
