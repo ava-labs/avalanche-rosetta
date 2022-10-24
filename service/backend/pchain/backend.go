@@ -41,6 +41,7 @@ type Backend struct {
 
 // NewBackend creates a P-chain service backend
 func NewBackend(
+	nodeMode string,
 	pClient client.PChainClient,
 	indexerParser indexer.Parser,
 	assetID ids.ID,
@@ -60,13 +61,18 @@ func NewBackend(
 		codec:            blocks.Codec,
 		codecVersion:     blocks.Version,
 		indexerParser:    indexerParser,
+		chainIDs:         map[ids.ID]string{},
 		avaxAssetID:      assetID,
 	}
 
-	if err = backEnd.initChainIDs(); err != nil {
-		return nil, err
+	if nodeMode == service.ModeOnline {
+		if err := backEnd.initChainIDs(); err != nil {
+			return nil, err
+		}
 	}
-	if backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier); err != nil {
+
+	backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier)
+	if err != nil {
 		return nil, err
 	}
 
@@ -77,8 +83,7 @@ func NewBackend(
 		AvaxAssetID:    backEnd.avaxAssetID,
 		PChainClient:   backEnd.pClient,
 	}
-
-	return backEnd, nil
+	return backEnd, err
 }
 
 // ShouldHandleRequest returns whether a given request should be handled by this backend
