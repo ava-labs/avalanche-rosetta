@@ -46,7 +46,7 @@ func (bd BlockTxDependencies) GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, e
 	case *txs.RewardValidatorTx:
 		return []ids.ID{unsignedTx.TxID}, nil
 	case *txs.AdvanceTimeTx:
-		// advance time txs do not have inputs
+		return []ids.ID{}, nil
 	default:
 		return nil, fmt.Errorf("unknown tx type %T", unsignedTx)
 	}
