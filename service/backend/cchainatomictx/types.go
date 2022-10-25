@@ -15,6 +15,8 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 )
 
+var _ common.AvaxTx = &cAtomicTx{}
+
 type cAtomicTx struct {
 	Tx           *evm.Tx
 	Codec        codec.Manager
@@ -31,32 +33,26 @@ func (c *cAtomicTx) Unmarshal(bytes []byte) error {
 	if err != nil {
 		return err
 	}
+	if err := tx.Sign(c.Codec, nil); err != nil {
+		return err
+	}
 	c.Tx = &tx
 	return nil
 }
 
 func (c *cAtomicTx) SigningPayload() ([]byte, error) {
-	unsignedAtomicBytes, err := c.Codec.Marshal(c.CodecVersion, &c.Tx.UnsignedAtomicTx)
-	if err != nil {
+	if err := c.Tx.Sign(c.Codec, nil); err != nil {
 		return nil, err
 	}
 
-	hash := hashing.ComputeHash256(unsignedAtomicBytes)
+	hash := hashing.ComputeHash256(c.Tx.Bytes())
 	return hash, nil
 }
 
 func (c *cAtomicTx) Hash() (ids.ID, error) {
-	unsignedBytes, err := c.Codec.Marshal(c.CodecVersion, &c.Tx.UnsignedAtomicTx)
-	if err != nil {
+	if err := c.Tx.Sign(c.Codec, nil); err != nil {
 		return ids.Empty, err
 	}
-
-	signedBytes, err := c.Codec.Marshal(c.CodecVersion, &c.Tx)
-	if err != nil {
-		return ids.Empty, err
-	}
-
-	c.Tx.Initialize(unsignedBytes, signedBytes)
 	return c.Tx.ID(), nil
 }
 
@@ -93,7 +89,7 @@ func (c cAtomicTxBuilder) BuildTx(operations []*types.Operation, metadata map[st
 
 type cAtomicTxParser struct {
 	hrp      string
-	chainIDs map[string]string
+	chainIDs map[ids.ID]string
 }
 
 func (c cAtomicTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*types.AccountIdentifier) ([]*types.Operation, error) {

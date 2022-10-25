@@ -15,7 +15,11 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 )
 
-var errInvalidTransaction = errors.New("invalid transaction")
+var (
+	errInvalidTransaction = errors.New("invalid transaction")
+
+	_ common.AvaxTx = &pTx{}
+)
 
 // AccountBalance contains P-chain account balances
 type AccountBalance struct {
@@ -42,32 +46,26 @@ func (p *pTx) Unmarshal(bytes []byte) error {
 	if err != nil {
 		return err
 	}
+	if err := tx.Sign(p.Codec, nil); err != nil {
+		return err
+	}
 	p.Tx = &tx
 	return nil
 }
 
 func (p *pTx) SigningPayload() ([]byte, error) {
-	unsignedAtomicBytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx.Unsigned)
-	if err != nil {
+	if err := p.Tx.Sign(p.Codec, nil); err != nil {
 		return nil, err
 	}
 
-	hash := hashing.ComputeHash256(unsignedAtomicBytes)
+	hash := hashing.ComputeHash256(p.Tx.Unsigned.Bytes())
 	return hash, nil
 }
 
 func (p *pTx) Hash() (ids.ID, error) {
-	unsignedBytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx.Unsigned)
-	if err != nil {
+	if err := p.Tx.Sign(p.Codec, nil); err != nil {
 		return ids.Empty, err
 	}
-
-	signedBytes, err := p.Codec.Marshal(p.CodecVersion, &p.Tx)
-	if err != nil {
-		return ids.Empty, err
-	}
-
-	p.Tx.Initialize(unsignedBytes, signedBytes)
 	return p.Tx.ID(), nil
 }
 
@@ -104,7 +102,7 @@ func (p pTxBuilder) BuildTx(operations []*types.Operation, metadataMap map[strin
 
 type pTxParser struct {
 	hrp         string
-	chainIDs    map[string]string
+	chainIDs    map[ids.ID]string
 	avaxAssetID ids.ID
 }
 
@@ -114,12 +112,19 @@ func (p pTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string]*type
 		return nil, errInvalidTransaction
 	}
 
-	parser, err := pmapper.NewTxParser(true, p.hrp, p.chainIDs, inputAddresses, nil, nil, p.avaxAssetID)
+	parserCfg := pmapper.TxParserConfig{
+		IsConstruction: true,
+		Hrp:            p.hrp,
+		ChainIDs:       p.chainIDs,
+		AvaxAssetID:    p.avaxAssetID,
+		PChainClient:   nil,
+	}
+	parser, err := pmapper.NewTxParser(parserCfg, inputAddresses, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	transactions, err := parser.Parse(pTx.Tx.ID(), pTx.Tx.Unsigned)
+	transactions, err := parser.Parse(pTx.Tx)
 	if err != nil {
 		return nil, err
 	}

@@ -203,9 +203,9 @@ func (b *Backend) ConstructionParse(ctx context.Context, req *types.Construction
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	chainIDs := map[string]string{}
+	chainIDs := map[ids.ID]string{}
 	if rosettaTx.DestinationChainID != nil {
-		chainIDs[rosettaTx.DestinationChainID.String()] = rosettaTx.DestinationChain
+		chainIDs[*rosettaTx.DestinationChainID] = rosettaTx.DestinationChain
 	}
 
 	txParser := pTxParser{

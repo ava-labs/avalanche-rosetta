@@ -13,6 +13,8 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
+
+	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
 
 var (
@@ -32,8 +34,9 @@ type Backend struct {
 	getUTXOsPageSize uint32
 	codec            codec.Manager
 	codecVersion     uint16
-	chainIDs         map[string]string
+	chainIDs         map[ids.ID]string
 	avaxAssetID      ids.ID
+	txParserCfg      pmapper.TxParserConfig
 }
 
 // NewBackend creates a P-chain service backend
@@ -58,7 +61,7 @@ func NewBackend(
 		codec:            blocks.Codec,
 		codecVersion:     blocks.Version,
 		indexerParser:    indexerParser,
-		chainIDs:         map[string]string{},
+		chainIDs:         map[ids.ID]string{},
 		avaxAssetID:      assetID,
 	}
 
@@ -71,6 +74,14 @@ func NewBackend(
 	backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier)
 	if err != nil {
 		return nil, err
+	}
+
+	backEnd.txParserCfg = pmapper.TxParserConfig{
+		IsConstruction: false,
+		Hrp:            backEnd.networkHRP,
+		ChainIDs:       backEnd.chainIDs,
+		AvaxAssetID:    backEnd.avaxAssetID,
+		PChainClient:   backEnd.pClient,
 	}
 	return backEnd, err
 }
@@ -111,21 +122,21 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 
 func (b *Backend) initChainIDs() error {
 	ctx := context.Background()
-	b.chainIDs = map[string]string{
-		ids.Empty.String(): mapper.PChainNetworkIdentifier,
+	b.chainIDs = map[ids.ID]string{
+		ids.Empty: mapper.PChainNetworkIdentifier,
 	}
 
 	cChainID, err := b.pClient.GetBlockchainID(ctx, mapper.CChainNetworkIdentifier)
 	if err != nil {
 		return err
 	}
-	b.chainIDs[cChainID.String()] = mapper.CChainNetworkIdentifier
+	b.chainIDs[cChainID] = mapper.CChainNetworkIdentifier
 
 	xChainID, err := b.pClient.GetBlockchainID(ctx, mapper.XChainNetworkIdentifier)
 	if err != nil {
 		return err
 	}
-	b.chainIDs[xChainID.String()] = mapper.XChainNetworkIdentifier
+	b.chainIDs[xChainID] = mapper.XChainNetworkIdentifier
 
 	return nil
 }
