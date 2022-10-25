@@ -64,7 +64,7 @@ func NewClient(ctx context.Context, endpoint string) (Client, error) {
 		return nil, err
 	}
 
-	return client{
+	return &client{
 		Client:         info.NewClient(endpoint),
 		EvmClient:      evm.NewClient(endpoint, "C"),
 		EthClient:      eth,

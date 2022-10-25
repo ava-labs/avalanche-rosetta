@@ -12,7 +12,6 @@ import (
 )
 
 var (
-	errMissingRPC              = errors.New("avalanche rpc endpoint is not provided")
 	errInvalidMode             = errors.New("invalid rosetta mode")
 	errGenesisBlockRequired    = errors.New("genesis block hash is not provided")
 	errInvalidTokenAddress     = errors.New("invalid token address provided")
@@ -23,8 +22,8 @@ var (
 
 type config struct {
 	Mode             string `json:"mode"`
-	RPCEndpoint      string `json:"rpc_endpoint"`
-	IndexerEndpoint  string `json:"indexer_endpoint"`
+	RPCBaseURL       string `json:"rpc_base_url"`
+	IndexerBaseURL   string `json:"indexer_base_url"`
 	ListenAddr       string `json:"listen_addr"`
 	NetworkName      string `json:"network_name"`
 	ChainID          int64  `json:"chain_id"`
@@ -50,7 +49,7 @@ func readConfig(path string) (*config, error) {
 	return cfg, err
 }
 
-func (c *config) ApplyDefaults() {
+func (c *config) applyDefaults() {
 	if c.Mode == "" {
 		c.Mode = service.ModeOnline
 	}
@@ -59,12 +58,12 @@ func (c *config) ApplyDefaults() {
 		c.IngestionMode = service.StandardIngestion
 	}
 
-	if c.RPCEndpoint == "" {
-		c.RPCEndpoint = "http://localhost:9650"
+	if c.RPCBaseURL == "" {
+		c.RPCBaseURL = "http://localhost:9650"
 	}
 
-	if c.IndexerEndpoint == "" {
-		c.IndexerEndpoint = c.RPCEndpoint
+	if c.IndexerBaseURL == "" {
+		c.IndexerBaseURL = c.RPCBaseURL
 	}
 
 	if c.ListenAddr == "" {
@@ -72,13 +71,7 @@ func (c *config) ApplyDefaults() {
 	}
 }
 
-func (c *config) Validate() error {
-	c.ApplyDefaults()
-
-	if c.RPCEndpoint == "" {
-		return errMissingRPC
-	}
-
+func (c *config) validate() error {
 	if !(c.Mode == service.ModeOffline || c.Mode == service.ModeOnline) {
 		return errInvalidMode
 	}
@@ -105,7 +98,7 @@ func (c *config) Validate() error {
 	return nil
 }
 
-func (c *config) ValidateWhitelistOnlyValidErc20s(cli client.Client) error {
+func (c *config) validateWhitelistOnlyValidErc20s(cli client.Client) error {
 	for _, token := range c.TokenWhiteList {
 		ethAddress := ethcommon.HexToAddress(token)
 		symbol, decimals, err := cli.GetContractInfo(ethAddress, true)

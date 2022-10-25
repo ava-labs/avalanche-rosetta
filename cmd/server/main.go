@@ -53,11 +53,15 @@ func main() {
 	if err != nil {
 		log.Fatal("config read error:", err)
 	}
-	if err := cfg.Validate(); err != nil {
+
+	// set defaults for unspecified configs
+	cfg.applyDefaults()
+
+	if err := cfg.validate(); err != nil {
 		log.Fatal("config validation error:", err)
 	}
 
-	apiClient, err := client.NewClient(context.Background(), cfg.RPCEndpoint)
+	apiClient, err := client.NewClient(context.Background(), cfg.RPCBaseURL)
 	if err != nil {
 		log.Fatal("client init error:", err)
 	}
@@ -68,7 +72,7 @@ func main() {
 	//
 	// TODO: Only perform this check after the underlying node is bootstrapped
 	if cfg.Mode == service.ModeOnline && cfg.ValidateERC20Whitelist {
-		if err := cfg.ValidateWhitelistOnlyValidErc20s(apiClient); err != nil {
+		if err := cfg.validateWhitelistOnlyValidErc20s(apiClient); err != nil {
 			log.Fatal("token whitelist validation error:", err)
 		}
 	}
@@ -163,7 +167,7 @@ func main() {
 		log.Fatal("parse asset id failed:", err)
 	}
 
-	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCEndpoint, cfg.IndexerEndpoint)
+	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCBaseURL, cfg.IndexerBaseURL)
 	pIndexerParser, err := indexer.NewParser(pChainClient)
 	if err != nil {
 		log.Fatal("unable to initialize p-chain indexer parser:", err)
@@ -185,7 +189,7 @@ func main() {
 		service.BlockchainName,
 		cfg.ChainID,
 		cfg.NetworkName,
-		cfg.RPCEndpoint,
+		cfg.RPCBaseURL,
 	)
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
