@@ -17,7 +17,7 @@ type AvaxTx interface {
 	Initialize() error
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
-	SigningPayload() ([]byte, error)
+	SigningPayload() []byte
 	Hash() ids.ID
 }
 

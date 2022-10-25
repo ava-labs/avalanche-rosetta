@@ -59,13 +59,8 @@ func (p *pTx) Unmarshal(bytes []byte) error {
 	return p.Initialize()
 }
 
-func (p *pTx) SigningPayload() ([]byte, error) {
-	if err := p.Initialize(); err != nil {
-		return nil, err
-	}
-
-	hash := hashing.ComputeHash256(p.Tx.Unsigned.Bytes())
-	return hash, nil
+func (p *pTx) SigningPayload() []byte {
+	return hashing.ComputeHash256(p.Tx.Unsigned.Bytes())
 }
 
 func (p *pTx) Hash() ids.ID {

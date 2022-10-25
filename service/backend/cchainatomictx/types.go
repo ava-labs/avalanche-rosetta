@@ -48,13 +48,8 @@ func (c *cAtomicTx) Unmarshal(bytes []byte) error {
 	return c.Initialize()
 }
 
-func (c *cAtomicTx) SigningPayload() ([]byte, error) {
-	if err := c.Initialize(); err != nil {
-		return nil, err
-	}
-
-	hash := hashing.ComputeHash256(c.Tx.Bytes())
-	return hash, nil
+func (c *cAtomicTx) SigningPayload() []byte {
+	return hashing.ComputeHash256(c.Tx.Bytes())
 }
 
 func (c *cAtomicTx) Hash() ids.ID {

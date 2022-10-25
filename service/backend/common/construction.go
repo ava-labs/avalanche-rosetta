@@ -148,23 +148,17 @@ func BuildPayloads(
 		AccountIdentifierSigners: accountIdentifierSigners,
 	}
 
-	hash, err := tx.SigningPayload()
-	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
-	}
-
 	payloads := make([]*types.SigningPayload, len(signers))
-
 	for i, signer := range signers {
 		payloads[i] = &types.SigningPayload{
 			AccountIdentifier: signer,
-			Bytes:             hash,
+			Bytes:             tx.SigningPayload(),
 			SignatureType:     types.EcdsaRecovery,
 		}
 	}
 
 	var metadata pmapper.Metadata
-	err = mapper.UnmarshalJSONMap(req.Metadata, &metadata)
+	err := mapper.UnmarshalJSONMap(req.Metadata, &metadata)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
