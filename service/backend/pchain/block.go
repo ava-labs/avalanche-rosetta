@@ -68,12 +68,12 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 		}
 		blockIndex = int64(block.Height)
 
-		dependencyTxs, err := b.fetchDependencyTxs(ctx, block.Txs)
+		blkDeps, err := b.fetchBlkDependencies(ctx, block.Txs)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
 
-		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, blocks.Codec, block.Txs, dependencyTxs)
+		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, blocks.Codec, block.Txs, blkDeps)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -125,7 +125,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
-		deps, err := b.fetchDependencyTxs(ctx, block.Txs)
+		deps, err := b.fetchBlkDependencies(ctx, block.Txs)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -150,7 +150,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	return nil, service.ErrTransactionNotFound
 }
 
-func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (pmapper.BlockTxDependencies, error) {
+func (b *Backend) fetchBlkDependencies(ctx context.Context, txs []*txs.Tx) (pmapper.BlockTxDependencies, error) {
 	blockDeps := make(pmapper.BlockTxDependencies)
 	depsTxIDs := []ids.ID{}
 	for _, tx := range txs {
