@@ -35,7 +35,7 @@ type Backend struct {
 	getUTXOsPageSize uint32
 	codec            codec.Manager
 	codecVersion     uint16
-	chainIDs         map[ids.ID]string
+	chainIDs         map[ids.ID]constants.NetworkIdentifiers
 	avaxAssetID      ids.ID
 	txParserCfg      pmapper.TxParserConfig
 }
@@ -62,7 +62,7 @@ func NewBackend(
 		codec:            blocks.Codec,
 		codecVersion:     blocks.Version,
 		indexerParser:    indexerParser,
-		chainIDs:         map[ids.ID]string{},
+		chainIDs:         map[ids.ID]constants.NetworkIdentifiers{},
 		avaxAssetID:      assetID,
 	}
 
@@ -123,21 +123,21 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 
 func (b *Backend) initChainIDs() error {
 	ctx := context.Background()
-	b.chainIDs = map[ids.ID]string{
-		ids.Empty: constants.PChain.String(),
+	b.chainIDs = map[ids.ID]constants.NetworkIdentifiers{
+		ids.Empty: constants.PChain,
 	}
 
 	cChainID, err := b.pClient.GetBlockchainID(ctx, constants.CChain.String())
 	if err != nil {
 		return err
 	}
-	b.chainIDs[cChainID] = constants.CChain.String()
+	b.chainIDs[cChainID] = constants.CChain
 
 	xChainID, err := b.pClient.GetBlockchainID(ctx, constants.XChain.String())
 	if err != nil {
 		return err
 	}
-	b.chainIDs[xChainID] = constants.XChain.String()
+	b.chainIDs[xChainID] = constants.XChain
 
 	return nil
 }

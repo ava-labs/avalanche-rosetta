@@ -18,9 +18,9 @@ import (
 var (
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	cChainID, _    = ids.FromString("yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")
-	chainIDs       = map[ids.ID]string{
-		ids.Empty: rosConst.PChain.String(),
-		cChainID:  rosConst.CChain.String(),
+	chainIDs       = map[ids.ID]rosConst.NetworkIdentifiers{
+		ids.Empty: rosConst.PChain,
+		cChainID:  rosConst.CChain,
 	}
 
 	pchainClient = &mocks.PChainClient{}
@@ -97,7 +97,7 @@ func TestMapOutOperation(t *testing.T) {
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	outOps := newTxOps(false)
-	err := parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, rosConst.PChain.String())
+	err := parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, rosConst.PChain)
 	assert.Nil(t, err)
 
 	rosettaOutOp := outOps.Outs
