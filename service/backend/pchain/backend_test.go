@@ -10,6 +10,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
+	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanchego/ids"
 )
@@ -32,7 +33,9 @@ func TestShouldHandleRequest(t *testing.T) {
 	clientMock := &mocks.PChainClient{}
 	clientMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
 	clientMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, nil, avaxAssetID, pChainNetworkIdentifier)
+	parserMock := &idxmocks.Parser{}
+	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
+	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	testData := []struct {

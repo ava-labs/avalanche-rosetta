@@ -23,18 +23,17 @@ var (
 )
 
 type Backend struct {
-	fac                    *crypto.FactorySECP256K1R
-	networkID              *types.NetworkIdentifier
-	networkHRP             string
-	pClient                client.PChainClient
-	indexerParser          indexer.Parser
-	getUTXOsPageSize       uint32
-	codec                  codec.Manager
-	codecVersion           uint16
-	genesisBlock           *indexer.ParsedGenesisBlock
-	genesisBlockIdentifier *types.BlockIdentifier
-	chainIDs               map[string]string
-	avaxAssetID            ids.ID
+	genesisHandler
+	fac              *crypto.FactorySECP256K1R
+	networkID        *types.NetworkIdentifier
+	networkHRP       string
+	pClient          client.PChainClient
+	indexerParser    indexer.Parser
+	getUTXOsPageSize uint32
+	codec            codec.Manager
+	codecVersion     uint16
+	chainIDs         map[string]string
+	avaxAssetID      ids.ID
 }
 
 // NewBackend creates a P-chain service backend
@@ -45,7 +44,13 @@ func NewBackend(
 	assetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
 ) (*Backend, error) {
+	genHandler, err := newGenesisHandler(indexerParser)
+	if err != nil {
+		return nil, err
+	}
+
 	backEnd := &Backend{
+		genesisHandler:   genHandler,
 		fac:              &crypto.FactorySECP256K1R{},
 		networkID:        networkIdentifier,
 		pClient:          pClient,
@@ -63,7 +68,6 @@ func NewBackend(
 		}
 	}
 
-	var err error
 	backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier)
 	if err != nil {
 		return nil, err
@@ -103,22 +107,6 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	}
 
 	return false
-}
-
-func (b *Backend) getGenesisBlock(ctx context.Context) (*indexer.ParsedGenesisBlock, error) {
-	if b.genesisBlock != nil {
-		return b.genesisBlock, nil
-	}
-	genesisBlock, err := b.indexerParser.GetGenesisBlock(ctx)
-	if err != nil {
-		return nil, err
-	}
-	b.genesisBlock = genesisBlock
-	b.genesisBlockIdentifier = &types.BlockIdentifier{
-		Index: int64(genesisBlock.Height),
-		Hash:  genesisBlock.BlockID.String(),
-	}
-	return genesisBlock, nil
 }
 
 func (b *Backend) initChainIDs() error {

@@ -5,13 +5,10 @@ import (
 	"fmt"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/service"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/utils/formatting"
@@ -33,30 +30,26 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 		hash = *request.BlockIdentifier.Hash
 	}
 
-	isGenesisBlockRequest, err := b.isGenesisBlockRequest(ctx, blockIndex, hash)
-	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
-	}
-
+	isGenesisBlockRequest := b.isGenesisBlockRequest(blockIndex, hash)
 	if isGenesisBlockRequest {
-		genesisBlock, err := b.getGenesisBlock(ctx)
+		genesisTxs, err := b.getFullGenesisTxs()
+		if err != nil {
+			return nil, service.WrapError(service.ErrClientError, err)
+		}
+		rosettaTxs, err := b.parseRosettaTxs(genesisTxs, nil)
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
 
-		transactions, err := b.getGenesisTransactions(genesisBlock)
-		if err != nil {
-			return nil, service.WrapError(service.ErrClientError, err)
-		}
-
+		genesisBlock := b.getGenesisBlock()
 		return &types.BlockResponse{
 			Block: &types.Block{
-				BlockIdentifier: b.genesisBlockIdentifier,
+				BlockIdentifier: b.getGenesisIdentifier(),
 				// Parent block identifier of genesis block is set to itself instead of the hash of the genesis state
 				// This is done as the genesis state hash cannot be used as a transaction id for the /block apis
 				// and the operations found in the genesis state are returned as operations of the genesis block.
-				ParentBlockIdentifier: b.genesisBlockIdentifier,
-				Transactions:          transactions,
+				ParentBlockIdentifier: b.getGenesisIdentifier(),
+				Transactions:          rosettaTxs,
 				Timestamp:             genesisBlock.Timestamp,
 				Metadata: map[string]interface{}{
 					pmapper.MetadataMessage: genesisBlock.Message,
@@ -71,7 +64,11 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 	}
 	blockIndex = int64(block.Height)
 
-	rosettaTxs, err := b.parseRosettaTxs(ctx, block.Txs)
+	dependencyTxs, err := b.fetchDependencyTxs(ctx, block.Txs)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+	rosettaTxs, err := b.parseRosettaTxs(block.Txs, dependencyTxs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -96,20 +93,16 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 
 // BlockTransaction implements the /block/transaction endpoint.
 func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
-	isGenesisBlockRequest, err := b.isGenesisBlockRequest(ctx, request.BlockIdentifier.Index, request.BlockIdentifier.Hash)
-	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
-	}
-
-	var rosettaTxs []*types.Transaction
-
-	if isGenesisBlockRequest {
-		genesisBlock, err := b.getGenesisBlock(ctx)
+	var (
+		isGenesisRequest = b.isGenesisBlockRequest(request.BlockIdentifier.Index, request.BlockIdentifier.Hash)
+		rosettaTxs       []*types.Transaction
+	)
+	if isGenesisRequest {
+		genesisTxs, err := b.getFullGenesisTxs()
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
-
-		rosettaTxs, err = b.getGenesisTransactions(genesisBlock)
+		rosettaTxs, err = b.parseRosettaTxs(genesisTxs, nil)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -118,8 +111,11 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
-
-		rosettaTxs, err = b.parseRosettaTxs(ctx, block.Txs)
+		dependencyTxs, err := b.fetchDependencyTxs(ctx, block.Txs)
+		if err != nil {
+			return nil, service.WrapError(service.ErrInternalError, err)
+		}
+		rosettaTxs, err = b.parseRosettaTxs(block.Txs, dependencyTxs)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -134,36 +130,6 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	}
 
 	return nil, service.ErrTransactionNotFound
-}
-
-func (b *Backend) parseRosettaTxs(
-	ctx context.Context,
-	txs []*txs.Tx,
-) ([]*types.Transaction, error) {
-	dependencyTxs, err := b.fetchDependencyTxs(ctx, txs)
-	if err != nil {
-		return nil, err
-	}
-
-	parser, err := b.newTxParser(dependencyTxs)
-	if err != nil {
-		return nil, err
-	}
-
-	transactions := make([]*types.Transaction, 0, len(txs))
-	for _, tx := range txs {
-		if err != tx.Sign(b.codec, nil) {
-			return nil, fmt.Errorf("failed tx initialization, %w", err)
-		}
-
-		t, err := parser.Parse(tx.ID(), tx.Unsigned)
-		if err != nil {
-			return nil, err
-		}
-
-		transactions = append(transactions, t)
-	}
-	return transactions, nil
 }
 
 func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[string]*pmapper.DependencyTx, error) {
@@ -256,37 +222,21 @@ func (b *Backend) newTxParser(dependencyTxs map[string]*pmapper.DependencyTx) (*
 	return pmapper.NewTxParser(false, b.networkHRP, b.chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
 }
 
-func (b *Backend) isGenesisBlockRequest(ctx context.Context, index int64, hash string) (bool, error) {
-	genesisBlock, err := b.getGenesisBlock(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	// if hash is provided, make sure it matches genesis block hash
-	if hash != "" {
-		return hash == genesisBlock.BlockID.String(), nil
-	}
-
-	// if hash is omitted, check if the height matches the genesis block height
-	return index == int64(genesisBlock.Height), nil
-}
-
-func (b *Backend) getGenesisTransactions(genesisBlock *indexer.ParsedGenesisBlock) ([]*types.Transaction, error) {
-	genesisTxs := genesisBlock.Txs
-
-	allocationTx, err := b.buildGenesisAllocationTx()
-	if err != nil {
-		return nil, err
-	}
-	genesisTxs = append(genesisTxs, allocationTx)
-
-	parser, err := b.newTxParser(nil)
+func (b *Backend) parseRosettaTxs(
+	txs []*txs.Tx,
+	dependencyTxs map[string]*pmapper.DependencyTx,
+) ([]*types.Transaction, error) {
+	parser, err := b.newTxParser(dependencyTxs)
 	if err != nil {
 		return nil, err
 	}
 
-	transactions := make([]*types.Transaction, 0, len(genesisTxs))
-	for _, tx := range genesisTxs {
+	transactions := make([]*types.Transaction, 0, len(txs))
+	for _, tx := range txs {
+		if err != tx.Sign(b.codec, nil) {
+			return nil, fmt.Errorf("failed tx initialization, %w", err)
+		}
+
 		t, err := parser.Parse(tx.ID(), tx.Unsigned)
 		if err != nil {
 			return nil, err
@@ -294,45 +244,5 @@ func (b *Backend) getGenesisTransactions(genesisBlock *indexer.ParsedGenesisBloc
 
 		transactions = append(transactions, t)
 	}
-
 	return transactions, nil
-}
-
-// Genesis allocation UTXOs are not part of a real transaction.
-// For convenience and compatibility with the rest of the parsing functionality
-// they are treated as outputs of an import tx with no inputs and id ids.Empty
-func (b *Backend) buildGenesisAllocationTx() (*txs.Tx, error) {
-	outs := []*avax.TransferableOutput{}
-	for _, utxo := range b.genesisBlock.UTXOs {
-		outIntf := utxo.Out
-		if lockedOut, ok := outIntf.(*stakeable.LockOut); ok {
-			outIntf = lockedOut.TransferableOut
-		}
-
-		out, ok := outIntf.(*secp256k1fx.TransferOutput)
-
-		if !ok {
-			return nil, errUnableToParseUTXO
-		}
-
-		outs = append(outs, &avax.TransferableOutput{
-			Out: &secp256k1fx.TransferOutput{
-				Amt: out.Amount(),
-				OutputOwners: secp256k1fx.OutputOwners{
-					Addrs:     out.Addrs,
-					Threshold: out.Threshold,
-					Locktime:  out.Locktime,
-				},
-			},
-		})
-	}
-
-	// TODO: this is probably not the right way to build this tx
-	// Some fields are missing that we populate in tx Builder
-	allocationTx := &txs.ImportTx{}
-	allocationTx.Outs = outs
-	tx := &txs.Tx{
-		Unsigned: allocationTx,
-	}
-	return tx, tx.Sign(b.codec, nil)
 }

@@ -35,6 +35,8 @@ var (
 	parsedBlock = &indexer.ParsedBlock{BlockID: blockID}
 
 	pChainAddr = "P-avax1yp8v6x7kf7ar2q5g0cs0a9jk4cmt0sgam72zfz"
+
+	dummyGenesis = &indexer.ParsedGenesisBlock{}
 )
 
 func TestAccountBalance(t *testing.T) {
@@ -43,6 +45,7 @@ func TestAccountBalance(t *testing.T) {
 	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
 	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
+	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
 	backend, err := NewBackend(service.ModeOnline, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
@@ -203,6 +206,7 @@ func TestAccountCoins(t *testing.T) {
 	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
 	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
+	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
 	backend, err := NewBackend(service.ModeOnline, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
