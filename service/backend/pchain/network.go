@@ -13,7 +13,7 @@ import (
 // NetworkIdentifier returns P-chain network identifier
 // used by /network/list endpoint to list available networks
 func (b *Backend) NetworkIdentifier() *types.NetworkIdentifier {
-	return b.networkIdentifier
+	return b.networkID
 }
 
 // NetworkStatus implements /network/status endpoint for P-chain

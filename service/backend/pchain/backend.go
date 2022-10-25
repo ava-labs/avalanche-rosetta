@@ -11,7 +11,6 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
@@ -25,7 +24,8 @@ var (
 
 type Backend struct {
 	fac                    *crypto.FactorySECP256K1R
-	networkIdentifier      *types.NetworkIdentifier
+	networkID              *types.NetworkIdentifier
+	networkHRP             string
 	pClient                client.PChainClient
 	indexerParser          indexer.Parser
 	getUTXOsPageSize       uint32
@@ -46,20 +46,27 @@ func NewBackend(
 	networkIdentifier *types.NetworkIdentifier,
 ) (*Backend, error) {
 	backEnd := &Backend{
-		fac:               &crypto.FactorySECP256K1R{},
-		networkIdentifier: networkIdentifier,
-		pClient:           pClient,
-		getUTXOsPageSize:  1024,
-		codec:             blocks.Codec,
-		codecVersion:      blocks.Version,
-		indexerParser:     indexerParser,
-		chainIDs:          map[string]string{},
-		avaxAssetID:       assetID,
+		fac:              &crypto.FactorySECP256K1R{},
+		networkID:        networkIdentifier,
+		pClient:          pClient,
+		getUTXOsPageSize: 1024,
+		codec:            blocks.Codec,
+		codecVersion:     blocks.Version,
+		indexerParser:    indexerParser,
+		chainIDs:         map[string]string{},
+		avaxAssetID:      assetID,
+	}
+
+	if nodeMode == service.ModeOnline {
+		if err := backEnd.initChainIDs(); err != nil {
+			return nil, err
+		}
 	}
 
 	var err error
-	if nodeMode == service.ModeOnline {
-		err = backEnd.initChainIDs()
+	backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier)
+	if err != nil {
+		return nil, err
 	}
 	return backEnd, err
 }
@@ -68,31 +75,31 @@ func NewBackend(
 func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	switch r := req.(type) {
 	case *types.AccountBalanceRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.AccountCoinsRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.BlockRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.BlockTransactionRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionDeriveRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionMetadataRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionPreprocessRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionPayloadsRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionParseRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionCombineRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionHashRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionSubmitRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.NetworkRequest:
-		return pmapper.IsPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	}
 
 	return false
@@ -133,4 +140,11 @@ func (b *Backend) initChainIDs() error {
 	b.chainIDs[xChainID.String()] = mapper.XChainNetworkIdentifier
 
 	return nil
+}
+
+// isPChain checks network identifier to make sure sub-network identifier set to "P"
+func (b *Backend) isPChain(reqNetworkID *types.NetworkIdentifier) bool {
+	return reqNetworkID != nil &&
+		reqNetworkID.SubNetworkIdentifier != nil &&
+		reqNetworkID.SubNetworkIdentifier.Network == mapper.PChainNetworkIdentifier
 }

@@ -203,18 +203,13 @@ func (b *Backend) ConstructionParse(ctx context.Context, req *types.Construction
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	hrp, err := mapper.GetHRP(req.NetworkIdentifier)
-	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "incorrect network identifier")
-	}
-
 	chainIDs := map[string]string{}
 	if rosettaTx.DestinationChainID != nil {
 		chainIDs[rosettaTx.DestinationChainID.String()] = rosettaTx.DestinationChain
 	}
 
 	txParser := pTxParser{
-		hrp:         hrp,
+		hrp:         b.networkHRP,
 		chainIDs:    chainIDs,
 		avaxAssetID: b.avaxAssetID,
 	}
