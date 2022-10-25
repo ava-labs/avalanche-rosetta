@@ -79,31 +79,31 @@ func NewBackend(
 func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	switch r := req.(type) {
 	case *types.AccountBalanceRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.AccountCoinsRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.BlockRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.BlockTransactionRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionDeriveRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionMetadataRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionPreprocessRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionPayloadsRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionParseRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionCombineRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionHashRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.ConstructionSubmitRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	case *types.NetworkRequest:
-		return b.isNetworkSupported(r.NetworkIdentifier) && b.isPChain(r.NetworkIdentifier)
+		return b.isPChain(r.NetworkIdentifier)
 	}
 
 	return false
@@ -135,8 +135,4 @@ func (b *Backend) isPChain(reqNetworkID *types.NetworkIdentifier) bool {
 	return reqNetworkID != nil &&
 		reqNetworkID.SubNetworkIdentifier != nil &&
 		reqNetworkID.SubNetworkIdentifier.Network == mapper.PChainNetworkIdentifier
-}
-
-func (b *Backend) isNetworkSupported(reqNetworkID *types.NetworkIdentifier) bool {
-	return reqNetworkID != nil && reqNetworkID.Network == b.networkID.Network
 }
