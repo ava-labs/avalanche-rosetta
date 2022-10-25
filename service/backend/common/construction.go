@@ -321,11 +321,7 @@ func buildCredential(numSigs int, sigOffset *int, signatures []*types.Signature)
 
 // HashTx generates a transaction id for the given RosettaTx
 func HashTx(rosettaTx *RosettaTx) (*types.TransactionIdentifierResponse, *types.Error) {
-	txID, err := rosettaTx.Tx.Hash()
-	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
-	}
-
+	txID := rosettaTx.Tx.Hash()
 	hash := txID.String()
 
 	return &types.TransactionIdentifierResponse{

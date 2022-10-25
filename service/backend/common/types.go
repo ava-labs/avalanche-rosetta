@@ -10,12 +10,15 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
+var ErrNoTxGiven = errors.New("no transaction was given")
+
 // AvaxTx encapsulates P-chain and C-chain atomic transactions in order to reuse common logic between them
 type AvaxTx interface {
+	Initialize() error
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
 	SigningPayload() ([]byte, error)
-	Hash() (ids.ID, error)
+	Hash() ids.ID
 }
 
 // RosettaTx wraps a transaction along with the input addresses and destination chain information.

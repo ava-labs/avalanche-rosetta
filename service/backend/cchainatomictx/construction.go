@@ -25,7 +25,6 @@ import (
 var (
 	errUnknownTxType = errors.New("unknown tx type")
 	errUndecodableTx = errors.New("undecodable transaction")
-	errNoTxGiven     = errors.New("no transaction was given")
 )
 
 // ConstructionDerive implements /construction/derive endpoint for C-chain atomic transactions
@@ -255,11 +254,7 @@ func (b *Backend) parsePayloadTxFromString(transaction string) (*common.RosettaT
 		return nil, errUndecodableTx
 	}
 
-	if payloadsTx.Tx == nil {
-		return nil, errNoTxGiven
-	}
-
-	return payloadsTx, nil
+	return payloadsTx, payloadsTx.Tx.Initialize()
 }
 
 // ConstructionCombine implements /construction/combine endpoint for C-chain atomic transactions

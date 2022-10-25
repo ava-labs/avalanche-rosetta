@@ -23,6 +23,13 @@ type cAtomicTx struct {
 	CodecVersion uint16
 }
 
+func (c *cAtomicTx) Initialize() error {
+	if c.Tx == nil {
+		return common.ErrNoTxGiven
+	}
+	return c.Tx.Sign(c.Codec, nil)
+}
+
 func (c *cAtomicTx) Marshal() ([]byte, error) {
 	return c.Codec.Marshal(c.CodecVersion, c.Tx)
 }
@@ -33,15 +40,13 @@ func (c *cAtomicTx) Unmarshal(bytes []byte) error {
 	if err != nil {
 		return err
 	}
-	if err := tx.Sign(c.Codec, nil); err != nil {
-		return err
-	}
 	c.Tx = &tx
-	return nil
+
+	return c.Initialize()
 }
 
 func (c *cAtomicTx) SigningPayload() ([]byte, error) {
-	if err := c.Tx.Sign(c.Codec, nil); err != nil {
+	if err := c.Initialize(); err != nil {
 		return nil, err
 	}
 
@@ -49,11 +54,8 @@ func (c *cAtomicTx) SigningPayload() ([]byte, error) {
 	return hash, nil
 }
 
-func (c *cAtomicTx) Hash() (ids.ID, error) {
-	if err := c.Tx.Sign(c.Codec, nil); err != nil {
-		return ids.Empty, err
-	}
-	return c.Tx.ID(), nil
+func (c *cAtomicTx) Hash() ids.ID {
+	return c.Tx.ID()
 }
 
 type cAtomicTxBuilder struct {
