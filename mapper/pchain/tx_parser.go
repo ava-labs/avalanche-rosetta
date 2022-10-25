@@ -387,6 +387,7 @@ func (t *TxParser) insToOperations(
 
 		input := in.In
 		if stakeableIn, ok := input.(*stakeable.LockIn); ok {
+			metadata.Locktime = stakeableIn.Locktime
 			input = stakeableIn
 		}
 		transferInput, ok := input.(*secp256k1fx.TransferInput)
