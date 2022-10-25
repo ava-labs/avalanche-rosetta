@@ -90,50 +90,50 @@ func NewTxParser(
 func (t *TxParser) Parse(signedTx *txs.Tx) (*types.Transaction, error) {
 	var (
 		ops    *txOps
-		txType string
+		txType constants.PChainOp
 		err    error
 	)
 
 	txID := signedTx.ID()
 	switch unsignedTx := signedTx.Unsigned.(type) {
 	case *txs.ExportTx:
-		txType = OpExportAvax
+		txType = constants.ExportAvax
 		ops, err = t.parseExportTx(txID, unsignedTx)
 	case *txs.ImportTx:
-		txType = OpImportAvax
+		txType = constants.ImportAvax
 		ops, err = t.parseImportTx(txID, unsignedTx)
 	case *txs.AddValidatorTx:
-		txType = OpAddValidator
+		txType = constants.AddValidator
 		ops, err = t.parseAddValidatorTx(txID, unsignedTx)
 	case *txs.AddDelegatorTx:
-		txType = OpAddDelegator
+		txType = constants.AddDelegator
 		ops, err = t.parseAddDelegatorTx(txID, unsignedTx)
 	case *txs.RewardValidatorTx:
-		txType = OpRewardValidator
+		txType = constants.RewardValidator
 		ops, err = t.parseRewardValidatorTx(unsignedTx)
 	case *txs.CreateSubnetTx:
-		txType = OpCreateSubnet
+		txType = constants.CreateSubnet
 		ops, err = t.parseCreateSubnetTx(txID, unsignedTx)
 	case *txs.CreateChainTx:
-		txType = OpCreateChain
+		txType = constants.CreateChain
 		ops, err = t.parseCreateChainTx(txID, unsignedTx)
 	case *txs.AddSubnetValidatorTx:
-		txType = OpAddSubnetValidator
+		txType = constants.AddSubnetValidator
 		ops, err = t.parseAddSubnetValidatorTx(txID, unsignedTx)
 	case *txs.AddPermissionlessValidatorTx:
-		txType = OpAddPermissionlessValidator
+		txType = constants.AddPermissionlessValidator
 		ops, err = t.parseAddPermissionlessValidatorTx(txID, unsignedTx)
 	case *txs.AddPermissionlessDelegatorTx:
-		txType = OpAddPermissionlessDelegator
+		txType = constants.AddPermissionlessDelegator
 		ops, err = t.parseAddPermissionlessDelegatorTx(txID, unsignedTx)
 	case *txs.RemoveSubnetValidatorTx:
-		txType = OpRemoveSubnetValidator
+		txType = constants.RemoveSubnetValidator
 		ops, err = t.parseRemoveSubnetValidatorTx(txID, unsignedTx)
 	case *txs.TransformSubnetTx:
-		txType = OpTransformSubnetValidator
+		txType = constants.TransformSubnetValidator
 		ops, err = t.parseTransformSubnetTx(txID, unsignedTx)
 	case *txs.AdvanceTimeTx:
-		txType = OpAdvanceTime
+		txType = constants.AdvanceTime
 		// no op tx
 	default:
 		log.Printf("unknown type %T", unsignedTx)
@@ -143,7 +143,7 @@ func (t *TxParser) Parse(signedTx *txs.Tx) (*types.Transaction, error) {
 	}
 
 	txMetadata := map[string]interface{}{
-		MetadataTxType: txType,
+		MetadataTxType: txType.String(),
 	}
 
 	var operations []*types.Operation
@@ -183,7 +183,7 @@ func addOperationIdentifiers(operations []*types.Operation, startIdx int) []*typ
 }
 
 func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) {
-	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpExportAvax)
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.ExportAvax)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) 
 		return nil, errUnknownDestinationChain
 	}
 
-	err = t.outsToOperations(ops, OpExportAvax, txID, tx.ExportedOutputs, OpTypeExport, chainIDAlias)
+	err = t.outsToOperations(ops, constants.ExportAvax, txID, tx.ExportedOutputs, OpTypeExport, chainIDAlias)
 	if err != nil {
 		return nil, err
 	}
@@ -204,17 +204,17 @@ func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) 
 func (t *TxParser) parseImportTx(txID ids.ID, tx *txs.ImportTx) (*txOps, error) {
 	ops := newTxOps(t.cfg.IsConstruction)
 
-	err := t.insToOperations(ops, OpImportAvax, tx.Ins, OpTypeInput)
+	err := t.insToOperations(ops, constants.ImportAvax, tx.Ins, OpTypeInput)
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.insToOperations(ops, OpImportAvax, tx.ImportedInputs, OpTypeImport)
+	err = t.insToOperations(ops, constants.ImportAvax, tx.ImportedInputs, OpTypeImport)
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpImportAvax, txID, tx.Outs, OpTypeOutput, constants.PChain)
+	err = t.outsToOperations(ops, constants.ImportAvax, txID, tx.Outs, OpTypeOutput, constants.PChain)
 	if err != nil {
 		return nil, err
 	}
@@ -223,12 +223,12 @@ func (t *TxParser) parseImportTx(txID ids.ID, tx *txs.ImportTx) (*txOps, error) 
 }
 
 func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*txOps, error) {
-	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddValidator)
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.AddValidator)
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpAddValidator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain)
+	err = t.outsToOperations(ops, constants.AddValidator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain)
 	if err != nil {
 		return nil, err
 	}
@@ -238,12 +238,12 @@ func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*tx
 }
 
 func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPermissionlessValidatorTx) (*txOps, error) {
-	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddValidator)
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.AddValidator)
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpAddPermissionlessValidator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain)
+	err = t.outsToOperations(ops, constants.AddPermissionlessValidator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain)
 	if err != nil {
 		return nil, err
 	}
@@ -259,12 +259,12 @@ func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPer
 }
 
 func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*txOps, error) {
-	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddDelegator)
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.AddDelegator)
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpAddDelegator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain)
+	err = t.outsToOperations(ops, constants.AddDelegator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain)
 	if err != nil {
 		return nil, err
 	}
@@ -274,12 +274,12 @@ func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*tx
 }
 
 func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPermissionlessDelegatorTx) (*txOps, error) {
-	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddDelegator)
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.AddDelegator)
 	if err != nil {
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpAddPermissionlessDelegator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain)
+	err = t.outsToOperations(ops, constants.AddPermissionlessDelegator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 		return nil, errNoMatchingRewardOutputs
 	}
 	ops := newTxOps(t.cfg.IsConstruction)
-	err := t.utxosToOperations(ops, OpRewardValidator, dep.RewardUTXOs, OpTypeReward, constants.PChain)
+	err := t.utxosToOperations(ops, constants.RewardValidator, dep.RewardUTXOs, OpTypeReward, constants.PChain)
 	if err != nil {
 		return nil, err
 	}
@@ -335,26 +335,26 @@ func addMetadataToStakeOuts(ops *txOps, validator *validator.Validator) {
 }
 
 func (t *TxParser) parseCreateSubnetTx(txID ids.ID, tx *txs.CreateSubnetTx) (*txOps, error) {
-	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpCreateSubnet)
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.CreateSubnet)
 }
 
 func (t *TxParser) parseAddSubnetValidatorTx(txID ids.ID, tx *txs.AddSubnetValidatorTx) (*txOps, error) {
-	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddSubnetValidator)
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.AddSubnetValidator)
 }
 
 func (t *TxParser) parseRemoveSubnetValidatorTx(txID ids.ID, tx *txs.RemoveSubnetValidatorTx) (*txOps, error) {
-	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpRemoveSubnetValidator)
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.RemoveSubnetValidator)
 }
 
 func (t *TxParser) parseTransformSubnetTx(txID ids.ID, tx *txs.TransformSubnetTx) (*txOps, error) {
-	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpTransformSubnetValidator)
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.TransformSubnetValidator)
 }
 
 func (t *TxParser) parseCreateChainTx(txID ids.ID, tx *txs.CreateChainTx) (*txOps, error) {
-	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpCreateChain)
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.CreateChain)
 }
 
-func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType string) (*txOps, error) {
+func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType constants.PChainOp) (*txOps, error) {
 	ops := newTxOps(t.cfg.IsConstruction)
 
 	err := t.insToOperations(ops, txType, tx.Ins, OpTypeInput)
@@ -372,7 +372,7 @@ func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txTyp
 
 func (t *TxParser) insToOperations(
 	inOps *txOps,
-	opType string,
+	opType constants.PChainOp,
 	txIns []*avax.TransferableInput,
 	metaType string,
 ) error {
@@ -440,7 +440,7 @@ func (t *TxParser) insToOperations(
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: int64(inOps.Len()),
 			},
-			Type:    opType,
+			Type:    opType.String(),
 			Status:  status,
 			Account: account,
 			Amount:  amount,
@@ -477,7 +477,7 @@ func (t *TxParser) buildAmount(value *big.Int, assetID ids.ID) (*types.Amount, e
 
 func (t *TxParser) outsToOperations(
 	outOps *txOps,
-	opType string,
+	opType constants.PChainOp,
 	txID ids.ID,
 	txOut []*avax.TransferableOutput,
 	metaType string,
@@ -536,7 +536,7 @@ func (t *TxParser) outsToOperations(
 
 func (t *TxParser) utxosToOperations(
 	outOps *txOps,
-	opType string,
+	opType constants.PChainOp,
 	utxos []*avax.UTXO,
 	metaType string,
 	chainIDAlias constants.ChainIDAlias,
@@ -598,7 +598,8 @@ func (t *TxParser) buildOutputOperation(
 	startIndex int,
 	txID ids.ID,
 	outIndex uint32,
-	opType, metaType string,
+	opType constants.PChainOp,
+	metaType string,
 	chainIDAlias constants.ChainIDAlias,
 ) (*types.Operation, error) {
 	if len(out.Addrs) == 0 {
@@ -642,7 +643,7 @@ func (t *TxParser) buildOutputOperation(
 	}
 
 	return &types.Operation{
-		Type: opType,
+		Type: opType.String(),
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: int64(startIndex),
 		},

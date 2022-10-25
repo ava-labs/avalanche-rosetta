@@ -42,17 +42,17 @@ func TestMapInOperation(t *testing.T) {
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	inOps := newTxOps(false)
-	err := parser.insToOperations(inOps, OpAddValidator, []*avax.TransferableInput{avaxIn}, OpTypeInput)
+	err := parser.insToOperations(inOps, rosConst.AddValidator, []*avax.TransferableInput{avaxIn}, OpTypeInput)
 	assert.Nil(t, err)
 
 	rosettaInOp := inOps.Ins
 
 	assert.Equal(t, int64(0), rosettaInOp[0].OperationIdentifier.Index)
-	assert.Equal(t, OpAddValidator, rosettaInOp[0].Type)
+	assert.Equal(t, rosConst.AddValidator.String(), rosettaInOp[0].Type)
 	assert.Equal(t, avaxIn.UTXOID.String(), rosettaInOp[0].CoinChange.CoinIdentifier.Identifier)
 	assert.Equal(t, types.CoinSpent, rosettaInOp[0].CoinChange.CoinAction)
 	assert.Equal(t, OpTypeInput, rosettaInOp[0].Metadata["type"])
-	assert.Equal(t, OpAddValidator, rosettaInOp[0].Type)
+	assert.Equal(t, rosConst.AddValidator.String(), rosettaInOp[0].Type)
 	assert.Equal(t, types.String(mapper.StatusSuccess), rosettaInOp[0].Status)
 
 	assert.Nil(t, rosettaInOp[0].Metadata["threshold"])
@@ -76,7 +76,7 @@ func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	inOps := newTxOps(true)
-	err := parser.insToOperations(inOps, OpImportAvax, []*avax.TransferableInput{avaxIn}, OpTypeInput)
+	err := parser.insToOperations(inOps, rosConst.ImportAvax, []*avax.TransferableInput{avaxIn}, OpTypeInput)
 	assert.ErrorIs(t, errUnsupportedAssetInConstruction, err)
 }
 
@@ -97,7 +97,7 @@ func TestMapOutOperation(t *testing.T) {
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	outOps := newTxOps(false)
-	err := parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, rosConst.PChain)
+	err := parser.outsToOperations(outOps, rosConst.AddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, rosConst.PChain)
 	assert.Nil(t, err)
 
 	rosettaOutOp := outOps.Outs
@@ -108,7 +108,7 @@ func TestMapOutOperation(t *testing.T) {
 	assert.Equal(t, "996649063", rosettaOutOp[0].Amount.Value)
 	assert.Equal(t, OpTypeOutput, rosettaOutOp[0].Metadata["type"])
 	assert.Nil(t, rosettaOutOp[0].Status)
-	assert.Equal(t, OpAddDelegator, rosettaOutOp[0].Type)
+	assert.Equal(t, rosConst.AddDelegator.String(), rosettaOutOp[0].Type)
 
 	assert.NotNil(t, rosettaOutOp[0].Metadata["threshold"])
 	assert.NotNil(t, rosettaOutOp[0].Metadata["locktime"])
@@ -135,7 +135,7 @@ func TestMapAddValidatorTx(t *testing.T) {
 	total := len(addValidatorTx.Ins) + len(addValidatorTx.Outs) + len(addValidatorTx.StakeOuts)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpAddValidator, OpTypeStakeOutput)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.AddValidator.String(), OpTypeStakeOutput)
 
 	assert.Equal(t, 2, cntTxType)
 	assert.Equal(t, 1, cntInputMeta)
@@ -164,7 +164,7 @@ func TestMapAddDelegatorTx(t *testing.T) {
 	total := len(addDelegatorTx.Ins) + len(addDelegatorTx.Outs) + len(addDelegatorTx.StakeOuts)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpAddDelegator, OpTypeStakeOutput)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.AddDelegator.String(), OpTypeStakeOutput)
 
 	assert.Equal(t, 3, cntTxType)
 	assert.Equal(t, 1, cntInputMeta)
@@ -181,9 +181,9 @@ func TestMapAddDelegatorTx(t *testing.T) {
 	assert.Equal(t, int64(1), rosettaTransaction.Operations[1].OperationIdentifier.Index)
 	assert.Equal(t, int64(2), rosettaTransaction.Operations[2].OperationIdentifier.Index)
 
-	assert.Equal(t, OpAddDelegator, rosettaTransaction.Operations[0].Type)
-	assert.Equal(t, OpAddDelegator, rosettaTransaction.Operations[1].Type)
-	assert.Equal(t, OpAddDelegator, rosettaTransaction.Operations[2].Type)
+	assert.Equal(t, rosConst.AddDelegator.String(), rosettaTransaction.Operations[0].Type)
+	assert.Equal(t, rosConst.AddDelegator.String(), rosettaTransaction.Operations[1].Type)
+	assert.Equal(t, rosConst.AddDelegator.String(), rosettaTransaction.Operations[2].Type)
 
 	assert.Equal(t, OpTypeInput, rosettaTransaction.Operations[0].Metadata["type"])
 	assert.Equal(t, OpTypeOutput, rosettaTransaction.Operations[1].Metadata["type"])
@@ -211,7 +211,7 @@ func TestMapImportTx(t *testing.T) {
 	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 2 // - 1 for the multisig output
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpImportAvax, OpTypeImport)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ImportAvax.String(), OpTypeImport)
 
 	assert.Equal(t, 2, cntTxType)
 	assert.Equal(t, 0, cntInputMeta)
@@ -243,7 +243,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 3 // - 1 for the multisig output
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpImportAvax, OpTypeImport)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ImportAvax.String(), OpTypeImport)
 
 	assert.Equal(t, 1, cntTxType)
 	assert.Equal(t, 0, cntInputMeta)
@@ -259,7 +259,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	importedInput := importTx.ImportedInputs[0]
 	expectedImportedInputs := []*types.Operation{{
 		OperationIdentifier: &types.OperationIdentifier{Index: 1},
-		Type:                OpImportAvax,
+		Type:                rosConst.ImportAvax.String(),
 		Status:              types.String(mapper.StatusSuccess),
 		Account:             nil,
 		Amount:              mapper.AtomicAvaxAmount(big.NewInt(-int64(importedInput.Input().Amount()))),
@@ -297,7 +297,7 @@ func TestMapExportTx(t *testing.T) {
 	total := len(exportTx.Ins) + len(exportTx.Outs) + len(exportTx.ExportedOutputs)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpExportAvax, OpTypeExport)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ExportAvax.String(), OpTypeExport)
 
 	assert.Equal(t, 3, cntTxType)
 	assert.Equal(t, 1, cntInputMeta)
@@ -326,7 +326,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	total := len(exportTx.Ins) + len(exportTx.Outs)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpExportAvax, OpTypeExport)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ExportAvax.String(), OpTypeExport)
 
 	assert.Equal(t, 2, cntTxType)
 	assert.Equal(t, 1, cntInputMeta)
@@ -335,7 +335,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 
 	txType, ok := rosettaTransaction.Metadata[MetadataTxType].(string)
 	assert.True(t, ok)
-	assert.Equal(t, OpExportAvax, txType)
+	assert.Equal(t, rosConst.ExportAvax.String(), txType)
 
 	// Verify that export output are properly generated
 	exportOutputs, ok := rosettaTransaction.Metadata[mapper.MetadataExportedOutputs].([]*types.Operation)

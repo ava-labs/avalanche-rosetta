@@ -63,11 +63,11 @@ func (b *Backend) ConstructionMetadata(
 	var suggestedFee *types.Amount
 	var metadata *pmapper.Metadata
 	switch opMetadata.Type {
-	case pmapper.OpImportAvax:
+	case constants.ImportAvax.String():
 		metadata, suggestedFee, err = b.buildImportMetadata(ctx, req.Options)
-	case pmapper.OpExportAvax:
+	case constants.ExportAvax.String():
 		metadata, suggestedFee, err = b.buildExportMetadata(ctx, req.Options)
-	case pmapper.OpAddValidator, pmapper.OpAddDelegator:
+	case constants.AddValidator.String(), constants.AddDelegator.String():
 		metadata, suggestedFee, err = b.buildStakingMetadata(req.Options)
 		metadata.Threshold = opMetadata.Threshold
 		metadata.Locktime = opMetadata.Locktime

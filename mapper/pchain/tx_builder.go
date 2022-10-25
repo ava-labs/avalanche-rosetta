@@ -15,6 +15,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common/math"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -33,13 +34,13 @@ func BuildTx(
 	avaxAssetID ids.ID,
 ) (*txs.Tx, []*types.AccountIdentifier, error) {
 	switch opType {
-	case OpImportAvax:
+	case constants.ImportAvax.String():
 		return buildImportTx(matches, payloadMetadata, codec, avaxAssetID)
-	case OpExportAvax:
+	case constants.ExportAvax.String():
 		return buildExportTx(matches, payloadMetadata, codec, avaxAssetID)
-	case OpAddValidator:
+	case constants.AddValidator.String():
 		return buildAddValidatorTx(matches, payloadMetadata, codec, avaxAssetID)
-	case OpAddDelegator:
+	case constants.AddDelegator.String():
 		return buildAddDelegatorTx(matches, payloadMetadata, codec, avaxAssetID)
 	default:
 		return nil, nil, fmt.Errorf("invalid tx type: %s", opType)

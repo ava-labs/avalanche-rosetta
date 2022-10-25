@@ -5,20 +5,6 @@ import (
 )
 
 const (
-	OpImportAvax                 = "IMPORT_AVAX"
-	OpExportAvax                 = "EXPORT_AVAX"
-	OpAddValidator               = "ADD_VALIDATOR"
-	OpAddPermissionlessValidator = "ADD_PERMISSIONLESS_VALIDATOR"
-	OpAddDelegator               = "ADD_DELEGATOR"
-	OpAddPermissionlessDelegator = "ADD_PERMISSIONLESS_DELEGATOR"
-	OpRewardValidator            = "REWARD_VALIDATOR"
-	OpCreateChain                = "CREATE_CHAIN"
-	OpCreateSubnet               = "CREATE_SUBNET"
-	OpAddSubnetValidator         = "ADD_SUBNET_VALIDATOR"
-	OpRemoveSubnetValidator      = "REMOVE_SUBNET_VALIDATOR"
-	OpTransformSubnetValidator   = "TRANSFORM_SUBNET_VALIDATOR"
-	OpAdvanceTime                = "ADVANCE_TIME"
-
 	OpTypeImport      = "IMPORT"
 	OpTypeExport      = "EXPORT"
 	OpTypeInput       = "INPUT"
@@ -42,23 +28,7 @@ const (
 	SubAccountTypeStaked             = "staked"
 )
 
-var (
-	OperationTypes = []string{
-		OpImportAvax,
-		OpExportAvax,
-		OpAddValidator,
-		OpAddDelegator,
-		OpRewardValidator,
-		OpCreateChain,
-		OpCreateSubnet,
-		OpAddSubnetValidator,
-		OpRemoveSubnetValidator,
-		OpTransformSubnetValidator,
-		OpAddPermissionlessValidator,
-		OpAddPermissionlessDelegator,
-	}
-	CallMethods = []string{}
-)
+var CallMethods = []string{}
 
 // OperationMetadata contains metadata fields specific to individual Rosetta operations as opposed to transactions
 type OperationMetadata struct {

@@ -21,8 +21,6 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service/backend/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
-
-	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
 
 var (
@@ -155,7 +153,7 @@ func main() {
 
 	var operationTypes []string
 	operationTypes = append(operationTypes, constants.CChainOps()...)
-	operationTypes = append(operationTypes, pmapper.OperationTypes...)
+	operationTypes = append(operationTypes, constants.PChainOps()...)
 
 	asserter, err := asserter.NewServer(
 		operationTypes, // supported operation types

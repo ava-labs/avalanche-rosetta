@@ -72,7 +72,7 @@ func (op CChainOp) String() string {
 	}
 }
 
-var opsStrings = []string{
+var cOpsStrings = []string{
 	Fee.String(),
 	Call.String(),
 	Create.String(),
@@ -93,7 +93,7 @@ var opsStrings = []string{
 	Erc721Burn.String(),
 }
 
-func CChainOps() []string { return opsStrings }
+func CChainOps() []string { return cOpsStrings }
 
 var createTypes = []CChainOp{Create, Create2}
 
