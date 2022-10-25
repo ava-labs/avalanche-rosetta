@@ -242,8 +242,8 @@ func (s *BlockService) parseCrossChainTransactions(
 	result := []*types.Transaction{}
 
 	// This map is used to create addresses for cross chain export outputs
-	chainIDToAliasMapping := map[ids.ID]string{
-		ids.Empty: constants.PChain.String(),
+	chainIDToAliasMapping := map[ids.ID]constants.ChainIDAlias{
+		ids.Empty: constants.PChain,
 	}
 	crossTxs, err := mapper.CrossChainTransactions(networkIdentifier, chainIDToAliasMapping, s.config.AvaxAssetID, block, s.config.AP5Activation)
 	if err != nil {

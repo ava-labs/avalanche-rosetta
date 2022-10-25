@@ -297,14 +297,12 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.Short
 		return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get chain height pre-lookup")
 	}
 
-	var sourceChains []string
+	sourceChains := []constants.ChainIDAlias{constants.AnyChain}
 	if fetchSharedMemory {
-		sourceChains = []string{
-			constants.CChain.String(),
-			constants.XChain.String(),
+		sourceChains = []constants.ChainIDAlias{
+			constants.CChain,
+			constants.XChain,
 		}
-	} else {
-		sourceChains = []string{""}
 	}
 
 	var utxoBytes [][]byte
@@ -419,7 +417,7 @@ func (b *Backend) parseAndFilterUTXOs(utxoBytes [][]byte, assetIDs ids.Set) ([]a
 	return utxos, nil
 }
 
-func (b *Backend) getAccountUTXOs(ctx context.Context, addr ids.ShortID, sourceChain string) ([][]byte, error) {
+func (b *Backend) getAccountUTXOs(ctx context.Context, addr ids.ShortID, sourceChain constants.ChainIDAlias) ([][]byte, error) {
 	utxos := [][]byte{}
 
 	// Used for pagination
@@ -433,7 +431,7 @@ func (b *Backend) getAccountUTXOs(ctx context.Context, addr ids.ShortID, sourceC
 		utxoPage, startAddr, startUTXOID, err = b.pClient.GetAtomicUTXOs(
 			ctx,
 			[]ids.ShortID{addr},
-			sourceChain,
+			sourceChain.String(),
 			b.getUTXOsPageSize,
 			startAddr,
 			startUTXOID,

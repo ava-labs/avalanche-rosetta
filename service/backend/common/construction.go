@@ -14,6 +14,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -28,7 +29,7 @@ var (
 )
 
 // DeriveBech32Address derives Bech32 addresses for the given chain using public key and hrp provided in the request
-func DeriveBech32Address(fac *crypto.FactorySECP256K1R, chainIDAlias string, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
+func DeriveBech32Address(fac *crypto.FactorySECP256K1R, chainIDAlias constants.ChainIDAlias, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	pub, err := fac.ToPublicKey(req.PublicKey.Bytes)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
@@ -39,7 +40,7 @@ func DeriveBech32Address(fac *crypto.FactorySECP256K1R, chainIDAlias string, req
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	addr, err := address.Format(chainIDAlias, hrp, pub.Address().Bytes())
+	addr, err := address.Format(chainIDAlias.String(), hrp, pub.Address().Bytes())
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}

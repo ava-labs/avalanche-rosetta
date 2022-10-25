@@ -8,10 +8,10 @@ type ChainIDAlias uint16
 
 const (
 	// values are ASCII values because why not?
-	Unknown ChainIDAlias = 0
-	PChain  ChainIDAlias = 80 // "P"
-	CChain  ChainIDAlias = 67 // "C"
-	XChain  ChainIDAlias = 88 // "X"
+	AnyChain ChainIDAlias = 0  // default value, with some usage in some P-Chain APIs
+	PChain   ChainIDAlias = 80 // "P"
+	CChain   ChainIDAlias = 67 // "C"
+	XChain   ChainIDAlias = 88 // "X"
 )
 
 func (ni ChainIDAlias) String() string {
@@ -23,7 +23,7 @@ func (ni ChainIDAlias) String() string {
 	case XChain:
 		return "X"
 	default:
-		return "Unknow"
+		return "" // this specific value signal some P-Chain API that any source ChainID is fine
 	}
 }
 
@@ -36,6 +36,6 @@ func FromString(s string) (ChainIDAlias, error) {
 	case s == "X":
 		return XChain, nil
 	default:
-		return Unknown, ErrUnknownChainIDAlias
+		return AnyChain, ErrUnknownChainIDAlias
 	}
 }

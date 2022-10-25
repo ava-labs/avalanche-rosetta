@@ -30,7 +30,7 @@ var (
 
 // ConstructionDerive implements /construction/derive endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
-	return common.DeriveBech32Address(b.fac, constants.CChain.String(), req)
+	return common.DeriveBech32Address(b.fac, constants.CChain, req)
 }
 
 // ConstructionPreprocess implements /construction/preprocess endpoint for C-chain atomic transactions
