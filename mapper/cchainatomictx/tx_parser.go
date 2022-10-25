@@ -25,7 +25,7 @@ var (
 type TxParser struct {
 	// hrp used for address formatting
 	hrp string
-	// chainIDs maps chain id to chain id alias mappings
+	// chainIDs maps chain ids to chain id aliases
 	chainIDs map[ids.ID]string
 	// inputTxAccounts contain utxo id to account identifier mappings
 	inputTxAccounts map[string]*types.AccountIdentifier
