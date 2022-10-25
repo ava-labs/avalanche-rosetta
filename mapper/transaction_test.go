@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	ethtypes "github.com/ava-labs/coreth/core/types"
@@ -45,7 +46,7 @@ func TestERC20Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   constants.Erc20Transfer.String(),
+				Type:   cconstants.Erc20Transfer.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
@@ -64,7 +65,7 @@ func TestERC20Ops(t *testing.T) {
 						Index: 1,
 					},
 				},
-				Type:   constants.Erc20Transfer.String(),
+				Type:   cconstants.Erc20Transfer.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0x5d95ae932D42E53Bb9DA4DE65E9b7263A4fA8564",
@@ -93,7 +94,7 @@ func TestERC20Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   constants.Erc20Burn.String(),
+				Type:   cconstants.Erc20Burn.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
@@ -122,7 +123,7 @@ func TestERC20Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   constants.Erc20Mint.String(),
+				Type:   cconstants.Erc20Mint.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
@@ -153,7 +154,7 @@ func TestERC721Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   constants.Erc721TransferSender.String(),
+				Type:   cconstants.Erc721TransferSender.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
@@ -172,7 +173,7 @@ func TestERC721Ops(t *testing.T) {
 						Index: 1,
 					},
 				},
-				Type:   constants.Erc721TransferReceive.String(),
+				Type:   cconstants.Erc721TransferReceive.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0x5d95ae932D42E53Bb9DA4DE65E9b7263A4fA8564",
@@ -201,7 +202,7 @@ func TestERC721Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   constants.Erc721Burn.String(),
+				Type:   cconstants.Erc721Burn.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
@@ -230,7 +231,7 @@ func TestERC721Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   constants.Erc721Mint.String(),
+				Type:   cconstants.Erc721Mint.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
@@ -275,7 +276,7 @@ func TestCrossChainExportedOuts(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 0,
 				},
-				Type:   constants.Export.String(),
+				Type:   cconstants.Export.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0x3158e80abD5A1e1aa716003C9Db096792C379621",
@@ -300,7 +301,7 @@ func TestCrossChainExportedOuts(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   constants.Export.String(),
+				Type:   cconstants.Export.String(),
 				Status: types.String(StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "P-fuji1eql2fhqet2f8tg6funmpdja5tc374vhmdj2xz2",

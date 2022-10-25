@@ -15,6 +15,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -66,10 +67,10 @@ func MatchOperations(operations []*types.Operation) ([]*parser.Match, error) {
 	var allowRepeatOutputs bool
 
 	switch opType {
-	case constants.Export.String():
+	case cconstants.Export.String():
 		coinAction = ""
 		allowRepeatOutputs = false
-	case constants.Import.String():
+	case cconstants.Import.String():
 		coinAction = types.CoinSpent
 		allowRepeatOutputs = false
 	default:
