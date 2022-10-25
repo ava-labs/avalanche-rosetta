@@ -70,4 +70,3 @@ server \
 # --avalanchego-path /Users/xiaying.peng@coinbase.com/src/public/avalanchego/build/avalanchego \
 # --global-node-config '{"chain-config-dir": "~/.github/config"}'
 
-
