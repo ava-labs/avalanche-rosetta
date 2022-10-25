@@ -13,6 +13,7 @@ import (
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -51,7 +52,7 @@ func (t *TxParser) Parse(tx evm.Tx) ([]*types.Operation, error) {
 
 func (t *TxParser) parseExportTx(exportTx *evm.UnsignedExportTx) ([]*types.Operation, error) {
 	operations := []*types.Operation{}
-	ins := t.insToOperations(0, mapper.OpExport, exportTx.Ins)
+	ins := t.insToOperations(0, constants.Export, exportTx.Ins)
 
 	destinationChainID := exportTx.DestinationChain
 	chainAlias, ok := t.chainIDs[destinationChainID]
@@ -60,7 +61,7 @@ func (t *TxParser) parseExportTx(exportTx *evm.UnsignedExportTx) ([]*types.Opera
 	}
 
 	operations = append(operations, ins...)
-	outs, err := t.exportedOutputsToOperations(len(ins), mapper.OpExport, chainAlias, exportTx.ExportedOutputs)
+	outs, err := t.exportedOutputsToOperations(len(ins), constants.Export, chainAlias, exportTx.ExportedOutputs)
 	if err != nil {
 		return nil, err
 	}
@@ -71,19 +72,19 @@ func (t *TxParser) parseExportTx(exportTx *evm.UnsignedExportTx) ([]*types.Opera
 
 func (t *TxParser) parseImportTx(importTx *evm.UnsignedImportTx) ([]*types.Operation, error) {
 	operations := []*types.Operation{}
-	ins, err := t.importedInToOperations(0, mapper.OpImport, importTx.ImportedInputs)
+	ins, err := t.importedInToOperations(0, constants.Import, importTx.ImportedInputs)
 	if err != nil {
 		return nil, err
 	}
 
 	operations = append(operations, ins...)
-	outs := t.outsToOperations(len(ins), mapper.OpImport, importTx.Outs)
+	outs := t.outsToOperations(len(ins), constants.Import, importTx.Outs)
 	operations = append(operations, outs...)
 
 	return operations, nil
 }
 
-func (t *TxParser) insToOperations(startIdx int64, opType string, ins []evm.EVMInput) []*types.Operation {
+func (t *TxParser) insToOperations(startIdx int64, op constants.CChainOp, ins []evm.EVMInput) []*types.Operation {
 	idx := startIdx
 	operations := []*types.Operation{}
 	for _, in := range ins {
@@ -92,7 +93,7 @@ func (t *TxParser) insToOperations(startIdx int64, opType string, ins []evm.EVMI
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: idx,
 			},
-			Type:    opType,
+			Type:    op.String(),
 			Account: &types.AccountIdentifier{Address: in.Address.Hex()},
 			// Negating input amount
 			Amount: mapper.AtomicAvaxAmount(new(big.Int).Neg(inputAmount)),
@@ -102,7 +103,7 @@ func (t *TxParser) insToOperations(startIdx int64, opType string, ins []evm.EVMI
 	return operations
 }
 
-func (t *TxParser) importedInToOperations(startIdx int64, opType string, ins []*avax.TransferableInput) ([]*types.Operation, error) {
+func (t *TxParser) importedInToOperations(startIdx int64, opType constants.CChainOp, ins []*avax.TransferableInput) ([]*types.Operation, error) {
 	idx := startIdx
 	operations := []*types.Operation{}
 	for _, in := range ins {
@@ -118,7 +119,7 @@ func (t *TxParser) importedInToOperations(startIdx int64, opType string, ins []*
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: idx,
 			},
-			Type:    opType,
+			Type:    opType.String(),
 			Account: account,
 			// Negating input amount
 			Amount: mapper.AtomicAvaxAmount(new(big.Int).Neg(inputAmount)),
@@ -132,7 +133,7 @@ func (t *TxParser) importedInToOperations(startIdx int64, opType string, ins []*
 	return operations, nil
 }
 
-func (t *TxParser) outsToOperations(startIdx int, opType string, outs []evm.EVMOutput) []*types.Operation {
+func (t *TxParser) outsToOperations(startIdx int, opType constants.CChainOp, outs []evm.EVMOutput) []*types.Operation {
 	idx := startIdx
 	operations := []*types.Operation{}
 	for _, out := range outs {
@@ -142,7 +143,7 @@ func (t *TxParser) outsToOperations(startIdx int, opType string, outs []evm.EVMO
 			},
 			Account:           &types.AccountIdentifier{Address: out.Address.Hex()},
 			RelatedOperations: buildRelatedOperations(startIdx),
-			Type:              opType,
+			Type:              opType.String(),
 			Amount: &types.Amount{
 				Value:    strconv.FormatUint(out.Amount, 10),
 				Currency: mapper.AtomicAvaxCurrency,
@@ -155,7 +156,7 @@ func (t *TxParser) outsToOperations(startIdx int, opType string, outs []evm.EVMO
 
 func (t *TxParser) exportedOutputsToOperations(
 	startIdx int,
-	opType string,
+	op constants.CChainOp,
 	chainAlias string,
 	outs []*avax.TransferableOutput,
 ) ([]*types.Operation, error) {
@@ -178,7 +179,7 @@ func (t *TxParser) exportedOutputsToOperations(
 			},
 			Account:           &types.AccountIdentifier{Address: addr},
 			RelatedOperations: buildRelatedOperations(startIdx),
-			Type:              opType,
+			Type:              op.String(),
 			Amount: &types.Amount{
 				Value:    strconv.FormatUint(out.Out.Amount(), 10),
 				Currency: mapper.AtomicAvaxCurrency,

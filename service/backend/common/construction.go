@@ -66,10 +66,10 @@ func MatchOperations(operations []*types.Operation) ([]*parser.Match, error) {
 	var allowRepeatOutputs bool
 
 	switch opType {
-	case mapper.OpExport:
+	case constants.Export.String():
 		coinAction = ""
 		allowRepeatOutputs = false
-	case mapper.OpImport:
+	case constants.Import.String():
 		coinAction = types.CoinSpent
 		allowRepeatOutputs = false
 	default:

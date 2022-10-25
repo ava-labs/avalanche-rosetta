@@ -23,11 +23,11 @@ func TestShouldHandleRequest(t *testing.T) {
 	evmAccountIdentifier := &types.AccountIdentifier{Address: "0x30cE0c38f953eE9CD5fbc247e63DE68D3263144b"}
 
 	atomicOperations := []*types.Operation{
-		{Type: mapper.OpImport},
+		{Type: constants.Import.String()},
 	}
 
 	evmOperations := []*types.Operation{
-		{Type: mapper.OpCall},
+		{Type: constants.Call.String()},
 	}
 
 	backend := &Backend{

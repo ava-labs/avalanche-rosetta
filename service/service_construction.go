@@ -20,6 +20,7 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -353,7 +354,7 @@ func (s ConstructionService) ConstructionParse(
 		tx.From = msg.From().Hex()
 	}
 
-	var opMethod string
+	var opMethod constants.CChainOp
 	var value *big.Int
 	var toAddressHex string
 	// Erc20 transfer
@@ -364,11 +365,11 @@ func (s ConstructionService) ConstructionParse(
 		}
 
 		value = amountSent
-		opMethod = mapper.OpErc20Transfer
+		opMethod = constants.Erc20Transfer
 		toAddressHex = toAddress.Hex()
 	} else {
 		value = tx.Value
-		opMethod = mapper.OpCall
+		opMethod = constants.Call
 		toAddressHex = tx.To
 	}
 
@@ -386,7 +387,7 @@ func (s ConstructionService) ConstructionParse(
 
 	ops := []*types.Operation{
 		{
-			Type: opMethod,
+			Type: opMethod.String(),
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 0,
 			},
@@ -399,7 +400,7 @@ func (s ConstructionService) ConstructionParse(
 			},
 		},
 		{
-			Type: opMethod,
+			Type: opMethod.String(),
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 1,
 			},
@@ -726,7 +727,7 @@ func (s ConstructionService) CreateOperationDescription(
 	}
 
 	if utils.Equal(currency, mapper.AvaxCurrency) {
-		return s.createOperationDescription(currency, mapper.OpCall), nil
+		return s.createOperationDescription(currency, constants.Call), nil
 	}
 
 	// ERC-20s must have contract address in metadata
@@ -734,17 +735,17 @@ func (s ConstructionService) CreateOperationDescription(
 		return nil, fmt.Errorf("contractAddress must be populated in currency metadata")
 	}
 
-	return s.createOperationDescription(currency, mapper.OpErc20Transfer), nil
+	return s.createOperationDescription(currency, constants.Erc20Transfer), nil
 }
 
 func (s ConstructionService) createOperationDescription(
 	currency *types.Currency,
-	opType string,
+	opType constants.CChainOp,
 ) []*parser.OperationDescription {
 	return []*parser.OperationDescription{
 		// Send
 		{
-			Type: opType,
+			Type: opType.String(),
 			Account: &parser.AccountDescription{
 				Exists: true,
 			},
@@ -757,7 +758,7 @@ func (s ConstructionService) createOperationDescription(
 
 		// Receive
 		{
-			Type: opType,
+			Type: opType.String(),
 			Account: &parser.AccountDescription{
 				Exists: true,
 			},

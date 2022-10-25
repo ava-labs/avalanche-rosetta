@@ -60,7 +60,7 @@ func (b *Backend) ConstructionPreprocess(
 	}
 
 	switch firstIn.Type {
-	case mapper.OpImport:
+	case constants.Import.String():
 		v, ok := req.Metadata[cmapper.MetadataSourceChain]
 		if !ok {
 			return nil, service.WrapError(service.ErrInvalidInput, "source_chain metadata must be provided")
@@ -71,7 +71,7 @@ func (b *Backend) ConstructionPreprocess(
 		}
 
 		preprocessOptions.SourceChain = chainAlias
-	case mapper.OpExport:
+	case constants.Export.String():
 		chain, _, _, err := address.Parse(firstOut.Account.Address)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
