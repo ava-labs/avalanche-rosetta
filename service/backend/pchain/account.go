@@ -166,6 +166,11 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImpo
 		return 0, nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
 	}
 
+	// utxos from fetchUTXOsAndStakedOutputs are guarateed to:
+	// 1. be unique (no duplicates)
+	// 2. containt only assetIDs
+	// 3. have not multisign utxos
+	// by parseAndFilterUTXOs call in fetchUTXOsAndStakedOutputs
 	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, !fetchImportable, fetchImportable, assetIds)
 	if typedErr != nil {
 		return 0, nil, typedErr
