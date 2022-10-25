@@ -18,6 +18,7 @@ import (
 var (
 	_ common.AvaxTx    = &cAtomicTx{}
 	_ common.TxBuilder = &cAtomicTxBuilder{}
+	_ common.TxParser  = &cAtomicTxParser{}
 )
 
 type cAtomicTx struct {
