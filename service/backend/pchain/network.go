@@ -71,7 +71,7 @@ func (b *Backend) NetworkOptions(ctx context.Context, request *types.NetworkRequ
 		},
 		Allow: &types.Allow{
 			OperationStatuses:       mapper.OperationStatuses,
-			OperationTypes:          constants.PChainOps(),
+			OperationTypes:          constants.PChainTxTypes(),
 			CallMethods:             pmapper.CallMethods,
 			Errors:                  service.Errors,
 			HistoricalBalanceLookup: false,

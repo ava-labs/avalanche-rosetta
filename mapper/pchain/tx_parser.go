@@ -90,7 +90,7 @@ func NewTxParser(
 func (t *TxParser) Parse(signedTx *txs.Tx) (*types.Transaction, error) {
 	var (
 		ops    *txOps
-		txType constants.PChainOp
+		txType constants.PChainTxType
 		err    error
 	)
 
@@ -354,7 +354,7 @@ func (t *TxParser) parseCreateChainTx(txID ids.ID, tx *txs.CreateChainTx) (*txOp
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, constants.CreateChain)
 }
 
-func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType constants.PChainOp) (*txOps, error) {
+func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType constants.PChainTxType) (*txOps, error) {
 	ops := newTxOps(t.cfg.IsConstruction)
 
 	err := t.insToOperations(ops, txType, tx.Ins, OpTypeInput)
@@ -372,7 +372,7 @@ func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txTyp
 
 func (t *TxParser) insToOperations(
 	inOps *txOps,
-	opType constants.PChainOp,
+	opType constants.PChainTxType,
 	txIns []*avax.TransferableInput,
 	metaType string,
 ) error {
@@ -477,7 +477,7 @@ func (t *TxParser) buildAmount(value *big.Int, assetID ids.ID) (*types.Amount, e
 
 func (t *TxParser) outsToOperations(
 	outOps *txOps,
-	opType constants.PChainOp,
+	opType constants.PChainTxType,
 	txID ids.ID,
 	txOut []*avax.TransferableOutput,
 	metaType string,
@@ -536,7 +536,7 @@ func (t *TxParser) outsToOperations(
 
 func (t *TxParser) utxosToOperations(
 	outOps *txOps,
-	opType constants.PChainOp,
+	opType constants.PChainTxType,
 	utxos []*avax.UTXO,
 	metaType string,
 	chainIDAlias constants.ChainIDAlias,
@@ -598,7 +598,7 @@ func (t *TxParser) buildOutputOperation(
 	startIndex int,
 	txID ids.ID,
 	outIndex uint32,
-	opType constants.PChainOp,
+	opType constants.PChainTxType,
 	metaType string,
 	chainIDAlias constants.ChainIDAlias,
 ) (*types.Operation, error) {

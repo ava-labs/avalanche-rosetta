@@ -153,7 +153,7 @@ func main() {
 
 	var operationTypes []string
 	operationTypes = append(operationTypes, constants.CChainOps()...)
-	operationTypes = append(operationTypes, constants.PChainOps()...)
+	operationTypes = append(operationTypes, constants.PChainTxTypes()...)
 
 	asserter, err := asserter.NewServer(
 		operationTypes, // supported operation types

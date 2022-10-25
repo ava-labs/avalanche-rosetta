@@ -135,7 +135,7 @@ func TestMapAddValidatorTx(t *testing.T) {
 	total := len(addValidatorTx.Ins) + len(addValidatorTx.Outs) + len(addValidatorTx.StakeOuts)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.AddValidator.String(), OpTypeStakeOutput)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.AddValidator, OpTypeStakeOutput)
 
 	assert.Equal(t, 2, cntTxType)
 	assert.Equal(t, 1, cntInputMeta)
@@ -164,7 +164,7 @@ func TestMapAddDelegatorTx(t *testing.T) {
 	total := len(addDelegatorTx.Ins) + len(addDelegatorTx.Outs) + len(addDelegatorTx.StakeOuts)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.AddDelegator.String(), OpTypeStakeOutput)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.AddDelegator, OpTypeStakeOutput)
 
 	assert.Equal(t, 3, cntTxType)
 	assert.Equal(t, 1, cntInputMeta)
@@ -211,7 +211,7 @@ func TestMapImportTx(t *testing.T) {
 	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 2 // - 1 for the multisig output
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ImportAvax.String(), OpTypeImport)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ImportAvax, OpTypeImport)
 
 	assert.Equal(t, 2, cntTxType)
 	assert.Equal(t, 0, cntInputMeta)
@@ -243,7 +243,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 3 // - 1 for the multisig output
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ImportAvax.String(), OpTypeImport)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ImportAvax, OpTypeImport)
 
 	assert.Equal(t, 1, cntTxType)
 	assert.Equal(t, 0, cntInputMeta)
@@ -297,7 +297,7 @@ func TestMapExportTx(t *testing.T) {
 	total := len(exportTx.Ins) + len(exportTx.Outs) + len(exportTx.ExportedOutputs)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ExportAvax.String(), OpTypeExport)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ExportAvax, OpTypeExport)
 
 	assert.Equal(t, 3, cntTxType)
 	assert.Equal(t, 1, cntInputMeta)
@@ -326,7 +326,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	total := len(exportTx.Ins) + len(exportTx.Outs)
 	assert.Equal(t, total, len(rosettaTransaction.Operations))
 
-	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ExportAvax.String(), OpTypeExport)
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, rosConst.ExportAvax, OpTypeExport)
 
 	assert.Equal(t, 2, cntTxType)
 	assert.Equal(t, 1, cntInputMeta)
@@ -359,14 +359,14 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	assert.Equal(t, []*types.Operation{out}, exportOutputs)
 }
 
-func verifyRosettaTransaction(operations []*types.Operation, txType string, metaType string) (int, int, int, int) {
+func verifyRosettaTransaction(operations []*types.Operation, txType rosConst.PChainTxType, metaType string) (int, int, int, int) {
 	cntOpInputMeta := 0
 	cntOpOutputMeta := 0
 	cntTxType := 0
 	cntMetaType := 0
 
 	for _, v := range operations {
-		if v.Type == txType {
+		if v.Type == txType.String() {
 			cntTxType++
 		}
 
