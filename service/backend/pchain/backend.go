@@ -35,7 +35,7 @@ type Backend struct {
 	getUTXOsPageSize uint32
 	codec            codec.Manager
 	codecVersion     uint16
-	chainIDs         map[ids.ID]constants.NetworkIdentifiers
+	chainIDs         map[ids.ID]constants.ChainIDAlias
 	avaxAssetID      ids.ID
 	txParserCfg      pmapper.TxParserConfig
 }
@@ -62,7 +62,7 @@ func NewBackend(
 		codec:            blocks.Codec,
 		codecVersion:     blocks.Version,
 		indexerParser:    indexerParser,
-		chainIDs:         map[ids.ID]constants.NetworkIdentifiers{},
+		chainIDs:         map[ids.ID]constants.ChainIDAlias{},
 		avaxAssetID:      assetID,
 	}
 
@@ -123,7 +123,7 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 
 func (b *Backend) initChainIDs() error {
 	ctx := context.Background()
-	b.chainIDs = map[ids.ID]constants.NetworkIdentifiers{
+	b.chainIDs = map[ids.ID]constants.ChainIDAlias{
 		ids.Empty: constants.PChain,
 	}
 

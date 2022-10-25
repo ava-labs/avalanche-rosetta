@@ -18,7 +18,7 @@ import (
 var (
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	cChainID, _    = ids.FromString("yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")
-	chainIDs       = map[ids.ID]rosConst.NetworkIdentifiers{
+	chainIDs       = map[ids.ID]rosConst.ChainIDAlias{
 		ids.Empty: rosConst.PChain,
 		cChainID:  rosConst.CChain,
 	}

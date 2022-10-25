@@ -203,7 +203,7 @@ func (b *Backend) ConstructionParse(ctx context.Context, req *types.Construction
 	}
 
 	netID, _ := constants.FromString(rosettaTx.DestinationChain)
-	chainIDs := map[ids.ID]constants.NetworkIdentifiers{}
+	chainIDs := map[ids.ID]constants.ChainIDAlias{}
 	if rosettaTx.DestinationChainID != nil {
 		chainIDs[*rosettaTx.DestinationChainID] = netID
 	}

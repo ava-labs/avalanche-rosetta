@@ -44,7 +44,7 @@ type TxParserConfig struct {
 	// Hrp used for address formatting
 	Hrp string
 	// ChainIDs maps chain id to chain id alias mappings
-	ChainIDs map[ids.ID]constants.NetworkIdentifiers
+	ChainIDs map[ids.ID]constants.ChainIDAlias
 	// AvaxAssetID contains asset id for AVAX currency
 	AvaxAssetID ids.ID
 	// PChainClient holds a P-chain client, used to lookup asset descriptions for non-AVAX assets
@@ -481,7 +481,7 @@ func (t *TxParser) outsToOperations(
 	txID ids.ID,
 	txOut []*avax.TransferableOutput,
 	metaType string,
-	chainIDAlias constants.NetworkIdentifiers,
+	chainIDAlias constants.ChainIDAlias,
 ) error {
 	outIndexOffset := outOps.OutputLen()
 	status := types.String(mapper.StatusSuccess)
@@ -539,7 +539,7 @@ func (t *TxParser) utxosToOperations(
 	opType string,
 	utxos []*avax.UTXO,
 	metaType string,
-	chainIDAlias constants.NetworkIdentifiers,
+	chainIDAlias constants.ChainIDAlias,
 ) error {
 	status := types.String(mapper.StatusSuccess)
 	if t.cfg.IsConstruction {
@@ -599,7 +599,7 @@ func (t *TxParser) buildOutputOperation(
 	txID ids.ID,
 	outIndex uint32,
 	opType, metaType string,
-	chainIDAlias constants.NetworkIdentifiers,
+	chainIDAlias constants.ChainIDAlias,
 ) (*types.Operation, error) {
 	if len(out.Addrs) == 0 {
 		return nil, errNoOutputAddresses

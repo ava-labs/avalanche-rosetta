@@ -2,19 +2,19 @@ package constants
 
 import "errors"
 
-var UnknownNetworkIdentifier = errors.New("unknown Network Identifier")
+var ErrUnknownChainIDAlias = errors.New("unknown chain ID alias")
 
-type NetworkIdentifiers uint16
+type ChainIDAlias uint16
 
 const (
 	// values are ASCII values because why not?
-	Unknown NetworkIdentifiers = 0
-	PChain  NetworkIdentifiers = 80 // "P"
-	CChain  NetworkIdentifiers = 67 // "C"
-	XChain  NetworkIdentifiers = 88 // "X"
+	Unknown ChainIDAlias = 0
+	PChain  ChainIDAlias = 80 // "P"
+	CChain  ChainIDAlias = 67 // "C"
+	XChain  ChainIDAlias = 88 // "X"
 )
 
-func (ni NetworkIdentifiers) String() string {
+func (ni ChainIDAlias) String() string {
 	switch ni {
 	case PChain:
 		return "P"
@@ -27,7 +27,7 @@ func (ni NetworkIdentifiers) String() string {
 	}
 }
 
-func FromString(s string) (NetworkIdentifiers, error) {
+func FromString(s string) (ChainIDAlias, error) {
 	switch {
 	case s == "P":
 		return PChain, nil
@@ -36,6 +36,6 @@ func FromString(s string) (NetworkIdentifiers, error) {
 	case s == "X":
 		return XChain, nil
 	default:
-		return Unknown, UnknownNetworkIdentifier
+		return Unknown, ErrUnknownChainIDAlias
 	}
 }
