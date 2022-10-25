@@ -8,6 +8,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
@@ -20,7 +21,7 @@ func TestShouldHandleRequest(t *testing.T) {
 		Blockchain: service.BlockchainName,
 		Network:    mapper.FujiNetwork,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
-			Network: mapper.PChainNetworkIdentifier,
+			Network: constants.PChain.String(),
 		},
 	}
 
@@ -31,8 +32,8 @@ func TestShouldHandleRequest(t *testing.T) {
 
 	ctx := context.Background()
 	clientMock := &mocks.PChainClient{}
-	clientMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
-	clientMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
+	clientMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(ids.ID{'C'}, nil)
+	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)

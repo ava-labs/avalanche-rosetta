@@ -10,6 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
@@ -78,8 +79,8 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 func (b *Backend) getAccountCoins(ctx context.Context, address string) (*types.BlockIdentifier, []*types.Coin, *types.Error) {
 	var coins []*types.Coin
 	sourceChains := []string{
-		mapper.PChainNetworkIdentifier,
-		mapper.XChainNetworkIdentifier,
+		constants.PChain.String(),
+		constants.XChain.String(),
 	}
 
 	preHeader, err := b.cClient.HeaderByNumber(ctx, nil)

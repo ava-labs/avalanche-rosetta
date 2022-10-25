@@ -19,7 +19,7 @@ import (
 	proposerBlk "github.com/ava-labs/avalanchego/vms/proposervm/block"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 var (
@@ -59,7 +59,7 @@ type parser struct {
 // NewParser creates a new P-chain indexer parser
 func NewParser(pChainClient client.PChainClient) (Parser, error) {
 	aliaser := ids.NewAliaser()
-	err := aliaser.Alias(constants.PlatformChainID, mapper.PChainNetworkIdentifier)
+	err := aliaser.Alias(constants.PlatformChainID, rosConst.PChain.String())
 	if err != nil {
 		return nil, err
 	}

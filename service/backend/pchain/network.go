@@ -5,6 +5,7 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -26,7 +27,7 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 	peers := mapper.Peers(infoPeers)
 
 	// Check if network is bootstrapped
-	ready, err := b.pClient.IsBootstrapped(ctx, mapper.PChainNetworkIdentifier)
+	ready, err := b.pClient.IsBootstrapped(ctx, constants.PChain.String())
 	if err != nil {
 		return nil, service.WrapError(service.ErrClientError, err)
 	}

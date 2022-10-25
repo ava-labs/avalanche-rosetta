@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/service"
 )
@@ -25,7 +26,7 @@ func TestAccountBalance(t *testing.T) {
 			NetworkIdentifier: &types.NetworkIdentifier{
 				Network: mapper.FujiNetwork,
 				SubNetworkIdentifier: &types.SubNetworkIdentifier{
-					Network: mapper.PChainNetworkIdentifier,
+					Network: constants.PChain.String(),
 				},
 			},
 			AccountIdentifier: &types.AccountIdentifier{
@@ -81,7 +82,7 @@ func TestAccountCoins(t *testing.T) {
 			NetworkIdentifier: &types.NetworkIdentifier{
 				Network: mapper.FujiNetwork,
 				SubNetworkIdentifier: &types.SubNetworkIdentifier{
-					Network: mapper.PChainNetworkIdentifier,
+					Network: constants.PChain.String(),
 				},
 			},
 			AccountIdentifier: &types.AccountIdentifier{

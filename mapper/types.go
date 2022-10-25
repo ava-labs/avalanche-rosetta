@@ -16,10 +16,6 @@ const (
 	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
 	FujiNetwork = "Fuji"
 
-	PChainNetworkIdentifier = "P"
-	CChainNetworkIdentifier = "C"
-	XChainNetworkIdentifier = "X"
-
 	ContractAddressMetadata  = "contractAddress"
 	IndexTransferredMetadata = "indexTransferred"
 

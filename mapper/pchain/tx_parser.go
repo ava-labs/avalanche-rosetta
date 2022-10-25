@@ -17,6 +17,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -213,7 +214,7 @@ func (t *TxParser) parseImportTx(txID ids.ID, tx *txs.ImportTx) (*txOps, error) 
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpImportAvax, txID, tx.Outs, OpTypeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpImportAvax, txID, tx.Outs, OpTypeOutput, constants.PChain.String())
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +228,7 @@ func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*tx
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpAddValidator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpAddValidator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain.String())
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +243,7 @@ func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPer
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpAddPermissionlessValidator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpAddPermissionlessValidator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain.String())
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +264,7 @@ func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*tx
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpAddDelegator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpAddDelegator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain.String())
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +279,7 @@ func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPer
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, OpAddPermissionlessDelegator, txID, tx.Stake(), OpTypeStakeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, OpAddPermissionlessDelegator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain.String())
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +299,7 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 		return nil, errNoMatchingRewardOutputs
 	}
 	ops := newTxOps(t.cfg.IsConstruction)
-	err := t.utxosToOperations(ops, OpRewardValidator, dep.RewardUTXOs, OpTypeReward, mapper.PChainNetworkIdentifier)
+	err := t.utxosToOperations(ops, OpRewardValidator, dep.RewardUTXOs, OpTypeReward, constants.PChain.String())
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +362,7 @@ func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txTyp
 		return nil, err
 	}
 
-	err = t.outsToOperations(ops, txType, txID, tx.Outs, OpTypeOutput, mapper.PChainNetworkIdentifier)
+	err = t.outsToOperations(ops, txType, txID, tx.Outs, OpTypeOutput, constants.PChain.String())
 	if err != nil {
 		return nil, err
 	}

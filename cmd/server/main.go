@@ -16,6 +16,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/cchainatomictx"
@@ -116,7 +117,7 @@ func main() {
 		Blockchain: service.BlockchainName,
 		Network:    cfg.NetworkName,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
-			Network: mapper.PChainNetworkIdentifier,
+			Network: constants.PChain.String(),
 		},
 	}
 	networkC := &types.NetworkIdentifier{

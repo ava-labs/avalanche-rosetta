@@ -9,6 +9,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 
@@ -299,8 +300,8 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.Short
 	var sourceChains []string
 	if fetchSharedMemory {
 		sourceChains = []string{
-			mapper.CChainNetworkIdentifier,
-			mapper.XChainNetworkIdentifier,
+			constants.CChain.String(),
+			constants.XChain.String(),
 		}
 	} else {
 		sourceChains = []string{""}

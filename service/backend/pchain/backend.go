@@ -10,6 +10,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
@@ -123,20 +124,20 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 func (b *Backend) initChainIDs() error {
 	ctx := context.Background()
 	b.chainIDs = map[ids.ID]string{
-		ids.Empty: mapper.PChainNetworkIdentifier,
+		ids.Empty: constants.PChain.String(),
 	}
 
-	cChainID, err := b.pClient.GetBlockchainID(ctx, mapper.CChainNetworkIdentifier)
+	cChainID, err := b.pClient.GetBlockchainID(ctx, constants.CChain.String())
 	if err != nil {
 		return err
 	}
-	b.chainIDs[cChainID] = mapper.CChainNetworkIdentifier
+	b.chainIDs[cChainID] = constants.CChain.String()
 
-	xChainID, err := b.pClient.GetBlockchainID(ctx, mapper.XChainNetworkIdentifier)
+	xChainID, err := b.pClient.GetBlockchainID(ctx, constants.XChain.String())
 	if err != nil {
 		return err
 	}
-	b.chainIDs[xChainID] = mapper.XChainNetworkIdentifier
+	b.chainIDs[xChainID] = constants.XChain.String()
 
 	return nil
 }
@@ -145,5 +146,5 @@ func (b *Backend) initChainIDs() error {
 func (b *Backend) isPChain(reqNetworkID *types.NetworkIdentifier) bool {
 	return reqNetworkID != nil &&
 		reqNetworkID.SubNetworkIdentifier != nil &&
-		reqNetworkID.SubNetworkIdentifier.Network == mapper.PChainNetworkIdentifier
+		reqNetworkID.SubNetworkIdentifier.Network == constants.PChain.String()
 }

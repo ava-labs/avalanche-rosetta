@@ -9,6 +9,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/utils"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -159,12 +160,12 @@ func (s *NetworkService) NetworkOptions(
 }
 
 func checkBootstrapStatus(ctx context.Context, client client.Client) *types.Error {
-	cReady, err := client.IsBootstrapped(ctx, mapper.CChainNetworkIdentifier)
+	cReady, err := client.IsBootstrapped(ctx, constants.CChain.String())
 	if err != nil {
 		return WrapError(ErrClientError, err)
 	}
 
-	xReady, err := client.IsBootstrapped(ctx, mapper.XChainNetworkIdentifier)
+	xReady, err := client.IsBootstrapped(ctx, constants.XChain.String())
 	if err != nil {
 		return WrapError(ErrClientError, err)
 	}

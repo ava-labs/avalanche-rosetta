@@ -12,6 +12,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
@@ -42,8 +43,8 @@ var (
 func TestAccountBalance(t *testing.T) {
 	ctx := context.Background()
 	pChainMock := &mocks.PChainClient{}
-	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
-	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
+	pChainMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(ids.ID{'C'}, nil)
+	pChainMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
@@ -83,7 +84,7 @@ func TestAccountBalance(t *testing.T) {
 				NetworkIdentifier: &types.NetworkIdentifier{
 					Network: mapper.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{
@@ -133,7 +134,7 @@ func TestAccountBalance(t *testing.T) {
 				NetworkIdentifier: &types.NetworkIdentifier{
 					Network: mapper.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{
@@ -180,7 +181,7 @@ func TestAccountBalance(t *testing.T) {
 				NetworkIdentifier: &types.NetworkIdentifier{
 					Network: mapper.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{
@@ -203,8 +204,8 @@ func TestAccountBalance(t *testing.T) {
 func TestAccountCoins(t *testing.T) {
 	ctx := context.Background()
 	pChainMock := &mocks.PChainClient{}
-	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
-	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
+	pChainMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(ids.ID{'C'}, nil)
+	pChainMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
@@ -243,7 +244,7 @@ func TestAccountCoins(t *testing.T) {
 				NetworkIdentifier: &types.NetworkIdentifier{
 					Network: mapper.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{
@@ -319,7 +320,7 @@ func TestAccountCoins(t *testing.T) {
 				NetworkIdentifier: &types.NetworkIdentifier{
 					Network: mapper.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{
