@@ -77,7 +77,7 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 		return nil, service.WrapError(service.ErrInvalidInput, "unknown account type "+balanceType)
 	}
 
-	block, err := b.getBlockDetails(ctx, int64(height), "")
+	block, err := b.indexerParser.ParseNonGenesisBlock(ctx, "", height)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, "unable to get height")
 	}
@@ -128,7 +128,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
 
-	block, err := b.getBlockDetails(ctx, int64(height), "")
+	block, err := b.indexerParser.ParseNonGenesisBlock(ctx, "", height)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, "unable to get height")
 	}

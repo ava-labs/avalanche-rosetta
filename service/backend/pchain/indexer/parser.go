@@ -2,13 +2,13 @@ package indexer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/indexer"
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
@@ -25,21 +25,20 @@ import (
 var (
 	_ Parser = &parser{}
 
-	genesisTimestamp = time.Date(2020, time.September, 10, 0, 0, 0, 0, time.UTC)
+	genesisTimestamp         = time.Date(2020, time.September, 10, 0, 0, 0, 0, time.UTC)
+	errMissingBlockIndexHash = errors.New("a positive block index, a block hash or both must be specified")
 )
 
 // Parser defines the interface for a P-chain indexer parser
 type Parser interface {
 	// GetGenesisBlock parses and returns the Genesis block
 	GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error)
+	// ParseNonGenesisBlock returns the block with provided hash or height
+	ParseNonGenesisBlock(ctx context.Context, hash string, height uint64) (*ParsedBlock, error)
 	// GetPlatformHeight returns the current block height of P-chain
 	GetPlatformHeight(ctx context.Context) (uint64, error)
 	// ParseCurrentBlock parses and returns the current tip of P-chain
 	ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error)
-	// ParseBlockAtHeight parses and returns the block at the specified index
-	ParseBlockAtHeight(ctx context.Context, height uint64) (*ParsedBlock, error)
-	// ParseBlockWithHash parses and returns the block with the specified hash
-	ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error)
 }
 
 type parser struct {
@@ -84,7 +83,7 @@ func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	blk, err := p.parseContainer(container)
+	blk, err := p.parseBlock(container.Bytes)
 	if err != nil {
 		return 0, err
 	}
@@ -112,7 +111,7 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 	var genesisParentID ids.ID = hashing.ComputeHash256Array(bytes)
 
 	// Genesis Block is not indexed by the indexer, but its block ID can be accessed from block 0's parent id
-	genesisChildBlock, err := p.ParseBlockAtHeight(ctx, 1)
+	genesisChildBlock, err := p.parseBlockAtHeight(ctx, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -152,10 +151,22 @@ func (p *parser) ParseCurrentBlock(ctx context.Context) (*ParsedBlock, error) {
 		return nil, err
 	}
 
-	return p.ParseBlockAtHeight(ctx, height)
+	return p.parseBlockAtHeight(ctx, height)
 }
 
-func (p *parser) ParseBlockAtHeight(ctx context.Context, height uint64) (*ParsedBlock, error) {
+func (p *parser) ParseNonGenesisBlock(ctx context.Context, hash string, height uint64) (*ParsedBlock, error) {
+	if height <= 0 && hash == "" {
+		return nil, errMissingBlockIndexHash
+	}
+
+	if hash != "" {
+		return p.parseBlockWithHash(ctx, hash)
+	}
+
+	return p.parseBlockAtHeight(ctx, height)
+}
+
+func (p *parser) parseBlockAtHeight(ctx context.Context, height uint64) (*ParsedBlock, error) {
 	// P-chain indexer does not include genesis and store block at height 1 with index 0.
 	// Therefore containers are looked up with index = height - 1.
 	// Note that genesis does not cause a problem here as it is handled in a separate code path
@@ -164,10 +175,10 @@ func (p *parser) ParseBlockAtHeight(ctx context.Context, height uint64) (*Parsed
 		return nil, err
 	}
 
-	return p.parseContainer(container)
+	return p.parseBlock(container.Bytes)
 }
 
-func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
+func (p *parser) parseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
 	hashID, err := ids.FromString(hash)
 	if err != nil {
 		return nil, err
@@ -178,14 +189,13 @@ func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 		return nil, err
 	}
 
-	return p.parseContainer(container)
+	return p.parseBlock(container.Bytes)
 }
 
-// [parseContainer] parses blocks are retrieved from index api.
-// [parseContainer] tries to parse container asProposerVM block first.
+// [parseBlock] parses blocks are retrieved from index api.
+// [parseBlock] tries to parse block asProposerVM block first.
 // In case of failure, it tries to parse it as a pre-proposerVM block.
-func (p *parser) parseContainer(container indexer.Container) (*ParsedBlock, error) {
-	blkBytes := container.Bytes
+func (p *parser) parseBlock(blkBytes []byte) (*ParsedBlock, error) {
 	pChainBlkBytes := blkBytes
 	proBlkData := Proposer{}
 
@@ -220,11 +230,9 @@ func (p *parser) parseContainer(container indexer.Container) (*ParsedBlock, erro
 		txes = []*txs.Tx{}
 	}
 
-	// container.Timestamp is the time the indexer node discovered the requested block.
-	// As such, its value depends on the specific indexer deployment. Instead we retrieve
-	// timestamps from the block to have a deployment-independent timestamp. This blkTime
-	// is not guarateed to be monotonic before Banff blocks, whose Mainnet activation happened
-	// on Tuesday, 2022 October 18 at 12 p.m. EDT.
+	// We retrieve timestamps from the block to have a deployment-independent timestamp.
+	// This blkTime is not guarateed to be monotonic before Banff blocks, whose Mainnet
+	// activation happened on Tuesday, 2022 October 18 at 12 p.m. EDT.
 	blkTime, err := retrieveTime(blk, proBlk)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieving block time: %w", err)

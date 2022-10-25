@@ -2,10 +2,9 @@ package pchain
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
@@ -23,21 +22,14 @@ import (
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
 
-var (
-	errMissingBlockIndexHash = errors.New("a positive block index, a block hash or both must be specified")
-	errMismatchedHeight      = errors.New("provided block height does not match height of the block with given hash")
-	errTxInitialize          = errors.New("tx initialize error")
-)
-
 // Block implements the /block endpoint
 func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*types.BlockResponse, *types.Error) {
 	var blockIndex int64
-	var hash string
-
 	if request.BlockIdentifier.Index != nil {
 		blockIndex = *request.BlockIdentifier.Index
 	}
 
+	var hash string
 	if request.BlockIdentifier.Hash != nil {
 		hash = *request.BlockIdentifier.Hash
 	}
@@ -69,13 +61,13 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 		}, nil
 	}
 
-	block, err := b.getBlockDetails(ctx, blockIndex, hash)
+	block, err := b.indexerParser.ParseNonGenesisBlock(ctx, hash, uint64(blockIndex))
 	if err != nil {
 		return nil, service.WrapError(service.ErrClientError, err)
 	}
 	blockIndex = int64(block.Height)
 
-	transactions, err := b.parseTransactions(ctx, request.NetworkIdentifier, block.Txs)
+	rosettaTxs, err := b.parseRosettaTxs(ctx, request.NetworkIdentifier, block.Txs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -91,7 +83,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 				Hash:  block.ParentID.String(),
 			},
 			Timestamp:    block.Timestamp,
-			Transactions: transactions,
+			Transactions: rosettaTxs,
 		},
 	}
 
@@ -105,29 +97,29 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		return nil, service.WrapError(service.ErrClientError, err)
 	}
 
-	var transactions []*types.Transaction
+	var rosettaTxs []*types.Transaction
 
 	if isGenesisBlockRequest {
-		_, transactions, err = b.getGenesisBlockAndTransactions(ctx, request.NetworkIdentifier)
+		_, rosettaTxs, err = b.getGenesisBlockAndTransactions(ctx, request.NetworkIdentifier)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
 	} else {
-		block, err := b.getBlockDetails(ctx, request.BlockIdentifier.Index, request.BlockIdentifier.Hash)
+		block, err := b.indexerParser.ParseNonGenesisBlock(ctx, request.BlockIdentifier.Hash, uint64(request.BlockIdentifier.Index))
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
 
-		transactions, err = b.parseTransactions(ctx, request.NetworkIdentifier, block.Txs)
+		rosettaTxs, err = b.parseRosettaTxs(ctx, request.NetworkIdentifier, block.Txs)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
 	}
 
-	for _, transaction := range transactions {
-		if transaction.TransactionIdentifier.Hash == request.TransactionIdentifier.Hash {
+	for _, rTx := range rosettaTxs {
+		if rTx.TransactionIdentifier.Hash == request.TransactionIdentifier.Hash {
 			return &types.BlockTransactionResponse{
-				Transaction: transaction,
+				Transaction: rTx,
 			}, nil
 		}
 	}
@@ -135,7 +127,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	return nil, service.ErrTransactionNotFound
 }
 
-func (b *Backend) parseTransactions(
+func (b *Backend) parseRosettaTxs(
 	ctx context.Context,
 	networkIdentifier *types.NetworkIdentifier,
 	txs []*txs.Tx,
@@ -145,16 +137,15 @@ func (b *Backend) parseTransactions(
 		return nil, err
 	}
 
-	parser, err := b.newTxParser(ctx, networkIdentifier, dependencyTxs)
+	parser, err := b.newTxParser(networkIdentifier, dependencyTxs)
 	if err != nil {
 		return nil, err
 	}
 
 	transactions := make([]*types.Transaction, 0, len(txs))
 	for _, tx := range txs {
-		err = b.initializeTx(tx)
-		if err != nil {
-			return nil, errTxInitialize
+		if err != tx.Sign(b.codec, nil) {
+			return nil, fmt.Errorf("failed tx initialization, %w", err)
 		}
 
 		t, err := parser.Parse(tx.ID(), tx.Unsigned)
@@ -218,13 +209,7 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 		return err
 	}
 
-	var tx txs.Tx
-	_, err = b.codec.Unmarshal(txBytes, &tx)
-	if err != nil {
-		return err
-	}
-
-	err = b.initializeTx(&tx)
+	tx, err := txs.Parse(txs.Codec, txBytes)
 	if err != nil {
 		return err
 	}
@@ -247,7 +232,7 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 		utxos = append(utxos, &utxo)
 	}
 	out <- &pmapper.DependencyTx{
-		Tx:          &tx,
+		Tx:          tx,
 		RewardUTXOs: utxos,
 	}
 
@@ -255,16 +240,10 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 }
 
 func (b *Backend) newTxParser(
-	ctx context.Context,
 	networkIdentifier *types.NetworkIdentifier,
 	dependencyTxs map[string]*pmapper.DependencyTx,
 ) (*pmapper.TxParser, error) {
 	hrp, err := mapper.GetHRP(networkIdentifier)
-	if err != nil {
-		return nil, err
-	}
-
-	chainIDs, err := b.getChainIDs(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -274,72 +253,7 @@ func (b *Backend) newTxParser(
 		return nil, err
 	}
 
-	return pmapper.NewTxParser(false, hrp, chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
-}
-
-func (b *Backend) getChainIDs(ctx context.Context) (map[string]string, error) {
-	if b.chainIDs == nil {
-		b.chainIDs = map[string]string{
-			ids.Empty.String(): mapper.PChainNetworkIdentifier,
-		}
-
-		cChainID, err := b.pClient.GetBlockchainID(ctx, mapper.CChainNetworkIdentifier)
-		if err != nil {
-			return nil, err
-		}
-		b.chainIDs[cChainID.String()] = mapper.CChainNetworkIdentifier
-
-		xChainID, err := b.pClient.GetBlockchainID(ctx, mapper.XChainNetworkIdentifier)
-		if err != nil {
-			return nil, err
-		}
-		b.chainIDs[xChainID.String()] = mapper.XChainNetworkIdentifier
-	}
-
-	return b.chainIDs, nil
-}
-
-func (b *Backend) getBlockDetails(ctx context.Context, index int64, hash string) (*indexer.ParsedBlock, error) {
-	if index <= 0 && hash == "" {
-		return nil, errMissingBlockIndexHash
-	}
-
-	blockHeight := uint64(index)
-
-	// Extract block id from hash parameter if it is non-empty, or from index if stated
-	if hash != "" {
-		height, err := b.getBlockHeight(ctx, hash)
-		if err != nil {
-			return nil, err
-		}
-
-		if blockHeight > 0 && height != blockHeight {
-			return nil, errMismatchedHeight
-		}
-		blockHeight = height
-	}
-
-	return b.indexerParser.ParseBlockAtHeight(ctx, blockHeight)
-}
-
-func (b *Backend) getBlockHeight(ctx context.Context, hash string) (uint64, error) {
-	blockID, err := ids.FromString(hash)
-	if err != nil {
-		return 0, err
-	}
-
-	blockBytes, err := b.pClient.GetBlock(ctx, blockID)
-	if err != nil {
-		return 0, err
-	}
-
-	var block blocks.Block
-	_, err = b.codec.Unmarshal(blockBytes, &block)
-	if err != nil {
-		return 0, err
-	}
-
-	return block.Height(), nil
+	return pmapper.NewTxParser(false, hrp, b.chainIDs, inputAddresses, dependencyTxs, b.pClient, b.avaxAssetID)
 }
 
 func (b *Backend) isGenesisBlockRequest(ctx context.Context, index int64, hash string) (bool, error) {
@@ -374,7 +288,7 @@ func (b *Backend) getGenesisBlockAndTransactions(
 	}
 	genesisTxs = append(genesisTxs, allocationTx)
 
-	parser, err := b.newTxParser(ctx, networkIdentifier, nil)
+	parser, err := b.newTxParser(networkIdentifier, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -421,27 +335,12 @@ func (b *Backend) buildGenesisAllocationTx() (*txs.Tx, error) {
 		})
 	}
 
+	// TODO: this is probably not the right way to build this tx
+	// Some fields are missing that we populate in tx Builder
 	allocationTx := &txs.ImportTx{}
 	allocationTx.Outs = outs
 	tx := &txs.Tx{
 		Unsigned: allocationTx,
 	}
-	return tx, nil
-}
-
-// initializes tx to have tx identifier generated
-func (b *Backend) initializeTx(tx *txs.Tx) error {
-	unsignedBytes, err := b.codec.Marshal(b.codecVersion, tx.Unsigned)
-	if err != nil {
-		return err
-	}
-
-	signedBytes, err := b.codec.Marshal(b.codecVersion, tx)
-	if err != nil {
-		return err
-	}
-
-	tx.Initialize(unsignedBytes, signedBytes)
-
-	return nil
+	return tx, tx.Sign(b.codec, nil)
 }

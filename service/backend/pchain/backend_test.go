@@ -1,6 +1,7 @@
 package pchain
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -8,7 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanchego/ids"
 )
 
 func TestShouldHandleRequest(t *testing.T) {
@@ -25,7 +28,12 @@ func TestShouldHandleRequest(t *testing.T) {
 		Network:    mapper.FujiNetwork,
 	}
 
-	backend := NewBackend(nil, nil, avaxAssetID, pChainNetworkIdentifier)
+	ctx := context.Background()
+	clientMock := &mocks.PChainClient{}
+	clientMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
+	clientMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
+	backend, err := NewBackend(service.ModeOnline, clientMock, nil, avaxAssetID, pChainNetworkIdentifier)
+	assert.Nil(t, err)
 
 	testData := []struct {
 		name              string

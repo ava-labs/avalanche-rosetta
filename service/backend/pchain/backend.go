@@ -10,6 +10,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
@@ -38,12 +39,13 @@ type Backend struct {
 
 // NewBackend creates a P-chain service backend
 func NewBackend(
+	nodeMode string,
 	pClient client.PChainClient,
 	indexerParser indexer.Parser,
 	assetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
-) *Backend {
-	return &Backend{
+) (*Backend, error) {
+	backEnd := &Backend{
 		fac:               &crypto.FactorySECP256K1R{},
 		networkIdentifier: networkIdentifier,
 		pClient:           pClient,
@@ -51,8 +53,15 @@ func NewBackend(
 		codec:             blocks.Codec,
 		codecVersion:      blocks.Version,
 		indexerParser:     indexerParser,
+		chainIDs:          map[string]string{},
 		avaxAssetID:       assetID,
 	}
+
+	var err error
+	if nodeMode == service.ModeOnline {
+		err = backEnd.initChainIDs()
+	}
+	return backEnd, err
 }
 
 // ShouldHandleRequest returns whether a given request should be handled by this backend
@@ -103,4 +112,25 @@ func (b *Backend) getGenesisBlock(ctx context.Context) (*indexer.ParsedGenesisBl
 		Hash:  genesisBlock.BlockID.String(),
 	}
 	return genesisBlock, nil
+}
+
+func (b *Backend) initChainIDs() error {
+	ctx := context.Background()
+	b.chainIDs = map[string]string{
+		ids.Empty.String(): mapper.PChainNetworkIdentifier,
+	}
+
+	cChainID, err := b.pClient.GetBlockchainID(ctx, mapper.CChainNetworkIdentifier)
+	if err != nil {
+		return err
+	}
+	b.chainIDs[cChainID.String()] = mapper.CChainNetworkIdentifier
+
+	xChainID, err := b.pClient.GetBlockchainID(ctx, mapper.XChainNetworkIdentifier)
+	if err != nil {
+		return err
+	}
+	b.chainIDs[xChainID.String()] = mapper.XChainNetworkIdentifier
+
+	return nil
 }

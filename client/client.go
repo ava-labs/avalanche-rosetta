@@ -19,7 +19,13 @@ import (
 var _ Client = &client{}
 
 type Client interface {
+	// info.Client methods
 	IsBootstrapped(context.Context, string, ...rpc.Option) (bool, error)
+	GetNetworkName(context.Context, ...rpc.Option) (string, error)
+	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)
+	GetNetworkID(context.Context, ...rpc.Option) (uint32, error)
+	GetBlockchainID(context.Context, string, ...rpc.Option) (ids.ID, error)
+
 	ChainID(context.Context) (*big.Int, error)
 	BlockByHash(context.Context, ethcommon.Hash) (*ethtypes.Block, error)
 	BlockByNumber(context.Context, *big.Int) (*ethtypes.Block, error)
@@ -35,12 +41,8 @@ type Client interface {
 	SuggestGasPrice(context.Context) (*big.Int, error)
 	EstimateGas(context.Context, interfaces.CallMsg) (uint64, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
-	GetNetworkName(context.Context, ...rpc.Option) (string, error)
-	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)
 	GetContractInfo(ethcommon.Address, bool) (string, uint8, error)
 	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
-	GetNetworkID(context.Context, ...rpc.Option) (uint32, error)
-	GetBlockchainID(context.Context, string, ...rpc.Option) (ids.ID, error)
 	IssueTx(ctx context.Context, txBytes []byte) (ids.ID, error)
 	GetAtomicUTXOs(ctx context.Context, addrs []string, sourceChain string, limit uint32, startAddress, startUTXOID string) ([][]byte, api.Index, error)
 	EstimateBaseFee(ctx context.Context) (*big.Int, error)
