@@ -46,6 +46,7 @@ func BuildTx(
 	}
 }
 
+// [buildImportTx] returns a duly initialized tx if it does not err
 func buildImportTx(
 	matches []*parser.Match,
 	metadata Metadata,
@@ -76,9 +77,10 @@ func buildImportTx(
 		SourceChain:    sourceChainID,
 	}}
 
-	return tx, signers, nil
+	return tx, signers, tx.Sign(codec, nil)
 }
 
+// [buildExportTx] returns a duly initialized tx if it does not err
 func buildExportTx(
 	matches []*parser.Match,
 	metadata Metadata,
@@ -112,9 +114,10 @@ func buildExportTx(
 		ExportedOutputs:  exported,
 	}}
 
-	return tx, signers, nil
+	return tx, signers, tx.Sign(codec, nil)
 }
 
+// [buildAddValidatorTx] returns a duly initialized tx if it does not err
 func buildAddValidatorTx(
 	matches []*parser.Match,
 	metadata Metadata,
@@ -180,9 +183,10 @@ func buildAddValidatorTx(
 		DelegationShares: metadata.Shares,
 	}}
 
-	return tx, signers, nil
+	return tx, signers, tx.Sign(codec, nil)
 }
 
+// [buildAddDelegatorTx] returns a duly initialized tx if it does not err
 func buildAddDelegatorTx(
 	matches []*parser.Match,
 	metadata Metadata,
@@ -242,7 +246,7 @@ func buildAddDelegatorTx(
 		DelegationRewardsOwner: rewardsOwner,
 	}}
 
-	return tx, signers, nil
+	return tx, signers, tx.Sign(codec, nil)
 }
 
 func buildOutputOwner(

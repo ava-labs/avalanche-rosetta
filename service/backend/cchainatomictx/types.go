@@ -15,7 +15,10 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 )
 
-var _ common.AvaxTx = &cAtomicTx{}
+var (
+	_ common.AvaxTx    = &cAtomicTx{}
+	_ common.TxBuilder = &cAtomicTxBuilder{}
+)
 
 type cAtomicTx struct {
 	Tx           *evm.Tx

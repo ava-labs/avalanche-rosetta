@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	_ common.AvaxTx = &pTx{}
+	_ common.AvaxTx    = &pTx{}
+	_ common.TxBuilder = &pTxBuilder{}
 
 	errInvalidTransaction = errors.New("invalid transaction")
 )
