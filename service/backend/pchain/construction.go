@@ -92,7 +92,6 @@ func (b *Backend) ConstructionMetadata(
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
-
 	metadata.BlockchainID = pChainID
 
 	metadataMap, err := mapper.MarshalJSONMap(metadata)

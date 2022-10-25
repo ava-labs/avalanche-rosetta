@@ -44,7 +44,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
-		rosettaTxs, err := parseRosettaTxs(b.txParserCfg, blocks.GenesisCodec, genesisTxs, nil)
+		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, blocks.GenesisCodec, genesisTxs, nil)
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
@@ -73,7 +73,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
 
-		rosettaTxs, err := parseRosettaTxs(b.txParserCfg, blocks.Codec, block.Txs, dependencyTxs)
+		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, blocks.Codec, block.Txs, dependencyTxs)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -107,7 +107,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
 	var (
 		targetTxs     []*txs.Tx
-		dependencyTxs map[ids.ID]*pmapper.DependencyTx
+		dependencyTxs pmapper.BlockTxDependencies
 		targetCodec   codec.Manager
 	)
 
@@ -135,7 +135,7 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		targetCodec = blocks.Codec
 	}
 
-	rosettaTxs, err := parseRosettaTxs(b.txParserCfg, targetCodec, targetTxs, dependencyTxs)
+	rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, targetCodec, targetTxs, dependencyTxs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -150,22 +150,21 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	return nil, service.ErrTransactionNotFound
 }
 
-func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[ids.ID]*pmapper.DependencyTx, error) {
-	dependencyTxIDs := []ids.ID{}
-
+func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (pmapper.BlockTxDependencies, error) {
+	blockDeps := make(pmapper.BlockTxDependencies)
+	depsTxIDs := []ids.ID{}
 	for _, tx := range txs {
-		inputTxsIds, err := pmapper.GetDependencyTxIDs(tx.Unsigned)
+		inputTxsIds, err := blockDeps.GetDependencyTxIDs(tx.Unsigned)
 		if err != nil {
 			return nil, err
 		}
-		dependencyTxIDs = append(dependencyTxIDs, inputTxsIds...)
+		depsTxIDs = append(depsTxIDs, inputTxsIds...)
 	}
 
-	dependencyTxChan := make(chan *pmapper.DependencyTx, len(dependencyTxIDs))
+	dependencyTxChan := make(chan *pmapper.SingleTxDependency, len(depsTxIDs))
 	eg, ctx := errgroup.WithContext(ctx)
 
-	dependencyTxs := make(map[ids.ID]*pmapper.DependencyTx)
-	for _, txID := range dependencyTxIDs {
+	for _, txID := range depsTxIDs {
 		txID := txID
 		eg.Go(func() error {
 			return b.fetchDependencyTx(ctx, txID, dependencyTxChan)
@@ -177,19 +176,19 @@ func (b *Backend) fetchDependencyTxs(ctx context.Context, txs []*txs.Tx) (map[id
 	close(dependencyTxChan)
 
 	for dTx := range dependencyTxChan {
-		dependencyTxs[dTx.Tx.ID()] = dTx
+		blockDeps[dTx.Tx.ID()] = dTx
 	}
 
-	return dependencyTxs, nil
+	return blockDeps, nil
 }
 
-func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *pmapper.DependencyTx) error {
+func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *pmapper.SingleTxDependency) error {
 	// Genesis state contains initial allocation UTXOs. These are not technically part of a transaction.
 	// As a result, their UTXO id uses zero value transaction id. In that case, return genesis allocation data
 	if txID == ids.Empty {
 		allocationTx, err := b.buildGenesisAllocationTx()
 		if allocationTx != nil {
-			out <- &pmapper.DependencyTx{
+			out <- &pmapper.SingleTxDependency{
 				Tx: allocationTx,
 			}
 		}
@@ -223,7 +222,7 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 		}
 		utxos = append(utxos, &utxo)
 	}
-	out <- &pmapper.DependencyTx{
+	out <- &pmapper.SingleTxDependency{
 		Tx:          tx,
 		RewardUTXOs: utxos,
 	}

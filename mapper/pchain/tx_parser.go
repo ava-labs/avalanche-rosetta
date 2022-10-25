@@ -54,7 +54,7 @@ type TxParser struct {
 	cfg TxParserConfig
 
 	// dependencyTxs maps transaction id to dependence transaction mapping
-	dependencyTxs map[ids.ID]*DependencyTx
+	dependencyTxs BlockTxDependencies
 	// inputTxAccounts contain utxo id to account identifier mappings
 	inputTxAccounts map[string]*types.AccountIdentifier
 }
@@ -63,7 +63,7 @@ type TxParser struct {
 func NewTxParser(
 	cfg TxParserConfig,
 	inputTxAccounts map[string]*types.AccountIdentifier,
-	dependencyTxs map[ids.ID]*DependencyTx,
+	dependencyTxs BlockTxDependencies,
 ) (*TxParser, error) {
 	if cfg.ChainIDs == nil {
 		return nil, errNilChainIDs
@@ -292,18 +292,18 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 	if t.dependencyTxs == nil {
 		return nil, errNoDependencyTxs
 	}
-	rewardOuts := t.dependencyTxs[stakingTxID]
-	if rewardOuts == nil {
+	dep := t.dependencyTxs[stakingTxID]
+	if dep == nil {
 		return nil, errNoMatchingRewardOutputs
 	}
 	ops := newTxOps(t.cfg.IsConstruction)
-	err := t.utxosToOperations(ops, OpRewardValidator, rewardOuts.RewardUTXOs, OpTypeReward, mapper.PChainNetworkIdentifier)
+	err := t.utxosToOperations(ops, OpRewardValidator, dep.RewardUTXOs, OpTypeReward, mapper.PChainNetworkIdentifier)
 	if err != nil {
 		return nil, err
 	}
 
 	var v *validator.Validator
-	switch utx := rewardOuts.Tx.Unsigned.(type) {
+	switch utx := dep.Tx.Unsigned.(type) {
 	case *txs.AddValidatorTx:
 		v = &utx.Validator
 	case *txs.AddDelegatorTx:
@@ -651,8 +651,8 @@ func (t *TxParser) isMultisig(utxoid avax.UTXOID) (bool, error) {
 		return false, errFailedToCheckMultisig
 	}
 
-	utxoMap := getUTXOMap(dependencyTx)
-	utxo, ok := utxoMap[utxoid.OutputIndex]
+	utxoMap := dependencyTx.GetUtxos()
+	utxo, ok := utxoMap[utxoid]
 	if !ok {
 		return false, errFailedToCheckMultisig
 	}
@@ -676,149 +676,6 @@ func (t *TxParser) lookupCurrency(assetID ids.ID) (*types.Currency, error) {
 		Symbol:   asset.Symbol,
 		Decimals: int32(asset.Denomination),
 	}, nil
-}
-
-// GetAccountsFromUTXOs extracts destination accounts from given dependency transactions
-func GetAccountsFromUTXOs(hrp string, dependencyTxs map[ids.ID]*DependencyTx) (map[string]*types.AccountIdentifier, error) {
-	addresses := make(map[string]*types.AccountIdentifier)
-	for _, dependencyTx := range dependencyTxs {
-		utxoMap := getUTXOMap(dependencyTx)
-
-		for _, utxo := range utxoMap {
-			addressable, ok := utxo.Out.(avax.Addressable)
-			if !ok {
-				return nil, errFailedToGetUTXOAddresses
-			}
-
-			addrs := addressable.Addresses()
-
-			if len(addrs) != 1 {
-				continue
-			}
-
-			addr, err := address.Format(mapper.PChainNetworkIdentifier, hrp, addrs[0])
-			addresses[utxo.UTXOID.String()] = &types.AccountIdentifier{Address: addr}
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return addresses, nil
-}
-
-// GetDependencyTxIDs generates the list of transaction ids used in the inputs to given unsigned transaction
-// this list is then used to fetch the dependency transactions in order to extract source addresses
-// as this information is not part of the transaction objects on chain.
-func GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
-	var txIds []ids.ID
-	switch unsignedTx := tx.(type) {
-	case *txs.ExportTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.ImportTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.AddValidatorTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.AddPermissionlessValidatorTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.AddDelegatorTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.AddPermissionlessDelegatorTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.CreateSubnetTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.CreateChainTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.AddSubnetValidatorTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.TransformSubnetTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.RemoveSubnetValidatorTx:
-		txIds = append(txIds, getUniqueTxIds(unsignedTx.Ins)...)
-	case *txs.RewardValidatorTx:
-		txIds = append(txIds, unsignedTx.TxID)
-	case *txs.AdvanceTimeTx:
-		// advance time txs do not have inputs
-	default:
-		log.Printf("unknown type %T", unsignedTx)
-	}
-
-	ids.SortIDs(txIds)
-
-	return txIds, nil
-}
-
-func getUniqueTxIds(ins []*avax.TransferableInput) []ids.ID {
-	txnIDs := make(map[ids.ID]ids.ID)
-	for _, in := range ins {
-		txnIDs[in.UTXOID.TxID] = in.UTXOID.TxID
-	}
-
-	uniqueTxnIDs := make([]ids.ID, 0, len(txnIDs))
-	for _, txnID := range txnIDs {
-		uniqueTxnIDs = append(uniqueTxnIDs, txnID)
-	}
-	return uniqueTxnIDs
-}
-
-func getUTXOMap(d *DependencyTx) map[uint32]*avax.UTXO {
-	utxos := make(map[uint32]*avax.UTXO)
-
-	if d.Tx != nil {
-		// Generate UTXOs from outputs
-		switch unsignedTx := d.Tx.Unsigned.(type) {
-		case *txs.ExportTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-		case *txs.ImportTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-		case *txs.AddValidatorTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-			mapUTXOs(d.Tx.ID(), unsignedTx.Stake(), utxos)
-		case *txs.AddPermissionlessValidatorTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-			mapUTXOs(d.Tx.ID(), unsignedTx.Stake(), utxos)
-		case *txs.AddDelegatorTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-			mapUTXOs(d.Tx.ID(), unsignedTx.Stake(), utxos)
-		case *txs.AddPermissionlessDelegatorTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-			mapUTXOs(d.Tx.ID(), unsignedTx.Stake(), utxos)
-		case *txs.CreateSubnetTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-		case *txs.AddSubnetValidatorTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-		case *txs.TransformSubnetTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-		case *txs.RemoveSubnetValidatorTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-		case *txs.CreateChainTx:
-			mapUTXOs(d.Tx.ID(), unsignedTx.Outs, utxos)
-		default:
-			// no utxos extracted from unsupported transaction types
-		}
-	}
-
-	// Add reward UTXOs
-	for _, utxo := range d.RewardUTXOs {
-		utxos[utxo.OutputIndex] = utxo
-	}
-
-	return utxos
-}
-
-func mapUTXOs(txID ids.ID, outs []*avax.TransferableOutput, utxos map[uint32]*avax.UTXO) {
-	outIndexOffset := uint32(len(utxos))
-	for i, out := range outs {
-		outIndex := outIndexOffset + uint32(i)
-		utxos[outIndex] = &avax.UTXO{
-			UTXOID: avax.UTXOID{
-				TxID:        txID,
-				OutputIndex: outIndex,
-			},
-			Asset: out.Asset,
-			Out:   out.Out,
-		}
-	}
 }
 
 type txOps struct {
