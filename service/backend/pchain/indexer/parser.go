@@ -22,6 +22,12 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
+var (
+	_ Parser = &parser{}
+
+	genesisTimestamp = time.Date(2020, time.September, 10, 0, 0, 0, 0, time.UTC)
+)
+
 // Parser defines the interface for a P-chain indexer parser
 type Parser interface {
 	// GetGenesisBlock parses and returns the Genesis block
@@ -35,9 +41,6 @@ type Parser interface {
 	// ParseBlockWithHash parses and returns the block with the specified hash
 	ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error)
 }
-
-// Interface compliance
-var _ Parser = &parser{}
 
 type parser struct {
 	// ideally parser should rely only on pchain indexer apis.
@@ -180,7 +183,7 @@ func (p *parser) ParseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 
 // [parseContainer] parses blocks are retrieved from index api.
 // [parseContainer] tries to parse container asProposerVM block first.
-// In case of failure, it tries to parsing it as a pre-proposerVM block.
+// In case of failure, it tries to parse it as a pre-proposerVM block.
 func (p *parser) parseContainer(container indexer.Container) (*ParsedBlock, error) {
 	blkBytes := container.Bytes
 	pChainBlkBytes := blkBytes
@@ -212,23 +215,75 @@ func (p *parser) parseContainer(container indexer.Container) (*ParsedBlock, erro
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
 	}
-
 	txes := blk.Txs()
 	if txes == nil {
 		txes = []*txs.Tx{}
 	}
+
+	// container.Timestamp is the time the indexer node discovered the requested block.
+	// As such, its value depends on the specific indexer deployment. Instead we retrieve
+	// timestamps from the block to have a deployment-independent timestamp. This blkTime
+	// is not guarateed to be monotonic before Banff blocks, whose Mainnet activation happened
+	// on Tuesday, 2022 October 18 at 12 p.m. EDT.
+	blkTime, err := retrieveTime(blk, proBlk)
+	if err != nil {
+		return nil, fmt.Errorf("failed retrieving block time: %w", err)
+	}
+
 	return &ParsedBlock{
 		BlockID:   blk.ID(),
 		BlockType: fmt.Sprintf("%T", blk),
 		ParentID:  blk.Parent(),
-
-		// TODO: we are considering different ways to build timestamp
-		// e.g. using Banff blocks timestamps/proposerVM timestamp.
-		// Update once agreement is reached
-		Timestamp: time.Unix(container.Timestamp, 0).UnixMilli(),
+		Timestamp: blkTime.UnixMilli(),
 
 		Height:   blk.Height(),
 		Txs:      txes,
 		Proposer: proBlkData,
 	}, nil
+}
+
+func retrieveTime(pchainBlk pBlocks.Block, proBlk proposerBlk.Block) (time.Time, error) {
+	switch b := pchainBlk.(type) {
+	// Banff blocks serialize pchain time
+	case *pBlocks.BanffProposalBlock:
+		return b.Timestamp(), nil
+	case *pBlocks.BanffStandardBlock:
+		return b.Timestamp(), nil
+	case *pBlocks.BanffAbortBlock:
+		return b.Timestamp(), nil
+	case *pBlocks.BanffCommitBlock:
+		return b.Timestamp(), nil
+
+	// Apricot Proposal blocks may contain an advance time tx
+	// setting pchain time
+	case *pBlocks.ApricotProposalBlock:
+		if t, ok := b.Tx.Unsigned.(*txs.AdvanceTimeTx); ok {
+			return t.Timestamp(), nil
+		}
+
+	case *pBlocks.ApricotAtomicBlock,
+		*pBlocks.ApricotStandardBlock,
+		*pBlocks.ApricotAbortBlock,
+		*pBlocks.ApricotCommitBlock:
+		// no relevant time information in these blocks
+
+	default:
+		return time.Time{}, fmt.Errorf("unknown block type %T", b)
+	}
+
+	// No timestamp was found in given pre-Banff block.
+	// Fallback to proposer timestamp as used by Snowman++
+	// if available. While proposer timestamp should be close
+	// to pchain time at block creation, time monotonicity is
+	// not guaranteed.
+	if proBlk != nil {
+		if signedProBlk, ok := proBlk.(proposerBlk.SignedBlock); ok {
+			return signedProBlk.Timestamp(), nil
+		}
+	}
+
+	// Fallback to the genesis timestamp. We cannot simply
+	// return time.Time{} as Rosetta expects timestamps to be available
+	// after 1/1/2000.
+	return genesisTimestamp, nil
 }
