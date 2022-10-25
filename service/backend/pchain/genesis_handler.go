@@ -109,6 +109,9 @@ func (gh *gHandler) buildGenesisAllocationTx() (*txs.Tx, error) {
 		}
 
 		outs = append(outs, &avax.TransferableOutput{
+			Asset: avax.Asset{
+				ID: utxo.AssetID(),
+			},
 			Out: &secp256k1fx.TransferOutput{
 				Amt: out.Amount(),
 				OutputOwners: secp256k1fx.OutputOwners{
