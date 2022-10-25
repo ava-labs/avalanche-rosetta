@@ -17,6 +17,8 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain"
@@ -152,8 +154,8 @@ func main() {
 	}
 
 	var operationTypes []string
-	operationTypes = append(operationTypes, constants.CChainOps()...)
-	operationTypes = append(operationTypes, constants.PChainTxTypes()...)
+	operationTypes = append(operationTypes, cconstants.CChainOps()...)
+	operationTypes = append(operationTypes, pconstants.TxTypes()...)
 
 	asserter, err := asserter.NewServer(
 		operationTypes, // supported operation types

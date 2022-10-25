@@ -5,13 +5,6 @@ import (
 )
 
 const (
-	OpTypeImport      = "IMPORT"
-	OpTypeExport      = "EXPORT"
-	OpTypeInput       = "INPUT"
-	OpTypeOutput      = "OUTPUT"
-	OpTypeStakeOutput = "STAKE"
-	OpTypeReward      = "REWARD"
-
 	MetadataOpType           = "type"
 	MetadataTxType           = "tx_type"
 	MetadataStakingTxID      = "staking_tx_id"

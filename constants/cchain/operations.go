@@ -1,9 +1,9 @@
 package constants
 
-type CChainOp uint16
+type Op uint16
 
 const (
-	Call CChainOp = iota + 1
+	Call Op = iota + 1
 	Fee
 	Create
 	Create2
@@ -27,7 +27,7 @@ const (
 	Erc721Burn
 )
 
-func (op CChainOp) String() string {
+func (op Op) String() string {
 	switch op {
 	case Call:
 		return "CALL"
@@ -95,7 +95,7 @@ var cOpsStrings = []string{
 
 func CChainOps() []string { return cOpsStrings }
 
-var createTypes = []CChainOp{Create, Create2}
+var createTypes = []Op{Create, Create2}
 
 func IsCreation(t string) bool {
 	for _, createType := range createTypes {
@@ -106,7 +106,7 @@ func IsCreation(t string) bool {
 	return false
 }
 
-var callTypes = []CChainOp{CallCode, DelegateCall, StaticCall}
+var callTypes = []Op{CallCode, DelegateCall, StaticCall}
 
 func IsCall(t string) bool {
 	for _, callType := range callTypes {

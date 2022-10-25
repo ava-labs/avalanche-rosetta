@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -23,11 +24,11 @@ func TestShouldHandleRequest(t *testing.T) {
 	evmAccountIdentifier := &types.AccountIdentifier{Address: "0x30cE0c38f953eE9CD5fbc247e63DE68D3263144b"}
 
 	atomicOperations := []*types.Operation{
-		{Type: constants.Import.String()},
+		{Type: cconstants.Import.String()},
 	}
 
 	evmOperations := []*types.Operation{
-		{Type: constants.Call.String()},
+		{Type: cconstants.Call.String()},
 	}
 
 	backend := &Backend{

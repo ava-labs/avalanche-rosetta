@@ -1,9 +1,9 @@
-package constants
+package pconstants
 
-type PChainTxType uint16
+type TxType uint16
 
 const (
-	ImportAvax PChainTxType = iota + 1
+	ImportAvax TxType = iota + 1
 	ExportAvax
 	AddValidator
 	AddPermissionlessValidator
@@ -18,7 +18,7 @@ const (
 	AdvanceTime
 )
 
-func (op PChainTxType) String() string {
+func (op TxType) String() string {
 	switch op {
 	case ImportAvax:
 		return "IMPORT_AVAX"
@@ -52,7 +52,7 @@ func (op PChainTxType) String() string {
 	}
 }
 
-var pTxTypesStrings = []string{
+var txTypesStrings = []string{
 	ImportAvax.String(),
 	ExportAvax.String(),
 	AddValidator.String(),
@@ -67,4 +67,4 @@ var pTxTypesStrings = []string{
 	AddPermissionlessDelegator.String(),
 }
 
-func PChainTxTypes() []string { return pTxTypesStrings }
+func TxTypes() []string { return txTypesStrings }

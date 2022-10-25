@@ -1,6 +1,9 @@
 package pchain
 
-import "github.com/coinbase/rosetta-sdk-go/types"
+import (
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
+	"github.com/coinbase/rosetta-sdk-go/types"
+)
 
 // txOps collects all balance-changing information within a transaction
 type txOps struct {
@@ -34,9 +37,9 @@ func (t *txOps) OutputLen() int {
 	return len(t.Outs) + len(t.StakeOuts)
 }
 
-func (t *txOps) Append(op *types.Operation, metaType string) {
+func (t *txOps) Append(op *types.Operation, metaType pconstants.Op) {
 	switch metaType {
-	case OpTypeImport:
+	case pconstants.Import:
 		if t.isConstruction {
 			t.Ins = append(t.Ins, op)
 		} else {
@@ -44,7 +47,7 @@ func (t *txOps) Append(op *types.Operation, metaType string) {
 			op.OperationIdentifier = nil
 			t.ImportIns = append(t.ImportIns, op)
 		}
-	case OpTypeExport:
+	case pconstants.Export:
 		if t.isConstruction {
 			t.Outs = append(t.Outs, op)
 		} else {
@@ -52,11 +55,11 @@ func (t *txOps) Append(op *types.Operation, metaType string) {
 			op.OperationIdentifier = nil
 			t.ExportOuts = append(t.ExportOuts, op)
 		}
-	case OpTypeStakeOutput, OpTypeReward:
+	case pconstants.Stake, pconstants.Reward:
 		t.StakeOuts = append(t.StakeOuts, op)
-	case OpTypeOutput:
+	case pconstants.Output:
 		t.Outs = append(t.Outs, op)
-	case OpTypeInput:
+	case pconstants.Input:
 		t.Ins = append(t.Ins, op)
 	}
 }

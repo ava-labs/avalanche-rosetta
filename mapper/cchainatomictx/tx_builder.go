@@ -15,7 +15,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -25,9 +25,9 @@ var errMissingCoinIdentifier = errors.New("input operation does not have coin id
 // This method is only used during construction.
 func BuildTx(opType string, matches []*parser.Match, metadata Metadata, codec codec.Manager, avaxAssetID ids.ID) (*evm.Tx, []*types.AccountIdentifier, error) {
 	switch opType {
-	case constants.Export.String():
+	case cconstants.Export.String():
 		return buildExportTx(matches, metadata, codec, avaxAssetID)
-	case constants.Import.String():
+	case cconstants.Import.String():
 		return buildImportTx(matches, metadata, codec, avaxAssetID)
 	default:
 		return nil, nil, fmt.Errorf("unsupported atomic operation type %s", opType)

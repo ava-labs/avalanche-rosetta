@@ -20,7 +20,7 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -354,7 +354,7 @@ func (s ConstructionService) ConstructionParse(
 		tx.From = msg.From().Hex()
 	}
 
-	var opMethod constants.CChainOp
+	var opMethod cconstants.Op
 	var value *big.Int
 	var toAddressHex string
 	// Erc20 transfer
@@ -365,11 +365,11 @@ func (s ConstructionService) ConstructionParse(
 		}
 
 		value = amountSent
-		opMethod = constants.Erc20Transfer
+		opMethod = cconstants.Erc20Transfer
 		toAddressHex = toAddress.Hex()
 	} else {
 		value = tx.Value
-		opMethod = constants.Call
+		opMethod = cconstants.Call
 		toAddressHex = tx.To
 	}
 
@@ -727,7 +727,7 @@ func (s ConstructionService) CreateOperationDescription(
 	}
 
 	if utils.Equal(currency, mapper.AvaxCurrency) {
-		return s.createOperationDescription(currency, constants.Call), nil
+		return s.createOperationDescription(currency, cconstants.Call), nil
 	}
 
 	// ERC-20s must have contract address in metadata
@@ -735,12 +735,12 @@ func (s ConstructionService) CreateOperationDescription(
 		return nil, fmt.Errorf("contractAddress must be populated in currency metadata")
 	}
 
-	return s.createOperationDescription(currency, constants.Erc20Transfer), nil
+	return s.createOperationDescription(currency, cconstants.Erc20Transfer), nil
 }
 
 func (s ConstructionService) createOperationDescription(
 	currency *types.Currency,
-	opType constants.CChainOp,
+	opType cconstants.Op,
 ) []*parser.OperationDescription {
 	return []*parser.OperationDescription{
 		// Send

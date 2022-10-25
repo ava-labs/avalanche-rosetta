@@ -10,6 +10,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -151,7 +152,7 @@ func (s *NetworkService) NetworkOptions(
 		},
 		Allow: &types.Allow{
 			OperationStatuses:       mapper.OperationStatuses,
-			OperationTypes:          constants.CChainOps(),
+			OperationTypes:          cconstants.CChainOps(),
 			CallMethods:             mapper.CallMethods,
 			Errors:                  Errors,
 			HistoricalBalanceLookup: true,
