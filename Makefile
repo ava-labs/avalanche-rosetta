@@ -11,7 +11,7 @@ DOCKER_ORG          ?= avaplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.8.6
+AVALANCHE_VERSION   ?= v1.9.0
 
 build:
 	export CGO_CFLAGS="-O -D__BLST_PORTABLE__" && go build -o ./rosetta-server ./cmd/server
