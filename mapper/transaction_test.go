@@ -254,7 +254,7 @@ func TestCrossChainExportedOuts(t *testing.T) {
 			tx          = &evm.Tx{}
 
 			networkIdentifier = &types.NetworkIdentifier{
-				Network: FujiNetwork,
+				Network: constants.FujiNetwork,
 			}
 			chainIDToAliasMapping = map[ids.ID]constants.ChainIDAlias{
 				ids.Empty: constants.PChain,

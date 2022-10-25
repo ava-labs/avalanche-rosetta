@@ -14,6 +14,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -23,7 +24,7 @@ import (
 var (
 	networkIdentifier = &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
-		Network:    mapper.FujiNetwork,
+		Network:    constants.FujiNetwork,
 	}
 
 	cAccountIdentifier       = &types.AccountIdentifier{Address: "0x3158e80abD5A1e1aa716003C9Db096792C379621"}

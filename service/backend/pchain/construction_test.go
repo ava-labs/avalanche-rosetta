@@ -26,7 +26,7 @@ import (
 var (
 	pChainNetworkIdentifier = &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
-		Network:    mapper.FujiNetwork,
+		Network:    constants.FujiNetwork,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
 			Network: constants.PChain.String(),
 		},

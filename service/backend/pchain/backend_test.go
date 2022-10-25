@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -19,7 +18,7 @@ import (
 func TestShouldHandleRequest(t *testing.T) {
 	pChainNetworkIdentifier := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
-		Network:    mapper.FujiNetwork,
+		Network:    constants.FujiNetwork,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
 			Network: constants.PChain.String(),
 		},
@@ -27,7 +26,7 @@ func TestShouldHandleRequest(t *testing.T) {
 
 	cChainNetworkIdentifier := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
-		Network:    mapper.FujiNetwork,
+		Network:    constants.FujiNetwork,
 	}
 
 	ctx := context.Background()

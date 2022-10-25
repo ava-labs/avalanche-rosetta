@@ -82,7 +82,7 @@ func TestAccountBalance(t *testing.T) {
 			ctx,
 			&types.AccountBalanceRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
 						Network: constants.PChain.String(),
 					},
@@ -132,7 +132,7 @@ func TestAccountBalance(t *testing.T) {
 			ctx,
 			&types.AccountBalanceRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
 						Network: constants.PChain.String(),
 					},
@@ -179,7 +179,7 @@ func TestAccountBalance(t *testing.T) {
 			ctx,
 			&types.AccountBalanceRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
 						Network: constants.PChain.String(),
 					},
@@ -242,7 +242,7 @@ func TestAccountCoins(t *testing.T) {
 			ctx,
 			&types.AccountCoinsRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
 						Network: constants.PChain.String(),
 					},
@@ -318,7 +318,7 @@ func TestAccountCoins(t *testing.T) {
 			ctx,
 			&types.AccountCoinsRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
 						Network: constants.PChain.String(),
 					},
