@@ -91,6 +91,22 @@ run-mainnet-offline:
 		-it \
 		${DOCKER_TAG}
 
+# Start the Devnet in ONLINE mode
+run-devnet:
+	docker run \
+		--rm \
+		-d \
+		-v ${WORKDIR}/data:/data \
+		-e AVALANCHE_NETWORK=network-1337 \
+		-e AVALANCHE_CHAIN=43112 \
+		-e AVALANCHE_MODE=online \
+		--name avalanche-devnet \
+		-p 8085:8085 \
+		-p 9650:9650 \
+		-p 9651:9651 \
+		-it \
+		${DOCKER_TAG}
+
 # Perform the Testnet data check
 check-testnet-data:
 	rosetta-cli check:data --configuration-file=rosetta-cli-conf/testnet/config.json
