@@ -61,7 +61,7 @@ sleep 5
 --log-level debug \
 --endpoint="0.0.0.0:8080" \
 --number-of-nodes=5 \
---avalanchego-path ${AVALANCHEGO_PATH}/avalanchego \
+# --avalanchego-path ${AVALANCHEGO_PATH}/avalanchego \
 # --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
 
 
