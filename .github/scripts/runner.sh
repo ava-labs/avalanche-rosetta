@@ -51,14 +51,14 @@ echo "launch avalanche-network-runner in the background"
 ~/bin/avalanche-network-runner \
 server \
 --log-level debug \
---port=":12342" \
---disable-grpc-gateway &
+--port=":8080" \
+--grpc-gateway-port=":8081" &
 
 sleep 5
 
 ~/bin/avalanche-network-runner control start \
 --log-level debug \
---endpoint="0.0.0.0:8085" \
+--endpoint="0.0.0.0:8080" \
 --number-of-nodes=5 \
 --avalanchego-path ${AVALANCHEGO_PATH} \
 --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
