@@ -59,7 +59,7 @@ server \
 --disable-grpc-gateway &
 
 
-avalanche-network-runner control start \
+~/bin/avalanche-network-runner control start \
 --log-level debug \
 --endpoint="0.0.0.0:8080" \
 --number-of-nodes=5 \
