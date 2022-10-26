@@ -16,9 +16,11 @@ import (
 )
 
 var (
-	errInvalidTransaction = errors.New("invalid transaction")
+	_ common.AvaxTx    = &pTx{}
+	_ common.TxBuilder = &pTxBuilder{}
+	_ common.TxParser  = &pTxParser{}
 
-	_ common.AvaxTx = &pTx{}
+	errInvalidTransaction = errors.New("invalid transaction")
 )
 
 // AccountBalance contains P-chain account balances
@@ -36,6 +38,13 @@ type pTx struct {
 	CodecVersion uint16
 }
 
+func (p *pTx) Initialize() error {
+	if p.Tx == nil {
+		return common.ErrNoTxGiven
+	}
+	return p.Tx.Sign(p.Codec, nil)
+}
+
 func (p *pTx) Marshal() ([]byte, error) {
 	return p.Codec.Marshal(p.CodecVersion, p.Tx)
 }
@@ -50,23 +59,16 @@ func (p *pTx) Unmarshal(bytes []byte) error {
 		return err
 	}
 	p.Tx = &tx
-	return nil
+
+	return p.Initialize()
 }
 
-func (p *pTx) SigningPayload() ([]byte, error) {
-	if err := p.Tx.Sign(p.Codec, nil); err != nil {
-		return nil, err
-	}
-
-	hash := hashing.ComputeHash256(p.Tx.Unsigned.Bytes())
-	return hash, nil
+func (p *pTx) SigningPayload() []byte {
+	return hashing.ComputeHash256(p.Tx.Unsigned.Bytes())
 }
 
-func (p *pTx) Hash() (ids.ID, error) {
-	if err := p.Tx.Sign(p.Codec, nil); err != nil {
-		return ids.Empty, err
-	}
-	return p.Tx.ID(), nil
+func (p *pTx) Hash() ids.ID {
+	return p.Tx.ID()
 }
 
 type pTxBuilder struct {
