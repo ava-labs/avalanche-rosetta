@@ -39,6 +39,8 @@ find /tmp/avalanchego-v${VERSION}
 AVALANCHEGO_PATH=/tmp/avalanchego-v${VERSION}/avalanchego
 AVALANCHEGO_PLUGIN_DIR=/tmp/avalanchego-v${VERSION}/plugins
 
+ls ${AVALANCHEGO_PATH}
+
 #################################
 # download avalanche-network-runner
 # https://github.com/ava-labs/avalanche-network-runner
@@ -61,7 +63,7 @@ sleep 5
 --log-level debug \
 --endpoint="0.0.0.0:8080" \
 --number-of-nodes=5 \
---avalanchego-path ${AVALANCHEGO_PATH} \
+--avalanchego-path ${AVALANCHEGO_PATH}/build/avalanchego \
 # --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
 
 
