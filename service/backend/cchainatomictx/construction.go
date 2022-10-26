@@ -8,7 +8,6 @@ import (
 	"math/big"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
 	"github.com/ava-labs/coreth/plugin/evm"
@@ -25,7 +24,6 @@ import (
 var (
 	errUnknownTxType = errors.New("unknown tx type")
 	errUndecodableTx = errors.New("undecodable transaction")
-	errNoTxGiven     = errors.New("no transaction was given")
 )
 
 // ConstructionDerive implements /construction/derive endpoint for C-chain atomic transactions
@@ -105,15 +103,16 @@ func (b *Backend) ConstructionPreprocess(
 
 func (b *Backend) estimateGasUsed(opType string, matches []*parser.Match) (uint64, error) {
 	// building tx with dummy data to get byte size for fee estimate
-	tx, _, err := cmapper.BuildTx(opType, matches, cmapper.Metadata{
-		SourceChainID:      &ids.Empty,
-		DestinationChainID: &ids.Empty,
-	}, b.codec, b.avaxAssetID)
-	if err != nil {
-		return 0, err
-	}
-
-	err = tx.Sign(b.codec, [][]*crypto.PrivateKeySECP256K1R{})
+	tx, _, err := cmapper.BuildTx(
+		opType,
+		matches,
+		cmapper.Metadata{
+			SourceChainID:      &ids.Empty,
+			DestinationChainID: &ids.Empty,
+		},
+		b.codec,
+		b.avaxAssetID,
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -255,11 +254,7 @@ func (b *Backend) parsePayloadTxFromString(transaction string) (*common.RosettaT
 		return nil, errUndecodableTx
 	}
 
-	if payloadsTx.Tx == nil {
-		return nil, errNoTxGiven
-	}
-
-	return payloadsTx, nil
+	return payloadsTx, payloadsTx.Tx.Initialize()
 }
 
 // ConstructionCombine implements /construction/combine endpoint for C-chain atomic transactions

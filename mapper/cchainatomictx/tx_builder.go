@@ -27,12 +27,13 @@ func BuildTx(opType string, matches []*parser.Match, metadata Metadata, codec co
 	case mapper.OpExport:
 		return buildExportTx(matches, metadata, codec, avaxAssetID)
 	case mapper.OpImport:
-		return buildImportTx(matches, metadata, avaxAssetID)
+		return buildImportTx(matches, metadata, codec, avaxAssetID)
 	default:
 		return nil, nil, fmt.Errorf("unsupported atomic operation type %s", opType)
 	}
 }
 
+// [buildExportTx] returns a duly initialized tx if it does not err
 func buildExportTx(
 	matches []*parser.Match,
 	metadata Metadata,
@@ -53,10 +54,16 @@ func buildExportTx(
 		Ins:              ins,
 		ExportedOutputs:  exportedOutputs,
 	}}
-	return tx, signers, nil
+	return tx, signers, tx.Sign(codec, nil)
 }
 
-func buildImportTx(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) (*evm.Tx, []*types.AccountIdentifier, error) {
+// [buildImportTx] returns a duly initialized tx if it does not err
+func buildImportTx(
+	matches []*parser.Match,
+	metadata Metadata,
+	codec codec.Manager,
+	avaxAssetID ids.ID,
+) (*evm.Tx, []*types.AccountIdentifier, error) {
 	importedInputs, signers, err := buildImportedInputs(matches, avaxAssetID)
 	if err != nil {
 		return nil, nil, err
@@ -71,7 +78,7 @@ func buildImportTx(matches []*parser.Match, metadata Metadata, avaxAssetID ids.I
 		ImportedInputs: importedInputs,
 		Outs:           outs,
 	}}
-	return tx, signers, nil
+	return tx, signers, tx.Sign(codec, nil)
 }
 
 func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([]evm.EVMInput, []*types.AccountIdentifier) {
