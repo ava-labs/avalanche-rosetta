@@ -49,8 +49,6 @@ set -e
 # https://github.com/ava-labs/avalanche-network-runner
 curl -sSfL https://raw.githubusercontent.com/ava-labs/avalanche-network-runner/main/scripts/install.sh | sh -s
 
-pwd
-
 #################################
 # run "avalanche-network-runner" server
 echo "launch avalanche-network-runner in the background"
@@ -58,15 +56,15 @@ echo "launch avalanche-network-runner in the background"
 server \
 --log-level debug \
 --port=":12342" \
---disable-grpc-gateway
+--disable-grpc-gateway &
 
 
+avalanche-network-runner control start \
+--log-level debug \
+--endpoint="0.0.0.0:8080" \
+--number-of-nodes=5 \
+--avalanchego-path /Users/xiaying.peng@coinbase.com/src/public/avalanchego/build/avalanchego \
+--global-node-config '{"chain-config-dir": "~/.github/config"}'
 
 
-# avalanche-network-runner control start \
-# --log-level debug \
-# --endpoint="0.0.0.0:8080" \
-# --number-of-nodes=5 \
-# --avalanchego-path /Users/xiaying.peng@coinbase.com/src/public/avalanchego/build/avalanchego \
-# --global-node-config '{"chain-config-dir": "~/.github/config"}'
-
+curl -X POST -k http://localhost:8081/v1/ping -d ''
