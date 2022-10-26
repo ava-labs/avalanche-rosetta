@@ -61,8 +61,8 @@ sleep 5
 --log-level debug \
 --endpoint="0.0.0.0:8080" \
 --number-of-nodes=5 \
-# --avalanchego-path ${AVALANCHEGO_PATH}/avalanchego \
-# --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
+--avalanchego-path ${AVALANCHEGO_PATH} \
+--global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
 
 
 curl -X POST -k http://localhost:8081/v1/ping -d ''
