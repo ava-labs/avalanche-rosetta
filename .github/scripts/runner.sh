@@ -60,14 +60,14 @@ server \
 
 sleep 5
 
-ls .github
+ls rosetta-cli-conf/config
 
 ~/bin/avalanche-network-runner control start \
 --log-level debug \
 --endpoint="0.0.0.0:8080" \
 --number-of-nodes=5 \
 --avalanchego-path /Users/xiaying.peng@coinbase.com/src/public/avalanchego/build/avalanchego \
---global-node-config '{"chain-config-dir": ".github/config"}'
+--global-node-config '{"chain-config-dir": "rosetta-cli-conf/config/local"}'
 
 
 curl -X POST -k http://localhost:8081/v1/ping -d ''
