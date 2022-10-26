@@ -53,6 +53,8 @@ server \
 --port=":12342" \
 --disable-grpc-gateway &
 
+ls rosetta-cli-conf/cchain
+
 sleep 5
 
 ~/bin/avalanche-network-runner control start \
