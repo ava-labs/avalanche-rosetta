@@ -2,11 +2,16 @@ package pchain
 
 import (
 	"testing"
+	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
+	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/stretchr/testify/require"
 )
@@ -94,6 +99,109 @@ func TestTxDependencyIsCreateChain(t *testing.T) {
 			},
 			Asset: multiSignOut.Asset,
 			Out:   multiSignOut.Out,
+		},
+	}
+
+	utxo, found := res[expectedUTXOs[0].UTXOID]
+	require.True(found)
+	require.Equal(utxo, expectedUTXOs[0])
+
+	utxo, found = res[expectedUTXOs[1].UTXOID]
+	require.True(found)
+	require.Equal(utxo, expectedUTXOs[1])
+
+	// show idempotency
+	res2 := dep.GetUtxos()
+	require.Equal(res, res2)
+}
+
+func TestTxDependencyIsAddValidator(t *testing.T) {
+	require := require.New(t)
+
+	var (
+		clk             = mockable.Clock{}
+		avaxAssetID     = ids.GenerateTestID()
+		validatorWeight = uint64(2022)
+	)
+
+	in := &avax.TransferableInput{
+		UTXOID: avax.UTXOID{
+			TxID:        ids.ID{'t', 'x', 'I', 'D'},
+			OutputIndex: 2,
+		},
+		Asset: avax.Asset{ID: avaxAssetID},
+		In: &secp256k1fx.TransferInput{
+			Amt:   uint64(5678),
+			Input: secp256k1fx.Input{SigIndices: []uint32{0}},
+		},
+	}
+	out := &avax.TransferableOutput{
+		Asset: avax.Asset{ID: avaxAssetID},
+		Out: &secp256k1fx.TransferOutput{
+			Amt: uint64(1234),
+			OutputOwners: secp256k1fx.OutputOwners{
+				Threshold: 1,
+				Addrs:     []ids.ShortID{preFundedKeys[0].PublicKey().Address()},
+			},
+		},
+	}
+	stake := &avax.TransferableOutput{
+		Asset: avax.Asset{ID: avaxAssetID},
+		Out: &stakeable.LockOut{
+			Locktime: uint64(clk.Time().Add(time.Second).Unix()),
+			TransferableOut: &secp256k1fx.TransferOutput{
+				Amt: validatorWeight,
+				OutputOwners: secp256k1fx.OutputOwners{
+					Threshold: 1,
+					Addrs:     []ids.ShortID{preFundedKeys[0].PublicKey().Address()},
+				},
+			},
+		},
+	}
+	utx := &txs.AddValidatorTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+			NetworkID:    uint32(1492),
+			BlockchainID: ids.GenerateTestID(),
+			Ins:          []*avax.TransferableInput{in},
+			Outs:         []*avax.TransferableOutput{out},
+		}},
+		Validator: validator.Validator{
+			NodeID: ids.GenerateTestNodeID(),
+			Start:  uint64(clk.Time().Unix()),
+			End:    uint64(clk.Time().Add(time.Hour).Unix()),
+			Wght:   validatorWeight,
+		},
+		StakeOuts: []*avax.TransferableOutput{stake},
+		RewardsOwner: &secp256k1fx.OutputOwners{
+			Locktime:  0,
+			Threshold: 1,
+			Addrs:     []ids.ShortID{preFundedKeys[1].PublicKey().Address()},
+		},
+		DelegationShares: reward.PercentDenominator,
+	}
+	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	require.NoError(err)
+
+	dep := &SingleTxDependency{Tx: tx}
+	res := dep.GetUtxos()
+	require.True(len(res) == 2)
+
+	expectedUTXOs := []*avax.UTXO{
+		{
+			UTXOID: avax.UTXOID{
+				TxID:        tx.ID(),
+				OutputIndex: 0,
+			},
+			Asset: out.Asset,
+			Out:   out.Out,
+		},
+		{
+			UTXOID: avax.UTXOID{
+				TxID:        tx.ID(),
+				OutputIndex: 1,
+			},
+			Asset: stake.Asset,
+			Out:   stake.Out,
 		},
 	}
 
