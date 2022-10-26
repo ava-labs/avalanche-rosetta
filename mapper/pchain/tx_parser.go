@@ -31,7 +31,8 @@ var (
 	errNoOutputAddresses              = errors.New("no output addresses")
 	errFailedToGetUTXOAddresses       = errors.New("failed to get utxo addresses")
 	errFailedToCheckMultisig          = errors.New("failed to check utxo for multisig")
-	errOutputTypeAssertion            = errors.New("output type assertion failed")
+	errUnknownOutputType              = errors.New("unknown output type")
+	errUnknownInputType               = errors.New("unknown input type")
 	errUnknownRewardSourceTransaction = errors.New("unknown source tx type for reward tx")
 	errUnsupportedAssetInConstruction = errors.New("unsupported asset passed during construction")
 )
@@ -384,16 +385,23 @@ func (t *TxParser) insToOperations(
 			Type: metaType,
 		}
 
-		if transferInput, ok := in.In.(*secp256k1fx.TransferInput); ok {
-			metadata.SigIndices = transferInput.SigIndices
+		input := in.In
+		if stakeableIn, ok := input.(*stakeable.LockIn); ok {
+			metadata.Locktime = stakeableIn.Locktime
+			input = stakeableIn.TransferableIn
 		}
+		transferInput, ok := input.(*secp256k1fx.TransferInput)
+		if !ok {
+			return errUnknownInputType
+		}
+		metadata.SigIndices = transferInput.SigIndices
 
 		opMetadata, err := mapper.MarshalJSONMap(metadata)
 		if err != nil {
 			return err
 		}
 
-		utxoID := in.UTXOID.String()
+		utxoIDStr := in.UTXOID.String()
 
 		var account *types.AccountIdentifier
 
@@ -413,7 +421,7 @@ func (t *TxParser) insToOperations(
 			}
 
 			var ok bool
-			account, ok = t.inputTxAccounts[utxoID]
+			account, ok = t.inputTxAccounts[utxoIDStr]
 			if !ok {
 				return errNoMatchingInputAddresses
 			}
@@ -438,7 +446,7 @@ func (t *TxParser) insToOperations(
 			Amount:  amount,
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{
-					Identifier: utxoID,
+					Identifier: utxoIDStr,
 				},
 				CoinAction: types.CoinSpent,
 			},
@@ -490,7 +498,7 @@ func (t *TxParser) outsToOperations(
 
 		transferOutput, ok := transferOut.(*secp256k1fx.TransferOutput)
 		if !ok {
-			return errOutputTypeAssertion
+			return errUnknownOutputType
 		}
 
 		// Rosetta cannot handle multisig at the moment. In order to pass data validation,
@@ -547,7 +555,7 @@ func (t *TxParser) utxosToOperations(
 		out, ok := outIntf.(*secp256k1fx.TransferOutput)
 
 		if !ok {
-			return errOutputTypeAssertion
+			return errUnknownOutputType
 		}
 
 		// Rosetta cannot handle multisig at the moment. In order to pass data validation,
@@ -676,62 +684,4 @@ func (t *TxParser) lookupCurrency(assetID ids.ID) (*types.Currency, error) {
 		Symbol:   asset.Symbol,
 		Decimals: int32(asset.Denomination),
 	}, nil
-}
-
-type txOps struct {
-	isConstruction bool
-	Ins            []*types.Operation
-	Outs           []*types.Operation
-	StakeOuts      []*types.Operation
-	ImportIns      []*types.Operation
-	ExportOuts     []*types.Operation
-}
-
-func newTxOps(isConstruction bool) *txOps {
-	return &txOps{isConstruction: isConstruction}
-}
-
-func (t *txOps) IncludedOperations() []*types.Operation {
-	ops := []*types.Operation{}
-	ops = append(ops, t.Ins...)
-	ops = append(ops, t.Outs...)
-	ops = append(ops, t.StakeOuts...)
-	return ops
-}
-
-// Used to populate operation identifier
-func (t *txOps) Len() int {
-	return len(t.Ins) + len(t.Outs) + len(t.StakeOuts)
-}
-
-// Used to populate coin identifier
-func (t *txOps) OutputLen() int {
-	return len(t.Outs) + len(t.StakeOuts)
-}
-
-func (t *txOps) Append(op *types.Operation, metaType string) {
-	switch metaType {
-	case OpTypeImport:
-		if t.isConstruction {
-			t.Ins = append(t.Ins, op)
-		} else {
-			// removing operation identifier as these will be skipped in the final operations list
-			op.OperationIdentifier = nil
-			t.ImportIns = append(t.ImportIns, op)
-		}
-	case OpTypeExport:
-		if t.isConstruction {
-			t.Outs = append(t.Outs, op)
-		} else {
-			// removing operation identifier as these will be skipped in the final operations list
-			op.OperationIdentifier = nil
-			t.ExportOuts = append(t.ExportOuts, op)
-		}
-	case OpTypeStakeOutput, OpTypeReward:
-		t.StakeOuts = append(t.StakeOuts, op)
-	case OpTypeOutput:
-		t.Outs = append(t.Outs, op)
-	case OpTypeInput:
-		t.Ins = append(t.Ins, op)
-	}
 }
