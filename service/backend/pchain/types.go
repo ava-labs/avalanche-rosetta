@@ -56,6 +56,9 @@ func (p *pTx) Unmarshal(bytes []byte) error {
 	if err != nil {
 		return err
 	}
+	if err := tx.Sign(p.Codec, nil); err != nil {
+		return err
+	}
 	p.Tx = &tx
 
 	return p.Initialize()

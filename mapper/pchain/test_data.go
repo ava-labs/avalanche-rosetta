@@ -5,6 +5,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
@@ -84,10 +85,7 @@ func buildImport() (*txs.Tx, *txs.ImportTx, map[string]*types.AccountIdentifier)
 		}},
 	}
 
-	signedTx := &txs.Tx{
-		Unsigned: importTx,
-	}
-	_ = signedTx.Sign(blocks.Codec, nil)
+	signedTx, _ := txs.NewSigned(importTx, blocks.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[importTx.ImportedInputs[0].String()] = &types.AccountIdentifier{Address: importAddr.String()}
@@ -145,10 +143,7 @@ func buildExport() (*txs.Tx, *txs.ExportTx, map[string]*types.AccountIdentifier)
 		}},
 	}
 
-	signedTx := &txs.Tx{
-		Unsigned: exportTx,
-	}
-	_ = signedTx.Sign(blocks.Codec, nil)
+	signedTx, _ := txs.NewSigned(exportTx, blocks.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[exportTx.Ins[0].String()] = &types.AccountIdentifier{Address: outAddr.String()}
@@ -217,10 +212,7 @@ func buildAddDelegator() (*txs.Tx, *txs.AddDelegatorTx, map[string]*types.Accoun
 		},
 	}
 
-	signedTx := &txs.Tx{
-		Unsigned: addDelegator,
-	}
-	_ = signedTx.Sign(blocks.Codec, nil)
+	signedTx, _ := txs.NewSigned(addDelegator, blocks.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[addDelegator.Ins[0].String()] = &types.AccountIdentifier{Address: stakeAddr.String()}
@@ -235,21 +227,35 @@ func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.Account
 	stakeAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
 	rewardAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
 	validatorID, _ := ids.NodeIDFromString("NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX")
-	addvalidator := &txs.AddValidatorTx{
+	addValidator := &txs.AddValidatorTx{
 		BaseTx: txs.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
 				Outs:         nil,
-				Ins: []*avax.TransferableInput{{
-					UTXOID: avax.UTXOID{TxID: txID, OutputIndex: 0, Symbol: false},
-					Asset:  avax.Asset{ID: avaxAssetID},
-					FxID:   [32]byte{},
-					In: &secp256k1fx.TransferInput{
-						Amt:   2000000000,
-						Input: secp256k1fx.Input{SigIndices: []uint32{1}},
+				Ins: []*avax.TransferableInput{ // two inputs, the second locktimed
+					{
+						UTXOID: avax.UTXOID{TxID: txID, OutputIndex: 0},
+						Asset:  avax.Asset{ID: avaxAssetID},
+						FxID:   [32]byte{},
+						In: &secp256k1fx.TransferInput{
+							Amt:   2000000000,
+							Input: secp256k1fx.Input{SigIndices: []uint32{1}},
+						},
 					},
-				}},
+					{
+						UTXOID: avax.UTXOID{TxID: txID, OutputIndex: 1},
+						Asset:  avax.Asset{ID: avaxAssetID},
+						FxID:   [32]byte{},
+						In: &stakeable.LockIn{
+							Locktime: uint64(1666781236), // a unix time
+							TransferableIn: &secp256k1fx.TransferInput{
+								Amt:   2000000000,
+								Input: secp256k1fx.Input{SigIndices: []uint32{1}},
+							},
+						},
+					},
+				},
 				Memo: []byte{},
 			},
 		},
@@ -279,13 +285,12 @@ func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.Account
 		DelegationShares: 20000,
 	}
 
-	signedTx := &txs.Tx{
-		Unsigned: addvalidator,
+	signedTx, _ := txs.NewSigned(addValidator, blocks.Codec, nil)
+
+	inputTxAccounts := map[string]*types.AccountIdentifier{
+		addValidator.Ins[0].String(): {Address: stakeAddr.String()},
+		addValidator.Ins[1].String(): {Address: stakeAddr.String()},
 	}
-	_ = signedTx.Sign(blocks.Codec, nil)
 
-	inputTxAccounts := map[string]*types.AccountIdentifier{}
-	inputTxAccounts[addvalidator.Ins[0].String()] = &types.AccountIdentifier{Address: stakeAddr.String()}
-
-	return signedTx, addvalidator, inputTxAccounts
+	return signedTx, addValidator, inputTxAccounts
 }

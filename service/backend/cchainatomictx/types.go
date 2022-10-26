@@ -44,6 +44,9 @@ func (c *cAtomicTx) Unmarshal(bytes []byte) error {
 	if err != nil {
 		return err
 	}
+	if err := tx.Sign(c.Codec, nil); err != nil {
+		return err
+	}
 	c.Tx = &tx
 
 	return c.Initialize()
