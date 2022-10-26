@@ -64,4 +64,3 @@ sleep 5
 --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
 
 
-curl -X POST -k http://localhost:8081/v1/ping -d ''
