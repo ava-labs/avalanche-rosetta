@@ -1,51 +1,43 @@
 #!/usr/bin/env bash
 set -e
 
-cd rosetta-cli-conf
-ls
 
-# MODE=${MODE:-run}
-# E2E=${E2E:-false}
-# if [[ ${E2E} == true ]]; then
-#   MODE="test"
-# fi
+VERSION=1.7.10
+MODE="test"
 
-# AVALANCHE_LOG_LEVEL=${AVALANCHE_LOG_LEVEL:-INFO}
+echo "Running with:"
+echo VERSION: ${VERSION}
+echo MODE: ${MODE}
 
-# echo "Running with:"
-# echo VERSION: ${VERSION}
-# echo MODE: ${MODE}
-# echo AVALANCHE_LOG_LEVEL: ${AVALANCHE_LOG_LEVEL}
+###########################
+download avalanchego
+https://github.com/ava-labs/avalanchego/releases
+GOARCH=$(go env GOARCH)
+GOOS=$(go env GOOS)
+DOWNLOAD_URL=https://github.com/ava-labs/avalanchego/releases/download/v${VERSION}/avalanchego-linux-${GOARCH}-v${VERSION}.tar.gz
+DOWNLOAD_PATH=/tmp/avalanchego.tar.gz
+if [[ ${GOOS} == "darwin" ]]; then
+  DOWNLOAD_URL=https://github.com/ava-labs/avalanchego/releases/download/v${VERSION}/avalanchego-macos-v${VERSION}.zip
+  DOWNLOAD_PATH=/tmp/avalanchego.zip
+fi
 
-############################
-# download avalanchego
-# https://github.com/ava-labs/avalanchego/releases
-# GOARCH=$(go env GOARCH)
-# GOOS=$(go env GOOS)
-# DOWNLOAD_URL=https://github.com/ava-labs/avalanchego/releases/download/v${VERSION}/avalanchego-linux-${GOARCH}-v${VERSION}.tar.gz
-# DOWNLOAD_PATH=/tmp/avalanchego.tar.gz
-# if [[ ${GOOS} == "darwin" ]]; then
-#   DOWNLOAD_URL=https://github.com/ava-labs/avalanchego/releases/download/v${VERSION}/avalanchego-macos-v${VERSION}.zip
-#   DOWNLOAD_PATH=/tmp/avalanchego.zip
-# fi
+rm -rf /tmp/avalanchego-v${VERSION}
+rm -f ${DOWNLOAD_PATH}
 
-# rm -rf /tmp/avalanchego-v${VERSION}
-# rm -f ${DOWNLOAD_PATH}
+echo "downloading avalanchego ${VERSION} at ${DOWNLOAD_URL}"
+curl -L ${DOWNLOAD_URL} -o ${DOWNLOAD_PATH}
 
-# echo "downloading avalanchego ${VERSION} at ${DOWNLOAD_URL}"
-# curl -L ${DOWNLOAD_URL} -o ${DOWNLOAD_PATH}
+echo "extracting downloaded avalanchego"
+if [[ ${GOOS} == "linux" ]]; then
+  tar xzvf ${DOWNLOAD_PATH} -C /tmp
+elif [[ ${GOOS} == "darwin" ]]; then
+  unzip ${DOWNLOAD_PATH} -d /tmp/avalanchego-build
+  mv /tmp/avalanchego-build/build /tmp/avalanchego-v${VERSION}
+fi
+find /tmp/avalanchego-v${VERSION}
 
-# echo "extracting downloaded avalanchego"
-# if [[ ${GOOS} == "linux" ]]; then
-#   tar xzvf ${DOWNLOAD_PATH} -C /tmp
-# elif [[ ${GOOS} == "darwin" ]]; then
-#   unzip ${DOWNLOAD_PATH} -d /tmp/avalanchego-build
-#   mv /tmp/avalanchego-build/build /tmp/avalanchego-v${VERSION}
-# fi
-# find /tmp/avalanchego-v${VERSION}
-
-# AVALANCHEGO_PATH=/tmp/avalanchego-v${VERSION}/avalanchego
-# AVALANCHEGO_PLUGIN_DIR=/tmp/avalanchego-v${VERSION}/plugins
+AVALANCHEGO_PATH=/tmp/avalanchego-v${VERSION}/avalanchego
+AVALANCHEGO_PLUGIN_DIR=/tmp/avalanchego-v${VERSION}/plugins
 
 #################################
 # download avalanche-network-runner
@@ -61,14 +53,14 @@ server \
 --port=":12342" \
 --disable-grpc-gateway &
 
-# sleep 5
+sleep 5
 
-# ~/bin/avalanche-network-runner control start \
-# --log-level debug \
-# --endpoint="0.0.0.0:8080" \
-# --number-of-nodes=5 \
-# --avalanchego-path /src/public/avalanchego/build/avalanchego \
-# --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
+~/bin/avalanche-network-runner control start \
+--log-level debug \
+--endpoint="0.0.0.0:8080" \
+--number-of-nodes=5 \
+--avalanchego-path AVALANCHEGO_PATH \
+--global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
 
 
-# curl -X POST -k http://localhost:8081/v1/ping -d ''
+curl -X POST -k http://localhost:8081/v1/ping -d ''
