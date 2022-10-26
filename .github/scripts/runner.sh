@@ -60,6 +60,8 @@ server \
 
 sleep 5
 
+ls .github/config
+
 ~/bin/avalanche-network-runner control start \
 --log-level debug \
 --endpoint="0.0.0.0:8080" \
