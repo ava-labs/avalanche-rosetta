@@ -39,33 +39,29 @@ find /tmp/avalanchego-v${VERSION}
 AVALANCHEGO_PATH=/tmp/avalanchego-v${VERSION}/avalanchego
 AVALANCHEGO_PLUGIN_DIR=/tmp/avalanchego-v${VERSION}/plugins
 
-echo 12313
-cd ${AVALANCHEGO_PATH}
-ls
-echo 213231
 
-# #################################
-# # download avalanche-network-runner
-# # https://github.com/ava-labs/avalanche-network-runner
-# curl -sSfL https://raw.githubusercontent.com/ava-labs/avalanche-network-runner/main/scripts/install.sh | sh -s
+#################################
+# download avalanche-network-runner
+# https://github.com/ava-labs/avalanche-network-runner
+curl -sSfL https://raw.githubusercontent.com/ava-labs/avalanche-network-runner/main/scripts/install.sh | sh -s
 
-# #################################
-# # run "avalanche-network-runner" server
-# echo "launch avalanche-network-runner in the background"
-# ~/bin/avalanche-network-runner \
-# server \
-# --log-level debug \
-# --port=":12342" \
-# --disable-grpc-gateway &
+#################################
+# run "avalanche-network-runner" server
+echo "launch avalanche-network-runner in the background"
+~/bin/avalanche-network-runner \
+server \
+--log-level debug \
+--port=":12342" \
+--disable-grpc-gateway &
 
-# sleep 5
+sleep 5
 
-# ~/bin/avalanche-network-runner control start \
-# --log-level debug \
-# --endpoint="0.0.0.0:8080" \
-# --number-of-nodes=5 \
-# --avalanchego-path ${AVALANCHEGO_PATH}/build/avalanchego \
-# # --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
+~/bin/avalanche-network-runner control start \
+--log-level debug \
+--endpoint="0.0.0.0:8080" \
+--number-of-nodes=5 \
+--avalanchego-path ${AVALANCHEGO_PATH} \
+# --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
 
 
-# curl -X POST -k http://localhost:8081/v1/ping -d ''
+curl -X POST -k http://localhost:8081/v1/ping -d ''
