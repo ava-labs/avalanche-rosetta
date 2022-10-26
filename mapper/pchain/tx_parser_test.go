@@ -28,10 +28,9 @@ var (
 func TestMapInOperation(t *testing.T) {
 	_, addValidatorTx, inputAccounts := buildValidatorTx()
 
-	assert.Equal(t, 1, len(addValidatorTx.Ins))
+	assert.Equal(t, 2, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
-	avaxIn := addValidatorTx.Ins[0]
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
 		Hrp:            constants.FujiHRP,
@@ -41,21 +40,38 @@ func TestMapInOperation(t *testing.T) {
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	inOps := newTxOps(false)
-	err := parser.insToOperations(inOps, OpAddValidator, []*avax.TransferableInput{avaxIn}, OpTypeInput)
+	err := parser.insToOperations(inOps, OpAddValidator, addValidatorTx.Ins, OpTypeInput)
 	assert.Nil(t, err)
 
 	rosettaInOp := inOps.Ins
 
-	assert.Equal(t, int64(0), rosettaInOp[0].OperationIdentifier.Index)
-	assert.Equal(t, OpAddValidator, rosettaInOp[0].Type)
-	assert.Equal(t, avaxIn.UTXOID.String(), rosettaInOp[0].CoinChange.CoinIdentifier.Identifier)
-	assert.Equal(t, types.CoinSpent, rosettaInOp[0].CoinChange.CoinAction)
-	assert.Equal(t, OpTypeInput, rosettaInOp[0].Metadata["type"])
-	assert.Equal(t, OpAddValidator, rosettaInOp[0].Type)
-	assert.Equal(t, types.String(mapper.StatusSuccess), rosettaInOp[0].Status)
+	// first input checks
+	in := addValidatorTx.Ins[0]
+	rosettaOp := rosettaInOp[0]
+	assert.Equal(t, int64(0), rosettaOp.OperationIdentifier.Index)
+	assert.Equal(t, OpAddValidator, rosettaOp.Type)
+	assert.Equal(t, in.UTXOID.String(), rosettaOp.CoinChange.CoinIdentifier.Identifier)
+	assert.Equal(t, types.CoinSpent, rosettaOp.CoinChange.CoinAction)
+	assert.Equal(t, OpTypeInput, rosettaOp.Metadata["type"])
+	assert.Equal(t, OpAddValidator, rosettaOp.Type)
+	assert.Equal(t, types.String(mapper.StatusSuccess), rosettaOp.Status)
+	assert.Equal(t, float64(0), rosettaOp.Metadata["locktime"])
+	assert.Nil(t, rosettaOp.Metadata["threshold"])
+	assert.NotNil(t, rosettaOp.Metadata["sig_indices"])
 
-	assert.Nil(t, rosettaInOp[0].Metadata["threshold"])
-	assert.NotNil(t, rosettaInOp[0].Metadata["sig_indices"])
+	// second input checks
+	in = addValidatorTx.Ins[1]
+	rosettaOp = rosettaInOp[1]
+	assert.Equal(t, int64(1), rosettaOp.OperationIdentifier.Index)
+	assert.Equal(t, OpAddValidator, rosettaOp.Type)
+	assert.Equal(t, in.UTXOID.String(), rosettaOp.CoinChange.CoinIdentifier.Identifier)
+	assert.Equal(t, types.CoinSpent, rosettaOp.CoinChange.CoinAction)
+	assert.Equal(t, OpTypeInput, rosettaOp.Metadata["type"])
+	assert.Equal(t, OpAddValidator, rosettaOp.Type)
+	assert.Equal(t, types.String(mapper.StatusSuccess), rosettaOp.Status)
+	assert.Equal(t, float64(1666781236), rosettaOp.Metadata["locktime"])
+	assert.Nil(t, rosettaOp.Metadata["threshold"])
+	assert.NotNil(t, rosettaOp.Metadata["sig_indices"])
 }
 
 func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
@@ -117,7 +133,7 @@ func TestMapOutOperation(t *testing.T) {
 func TestMapAddValidatorTx(t *testing.T) {
 	signedTx, addValidatorTx, inputAccounts := buildValidatorTx()
 
-	assert.Equal(t, 1, len(addValidatorTx.Ins))
+	assert.Equal(t, 2, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
 	parserCfg := TxParserConfig{
@@ -136,8 +152,8 @@ func TestMapAddValidatorTx(t *testing.T) {
 
 	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpAddValidator, OpTypeStakeOutput)
 
-	assert.Equal(t, 2, cntTxType)
-	assert.Equal(t, 1, cntInputMeta)
+	assert.Equal(t, 3, cntTxType)
+	assert.Equal(t, 2, cntInputMeta)
 	assert.Equal(t, 0, cntOutputMeta)
 	assert.Equal(t, 1, cntMetaType)
 }
