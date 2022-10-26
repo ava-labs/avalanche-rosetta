@@ -58,13 +58,14 @@ server \
 --port=":12342" \
 --disable-grpc-gateway &
 
+sleep 5
 
 ~/bin/avalanche-network-runner control start \
 --log-level debug \
 --endpoint="0.0.0.0:8080" \
 --number-of-nodes=5 \
 --avalanchego-path /Users/xiaying.peng@coinbase.com/src/public/avalanchego/build/avalanchego \
---global-node-config '{"chain-config-dir": "~/.github/config"}'
+--global-node-config '{"chain-config-dir": ".github/config"}'
 
 
 curl -X POST -k http://localhost:8081/v1/ping -d ''
