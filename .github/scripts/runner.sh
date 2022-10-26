@@ -2,7 +2,7 @@
 set -e
 
 
-VERSION=1.7.10
+VERSION=1.9.0
 MODE="test"
 
 echo "Running with:"
