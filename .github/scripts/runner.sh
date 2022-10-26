@@ -60,7 +60,8 @@ server \
 
 sleep 5
 
-ls rosetta-cli-conf/local
+cd rosetta-cli-conf
+ls local
 
 ~/bin/avalanche-network-runner control start \
 --log-level debug \
