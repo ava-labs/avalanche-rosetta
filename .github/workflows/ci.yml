@@ -13,9 +13,10 @@ jobs:
   Rosetta-Validation:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
       with:
-      repository: xiaying-peng/avalanche-rosetta-ci
+        repository: xiaying-peng/avalanche-rosetta-ci
 
     - name: Start Rosetta Server
       run: .github/scripts/runner.sh
