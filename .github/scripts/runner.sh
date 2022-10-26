@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+cd rosetta-cli-conf
+ls
+
 # MODE=${MODE:-run}
 # E2E=${E2E:-false}
 # if [[ ${E2E} == true ]]; then
@@ -58,17 +61,14 @@ server \
 --port=":12342" \
 --disable-grpc-gateway &
 
-sleep 5
+# sleep 5
 
-cd rosetta-cli-conf
-ls
-
-~/bin/avalanche-network-runner control start \
---log-level debug \
---endpoint="0.0.0.0:8080" \
---number-of-nodes=5 \
---avalanchego-path /Users/xiaying.peng@coinbase.com/src/public/avalanchego/build/avalanchego \
---global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
+# ~/bin/avalanche-network-runner control start \
+# --log-level debug \
+# --endpoint="0.0.0.0:8080" \
+# --number-of-nodes=5 \
+# --avalanchego-path /src/public/avalanchego/build/avalanchego \
+# --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
 
 
-curl -X POST -k http://localhost:8081/v1/ping -d ''
+# curl -X POST -k http://localhost:8081/v1/ping -d ''
