@@ -10,8 +10,8 @@ echo VERSION: ${VERSION}
 echo MODE: ${MODE}
 
 ###########################
-download avalanchego
-https://github.com/ava-labs/avalanchego/releases
+# download avalanchego
+# https://github.com/ava-labs/avalanchego/releases
 GOARCH=$(go env GOARCH)
 GOOS=$(go env GOOS)
 DOWNLOAD_URL=https://github.com/ava-labs/avalanchego/releases/download/v${VERSION}/avalanchego-linux-${GOARCH}-v${VERSION}.tar.gz
