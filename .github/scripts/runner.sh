@@ -39,7 +39,9 @@ find /tmp/avalanchego-v${VERSION}
 AVALANCHEGO_PATH=/tmp/avalanchego-v${VERSION}/avalanchego
 AVALANCHEGO_PLUGIN_DIR=/tmp/avalanchego-v${VERSION}/plugins
 
+echo 12313
 ls ${AVALANCHEGO_PATH}
+echo 213231
 
 #################################
 # download avalanche-network-runner
@@ -54,8 +56,6 @@ server \
 --log-level debug \
 --port=":12342" \
 --disable-grpc-gateway &
-
-ls rosetta-cli-conf/cchain
 
 sleep 5
 
