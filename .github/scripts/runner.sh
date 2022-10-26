@@ -60,7 +60,7 @@ server \
 
 sleep 5
 
-ls .github/config
+ls
 
 ~/bin/avalanche-network-runner control start \
 --log-level debug \
