@@ -102,7 +102,7 @@ type SingleTxDependency struct {
 	Tx *txs.Tx
 
 	// Staker txs are rewarded at the end of staking period
-	// with some utxos appended to staker txs.
+	// with some utxos appended to staker txs' ones.
 	// [RewardUTXOs] collects those reward utxos
 	RewardUTXOs []*avax.UTXO
 
