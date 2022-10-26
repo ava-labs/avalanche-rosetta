@@ -13,10 +13,10 @@ import (
 
 type BlockTxDependencies map[ids.ID]*SingleTxDependency
 
-// GetDependencyTxIDs generates the list of transaction ids used in the inputs to given unsigned transaction
+// GetTxDependenciesIDs generates the list of transaction ids used in the inputs to given unsigned transaction
 // this list is then used to fetch the dependency transactions in order to extract source addresses
 // as this information is not part of the transaction objects on chain.
-func (bd BlockTxDependencies) GetDependencyTxIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
+func (bd BlockTxDependencies) GetTxDependenciesIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 	// collect tx inputs
 	var ins []*avax.TransferableInput
 	switch unsignedTx := tx.(type) {
@@ -102,7 +102,7 @@ type SingleTxDependency struct {
 	Tx *txs.Tx
 
 	// Staker txs are rewarded at the end of staking period
-	// with some utxos appended to staker txs.
+	// with some utxos appended to staker txs' ones.
 	// [RewardUTXOs] collects those reward utxos
 	RewardUTXOs []*avax.UTXO
 
@@ -115,6 +115,7 @@ func (d *SingleTxDependency) GetUtxos() map[avax.UTXOID]*avax.UTXO {
 	if d.utxosMap != nil {
 		return d.utxosMap
 	}
+	d.utxosMap = make(map[avax.UTXOID]*avax.UTXO)
 
 	// Add reward UTXOs
 	for _, utxo := range d.RewardUTXOs {
