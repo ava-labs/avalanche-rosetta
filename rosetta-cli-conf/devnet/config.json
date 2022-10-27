@@ -16,7 +16,7 @@
   "construction": {
     "offline_url": "http://localhost:8085",
     "stale_depth": 5,
-    "broadcast_limit": 5,
+    "broadcast_limit": 15,
     "constructor_dsl_file": "./avalanche.ros",
     "end_conditions": {
       "create_account": 1,
