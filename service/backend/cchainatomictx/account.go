@@ -8,12 +8,12 @@ import (
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
+	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 var (
@@ -52,7 +52,7 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 		Balances: []*types.Amount{
 			{
 				Value:    strconv.FormatUint(balanceValue, 10),
-				Currency: mapper.AvaxCurrency,
+				Currency: cconstants.AvaxCurrency,
 			},
 		},
 	}, nil
@@ -165,7 +165,7 @@ func (b *Backend) processUtxos(sourceChain constants.ChainIDAlias, utxos [][]byt
 			CoinIdentifier: &types.CoinIdentifier{Identifier: utxo.UTXOID.String()},
 			Amount: &types.Amount{
 				Value:    strconv.FormatUint(transferableOut.Amount(), 10),
-				Currency: mapper.AvaxCurrency,
+				Currency: cconstants.AvaxCurrency,
 				Metadata: map[string]interface{}{
 					"source_chain": sourceChain.String(),
 				},

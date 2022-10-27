@@ -6,6 +6,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	ethtypes "github.com/ava-labs/coreth/core/types"
@@ -283,7 +284,7 @@ func TestCrossChainExportedOuts(t *testing.T) {
 				},
 				Amount: &types.Amount{
 					Value:    "-1280750000000000",
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
 					"tx":                "7QUPqUAMdny53bVptZ2DgxLLN4qZ5X7MnBPseUKYnoh5C5v47",
@@ -308,7 +309,7 @@ func TestCrossChainExportedOuts(t *testing.T) {
 				},
 				Amount: &types.Amount{
 					Value:    "1000000",
-					Currency: AtomicAvaxCurrency,
+					Currency: pconstants.AtomicAvaxCurrency,
 				},
 				CoinChange: &types.CoinChange{
 					CoinIdentifier: &types.CoinIdentifier{

@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	backendMocks "github.com/ava-labs/avalanche-rosetta/mocks/service"
@@ -114,7 +115,7 @@ func TestConstructionMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "21001000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, resp)
@@ -175,7 +176,7 @@ func TestConstructionMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "21001000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, resp)
@@ -410,7 +411,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "21001000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, metadataResponse)
@@ -456,7 +457,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "21000000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, metadataResponse)
@@ -521,7 +522,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "23100000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, metadataResponse)
@@ -588,7 +589,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "23100000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, metadataResponse)
@@ -659,7 +660,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "23100000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, metadataResponse)
@@ -724,7 +725,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "23100000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, metadataResponse)
@@ -785,7 +786,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "44000000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, metadataResponse)
@@ -873,7 +874,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			SuggestedFee: []*types.Amount{
 				{
 					Value:    "21001000000000",
-					Currency: mapper.AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 			},
 		}, metadataResponse)

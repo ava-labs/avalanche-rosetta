@@ -19,6 +19,7 @@ import (
 	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 )
 
 const (
@@ -186,7 +187,7 @@ func crossChainTransaction(
 				},
 				Amount: &types.Amount{
 					Value:    new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), X2crate).String(),
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
 					"tx":            t.ID().String(),
@@ -218,7 +219,7 @@ func crossChainTransaction(
 				},
 				Amount: &types.Amount{
 					Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(X2crate)).String(),
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
 					"tx":                t.ID().String(),
@@ -289,7 +290,7 @@ func createExportedOuts(
 			Status:  types.String(constants.StatusSuccess),
 			Amount: &types.Amount{
 				Value:    strconv.FormatUint(out.Out.Amount(), 10),
-				Currency: AtomicAvaxCurrency,
+				Currency: pconstants.AtomicAvaxCurrency,
 			},
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{Identifier: utxoID.String()},
@@ -407,7 +408,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 				},
 				Amount: &types.Amount{
 					Value:    new(big.Int).Neg(call.Value).String(),
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: metadata,
 			}
@@ -468,7 +469,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 				},
 				Amount: &types.Amount{
 					Value:    call.Value.String(),
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: metadata,
 			}
@@ -507,7 +508,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 			},
 			Amount: &types.Amount{
 				Value:    new(big.Int).Neg(val).String(),
-				Currency: AvaxCurrency,
+				Currency: cconstants.AvaxCurrency,
 			},
 		})
 	}

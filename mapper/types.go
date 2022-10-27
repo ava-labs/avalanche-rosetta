@@ -16,18 +16,6 @@ const (
 	AddressFormatBech32     = "bech32"
 )
 
-var (
-	AvaxCurrency = &types.Currency{
-		Symbol:   "AVAX",
-		Decimals: 18,
-	}
-
-	AtomicAvaxCurrency = &types.Currency{
-		Symbol:   "AVAX",
-		Decimals: 9,
-	}
-)
-
 func ToCurrency(symbol string, decimals uint8, contractAddress common.Address) *types.Currency {
 	return &types.Currency{
 		Symbol:   symbol,

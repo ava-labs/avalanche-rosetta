@@ -14,6 +14,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -146,7 +147,7 @@ func (t *TxParser) outsToOperations(startIdx int, opType cconstants.Op, outs []e
 			Type:              opType.String(),
 			Amount: &types.Amount{
 				Value:    strconv.FormatUint(out.Amount, 10),
-				Currency: mapper.AtomicAvaxCurrency,
+				Currency: pconstants.AtomicAvaxCurrency,
 			},
 		})
 		idx++
@@ -182,7 +183,7 @@ func (t *TxParser) exportedOutputsToOperations(
 			Type:              op.String(),
 			Amount: &types.Amount{
 				Value:    strconv.FormatUint(out.Out.Amount(), 10),
-				Currency: mapper.AtomicAvaxCurrency,
+				Currency: pconstants.AtomicAvaxCurrency,
 			},
 		})
 		idx++

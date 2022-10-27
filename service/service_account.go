@@ -15,6 +15,7 @@ import (
 	"github.com/ava-labs/coreth/interfaces"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -112,7 +113,7 @@ func (s AccountService) AccountBalance(
 	for _, currency := range req.Currencies {
 		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
 		if !ok {
-			if utils.Equal(currency, mapper.AvaxCurrency) {
+			if utils.Equal(currency, cconstants.AvaxCurrency) {
 				balances = append(balances, mapper.AvaxAmount(avaxBalance))
 				continue
 			}

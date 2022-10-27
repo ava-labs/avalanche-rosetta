@@ -1,4 +1,4 @@
-package constants
+package cconstants
 
 type Op uint16
 
