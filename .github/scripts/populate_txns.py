@@ -11,15 +11,15 @@ web3.eth.defaultAccount = acct
 print(acct.address, "has balance", web3.eth.get_balance(acct.address))
 
 if len(web3.eth.accounts) == 0:
-    print(web3.geth.personal.import_raw_key(privateKey, ""))
+    web3.geth.personal.import_raw_key(privateKey, "")
 web3.geth.personal.unlock_account(acct.address, '')
 
 print("latest block", web3.eth.block_number, web3.eth.accounts)
 
-web3.eth.send_transaction({
+tx = web3.eth.send_transaction({
     'to': "0x26Cb836E81bFc47c2530aDBF63968c9830a44C8d",
     'from': acct.address,
     'value': 12345
 })
 
-print("latest block", web3.eth.block_number)
+print("tx hash:", tx.hex())
