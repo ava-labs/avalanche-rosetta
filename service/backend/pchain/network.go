@@ -39,7 +39,7 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 			CurrentBlockIdentifier: b.getGenesisIdentifier(),
 			CurrentBlockTimestamp:  genesisBlock.Timestamp,
 			GenesisBlockIdentifier: b.getGenesisIdentifier(),
-			SyncStatus:             mapper.StageBootstrap,
+			SyncStatus:             constants.StageBootstrap,
 			Peers:                  peers,
 		}, nil
 	}
@@ -57,7 +57,7 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 		},
 		CurrentBlockTimestamp:  currentBlock.Timestamp,
 		GenesisBlockIdentifier: b.getGenesisIdentifier(),
-		SyncStatus:             mapper.StageSynced,
+		SyncStatus:             constants.StageSynced,
 		Peers:                  peers,
 	}, nil
 }
@@ -71,7 +71,7 @@ func (b *Backend) NetworkOptions(ctx context.Context, request *types.NetworkRequ
 			MiddlewareVersion: types.String(service.MiddlewareVersion),
 		},
 		Allow: &types.Allow{
-			OperationStatuses:       mapper.OperationStatuses,
+			OperationStatuses:       constants.OperationStatuses,
 			OperationTypes:          pconstants.TxTypes(),
 			CallMethods:             pmapper.CallMethods,
 			Errors:                  service.Errors,

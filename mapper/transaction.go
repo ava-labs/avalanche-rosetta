@@ -58,7 +58,7 @@ func Transaction(
 				Index: 0,
 			},
 			Type:    cconstants.Fee.String(),
-			Status:  types.String(StatusSuccess),
+			Status:  types.String(constants.StatusSuccess),
 			Account: Account(&sender),
 			Amount:  AvaxAmount(new(big.Int).Neg(txFee)),
 		},
@@ -72,7 +72,7 @@ func Transaction(
 				},
 			},
 			Type:    cconstants.Fee.String(),
-			Status:  types.String(StatusSuccess),
+			Status:  types.String(constants.StatusSuccess),
 			Account: Account(feeReceiver),
 			Amount:  AvaxAmount(txFee),
 		},
@@ -180,7 +180,7 @@ func crossChainTransaction(
 					Index: idx,
 				},
 				Type:   cconstants.Import.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: out.Address.Hex(),
 				},
@@ -212,7 +212,7 @@ func crossChainTransaction(
 					Index: idx,
 				},
 				Type:   cconstants.Export.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: in.Address.Hex(),
 				},
@@ -286,7 +286,7 @@ func createExportedOuts(
 		operations = append(operations, &types.Operation{
 			Account: &types.AccountIdentifier{Address: addr},
 			Type:    cconstants.Export.String(),
-			Status:  types.String(StatusSuccess),
+			Status:  types.String(constants.StatusSuccess),
 			Amount: &types.Amount{
 				Value:    strconv.FormatUint(out.Out.Amount(), 10),
 				Currency: AtomicAvaxCurrency,
@@ -371,9 +371,9 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 	for _, call := range trace {
 		// Handle partial transaction success
 		metadata := map[string]interface{}{}
-		opStatus := StatusSuccess
+		opStatus := constants.StatusSuccess
 		if call.Revert {
-			opStatus = StatusFailure
+			opStatus = constants.StatusFailure
 			metadata["error"] = call.Error
 		}
 
@@ -415,7 +415,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 				fromOp.Amount = nil
 			} else {
 				_, destroyed := destroyedAccounts[from]
-				if destroyed && opStatus == StatusSuccess {
+				if destroyed && opStatus == constants.StatusSuccess {
 					destroyedAccounts[from] = new(big.Int).Sub(destroyedAccounts[from], call.Value)
 				}
 			}
@@ -476,7 +476,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 				toOp.Amount = nil
 			} else {
 				_, destroyed := destroyedAccounts[to]
-				if destroyed && opStatus == StatusSuccess {
+				if destroyed && opStatus == constants.StatusSuccess {
 					destroyedAccounts[to] = new(big.Int).Add(destroyedAccounts[to], call.Value)
 				}
 			}
@@ -501,7 +501,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 				Index: ops[len(ops)-1].OperationIdentifier.Index + 1,
 			},
 			Type:   cconstants.Destruct.String(),
-			Status: types.String(StatusSuccess),
+			Status: types.String(constants.StatusSuccess),
 			Account: &types.AccountIdentifier{
 				Address: acct,
 			},
@@ -525,7 +525,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
-			Status:  types.String(StatusSuccess),
+			Status:  types.String(constants.StatusSuccess),
 			Type:    cconstants.Erc20Mint.String(),
 			Amount:  Erc20Amount(transferLog.Data, currency, false),
 			Account: Account(&toAddress),
@@ -538,7 +538,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
-			Status:  types.String(StatusSuccess),
+			Status:  types.String(constants.StatusSuccess),
 			Type:    cconstants.Erc20Burn.String(),
 			Amount:  Erc20Amount(transferLog.Data, currency, true),
 			Account: Account(&fromAddress),
@@ -550,7 +550,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen,
 		},
-		Status:  types.String(StatusSuccess),
+		Status:  types.String(constants.StatusSuccess),
 		Type:    cconstants.Erc20Transfer.String(),
 		Amount:  Erc20Amount(transferLog.Data, currency, true),
 		Account: Account(&fromAddress),
@@ -559,7 +559,7 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen + 1,
 		},
-		Status:  types.String(StatusSuccess),
+		Status:  types.String(constants.StatusSuccess),
 		Type:    cconstants.Erc20Transfer.String(),
 		Amount:  Erc20Amount(transferLog.Data, currency, false),
 		Account: Account(&toAddress),
@@ -585,7 +585,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
-			Status:   types.String(StatusSuccess),
+			Status:   types.String(constants.StatusSuccess),
 			Type:     cconstants.Erc721Mint.String(),
 			Account:  Account(&toAddress),
 			Metadata: metadata,
@@ -598,7 +598,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
-			Status:   types.String(StatusSuccess),
+			Status:   types.String(constants.StatusSuccess),
 			Type:     cconstants.Erc721Burn.String(),
 			Account:  Account(&fromAddress),
 			Metadata: metadata,
@@ -610,7 +610,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen,
 		},
-		Status:   types.String(StatusSuccess),
+		Status:   types.String(constants.StatusSuccess),
 		Type:     cconstants.Erc721TransferSender.String(),
 		Account:  Account(&fromAddress),
 		Metadata: metadata,
@@ -619,7 +619,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen + 1,
 		},
-		Status:   types.String(StatusSuccess),
+		Status:   types.String(constants.StatusSuccess),
 		Type:     cconstants.Erc721TransferReceive.String(),
 		Account:  Account(&toAddress),
 		Metadata: metadata,

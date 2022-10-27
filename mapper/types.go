@@ -10,9 +10,6 @@ const (
 	ContractAddressMetadata  = "contractAddress"
 	IndexTransferredMetadata = "indexTransferred"
 
-	StatusSuccess = "SUCCESS"
-	StatusFailure = "FAILURE"
-
 	MetadataImportedInputs  = "imported_inputs"
 	MetadataExportedOutputs = "exported_outputs"
 	MetadataAddressFormat   = "address_format"
@@ -20,16 +17,6 @@ const (
 )
 
 var (
-	StageBootstrap = &types.SyncStatus{
-		Synced: types.Bool(false),
-		Stage:  types.String("BOOTSTRAP"),
-	}
-
-	StageSynced = &types.SyncStatus{
-		Synced: types.Bool(true),
-		Stage:  types.String("SYNCED"),
-	}
-
 	AvaxCurrency = &types.Currency{
 		Symbol:   "AVAX",
 		Decimals: 18,
@@ -38,17 +25,6 @@ var (
 	AtomicAvaxCurrency = &types.Currency{
 		Symbol:   "AVAX",
 		Decimals: 9,
-	}
-
-	OperationStatuses = []*types.OperationStatus{
-		{
-			Status:     StatusSuccess,
-			Successful: true,
-		},
-		{
-			Status:     StatusFailure,
-			Successful: false,
-		},
 	}
 )
 

@@ -56,7 +56,7 @@ func TestMapInOperation(t *testing.T) {
 	assert.Equal(t, types.CoinSpent, rosettaOp.CoinChange.CoinAction)
 	assert.Equal(t, pconstants.Input.String(), rosettaOp.Metadata["type"])
 	assert.Equal(t, pconstants.AddValidator.String(), rosettaOp.Type)
-	assert.Equal(t, types.String(mapper.StatusSuccess), rosettaOp.Status)
+	assert.Equal(t, types.String(rosConst.StatusSuccess), rosettaOp.Status)
 	assert.Equal(t, float64(0), rosettaOp.Metadata["locktime"])
 	assert.Nil(t, rosettaOp.Metadata["threshold"])
 	assert.NotNil(t, rosettaOp.Metadata["sig_indices"])
@@ -70,7 +70,7 @@ func TestMapInOperation(t *testing.T) {
 	assert.Equal(t, types.CoinSpent, rosettaOp.CoinChange.CoinAction)
 	assert.Equal(t, pconstants.Input.String(), rosettaOp.Metadata["type"])
 	assert.Equal(t, pconstants.AddValidator.String(), rosettaOp.Type)
-	assert.Equal(t, types.String(mapper.StatusSuccess), rosettaOp.Status)
+	assert.Equal(t, types.String(rosConst.StatusSuccess), rosettaOp.Status)
 	assert.Equal(t, float64(1666781236), rosettaOp.Metadata["locktime"])
 	assert.Nil(t, rosettaOp.Metadata["threshold"])
 	assert.NotNil(t, rosettaOp.Metadata["sig_indices"])
@@ -277,7 +277,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	expectedImportedInputs := []*types.Operation{{
 		OperationIdentifier: &types.OperationIdentifier{Index: 1},
 		Type:                pconstants.ImportAvax.String(),
-		Status:              types.String(mapper.StatusSuccess),
+		Status:              types.String(rosConst.StatusSuccess),
 		Account:             nil,
 		Amount:              mapper.AtomicAvaxAmount(big.NewInt(-int64(importedInput.Input().Amount()))),
 		CoinChange: &types.CoinChange{
@@ -371,7 +371,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	assert.Nil(t, err)
 
 	out := rosettaTransactionWithExportOperations.Operations[2]
-	out.Status = types.String(mapper.StatusSuccess)
+	out.Status = types.String(rosConst.StatusSuccess)
 	out.CoinChange = exportOutputs[0].CoinChange
 	assert.Equal(t, []*types.Operation{out}, exportOutputs)
 }

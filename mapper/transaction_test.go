@@ -47,7 +47,7 @@ func TestERC20Ops(t *testing.T) {
 					Index: 1,
 				},
 				Type:   cconstants.Erc20Transfer.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -66,7 +66,7 @@ func TestERC20Ops(t *testing.T) {
 					},
 				},
 				Type:   cconstants.Erc20Transfer.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0x5d95ae932D42E53Bb9DA4DE65E9b7263A4fA8564",
 				},
@@ -95,7 +95,7 @@ func TestERC20Ops(t *testing.T) {
 					Index: 1,
 				},
 				Type:   cconstants.Erc20Burn.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -124,7 +124,7 @@ func TestERC20Ops(t *testing.T) {
 					Index: 1,
 				},
 				Type:   cconstants.Erc20Mint.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -155,7 +155,7 @@ func TestERC721Ops(t *testing.T) {
 					Index: 1,
 				},
 				Type:   cconstants.Erc721TransferSender.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -174,7 +174,7 @@ func TestERC721Ops(t *testing.T) {
 					},
 				},
 				Type:   cconstants.Erc721TransferReceive.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0x5d95ae932D42E53Bb9DA4DE65E9b7263A4fA8564",
 				},
@@ -203,7 +203,7 @@ func TestERC721Ops(t *testing.T) {
 					Index: 1,
 				},
 				Type:   cconstants.Erc721Burn.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -232,7 +232,7 @@ func TestERC721Ops(t *testing.T) {
 					Index: 1,
 				},
 				Type:   cconstants.Erc721Mint.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -277,7 +277,7 @@ func TestCrossChainExportedOuts(t *testing.T) {
 					Index: 0,
 				},
 				Type:   cconstants.Export.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0x3158e80abD5A1e1aa716003C9Db096792C379621",
 				},
@@ -302,7 +302,7 @@ func TestCrossChainExportedOuts(t *testing.T) {
 					Index: 1,
 				},
 				Type:   cconstants.Export.String(),
-				Status: types.String(StatusSuccess),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "P-fuji1eql2fhqet2f8tg6funmpdja5tc374vhmdj2xz2",
 				},

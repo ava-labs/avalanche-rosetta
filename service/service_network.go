@@ -95,7 +95,7 @@ func (s *NetworkService) NetworkStatus(
 				CurrentBlockTimestamp:  s.genesisBlock.Timestamp,
 				CurrentBlockIdentifier: s.genesisBlock.BlockIdentifier,
 				GenesisBlockIdentifier: s.genesisBlock.BlockIdentifier,
-				SyncStatus:             mapper.StageBootstrap,
+				SyncStatus:             constants.StageBootstrap,
 				Peers:                  peers,
 			}, nil
 		}
@@ -130,7 +130,7 @@ func (s *NetworkService) NetworkStatus(
 			Index: genesisHeader.Number.Int64(),
 			Hash:  genesisHeader.Hash().String(),
 		},
-		SyncStatus: mapper.StageSynced,
+		SyncStatus: constants.StageSynced,
 		Peers:      peers,
 	}, nil
 }
@@ -151,7 +151,7 @@ func (s *NetworkService) NetworkOptions(
 			MiddlewareVersion: types.String(MiddlewareVersion),
 		},
 		Allow: &types.Allow{
-			OperationStatuses:       mapper.OperationStatuses,
+			OperationStatuses:       constants.OperationStatuses,
 			OperationTypes:          cconstants.CChainOps(),
 			CallMethods:             cconstants.CChainCallMethods(),
 			Errors:                  Errors,

@@ -393,7 +393,7 @@ func (t *TxParser) insToOperations(
 	txIns []*avax.TransferableInput,
 	metaType pconstants.Op,
 ) error {
-	status := types.String(mapper.StatusSuccess)
+	status := types.String(constants.StatusSuccess)
 	if t.cfg.IsConstruction {
 		status = nil
 	}
@@ -502,7 +502,7 @@ func (t *TxParser) outsToOperations(
 	chainIDAlias constants.ChainIDAlias,
 ) error {
 	outIndexOffset := outOps.OutputLen()
-	status := types.String(mapper.StatusSuccess)
+	status := types.String(constants.StatusSuccess)
 	if t.cfg.IsConstruction {
 		status = nil
 	}
@@ -559,7 +559,7 @@ func (t *TxParser) utxosToOperations(
 	metaType pconstants.Op,
 	chainIDAlias constants.ChainIDAlias,
 ) error {
-	status := types.String(mapper.StatusSuccess)
+	status := types.String(constants.StatusSuccess)
 	if t.cfg.IsConstruction {
 		status = nil
 	}
