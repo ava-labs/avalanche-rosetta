@@ -136,17 +136,17 @@ func TestExportTxConstruction(t *testing.T) {
 	}
 
 	preprocessMetadata := map[string]interface{}{
-		"destination_chain": "C",
+		"destination_chain": constants.CChain.String(),
 	}
 
 	metadataOptions := map[string]interface{}{
-		"destination_chain": "C",
+		"destination_chain": constants.CChain.String(),
 		"type":              opExportAvax,
 	}
 
 	payloadsMetadata := map[string]interface{}{
 		"network_id":           float64(networkID),
-		"destination_chain":    "C",
+		"destination_chain":    constants.CChain.String(),
 		"destination_chain_id": cChainID.String(),
 		"blockchain_id":        pChainID.String(),
 	}
@@ -170,8 +170,8 @@ func TestExportTxConstruction(t *testing.T) {
 	signedExportTxHash := "bG7jzw16x495XSFdhEavHWR836Ya5teoB1YxRC1inN3HEtqbs"
 
 	wrappedTxFormat := `{"tx":"%s","signers":%s,"destination_chain":"%s","destination_chain_id":"%s"}`
-	wrappedUnsignedExportTx := fmt.Sprintf(wrappedTxFormat, unsignedExportTx, exportSigners, "C", cChainID.String())
-	wrappedSignedExportTx := fmt.Sprintf(wrappedTxFormat, signedExportTx, exportSigners, "C", cChainID.String())
+	wrappedUnsignedExportTx := fmt.Sprintf(wrappedTxFormat, unsignedExportTx, exportSigners, constants.CChain.String(), cChainID.String())
+	wrappedSignedExportTx := fmt.Sprintf(wrappedTxFormat, signedExportTx, exportSigners, constants.CChain.String(), cChainID.String())
 
 	signatures := []*types.Signature{{
 		SigningPayload: &types.SigningPayload{
@@ -354,11 +354,11 @@ func TestImportTxConstruction(t *testing.T) {
 	}
 
 	preprocessMetadata := map[string]interface{}{
-		"source_chain": "C",
+		"source_chain": constants.CChain.String(),
 	}
 
 	metadataOptions := map[string]interface{}{
-		"source_chain": "C",
+		"source_chain": constants.CChain.String(),
 		"type":         opImportAvax,
 	}
 
