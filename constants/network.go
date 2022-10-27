@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	MainnetChainID = 43114
-	MainnetAssetID = "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
-	MainnetNetwork = constants.MainnetName
+	MainnetCChainID = 43114
+	MainnetCAssetID = "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
+	MainnetNetwork  = constants.MainnetName
 
-	FujiChainID = 43113
-	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
-	FujiNetwork = constants.FujiName
+	FujiCChainID = 43113
+	FujiCAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
+	FujiNetwork  = constants.FujiName
 
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
