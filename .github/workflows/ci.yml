@@ -36,9 +36,9 @@ jobs:
       run: .github/scripts/setup.sh
       shell: bash
 
-    # - name: Run Check:construction test
-    #   run: .github/scripts/cli.sh
-    #   shell: bash
+    - name: Run Check:construction test
+      run: .github/scripts/cli.sh
+      shell: bash
 
   # Build:
   #   runs-on: ubuntu-latest
