@@ -1,7 +1,8 @@
 #!/bin/bash
 
 make build
-./rosetta-server -config=./script/config.json
+ls
+./rosetta-server -config=./scripts/config.json
 # nohup make run-devnet > /dev/null 2>&1 &
 
 # sleep 15
