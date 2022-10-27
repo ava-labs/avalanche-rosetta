@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"strings"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
@@ -72,6 +73,11 @@ func (c *config) applyDefaults() {
 }
 
 func (c *config) validate() error {
+	// avalanchego node define lowercase network names.
+	// We silently change config to ensure backward compatibility
+	// with previous deployments.
+	c.NetworkName = strings.ToLower(c.NetworkName)
+
 	if !(c.Mode == service.ModeOffline || c.Mode == service.ModeOnline) {
 		return errInvalidMode
 	}
