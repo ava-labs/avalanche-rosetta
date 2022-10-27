@@ -1,0 +1,65 @@
+{
+  "network": {
+    "blockchain": "Avalanche",
+    "network": "network-1337"
+  },
+  "online_url": "http://localhost:8085",
+  "http_timeout": 500,
+  "max_retries": 50,
+  "retry_elapsed_time": 0,
+  "max_online_connections": 500,
+  "max_sync_concurrency": 50,
+  "tip_delay": 3600,
+  "log_configuration": false,
+  "compression_disabled": false,
+  "data_directory": "rosetta-data",
+  "construction": {
+    "offline_url": "http://localhost:8085",
+    "stale_depth": 5,
+    "broadcast_limit": 5,
+    "constructor_dsl_file": "./avalanche.ros",
+    "end_conditions": {
+      "create_account": 1,
+      "simple_transfer": 1
+    },
+    "prefunded_accounts": [
+      {
+        "privkey": "56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027",
+        "account_identifier": {
+          "address": "0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC"
+        },
+        "curve_type": "secp256k1",
+        "currency": {
+          "symbol": "AVAX",
+          "decimals": 18
+        }
+      }
+    ]
+  },
+  "data": {
+    "active_reconciliation_concurrency": 16,
+    "inactive_reconciliation_concurrency": 4,
+    "inactive_reconciliation_frequency": 250,
+    "initial_balance_fetch_disabled": false,
+    "log_blocks": false,
+    "log_transactions": false,
+    "log_balance_changes": false,
+    "log_reconciliations": false,
+    "ignore_reconciliation_error": false,
+    "exempt_accounts": "",
+    "bootstrap_balances": "",
+    "interesting_accounts": "",
+    "reconciliation_disabled": false,
+    "balance_tracking_disabled": false,
+    "historical_balance_disabled": false,
+    "coin_tracking_disabled": false,
+    "results_output_file": "",
+    "end_conditions": {
+      "reconciliation_coverage": {
+        "coverage": 0.95,
+        "from_tip": true,
+        "tip": true
+      }
+    }
+  }
+}
