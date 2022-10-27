@@ -16,10 +16,12 @@ web3.geth.personal.unlock_account(acct.address, '')
 
 print("latest block", web3.eth.block_number, web3.eth.accounts)
 
-tx = web3.eth.send_transaction({
-    'to': "0x26Cb836E81bFc47c2530aDBF63968c9830a44C8d",
-    'from': acct.address,
-    'value': 12345
-})
+for _ in range(2):
+    tx = web3.eth.send_transaction({
+        'to': "0x26Cb836E81bFc47c2530aDBF63968c9830a44C8d",
+        'from': acct.address,
+        'value': 12345
+    })
 
-print("tx hash:", tx.hex())
+    print("tx hash:", tx.hex())
+
