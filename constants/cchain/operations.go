@@ -95,6 +95,10 @@ var cOpsStrings = []string{
 
 func CChainOps() []string { return cOpsStrings }
 
+func CChainCallMethods() []string {
+	return []string{"eth_getTransactionReceipt"}
+}
+
 var createTypes = []Op{Create, Create2}
 
 func IsCreation(t string) bool {

@@ -50,10 +50,6 @@ var (
 			Successful: false,
 		},
 	}
-
-	CallMethods = []string{
-		"eth_getTransactionReceipt",
-	}
 )
 
 func ToCurrency(symbol string, decimals uint8, contractAddress common.Address) *types.Currency {

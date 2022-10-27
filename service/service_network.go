@@ -153,7 +153,7 @@ func (s *NetworkService) NetworkOptions(
 		Allow: &types.Allow{
 			OperationStatuses:       mapper.OperationStatuses,
 			OperationTypes:          cconstants.CChainOps(),
-			CallMethods:             mapper.CallMethods,
+			CallMethods:             cconstants.CChainCallMethods(),
 			Errors:                  Errors,
 			HistoricalBalanceLookup: true,
 		},
