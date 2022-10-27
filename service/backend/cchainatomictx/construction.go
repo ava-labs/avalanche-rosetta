@@ -8,7 +8,6 @@ import (
 	"math/big"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
 	"github.com/ava-labs/coreth/plugin/evm"
@@ -106,15 +105,16 @@ func (b *Backend) ConstructionPreprocess(
 
 func (b *Backend) estimateGasUsed(opType string, matches []*parser.Match) (uint64, error) {
 	// building tx with dummy data to get byte size for fee estimate
-	tx, _, err := cmapper.BuildTx(opType, matches, cmapper.Metadata{
-		SourceChainID:      &ids.Empty,
-		DestinationChainID: &ids.Empty,
-	}, b.codec, b.avaxAssetID)
-	if err != nil {
-		return 0, err
-	}
-
-	err = tx.Sign(b.codec, [][]*crypto.PrivateKeySECP256K1R{})
+	tx, _, err := cmapper.BuildTx(
+		opType,
+		matches,
+		cmapper.Metadata{
+			SourceChainID:      &ids.Empty,
+			DestinationChainID: &ids.Empty,
+		},
+		b.codec,
+		b.avaxAssetID,
+	)
 	if err != nil {
 		return 0, err
 	}
