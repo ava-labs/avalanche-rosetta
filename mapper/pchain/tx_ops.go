@@ -8,15 +8,21 @@ import (
 // txOps collects all balance-changing information within a transaction
 type txOps struct {
 	isConstruction bool
-	Ins            []*types.Operation
-	Outs           []*types.Operation
-	StakeOuts      []*types.Operation
-	ImportIns      []*types.Operation
-	ExportOuts     []*types.Operation
+	txType         pconstants.TxType
+
+	Ins        []*types.Operation
+	Outs       []*types.Operation
+	StakeOuts  []*types.Operation
+	ImportIns  []*types.Operation
+	ExportOuts []*types.Operation
 }
 
 func newTxOps(isConstruction bool) *txOps {
 	return &txOps{isConstruction: isConstruction}
+}
+
+func (t *txOps) IsEmpty() bool {
+	return t.Len() == 0 && len(t.ExportOuts) == 0 && len(t.ImportIns) == 0
 }
 
 func (t *txOps) IncludedOperations() []*types.Operation {
