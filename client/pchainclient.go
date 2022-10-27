@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
@@ -83,7 +84,7 @@ func NewPChainClient(ctx context.Context, rpcBaseURL, indexerBaseURL string) PCh
 
 	return pchainClient{
 		platformvmClient: platformvm.NewClient(rpcBaseURL),
-		xChainClient:     avm.NewClient(rpcBaseURL, "X"),
+		xChainClient:     avm.NewClient(rpcBaseURL, constants.XChain.String()),
 		infoClient:       info.NewClient(rpcBaseURL),
 		indexerClient:    indexer.NewClient(indexerBaseURL + "/ext/index/P/block"),
 	}

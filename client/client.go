@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
@@ -68,7 +69,7 @@ func NewClient(ctx context.Context, endpoint string) (Client, error) {
 
 	return &client{
 		Client:         info.NewClient(endpoint),
-		EvmClient:      evm.NewClient(endpoint, "C"),
+		EvmClient:      evm.NewClient(endpoint, constants.CChain.String()),
 		EthClient:      eth,
 		ContractClient: NewContractClient(eth.Client),
 	}, nil

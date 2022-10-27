@@ -123,9 +123,9 @@ func TestAccountBalance(t *testing.T) {
 		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
 		pageSize := uint32(1024)
 		backend.getUTXOsPageSize = pageSize
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "C", pageSize, ids.ShortEmpty, ids.Empty).
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.CChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{utxo0Bytes, utxo1Bytes}, pChainAddrID, utxo1Id, nil).Once()
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "X", pageSize, ids.ShortEmpty, ids.Empty).
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.XChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{}, pChainAddrID, ids.Empty, nil).Once()
 
 		resp, err := backend.AccountBalance(
@@ -309,9 +309,9 @@ func TestAccountCoins(t *testing.T) {
 		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
 		pageSize := uint32(1024)
 		backend.getUTXOsPageSize = pageSize
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "C", pageSize, ids.ShortEmpty, ids.Empty).
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.CChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{utxo0Bytes}, pChainAddrID, utxo0Id, nil).Once()
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "X", pageSize, ids.ShortEmpty, ids.Empty).
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.XChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{utxo1Bytes}, pChainAddrID, utxo1Id, nil).Once()
 
 		resp, err := backend.AccountCoins(

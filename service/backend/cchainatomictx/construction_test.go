@@ -104,7 +104,7 @@ func TestExportTxConstruction(t *testing.T) {
 	metadataOptions := map[string]interface{}{
 		"atomic_tx_gas":     11230.,
 		"from":              cAccountIdentifier.Address,
-		"destination_chain": "P",
+		"destination_chain": constants.PChain.String(),
 	}
 
 	suggestedFeeValue := "280750"
@@ -112,7 +112,7 @@ func TestExportTxConstruction(t *testing.T) {
 	payloadsMetadata := map[string]interface{}{
 		"network_id":           float64(networkID),
 		"c_chain_id":           cChainID.String(),
-		"destination_chain":    "P",
+		"destination_chain":    constants.PChain.String(),
 		"destination_chain_id": pChainID.String(),
 		"nonce":                float64(nonce),
 	}
@@ -132,7 +132,7 @@ func TestExportTxConstruction(t *testing.T) {
 	}
 
 	wrappedTxFormat := `{"tx":"%s","signers":%s,"destination_chain":"%s","destination_chain_id":"%s"}`
-	wrappedUnsignedExportTx := fmt.Sprintf(wrappedTxFormat, unsignedExportTx, exportSigners, "P", pChainID.String())
+	wrappedUnsignedExportTx := fmt.Sprintf(wrappedTxFormat, unsignedExportTx, exportSigners, constants.PChain.String(), pChainID.String())
 
 	signedExportTxSignature, _ := hex.DecodeString("2acfc2cedd3c42978728518b13cc84a64f23784af591516e8dfe0cce544bc63c370ca6d64b2550f12f56a800b8a73ff8573131bf54e584de38c91fc14dd7336801")
 	signedExportTx := "0x000000000001000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d50000000000000000000000000000000000000000000000000000000000000000000000013158e80abd5a1e1aa716003c9db096792c37962100000000009896803d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000000000030000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000070000000000944dd20000000000000000000000010000000176da56a4600f1ba6f40fc3735f71e3f06c31d7590000000100000009000000012acfc2cedd3c42978728518b13cc84a64f23784af591516e8dfe0cce544bc63c370ca6d64b2550f12f56a800b8a73ff8573131bf54e584de38c91fc14dd733680149056c11"
@@ -150,7 +150,7 @@ func TestExportTxConstruction(t *testing.T) {
 		},
 	}
 
-	wrappedSignedExportTx := fmt.Sprintf(wrappedTxFormat, signedExportTx, exportSigners, "P", pChainID.String())
+	wrappedSignedExportTx := fmt.Sprintf(wrappedTxFormat, signedExportTx, exportSigners, constants.PChain.String(), pChainID.String())
 
 	ctx := context.Background()
 	clientMock := &mocks.Client{}
@@ -177,8 +177,8 @@ func TestExportTxConstruction(t *testing.T) {
 		}
 
 		clientMock.On("GetNetworkID", ctx).Return(uint32(networkID), nil)
-		clientMock.On("GetBlockchainID", ctx, "C").Return(cChainID, nil)
-		clientMock.On("GetBlockchainID", ctx, "P").Return(pChainID, nil)
+		clientMock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
+		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.
 			On("NonceAt", ctx, ethcommon.HexToAddress(cAccountIdentifier.Address), (*big.Int)(nil)).
 			Return(nonce, nil)
@@ -325,12 +325,12 @@ func TestImportTxConstruction(t *testing.T) {
 	}
 
 	preprocessMetadata := map[string]interface{}{
-		"source_chain": "P",
+		"source_chain": constants.PChain.String(),
 	}
 
 	metadataOptions := map[string]interface{}{
 		"atomic_tx_gas": 12318.,
-		"source_chain":  "P",
+		"source_chain":  constants.PChain.String(),
 	}
 
 	suggestedFeeValue := "307950"
@@ -409,8 +409,8 @@ func TestImportTxConstruction(t *testing.T) {
 		}
 
 		clientMock.On("GetNetworkID", ctx).Return(uint32(networkID), nil)
-		clientMock.On("GetBlockchainID", ctx, "C").Return(cChainID, nil)
-		clientMock.On("GetBlockchainID", ctx, "P").Return(pChainID, nil)
+		clientMock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
+		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.On("EstimateBaseFee", ctx).Return(big.NewInt(25_000_000_000), nil)
 
 		resp, apiErr := backend.ConstructionMetadata(ctx, req)
