@@ -1,29 +1,3 @@
-request_funds(1){
-  find_account{
-    currency = {"symbol":"AVAX", "decimals":18};
-    random_account = find_balance({
-      "minimum_balance":{
-        "value": "0",
-        "currency": {{currency}}
-      },
-      "create_limit":1
-    });
-  },
-
-  // Create a separate scenario to request funds so that
-  // the address we are using to request funds does not
-  // get rolled back if funds do not yet exist.
-  request{
-    loaded_account = find_balance({
-      "account_identifier": {{random_account.account_identifier}},
-      "minimum_balance":{
-        "value": "10000000000000000", // 0.01 AVAX
-        "currency": {{currency}}
-      }
-    });
-  }
-}
-
 create_account(1){
   create{
     network = {"network":"network-1337", "blockchain":"Avalanche"};
