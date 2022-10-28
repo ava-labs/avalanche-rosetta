@@ -26,7 +26,7 @@ type config struct {
 	IndexerBaseURL   string `json:"indexer_base_url"`
 	ListenAddr       string `json:"listen_addr"`
 	NetworkName      string `json:"network_name"`
-	ChainID          int64  `json:"chain_id"`
+	CChainID         int64  `json:"chain_id"`
 	LogRequests      bool   `json:"log_requests"`
 	GenesisBlockHash string `json:"genesis_block_hash"`
 

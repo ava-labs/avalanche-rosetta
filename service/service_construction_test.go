@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 
+	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
@@ -30,24 +31,27 @@ const (
 )
 
 func TestConstructionMetadata(t *testing.T) {
-	client := &mocks.Client{}
 	ctx := context.Background()
+
+	client := &mocks.Client{}
+	cChainBackend := cBackend.NewBackend(
+		&cBackend.Config{
+			Mode: ModeOnline,
+		},
+		client,
+	)
 	skippedBackend := &backendMocks.ConstructionBackend{}
 	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
-
-	service := ConstructionService{
-		config:                &Config{Mode: ModeOnline},
-		client:                client,
-		pChainBackend:         skippedBackend,
-		cChainAtomicTxBackend: skippedBackend,
-	}
+	service := NewConstructionService(ModeOnline, cChainBackend, skippedBackend, skippedBackend)
 
 	t.Run("unavailable in offline mode", func(t *testing.T) {
-		service := ConstructionService{
-			config: &Config{
+		cChainBackend := cBackend.NewBackend(
+			&cBackend.Config{
 				Mode: ModeOffline,
 			},
-		}
+			client,
+		)
+		service := NewConstructionService(ModeOffline, cChainBackend, skippedBackend, skippedBackend)
 
 		resp, err := service.ConstructionMetadata(
 			context.Background(),
@@ -186,11 +190,13 @@ func TestConstructionMetadata(t *testing.T) {
 func TestContructionHash(t *testing.T) {
 	skippedBackend := &backendMocks.ConstructionBackend{}
 	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
-
-	service := ConstructionService{
-		pChainBackend:         skippedBackend,
-		cChainAtomicTxBackend: skippedBackend,
-	}
+	cChainBackend := cBackend.NewBackend(
+		&cBackend.Config{
+			Mode: ModeOnline,
+		},
+		&mocks.Client{},
+	)
+	service := NewConstructionService(ModeOnline, cChainBackend, skippedBackend, skippedBackend)
 
 	t.Run("no transaction", func(t *testing.T) {
 		resp, err := service.ConstructionHash(
@@ -256,10 +262,13 @@ func TestContructionHash(t *testing.T) {
 func TestConstructionDerive(t *testing.T) {
 	skippedBackend := &backendMocks.ConstructionBackend{}
 	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
-	service := ConstructionService{
-		pChainBackend:         skippedBackend,
-		cChainAtomicTxBackend: skippedBackend,
-	}
+	cChainBackend := cBackend.NewBackend(
+		&cBackend.Config{
+			Mode: ModeOnline,
+		},
+		&mocks.Client{},
+	)
+	service := NewConstructionService(ModeOnline, cChainBackend, skippedBackend, skippedBackend)
 
 	t.Run("no public key", func(t *testing.T) {
 		resp, err := service.ConstructionDerive(
@@ -319,19 +328,22 @@ func forceMarshalMap(t *testing.T, i interface{}) map[string]interface{} {
 
 func TestPreprocessMetadata(t *testing.T) {
 	ctx := context.Background()
-	client := &mocks.Client{}
 	networkIdentifier := &types.NetworkIdentifier{
 		Network:    "Fuji",
 		Blockchain: "Avalanche",
 	}
+
+	client := &mocks.Client{}
+	cChainBackend := cBackend.NewBackend(
+		&cBackend.Config{
+			Mode: ModeOnline,
+		},
+		client,
+	)
 	skippedBackend := &backendMocks.ConstructionBackend{}
 	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
-	service := ConstructionService{
-		config:                &Config{Mode: ModeOnline},
-		client:                client,
-		pChainBackend:         skippedBackend,
-		cChainAtomicTxBackend: skippedBackend,
-	}
+	service := NewConstructionService(ModeOnline, cChainBackend, skippedBackend, skippedBackend)
+
 	intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"AVAX","decimals":18}}}]`
 	t.Run("currency info doesn't match between the operations", func(t *testing.T) {
 		unclearIntent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"NOAX","decimals":18}}}]`
@@ -796,12 +808,15 @@ func TestPreprocessMetadata(t *testing.T) {
 		erc20Intent := `[{"operation_identifier":{"index":0},"type":"ERC20_TRANSFER","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}},{"operation_identifier":{"index":1},"type":"ERC20_TRANSFER","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}}]`
 		tokenList := []string{defaultContractAddress}
 
-		service := ConstructionService{
-			config:                &Config{Mode: ModeOnline, TokenWhiteList: tokenList},
-			client:                client,
-			pChainBackend:         skippedBackend,
-			cChainAtomicTxBackend: skippedBackend,
-		}
+		client := &mocks.Client{}
+		cChainBackend := cBackend.NewBackend(
+			&cBackend.Config{
+				Mode:           ModeOnline,
+				TokenWhiteList: tokenList,
+			},
+			client,
+		)
+		service := NewConstructionService(ModeOnline, cChainBackend, skippedBackend, skippedBackend)
 		currency := &types.Currency{Symbol: defaultSymbol, Decimals: defaultDecimals}
 		client.On(
 			"ContractInfo",
@@ -912,18 +927,30 @@ func TestBackendDelegations(t *testing.T) {
 
 	for idx, backendName := range testCases {
 		backends := makeBackends(idx)
+		client := &mocks.Client{}
+		offlineService := NewConstructionService(
+			ModeOffline,
+			cBackend.NewBackend(
+				&cBackend.Config{
+					Mode: ModeOffline,
+				},
+				client,
+			),
+			/*pChainBackend*/ backends[0],
+			/*cChainAtomicTxBackend*/ backends[1],
+		)
 
-		offlineService := ConstructionService{
-			config:                &Config{Mode: ModeOffline},
-			pChainBackend:         backends[0],
-			cChainAtomicTxBackend: backends[1],
-		}
-
-		onlineService := ConstructionService{
-			config:                &Config{Mode: ModeOnline},
-			pChainBackend:         backends[0],
-			cChainAtomicTxBackend: backends[1],
-		}
+		onlineService := NewConstructionService(
+			ModeOnline,
+			cBackend.NewBackend(
+				&cBackend.Config{
+					Mode: ModeOnline,
+				},
+				client,
+			),
+			/*pChainBackend*/ backends[0],
+			/*cChainAtomicTxBackend*/ backends[1],
+		)
 
 		t.Run("Derive request is delegated to "+backendName, func(t *testing.T) {
 			req := &types.ConstructionDeriveRequest{

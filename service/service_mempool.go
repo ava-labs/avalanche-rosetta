@@ -3,23 +3,22 @@ package service
 import (
 	"context"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchain"
+	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 // MempoolService implements the /mempool/* endpoints
 type MempoolService struct {
-	config *Config
-	client client.Client
+	mode          string
+	cChainBackend *cBackend.Backend
 }
 
 // NewMempoolService returns a new mempool servicer
-func NewMempoolService(config *Config, client client.Client) server.MempoolAPIServicer {
+func NewMempoolService(mode string, cChainBackend *cBackend.Backend) server.MempoolAPIServicer {
 	return &MempoolService{
-		config: config,
-		client: client,
+		mode:          mode,
+		cChainBackend: cChainBackend,
 	}
 }
 
@@ -28,21 +27,14 @@ func (s MempoolService) Mempool(
 	ctx context.Context,
 	req *types.NetworkRequest,
 ) (*types.MempoolResponse, *types.Error) {
-	if s.config.IsOfflineMode() {
+	if s.mode == ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 
-	content, err := s.client.TxPoolContent(ctx)
-	if err != nil {
-		return nil, WrapError(ErrClientError, err)
-	}
+	// TODO ABENEGIA: use ShouldHandleRequest for p, c and x chains
+	// and return error if it's not even CChain block
 
-	return &types.MempoolResponse{
-		TransactionIdentifiers: append(
-			cmapper.MempoolTransactionsIDs(content.Pending),
-			cmapper.MempoolTransactionsIDs(content.Queued)...,
-		),
-	}, nil
+	return s.cChainBackend.Mempool(ctx, req)
 }
 
 // MempoolTransaction implements the /mempool/transaction endpoint
@@ -50,5 +42,8 @@ func (s MempoolService) MempoolTransaction(
 	ctx context.Context,
 	req *types.MempoolTransactionRequest,
 ) (*types.MempoolTransactionResponse, *types.Error) {
-	return nil, ErrNotImplemented
+	// TODO ABENEGIA: use ShouldHandleRequest for p, c and x chains
+	// and return error if it's not even CChain block
+
+	return s.cChainBackend.MempoolTransaction(ctx, req)
 }

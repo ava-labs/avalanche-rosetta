@@ -14,7 +14,22 @@ import (
 const (
 	nativeTransferGasLimit = uint64(21000)
 	erc20TransferGasLimit  = uint64(250000)
+	genesisTimestamp       = 946713601000 // min allowable timestamp
 )
+
+func makeGenesisBlock(hash string) *types.Block {
+	return &types.Block{
+		BlockIdentifier: &types.BlockIdentifier{
+			Index: 0,
+			Hash:  hash,
+		},
+		ParentBlockIdentifier: &types.BlockIdentifier{
+			Index: 0,
+			Hash:  hash,
+		},
+		Timestamp: genesisTimestamp,
+	}
+}
 
 func blockHeaderFromInput(
 	ctx context.Context,

@@ -8,18 +8,23 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cltmocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/service"
 )
 
 func TestAccountBalance(t *testing.T) {
+	cChainBackend := cBackend.NewBackend(
+		&cBackend.Config{
+			Mode: ModeOnline,
+		},
+		&cltmocks.Client{},
+	)
 	pBackendMock := &mocks.AccountBackend{}
-	cBackendMock := &mocks.AccountBackend{}
-	service := AccountService{
-		config:                &Config{Mode: ModeOnline},
-		pChainBackend:         pBackendMock,
-		cChainAtomicTxBackend: cBackendMock,
-	}
+	atomicBackendMock := &mocks.AccountBackend{}
+	service := NewAccountService(ModeOnline, cChainBackend, pBackendMock, atomicBackendMock)
+
 	t.Run("p-chain request is delegated to p-chain backend", func(t *testing.T) {
 		req := &types.AccountBalanceRequest{
 			NetworkIdentifier: &types.NetworkIdentifier{
@@ -56,26 +61,28 @@ func TestAccountBalance(t *testing.T) {
 
 		expectedResp := &types.AccountBalanceResponse{}
 		pBackendMock.On("ShouldHandleRequest", req).Return(false)
-		cBackendMock.On("ShouldHandleRequest", req).Return(true)
-		cBackendMock.On("AccountBalance", mock.Anything, req).Return(expectedResp, nil)
+		atomicBackendMock.On("ShouldHandleRequest", req).Return(true)
+		atomicBackendMock.On("AccountBalance", mock.Anything, req).Return(expectedResp, nil)
 
 		resp, err := service.AccountBalance(context.Background(), req)
 
 		assert.Nil(t, err)
 		assert.Equal(t, expectedResp, resp)
-		cBackendMock.AssertExpectations(t)
+		atomicBackendMock.AssertExpectations(t)
 	})
 }
 
 func TestAccountCoins(t *testing.T) {
+	cChainBackend := cBackend.NewBackend(
+		&cBackend.Config{
+			Mode: ModeOnline,
+		},
+		&cltmocks.Client{},
+	)
 	pBackendMock := &mocks.AccountBackend{}
-	cBackendMock := &mocks.AccountBackend{}
+	atomicBackendMock := &mocks.AccountBackend{}
+	service := NewAccountService(ModeOnline, cChainBackend, pBackendMock, atomicBackendMock)
 
-	service := AccountService{
-		config:                &Config{Mode: ModeOnline},
-		pChainBackend:         pBackendMock,
-		cChainAtomicTxBackend: cBackendMock,
-	}
 	t.Run("p-chain request is delegated to p-chain backend", func(t *testing.T) {
 		req := &types.AccountCoinsRequest{
 			NetworkIdentifier: &types.NetworkIdentifier{
@@ -114,14 +121,14 @@ func TestAccountCoins(t *testing.T) {
 		expectedResp := &types.AccountCoinsResponse{}
 
 		pBackendMock.On("ShouldHandleRequest", req).Return(false)
-		cBackendMock.On("ShouldHandleRequest", req).Return(true)
-		cBackendMock.On("AccountCoins", mock.Anything, req).Return(expectedResp, nil)
+		atomicBackendMock.On("ShouldHandleRequest", req).Return(true)
+		atomicBackendMock.On("AccountCoins", mock.Anything, req).Return(expectedResp, nil)
 
 		resp, err := service.AccountCoins(context.Background(), req)
 
 		assert.Nil(t, err)
 		assert.Equal(t, expectedResp, resp)
-		cBackendMock.AssertExpectations(t)
+		atomicBackendMock.AssertExpectations(t)
 	})
 
 	t.Run("c-chain regular request is not supported", func(t *testing.T) {
@@ -135,12 +142,12 @@ func TestAccountCoins(t *testing.T) {
 		}
 
 		pBackendMock.On("ShouldHandleRequest", req).Return(false)
-		cBackendMock.On("ShouldHandleRequest", req).Return(false)
+		atomicBackendMock.On("ShouldHandleRequest", req).Return(false)
 
 		resp, err := service.AccountCoins(context.Background(), req)
 
 		assert.Equal(t, ErrNotImplemented, err)
 		assert.Nil(t, resp)
-		cBackendMock.AssertExpectations(t)
+		atomicBackendMock.AssertExpectations(t)
 	})
 }
