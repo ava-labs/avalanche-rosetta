@@ -9,26 +9,27 @@ var (
 	Errors = []*types.Error{
 		ErrNotReady,
 		ErrNotImplemented,
-		// ErrNotSupported, // TODO: to add?
+		// ErrNotSupported, // TODO: used only in Pchain. Move there
 		ErrUnavailableOffline,
 		ErrInternalError,
 		ErrInvalidInput,
 		ErrClientError,
 		ErrBlockInvalidInput,
 		ErrBlockNotFound,
-		// ErrCallInvalidMethod,  // TODO: to add?
+		ErrCallInvalidMethod,
 		ErrCallInvalidParams,
-		// ErrTransactionNotFound,  // TODO: to add?
+		// ErrTransactionNotFound,  // TODO: used only in Pchain. Move there
 	}
 
 	ErrNotReady           = makeError(1, "Node is not ready", true)
-	ErrUnavailableOffline = makeError(4, "Endpoint is not available offline", false)
 	ErrNotImplemented     = makeError(2, "Endpoint is not implemented", false)
-	ErrBlockInvalidInput  = makeError(8, "Block number or hash is required", false)
-	ErrClientError        = makeError(7, "Client error", true)
-	ErrInvalidInput       = makeError(6, "Invalid input", false)
+	ErrUnavailableOffline = makeError(4, "Endpoint is not available offline", false)
 	ErrInternalError      = makeError(5, "Internal server error", true)
+	ErrInvalidInput       = makeError(6, "Invalid input", false)
+	ErrClientError        = makeError(7, "Client error", true)
+	ErrBlockInvalidInput  = makeError(8, "Block number or hash is required", false)
 	ErrBlockNotFound      = makeError(9, "Block was not found", true)
+	ErrCallInvalidMethod  = makeError(10, "Invalid call method", false)
 	ErrCallInvalidParams  = makeError(11, "invalid call params", false)
 )
 
