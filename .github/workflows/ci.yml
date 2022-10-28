@@ -22,7 +22,7 @@ jobs:
       run: .github/scripts/runner.sh
       shell: bash
 
-    - name: Ping node
+    - name: Test node stability
       run: |
         curl -X POST -k http://localhost:8081/v1/ping -d ''
       shell: bash
