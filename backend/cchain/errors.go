@@ -6,11 +6,13 @@ import "github.com/coinbase/rosetta-sdk-go/types"
 
 var (
 	ErrUnavailableOffline = makeError(4, "Endpoint is not available offline", false)
+	ErrNotImplemented     = makeError(2, "Endpoint is not implemented", false)
 	ErrBlockInvalidInput  = makeError(8, "Block number or hash is required", false)
 	ErrClientError        = makeError(7, "Client error", true)
 	ErrInvalidInput       = makeError(6, "Invalid input", false)
 	ErrInternalError      = makeError(5, "Internal server error", true)
 	ErrBlockNotFound      = makeError(9, "Block was not found", true)
+	ErrCallInvalidParams  = makeError(11, "invalid call params", false)
 )
 
 func makeError(code int32, message string, retriable bool) *types.Error {

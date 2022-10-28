@@ -9,8 +9,8 @@ import (
 var (
 	// _ service.ConstructionBackend = &Backend{}
 	// _ service.NetworkBackend      = &Backend{}
-	// _ service.AccountBackend      = &Backend{}
-	_ service.BlockBackend = &Backend{}
+	_ service.AccountBackend = &Backend{}
+	_ service.BlockBackend   = &Backend{}
 )
 
 type Backend struct {
