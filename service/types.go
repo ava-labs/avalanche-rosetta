@@ -158,24 +158,6 @@ type parseMetadata struct {
 	ChainID  *big.Int `json:"chain_id"`
 }
 
-type parseMetadataWire struct {
-	Nonce    string `json:"nonce"`
-	GasPrice string `json:"gas_price"`
-	GasLimit string `json:"gas_limit"`
-	ChainID  string `json:"chain_id"`
-}
-
-func (p *parseMetadata) MarshalJSON() ([]byte, error) {
-	pmw := &parseMetadataWire{
-		Nonce:    hexutil.Uint64(p.Nonce).String(),
-		GasPrice: hexutil.EncodeBig(p.GasPrice),
-		GasLimit: hexutil.Uint64(p.GasLimit).String(),
-		ChainID:  hexutil.EncodeBig(p.ChainID),
-	}
-
-	return json.Marshal(pmw)
-}
-
 type transaction struct {
 	From     string          `json:"from"`
 	To       string          `json:"to"`

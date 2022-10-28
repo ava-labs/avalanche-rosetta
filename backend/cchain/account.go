@@ -103,7 +103,7 @@ func (b *Backend) AccountBalance(
 }
 
 // AccountCoins implements the /account/coins endpoint
-func (b Backend) AccountCoins(
+func (b *Backend) AccountCoins(
 	ctx context.Context,
 	req *types.AccountCoinsRequest,
 ) (*types.AccountCoinsResponse, *types.Error) {

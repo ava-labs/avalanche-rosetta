@@ -3,11 +3,17 @@ package cchain
 import (
 	"context"
 	"math/big"
+	"strings"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+)
+
+const (
+	nativeTransferGasLimit = uint64(21000)
+	erc20TransferGasLimit  = uint64(250000)
 )
 
 func blockHeaderFromInput(
@@ -39,4 +45,20 @@ func blockHeaderFromInput(
 	}
 
 	return header, nil
+}
+
+// checksumAddress ensures an Ethereum hex address
+// is in Checksum Format. If the address cannot be converted,
+// it returns !ok.
+func checksumAddress(address string) (string, bool) {
+	if !strings.HasPrefix(address, "0x") {
+		return "", false
+	}
+
+	addr, err := ethcommon.NewMixedcaseAddressFromString(address)
+	if err != nil {
+		return "", false
+	}
+
+	return addr.Address().Hex(), true
 }

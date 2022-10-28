@@ -15,7 +15,7 @@ import (
 
 // this is common across all chains. TODO: make one
 func (b *Backend) NetworkIdentifier() *types.NetworkIdentifier {
-	return b.networkID
+	return b.config.NetworkID
 }
 
 // NetworkStatus implements the /network/status endpoint

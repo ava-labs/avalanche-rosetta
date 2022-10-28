@@ -7,18 +7,15 @@ import (
 )
 
 var (
-	// _ service.ConstructionBackend = &Backend{}
-	_ service.NetworkBackend = &Backend{}
-	_ service.AccountBackend = &Backend{}
-	_ service.BlockBackend   = &Backend{}
+	_ service.ConstructionBackend = &Backend{}
+	_ service.NetworkBackend      = &Backend{}
+	_ service.AccountBackend      = &Backend{}
+	_ service.BlockBackend        = &Backend{}
 )
 
 type Backend struct {
 	config *Config
 	client client.Client
 
-	// TODO: networkID is static data common to all backend
-	// Move to a common struct
-	networkID    *types.NetworkIdentifier
 	genesisBlock *types.Block
 }
