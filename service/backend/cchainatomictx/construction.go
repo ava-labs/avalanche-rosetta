@@ -18,7 +18,8 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
+	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchain"
+	camapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 )
@@ -55,13 +56,13 @@ func (b *Backend) ConstructionPreprocess(
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	preprocessOptions := cmapper.Options{
+	preprocessOptions := camapper.Options{
 		AtomicTxGas: new(big.Int).SetUint64(gasUsed),
 	}
 
 	switch firstIn.Type {
 	case cconstants.Import.String():
-		v, ok := req.Metadata[cmapper.MetadataSourceChain]
+		v, ok := req.Metadata[camapper.MetadataSourceChain]
 		if !ok {
 			return nil, service.WrapError(service.ErrInvalidInput, "source_chain metadata must be provided")
 		}
@@ -80,7 +81,7 @@ func (b *Backend) ConstructionPreprocess(
 		preprocessOptions.From = firstIn.Account.Address
 		preprocessOptions.DestinationChain = chain
 
-		if v, ok := req.Metadata[cmapper.MetadataNonce]; ok {
+		if v, ok := req.Metadata[camapper.MetadataNonce]; ok {
 			stringObj, ok := v.(string)
 			if !ok {
 				return nil, service.WrapError(service.ErrInvalidInput, fmt.Errorf("%s is not a valid nonce string", v))
@@ -105,10 +106,10 @@ func (b *Backend) ConstructionPreprocess(
 
 func (b *Backend) estimateGasUsed(opType string, matches []*parser.Match) (uint64, error) {
 	// building tx with dummy data to get byte size for fee estimate
-	tx, _, err := cmapper.BuildTx(
+	tx, _, err := camapper.BuildTx(
 		opType,
 		matches,
-		cmapper.Metadata{
+		camapper.Metadata{
 			SourceChainID:      &ids.Empty,
 			DestinationChainID: &ids.Empty,
 		},
@@ -127,7 +128,7 @@ func (b *Backend) ConstructionMetadata(
 	ctx context.Context,
 	req *types.ConstructionMetadataRequest,
 ) (*types.ConstructionMetadataResponse, *types.Error) {
-	var input cmapper.Options
+	var input camapper.Options
 	err := mapper.UnmarshalJSONMap(req.Options, &input)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
@@ -143,7 +144,7 @@ func (b *Backend) ConstructionMetadata(
 		return nil, service.WrapError(service.ErrClientError, err)
 	}
 
-	metadata := cmapper.Metadata{
+	metadata := camapper.Metadata{
 		NetworkID: networkID,
 		CChainID:  cChainID,
 	}
@@ -203,8 +204,8 @@ func (b *Backend) calculateSuggestedFee(ctx context.Context, gasUsed *big.Int) (
 	}
 
 	suggestedFeeEth := new(big.Int).Mul(gasUsed, baseFee)
-	suggestedFee := new(big.Int).Div(suggestedFeeEth, mapper.X2crate)
-	return mapper.AtomicAvaxAmount(suggestedFee), nil
+	suggestedFee := new(big.Int).Div(suggestedFeeEth, cmapper.X2crate)
+	return camapper.AtomicAvaxAmount(suggestedFee), nil
 }
 
 // ConstructionPayloads implements /construction/payloads endpoint for C-chain atomic transactions

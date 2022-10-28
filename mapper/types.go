@@ -1,27 +1,20 @@
 package mapper
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"math/big"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
-const (
-	ContractAddressMetadata  = "contractAddress"
-	IndexTransferredMetadata = "indexTransferred"
+const MetadataExportedOutputs = "exported_outputs"
 
-	MetadataImportedInputs  = "imported_inputs"
-	MetadataExportedOutputs = "exported_outputs"
-	MetadataAddressFormat   = "address_format"
-	AddressFormatBech32     = "bech32"
-)
+func Amount(value *big.Int, currency *types.Currency) *types.Amount {
+	if value == nil {
+		return nil
+	}
 
-func ToCurrency(symbol string, decimals uint8, contractAddress common.Address) *types.Currency {
-	return &types.Currency{
-		Symbol:   symbol,
-		Decimals: int32(decimals),
-		Metadata: map[string]interface{}{
-			ContractAddressMetadata: contractAddress.Hex(),
-		},
+	return &types.Amount{
+		Value:    value.String(),
+		Currency: currency,
 	}
 }

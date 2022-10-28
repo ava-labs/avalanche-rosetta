@@ -21,6 +21,11 @@ var (
 	_ common.TxParser  = &cAtomicTxParser{}
 )
 
+const (
+	metadataAddressFormat = "address_format"
+	addressFormatBech32   = "bech32"
+)
+
 type cAtomicTx struct {
 	Tx           *evm.Tx
 	Codec        codec.Manager

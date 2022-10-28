@@ -22,6 +22,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchain"
 )
 
 const (
@@ -170,7 +171,7 @@ func (s ConstructionService) ConstructionMetadata(
 	return &types.ConstructionMetadataResponse{
 		Metadata: metadataMap,
 		SuggestedFee: []*types.Amount{
-			mapper.AvaxAmount(big.NewInt(suggestedFee)),
+			cmapper.AvaxAmount(big.NewInt(suggestedFee)),
 		},
 	}, nil
 }
@@ -518,7 +519,7 @@ func (s ConstructionService) ConstructionPayloads(
 		transferData = []byte{}
 		sendToAddress = ethcommon.HexToAddress(checkTo)
 	} else {
-		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
+		contract, ok := fromCurrency.Metadata[cmapper.ContractAddressMetadata].(string)
 		if !ok {
 			return nil, WrapError(ErrInvalidInput,
 				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
@@ -731,7 +732,7 @@ func (s ConstructionService) CreateOperationDescription(
 	}
 
 	// ERC-20s must have contract address in metadata
-	if _, ok := currency.Metadata[mapper.ContractAddressMetadata].(string); !ok {
+	if _, ok := currency.Metadata[cmapper.ContractAddressMetadata].(string); !ok {
 		return nil, fmt.Errorf("contractAddress must be populated in currency metadata")
 	}
 
@@ -799,7 +800,7 @@ func (s ConstructionService) getErc20TransferGasLimit(
 	value *big.Int,
 	currency *types.Currency,
 ) (uint64, error) {
-	contract, ok := currency.Metadata[mapper.ContractAddressMetadata]
+	contract, ok := currency.Metadata[cmapper.ContractAddressMetadata]
 	if len(to) == 0 || value == nil || !ok {
 		return erc20TransferGasLimit, nil
 	}

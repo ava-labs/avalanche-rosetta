@@ -15,7 +15,6 @@ import (
 
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 var (
@@ -97,7 +96,7 @@ func (t *TxParser) insToOperations(startIdx int64, op cconstants.Op, ins []evm.E
 			Type:    op.String(),
 			Account: &types.AccountIdentifier{Address: in.Address.Hex()},
 			// Negating input amount
-			Amount: mapper.AtomicAvaxAmount(new(big.Int).Neg(inputAmount)),
+			Amount: AtomicAvaxAmount(new(big.Int).Neg(inputAmount)),
 		})
 		idx++
 	}
@@ -123,7 +122,7 @@ func (t *TxParser) importedInToOperations(startIdx int64, opType cconstants.Op, 
 			Type:    opType.String(),
 			Account: account,
 			// Negating input amount
-			Amount: mapper.AtomicAvaxAmount(new(big.Int).Neg(inputAmount)),
+			Amount: AtomicAvaxAmount(new(big.Int).Neg(inputAmount)),
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{Identifier: utxoID},
 				CoinAction:     types.CoinSpent,

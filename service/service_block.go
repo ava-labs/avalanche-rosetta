@@ -15,7 +15,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchain"
 )
 
 // BlockBackend represents a backend that implements /block family of apis for a subset of requests
@@ -136,7 +136,7 @@ func (s *BlockService) Block(
 			ParentBlockIdentifier: parentBlockIdentifier,
 			Timestamp:             int64(block.Time() * utils.MillisecondsInSecond),
 			Transactions:          append(transactions, crosstx...),
-			Metadata:              mapper.BlockMetadata(block),
+			Metadata:              cmapper.BlockMetadata(block),
 		},
 	}, nil
 }
@@ -227,7 +227,7 @@ func (s *BlockService) fetchTransaction(
 		return nil, WrapError(ErrClientError, err)
 	}
 
-	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace, flattened, s.client, s.config.IsAnalyticsMode(), s.config.TokenWhiteList, s.config.IndexUnknownTokens)
+	transaction, err := cmapper.Transaction(header, tx, &msg, receipt, trace, flattened, s.client, s.config.IsAnalyticsMode(), s.config.TokenWhiteList, s.config.IndexUnknownTokens)
 	if err != nil {
 		return nil, WrapError(ErrInternalError, err)
 	}
@@ -245,7 +245,7 @@ func (s *BlockService) parseCrossChainTransactions(
 	chainIDToAliasMapping := map[ids.ID]constants.ChainIDAlias{
 		ids.Empty: constants.PChain,
 	}
-	crossTxs, err := mapper.CrossChainTransactions(networkIdentifier, chainIDToAliasMapping, s.config.AvaxAssetID, block, s.config.AP5Activation)
+	crossTxs, err := cmapper.CrossChainTransactions(networkIdentifier, chainIDToAliasMapping, s.config.AvaxAssetID, block, s.config.AP5Activation)
 	if err != nil {
 		return nil, WrapError(ErrInternalError, err)
 	}

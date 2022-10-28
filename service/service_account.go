@@ -17,6 +17,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchain"
 )
 
 // AccountBackend represents a backend that implements /account family of apis for a subset of requests.
@@ -107,14 +108,14 @@ func (s AccountService) AccountBalance(
 
 	balances := []*types.Amount{}
 	if len(req.Currencies) == 0 {
-		balances = append(balances, mapper.AvaxAmount(avaxBalance))
+		balances = append(balances, cmapper.AvaxAmount(avaxBalance))
 	}
 
 	for _, currency := range req.Currencies {
-		value, ok := currency.Metadata[mapper.ContractAddressMetadata]
+		value, ok := currency.Metadata[cmapper.ContractAddressMetadata]
 		if !ok {
 			if utils.Equal(currency, cconstants.AvaxCurrency) {
-				balances = append(balances, mapper.AvaxAmount(avaxBalance))
+				balances = append(balances, cmapper.AvaxAmount(avaxBalance))
 				continue
 			}
 			return nil, WrapError(ErrCallInvalidParams, errors.New("non-avax currencies must specify contractAddress in metadata"))
@@ -137,7 +138,7 @@ func (s AccountService) AccountBalance(
 			return nil, WrapError(ErrInternalError, err)
 		}
 
-		amount := mapper.Erc20Amount(response, currency, false)
+		amount := cmapper.Erc20Amount(response, currency, false)
 
 		balances = append(balances, amount)
 	}
