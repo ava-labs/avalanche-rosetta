@@ -3,7 +3,7 @@ package pchain
 import (
 	"context"
 
-	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
+	"github.com/ava-labs/avalanche-rosetta/backend/pchain/indexer"
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"

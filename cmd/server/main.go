@@ -15,14 +15,14 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend/cchainatomictx"
+	"github.com/ava-labs/avalanche-rosetta/backend/pchain"
+	"github.com/ava-labs/avalanche-rosetta/backend/pchain/indexer"
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/cchainatomictx"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
 
 var (
