@@ -22,7 +22,7 @@ simple_transfer(1){
     sender = find_balance({
       "minimum_balance":{
         "value": "10000000000000000", // 0.01 AVAX
-        "currency": {"symbol":"AVAX", "decimals":18};
+        "currency": {"symbol":"AVAX", "decimals":18}
       }
     });
 
