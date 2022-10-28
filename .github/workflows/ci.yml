@@ -16,7 +16,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Start Avalanche Node
+    - name: Start Avalanche node
       run: .github/scripts/runner.sh
       shell: bash
 
