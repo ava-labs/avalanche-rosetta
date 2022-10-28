@@ -45,7 +45,7 @@ jobs:
       run: .github/scripts/setup.sh
       shell: bash
 
-    - name: Run Check:construction
+    - name: Run rosetta-cli check:construction
       run: .github/scripts/cli.sh
       shell: bash
 
