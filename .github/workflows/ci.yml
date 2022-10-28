@@ -15,8 +15,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-      with:
-        repository: xiaying-peng/avalanche-rosetta-ci
 
     - name: Start Avalanche Node
       run: .github/scripts/runner.sh
