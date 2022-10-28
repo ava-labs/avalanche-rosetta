@@ -63,4 +63,5 @@ sleep 5
 --avalanchego-path ${AVALANCHEGO_PATH} \
 --global-node-config '{"chain-config-dir": "rosetta-cli-conf/cchain"}'
 
+sleep 10
 
