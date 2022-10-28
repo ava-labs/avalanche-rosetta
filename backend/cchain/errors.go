@@ -5,6 +5,23 @@ import "github.com/coinbase/rosetta-sdk-go/types"
 // copied here from service. TODO cleanup
 
 var (
+	// Errors lists all available error types
+	Errors = []*types.Error{
+		ErrNotReady,
+		ErrNotImplemented,
+		// ErrNotSupported, // TODO: to add?
+		ErrUnavailableOffline,
+		ErrInternalError,
+		ErrInvalidInput,
+		ErrClientError,
+		ErrBlockInvalidInput,
+		ErrBlockNotFound,
+		// ErrCallInvalidMethod,  // TODO: to add?
+		ErrCallInvalidParams,
+		// ErrTransactionNotFound,  // TODO: to add?
+	}
+
+	ErrNotReady           = makeError(1, "Node is not ready", true)
 	ErrUnavailableOffline = makeError(4, "Endpoint is not available offline", false)
 	ErrNotImplemented     = makeError(2, "Endpoint is not implemented", false)
 	ErrBlockInvalidInput  = makeError(8, "Block number or hash is required", false)
