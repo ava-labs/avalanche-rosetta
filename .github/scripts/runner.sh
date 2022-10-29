@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
+sudo ethtool -K eth0 tx off rx off
 
 VERSION=1.9.0
 MODE="test"
