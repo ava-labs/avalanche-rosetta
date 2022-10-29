@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo ethtool -K eth0 tx off rx off
+
 make build
 nohup ./rosetta-server -config=./scripts/config.json > /dev/null 2>&1 &
 
