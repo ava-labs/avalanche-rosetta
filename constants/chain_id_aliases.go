@@ -27,7 +27,7 @@ func (ni ChainIDAlias) String() string {
 	}
 }
 
-func FromString(s string) (ChainIDAlias, error) {
+func GetChainIDAlias(s string) (ChainIDAlias, error) {
 	switch {
 	case s == "P":
 		return PChain, nil

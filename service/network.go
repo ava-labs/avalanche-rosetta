@@ -30,14 +30,14 @@ type NetworkBackend interface {
 
 // NetworkService implements all /network endpoints
 type NetworkService struct {
-	mode          string
+	mode          constants.NodeMode
 	cChainBackend *cBackend.Backend
 	pChainBackend NetworkBackend
 }
 
 // NewNetworkService returns a new network servicer
 func NewNetworkService(
-	mode string,
+	mode constants.NodeMode,
 	cChainBackend *cBackend.Backend,
 	pChainBackend NetworkBackend,
 ) server.NetworkAPIServicer {
@@ -66,7 +66,7 @@ func (s *NetworkService) NetworkStatus(
 	ctx context.Context,
 	request *types.NetworkRequest,
 ) (*types.NetworkStatusResponse, *types.Error) {
-	if s.mode == constants.ModeOffline {
+	if s.mode == constants.Offline {
 		return nil, backend.ErrUnavailableOffline
 	}
 

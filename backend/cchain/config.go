@@ -3,18 +3,19 @@ package cchain
 import (
 	"math/big"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 // Config holds the service configuration
 type Config struct {
-	Mode               string
+	Mode               constants.NodeMode
 	ChainID            *big.Int
 	NetworkID          *types.NetworkIdentifier
 	GenesisBlockHash   string
 	AvaxAssetID        string
-	IngestionMode      string
+	IngestionMode      constants.NodeIngestion
 	TokenWhiteList     []string
 	IndexUnknownTokens bool
 
@@ -22,31 +23,24 @@ type Config struct {
 	AP5Activation uint64
 }
 
-const (
-	ModeOffline        = "offline"
-	ModeOnline         = "online"
-	StandardIngestion  = "standard"
-	AnalyticsIngestion = "analytics"
-)
-
 // IsOfflineMode returns true if running in offline mode
 func (c Config) IsOfflineMode() bool {
-	return c.Mode == ModeOffline
+	return c.Mode == constants.Offline
 }
 
 // IsOnlineMode returns true if running in online mode
 func (c Config) IsOnlineMode() bool {
-	return c.Mode == ModeOnline
+	return c.Mode == constants.Online
 }
 
 // IsAnalyticsMode returns true if running in analytics ingestion mode
 func (c Config) IsAnalyticsMode() bool {
-	return c.IngestionMode == AnalyticsIngestion
+	return c.IngestionMode == constants.AnalyticsIngestion
 }
 
 // IsStandardMode returns true if running in standard ingestion mode
 func (c Config) IsStandardMode() bool {
-	return c.IngestionMode == StandardIngestion
+	return c.IngestionMode == constants.StandardIngestion
 }
 
 // IsTokenListEmpty returns true if the token addresses list is empty

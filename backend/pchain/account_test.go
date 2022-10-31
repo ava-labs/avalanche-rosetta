@@ -48,7 +48,7 @@ func TestAccountBalance(t *testing.T) {
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
-	backend, err := NewBackend(constants.ModeOnline, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(constants.Online, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 	backend.getUTXOsPageSize = 2
 
@@ -209,7 +209,7 @@ func TestAccountCoins(t *testing.T) {
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
-	backend, err := NewBackend(constants.ModeOnline, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(constants.Online, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	t.Run("Account Coins Test regular coins", func(t *testing.T) {

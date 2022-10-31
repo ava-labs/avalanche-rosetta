@@ -28,14 +28,14 @@ type BlockBackend interface {
 
 // BlockService implements the /block/* endpoints
 type BlockService struct {
-	mode          string
+	mode          constants.NodeMode
 	cChainBackend *cBackend.Backend
 	pChainBackend BlockBackend
 }
 
 // NewBlockService returns a new block servicer
 func NewBlockService(
-	mode string,
+	mode constants.NodeMode,
 	cChainBackend *cBackend.Backend,
 	pChainBackend BlockBackend,
 ) server.BlockAPIServicer {
@@ -51,7 +51,7 @@ func (s *BlockService) Block(
 	ctx context.Context,
 	request *types.BlockRequest,
 ) (*types.BlockResponse, *types.Error) {
-	if s.mode == constants.ModeOffline {
+	if s.mode == constants.Offline {
 		return nil, backend.ErrUnavailableOffline
 	}
 
@@ -76,7 +76,7 @@ func (s *BlockService) BlockTransaction(
 	ctx context.Context,
 	request *types.BlockTransactionRequest,
 ) (*types.BlockTransactionResponse, *types.Error) {
-	if s.mode == constants.ModeOffline {
+	if s.mode == constants.Offline {
 		return nil, backend.ErrUnavailableOffline
 	}
 

@@ -12,7 +12,6 @@ import (
 )
 
 var (
-	errInvalidMode             = errors.New("invalid rosetta mode")
 	errGenesisBlockRequired    = errors.New("genesis block hash is not provided")
 	errInvalidTokenAddress     = errors.New("invalid token address provided")
 	errInvalidErc20Address     = errors.New("not all token addresses provided are valid erc20s")
@@ -51,11 +50,11 @@ func readConfig(path string) (*config, error) {
 
 func (c *config) applyDefaults() {
 	if c.Mode == "" {
-		c.Mode = constants.ModeOnline
+		c.Mode = constants.Online.String()
 	}
 
 	if c.IngestionMode == "" {
-		c.IngestionMode = constants.StandardIngestion
+		c.IngestionMode = constants.StandardIngestion.String()
 	}
 
 	if c.RPCBaseURL == "" {
@@ -72,8 +71,8 @@ func (c *config) applyDefaults() {
 }
 
 func (c *config) validate() error {
-	if !(c.Mode == constants.ModeOffline || c.Mode == constants.ModeOnline) {
-		return errInvalidMode
+	if _, err := constants.GetNodeMode(c.Mode); err != nil {
+		return err
 	}
 
 	if c.GenesisBlockHash == "" {
@@ -88,11 +87,11 @@ func (c *config) validate() error {
 		}
 	}
 
-	if !(c.IngestionMode == constants.AnalyticsIngestion || c.IngestionMode == constants.StandardIngestion) {
-		return errInvalidIngestionMode
+	if _, err := constants.GetNodeIngestion(c.Mode); err != nil {
+		return err
 	}
 
-	if c.IngestionMode == constants.StandardIngestion && c.IndexUnknownTokens {
+	if c.IngestionMode == constants.StandardIngestion.String() && c.IndexUnknownTokens {
 		return errInvalidUnknownTokenMode
 	}
 	return nil

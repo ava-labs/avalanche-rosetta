@@ -40,7 +40,7 @@ type ConstructionBackend interface {
 
 // ConstructionService implements /construction/* endpoints
 type ConstructionService struct {
-	mode                  string
+	mode                  constants.NodeMode
 	cChainBackend         *cBackend.Backend
 	cChainAtomicTxBackend ConstructionBackend
 	pChainBackend         ConstructionBackend
@@ -48,7 +48,7 @@ type ConstructionService struct {
 
 // NewConstructionService returns a new construction servicer
 func NewConstructionService(
-	mode string,
+	mode constants.NodeMode,
 	cChainBackend *cBackend.Backend,
 	pChainBackend ConstructionBackend,
 	cChainAtomicTxBackend ConstructionBackend,
@@ -71,7 +71,7 @@ func (s ConstructionService) ConstructionMetadata(
 	ctx context.Context,
 	req *types.ConstructionMetadataRequest,
 ) (*types.ConstructionMetadataResponse, *types.Error) {
-	if s.mode == constants.ModeOffline {
+	if s.mode == constants.Offline {
 		return nil, backend.ErrUnavailableOffline
 	}
 
@@ -243,7 +243,7 @@ func (s ConstructionService) ConstructionSubmit(
 	ctx context.Context,
 	req *types.ConstructionSubmitRequest,
 ) (*types.TransactionIdentifierResponse, *types.Error) {
-	if s.mode == constants.ModeOffline {
+	if s.mode == constants.Offline {
 		return nil, backend.ErrUnavailableOffline
 	}
 

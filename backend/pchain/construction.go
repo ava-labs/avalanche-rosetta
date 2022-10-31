@@ -204,7 +204,7 @@ func (b *Backend) ConstructionParse(ctx context.Context, req *types.Construction
 		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
-	netID, _ := constants.FromString(rosettaTx.DestinationChain)
+	netID, _ := constants.GetChainIDAlias(rosettaTx.DestinationChain)
 	chainIDs := map[ids.ID]constants.ChainIDAlias{}
 	if rosettaTx.DestinationChainID != nil {
 		chainIDs[*rosettaTx.DestinationChainID] = netID

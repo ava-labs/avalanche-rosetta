@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
@@ -12,7 +13,7 @@ import (
 func TestConfig(t *testing.T) {
 	t.Run("online", func(t *testing.T) {
 		cfg := Config{
-			Mode:      "online",
+			Mode:      constants.Online,
 			ChainID:   big.NewInt(1),
 			NetworkID: &types.NetworkIdentifier{},
 		}
@@ -23,7 +24,7 @@ func TestConfig(t *testing.T) {
 
 	t.Run("offline", func(t *testing.T) {
 		cfg := Config{
-			Mode:      "offline",
+			Mode:      constants.Offline,
 			ChainID:   big.NewInt(1),
 			NetworkID: &types.NetworkIdentifier{},
 		}

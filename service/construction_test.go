@@ -38,22 +38,22 @@ func TestConstructionMetadata(t *testing.T) {
 	client := &mocks.Client{}
 	cChainBackend := cBackend.NewBackend(
 		&cBackend.Config{
-			Mode: constants.ModeOnline,
+			Mode: constants.Online,
 		},
 		client,
 	)
 	skippedBackend := &backendMocks.ConstructionBackend{}
 	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
-	service := NewConstructionService(constants.ModeOnline, cChainBackend, skippedBackend, skippedBackend)
+	service := NewConstructionService(constants.Online, cChainBackend, skippedBackend, skippedBackend)
 
 	t.Run("unavailable in offline mode", func(t *testing.T) {
 		cChainBackend := cBackend.NewBackend(
 			&cBackend.Config{
-				Mode: constants.ModeOffline,
+				Mode: constants.Offline,
 			},
 			client,
 		)
-		service := NewConstructionService(constants.ModeOffline, cChainBackend, skippedBackend, skippedBackend)
+		service := NewConstructionService(constants.Offline, cChainBackend, skippedBackend, skippedBackend)
 
 		resp, err := service.ConstructionMetadata(
 			context.Background(),
@@ -194,11 +194,11 @@ func TestContructionHash(t *testing.T) {
 	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
 	cChainBackend := cBackend.NewBackend(
 		&cBackend.Config{
-			Mode: constants.ModeOnline,
+			Mode: constants.Online,
 		},
 		&mocks.Client{},
 	)
-	service := NewConstructionService(constants.ModeOnline, cChainBackend, skippedBackend, skippedBackend)
+	service := NewConstructionService(constants.Online, cChainBackend, skippedBackend, skippedBackend)
 
 	t.Run("no transaction", func(t *testing.T) {
 		resp, err := service.ConstructionHash(
@@ -266,11 +266,11 @@ func TestConstructionDerive(t *testing.T) {
 	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
 	cChainBackend := cBackend.NewBackend(
 		&cBackend.Config{
-			Mode: constants.ModeOnline,
+			Mode: constants.Online,
 		},
 		&mocks.Client{},
 	)
-	service := NewConstructionService(constants.ModeOnline, cChainBackend, skippedBackend, skippedBackend)
+	service := NewConstructionService(constants.Online, cChainBackend, skippedBackend, skippedBackend)
 
 	t.Run("no public key", func(t *testing.T) {
 		resp, err := service.ConstructionDerive(
@@ -338,13 +338,13 @@ func TestPreprocessMetadata(t *testing.T) {
 	client := &mocks.Client{}
 	cChainBackend := cBackend.NewBackend(
 		&cBackend.Config{
-			Mode: constants.ModeOnline,
+			Mode: constants.Online,
 		},
 		client,
 	)
 	skippedBackend := &backendMocks.ConstructionBackend{}
 	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
-	service := NewConstructionService(constants.ModeOnline, cChainBackend, skippedBackend, skippedBackend)
+	service := NewConstructionService(constants.Online, cChainBackend, skippedBackend, skippedBackend)
 
 	intent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"AVAX","decimals":18}}}]`
 	t.Run("currency info doesn't match between the operations", func(t *testing.T) {
@@ -813,12 +813,12 @@ func TestPreprocessMetadata(t *testing.T) {
 		client := &mocks.Client{}
 		cChainBackend := cBackend.NewBackend(
 			&cBackend.Config{
-				Mode:           constants.ModeOnline,
+				Mode:           constants.Online,
 				TokenWhiteList: tokenList,
 			},
 			client,
 		)
-		service := NewConstructionService(constants.ModeOnline, cChainBackend, skippedBackend, skippedBackend)
+		service := NewConstructionService(constants.Online, cChainBackend, skippedBackend, skippedBackend)
 		currency := &types.Currency{Symbol: defaultSymbol, Decimals: defaultDecimals}
 		client.On(
 			"ContractInfo",
@@ -931,10 +931,10 @@ func TestBackendDelegations(t *testing.T) {
 		backends := makeBackends(idx)
 		client := &mocks.Client{}
 		offlineService := NewConstructionService(
-			constants.ModeOffline,
+			constants.Offline,
 			cBackend.NewBackend(
 				&cBackend.Config{
-					Mode: constants.ModeOffline,
+					Mode: constants.Offline,
 				},
 				client,
 			),
@@ -943,10 +943,10 @@ func TestBackendDelegations(t *testing.T) {
 		)
 
 		onlineService := NewConstructionService(
-			constants.ModeOnline,
+			constants.Online,
 			cBackend.NewBackend(
 				&cBackend.Config{
-					Mode: constants.ModeOnline,
+					Mode: constants.Online,
 				},
 				client,
 			),

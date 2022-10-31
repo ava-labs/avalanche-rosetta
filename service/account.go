@@ -28,7 +28,7 @@ type AccountBackend interface {
 
 // AccountService implements the /account/* endpoints
 type AccountService struct {
-	mode                  string
+	mode                  constants.NodeMode
 	cChainBackend         *cBackend.Backend
 	cChainAtomicTxBackend AccountBackend
 	pChainBackend         AccountBackend
@@ -36,7 +36,7 @@ type AccountService struct {
 
 // NewAccountService returns a new network servicer
 func NewAccountService(
-	mode string,
+	mode constants.NodeMode,
 	cChainBackend *cBackend.Backend,
 	pChainBackend AccountBackend,
 	cChainAtomicTxBackend AccountBackend,
@@ -54,7 +54,7 @@ func (s AccountService) AccountBalance(
 	ctx context.Context,
 	req *types.AccountBalanceRequest,
 ) (*types.AccountBalanceResponse, *types.Error) {
-	if s.mode == constants.ModeOffline {
+	if s.mode == constants.Offline {
 		return nil, backend.ErrUnavailableOffline
 	}
 
@@ -81,7 +81,7 @@ func (s AccountService) AccountCoins(
 	ctx context.Context,
 	req *types.AccountCoinsRequest,
 ) (*types.AccountCoinsResponse, *types.Error) {
-	if s.mode == constants.ModeOffline {
+	if s.mode == constants.Offline {
 		return nil, backend.ErrUnavailableOffline
 	}
 

@@ -74,7 +74,7 @@ func main() {
 	// bootstrapping, it will fail.
 	//
 	// TODO: Only perform this check after the underlying node is bootstrapped
-	if cfg.Mode == constants.ModeOnline && cfg.ValidateERC20Whitelist {
+	if cfg.Mode == constants.Online.String() && cfg.ValidateERC20Whitelist {
 		if err := cfg.validateWhitelistOnlyValidErc20s(cChainClient); err != nil {
 			log.Fatal("token whitelist validation error:", err)
 		}
@@ -85,7 +85,7 @@ func main() {
 	if cfg.CChainID == 0 {
 		log.Println("chain id is not provided, fetching from rpc...")
 
-		if cfg.Mode == constants.ModeOffline {
+		if cfg.Mode == constants.Offline.String() {
 			log.Fatal("cant fetch chain id in offline mode")
 		}
 
@@ -131,15 +131,17 @@ func main() {
 	}
 
 	// Create C-chain backend
+	nodeMode, _ := constants.GetNodeMode(cfg.Mode)
+	ingestionMode, _ := constants.GetNodeIngestion(cfg.Mode)
 	cChainConfig := &cchain.Config{
-		Mode:               cfg.Mode,
+		Mode:               nodeMode,
 		ChainID:            big.NewInt(cfg.CChainID),
 		NetworkID:          networkC,
 		GenesisBlockHash:   cfg.GenesisBlockHash,
 		AvaxAssetID:        assetID,
 		AP5Activation:      AP5Activation,
 		IndexUnknownTokens: cfg.IndexUnknownTokens,
-		IngestionMode:      cfg.IngestionMode,
+		IngestionMode:      ingestionMode,
 		TokenWhiteList:     cfg.TokenWhiteList,
 	}
 	cChainBackend := cchain.NewBackend(cChainConfig, cChainClient)
@@ -150,7 +152,7 @@ func main() {
 	if err != nil {
 		log.Fatal("unable to initialize p-chain indexer parser:", err)
 	}
-	pChainBackend, err := pchain.NewBackend(cfg.Mode, pChainClient, pIndexerParser, avaxAssetID, networkP)
+	pChainBackend, err := pchain.NewBackend(nodeMode, pChainClient, pIndexerParser, avaxAssetID, networkP)
 	if err != nil {
 		log.Fatal("unable to initialize p-chain backend:", err)
 	}
@@ -177,7 +179,7 @@ func main() {
 	}
 
 	handler := configureRouter(
-		cfg.Mode,
+		nodeMode,
 		asserter,
 		cChainBackend,
 		pChainBackend,
@@ -203,7 +205,7 @@ func main() {
 }
 
 func validateNetworkName(cfg *config, cChainClient client.Client) error {
-	if cfg.Mode == constants.ModeOffline {
+	if cfg.Mode == constants.Offline.String() {
 		if cfg.NetworkName == "" {
 			return fmt.Errorf("network name is not provided, can't fetch network name in offline mode")
 		}
@@ -233,7 +235,7 @@ func validateNetworkName(cfg *config, cChainClient client.Client) error {
 }
 
 func configureRouter(
-	mode string,
+	mode constants.NodeMode,
 	asserter *asserter.Asserter,
 	cChainBackend *cchain.Backend,
 	pChainBackend *pchain.Backend,

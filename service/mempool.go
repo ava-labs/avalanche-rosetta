@@ -12,12 +12,12 @@ import (
 
 // MempoolService implements the /mempool/* endpoints
 type MempoolService struct {
-	mode          string
+	mode          constants.NodeMode
 	cChainBackend *cBackend.Backend
 }
 
 // NewMempoolService returns a new mempool servicer
-func NewMempoolService(mode string, cChainBackend *cBackend.Backend) server.MempoolAPIServicer {
+func NewMempoolService(mode constants.NodeMode, cChainBackend *cBackend.Backend) server.MempoolAPIServicer {
 	return &MempoolService{
 		mode:          mode,
 		cChainBackend: cChainBackend,
@@ -29,7 +29,7 @@ func (s MempoolService) Mempool(
 	ctx context.Context,
 	req *types.NetworkRequest,
 ) (*types.MempoolResponse, *types.Error) {
-	if s.mode == constants.ModeOffline {
+	if s.mode == constants.Offline {
 		return nil, backend.ErrUnavailableOffline
 	}
 
