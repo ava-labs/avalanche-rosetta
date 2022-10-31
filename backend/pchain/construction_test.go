@@ -20,12 +20,11 @@ import (
 	camapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (
 	pChainNetworkIdentifier = &types.NetworkIdentifier{
-		Blockchain: service.BlockchainName,
+		Blockchain: constants.BlockchainName,
 		Network:    constants.FujiNetwork,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
 			Network: constants.PChain.String(),
@@ -76,7 +75,7 @@ func TestConstructionDerive(t *testing.T) {
 	pChainMock.Mock.On("GetNetworkID", ctx).Return(uint32(5), nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(constants.ModeOnline, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	t.Run("p-chain address", func(t *testing.T) {
@@ -189,7 +188,7 @@ func TestExportTxConstruction(t *testing.T) {
 	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(constants.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -405,7 +404,7 @@ func TestImportTxConstruction(t *testing.T) {
 	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(constants.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -644,7 +643,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(constants.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -878,7 +877,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(constants.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {

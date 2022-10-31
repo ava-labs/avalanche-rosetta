@@ -10,12 +10,11 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 func TestShouldHandleRequest(t *testing.T) {
 	cChainNetworkIdentifier := &types.NetworkIdentifier{
-		Blockchain: service.BlockchainName,
+		Blockchain: constants.BlockchainName,
 		Network:    constants.FujiNetwork,
 	}
 

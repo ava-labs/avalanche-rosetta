@@ -8,7 +8,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 var (
@@ -51,11 +51,11 @@ func readConfig(path string) (*config, error) {
 
 func (c *config) applyDefaults() {
 	if c.Mode == "" {
-		c.Mode = service.ModeOnline
+		c.Mode = constants.ModeOnline
 	}
 
 	if c.IngestionMode == "" {
-		c.IngestionMode = service.StandardIngestion
+		c.IngestionMode = constants.StandardIngestion
 	}
 
 	if c.RPCBaseURL == "" {
@@ -72,7 +72,7 @@ func (c *config) applyDefaults() {
 }
 
 func (c *config) validate() error {
-	if !(c.Mode == service.ModeOffline || c.Mode == service.ModeOnline) {
+	if !(c.Mode == constants.ModeOffline || c.Mode == constants.ModeOnline) {
 		return errInvalidMode
 	}
 
@@ -88,11 +88,11 @@ func (c *config) validate() error {
 		}
 	}
 
-	if !(c.IngestionMode == service.AnalyticsIngestion || c.IngestionMode == service.StandardIngestion) {
+	if !(c.IngestionMode == constants.AnalyticsIngestion || c.IngestionMode == constants.StandardIngestion) {
 		return errInvalidIngestionMode
 	}
 
-	if c.IngestionMode == service.StandardIngestion && c.IndexUnknownTokens {
+	if c.IngestionMode == constants.StandardIngestion && c.IndexUnknownTokens {
 		return errInvalidUnknownTokenMode
 	}
 	return nil

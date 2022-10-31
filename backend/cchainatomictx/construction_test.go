@@ -18,12 +18,11 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	camapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (
 	networkIdentifier = &types.NetworkIdentifier{
-		Blockchain: service.BlockchainName,
+		Blockchain: constants.BlockchainName,
 		Network:    constants.FujiNetwork,
 	}
 

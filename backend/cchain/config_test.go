@@ -1,4 +1,4 @@
-package service
+package cchain
 
 import (
 	"math/big"

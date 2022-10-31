@@ -7,6 +7,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 // BlockBackend represents a backend that implements /block family of apis for a subset of requests
@@ -49,7 +50,7 @@ func (s *BlockService) Block(
 	ctx context.Context,
 	request *types.BlockRequest,
 ) (*types.BlockResponse, *types.Error) {
-	if s.mode == ModeOffline {
+	if s.mode == constants.ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 
@@ -74,7 +75,7 @@ func (s *BlockService) BlockTransaction(
 	ctx context.Context,
 	request *types.BlockTransactionRequest,
 ) (*types.BlockTransactionResponse, *types.Error) {
-	if s.mode == ModeOffline {
+	if s.mode == constants.ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 

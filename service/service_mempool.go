@@ -4,6 +4,7 @@ import (
 	"context"
 
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
@@ -27,7 +28,7 @@ func (s MempoolService) Mempool(
 	ctx context.Context,
 	req *types.NetworkRequest,
 ) (*types.MempoolResponse, *types.Error) {
-	if s.mode == ModeOffline {
+	if s.mode == constants.ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 

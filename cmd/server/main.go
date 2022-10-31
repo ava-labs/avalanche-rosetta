@@ -28,7 +28,7 @@ import (
 
 var (
 	cmdName    = "avalanche-rosetta"
-	cmdVersion = service.MiddlewareVersion
+	cmdVersion = constants.MiddlewareVersion
 )
 
 var opts struct {
@@ -74,7 +74,7 @@ func main() {
 	// bootstrapping, it will fail.
 	//
 	// TODO: Only perform this check after the underlying node is bootstrapped
-	if cfg.Mode == service.ModeOnline && cfg.ValidateERC20Whitelist {
+	if cfg.Mode == constants.ModeOnline && cfg.ValidateERC20Whitelist {
 		if err := cfg.validateWhitelistOnlyValidErc20s(cChainClient); err != nil {
 			log.Fatal("token whitelist validation error:", err)
 		}
@@ -85,7 +85,7 @@ func main() {
 	if cfg.CChainID == 0 {
 		log.Println("chain id is not provided, fetching from rpc...")
 
-		if cfg.Mode == service.ModeOffline {
+		if cfg.Mode == constants.ModeOffline {
 			log.Fatal("cant fetch chain id in offline mode")
 		}
 
@@ -114,14 +114,14 @@ func main() {
 	}
 
 	networkP := &types.NetworkIdentifier{
-		Blockchain: service.BlockchainName,
+		Blockchain: constants.BlockchainName,
 		Network:    cfg.NetworkName,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
 			Network: constants.PChain.String(),
 		},
 	}
 	networkC := &types.NetworkIdentifier{
-		Blockchain: service.BlockchainName,
+		Blockchain: constants.BlockchainName,
 		Network:    cfg.NetworkName,
 	}
 
@@ -192,7 +192,7 @@ func main() {
 
 	log.Printf(
 		`using avax (chain=%q chainid="%d" network=%q) rpc endpoint: %v`,
-		service.BlockchainName,
+		constants.BlockchainName,
 		cfg.CChainID,
 		cfg.NetworkName,
 		cfg.RPCBaseURL,
@@ -203,7 +203,7 @@ func main() {
 }
 
 func validateNetworkName(cfg *config, cChainClient client.Client) error {
-	if cfg.Mode == service.ModeOffline {
+	if cfg.Mode == constants.ModeOffline {
 		if cfg.NetworkName == "" {
 			return fmt.Errorf("network name is not provided, can't fetch network name in offline mode")
 		}

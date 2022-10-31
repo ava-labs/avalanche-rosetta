@@ -7,6 +7,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 // AccountBackend represents a backend that implements /account family of apis for a subset of requests.
@@ -52,7 +53,7 @@ func (s AccountService) AccountBalance(
 	ctx context.Context,
 	req *types.AccountBalanceRequest,
 ) (*types.AccountBalanceResponse, *types.Error) {
-	if s.mode == ModeOffline {
+	if s.mode == constants.ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 
@@ -79,7 +80,7 @@ func (s AccountService) AccountCoins(
 	ctx context.Context,
 	req *types.AccountCoinsRequest,
 ) (*types.AccountCoinsResponse, *types.Error) {
-	if s.mode == ModeOffline {
+	if s.mode == constants.ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 

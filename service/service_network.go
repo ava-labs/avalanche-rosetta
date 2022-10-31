@@ -7,6 +7,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 // NetworkBackend represents a backend that implements /block family of apis for a subset of requests
@@ -64,7 +65,7 @@ func (s *NetworkService) NetworkStatus(
 	ctx context.Context,
 	request *types.NetworkRequest,
 ) (*types.NetworkStatusResponse, *types.Error) {
-	if s.mode == ModeOffline {
+	if s.mode == constants.ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 

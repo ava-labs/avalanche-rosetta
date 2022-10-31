@@ -67,8 +67,8 @@ func (b *Backend) NetworkOptions(ctx context.Context, request *types.NetworkRequ
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
 			RosettaVersion:    types.RosettaAPIVersion,
-			NodeVersion:       service.NodeVersion,
-			MiddlewareVersion: types.String(service.MiddlewareVersion),
+			NodeVersion:       constants.NodeVersion,
+			MiddlewareVersion: types.String(constants.MiddlewareVersion),
 		},
 		Allow: &types.Allow{
 			OperationStatuses:       constants.OperationStatuses,

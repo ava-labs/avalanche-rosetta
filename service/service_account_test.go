@@ -17,13 +17,13 @@ import (
 func TestAccountBalance(t *testing.T) {
 	cChainBackend := cBackend.NewBackend(
 		&cBackend.Config{
-			Mode: ModeOnline,
+			Mode: constants.ModeOnline,
 		},
 		&cltmocks.Client{},
 	)
 	pBackendMock := &mocks.AccountBackend{}
 	atomicBackendMock := &mocks.AccountBackend{}
-	service := NewAccountService(ModeOnline, cChainBackend, pBackendMock, atomicBackendMock)
+	service := NewAccountService(constants.ModeOnline, cChainBackend, pBackendMock, atomicBackendMock)
 
 	t.Run("p-chain request is delegated to p-chain backend", func(t *testing.T) {
 		req := &types.AccountBalanceRequest{
@@ -75,13 +75,13 @@ func TestAccountBalance(t *testing.T) {
 func TestAccountCoins(t *testing.T) {
 	cChainBackend := cBackend.NewBackend(
 		&cBackend.Config{
-			Mode: ModeOnline,
+			Mode: constants.ModeOnline,
 		},
 		&cltmocks.Client{},
 	)
 	pBackendMock := &mocks.AccountBackend{}
 	atomicBackendMock := &mocks.AccountBackend{}
-	service := NewAccountService(ModeOnline, cChainBackend, pBackendMock, atomicBackendMock)
+	service := NewAccountService(constants.ModeOnline, cChainBackend, pBackendMock, atomicBackendMock)
 
 	t.Run("p-chain request is delegated to p-chain backend", func(t *testing.T) {
 		req := &types.AccountCoinsRequest{

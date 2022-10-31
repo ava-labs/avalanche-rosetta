@@ -11,13 +11,12 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
-	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanchego/ids"
 )
 
 func TestShouldHandleRequest(t *testing.T) {
 	pChainNetworkIdentifier := &types.NetworkIdentifier{
-		Blockchain: service.BlockchainName,
+		Blockchain: constants.BlockchainName,
 		Network:    constants.FujiNetwork,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
 			Network: constants.PChain.String(),
@@ -25,7 +24,7 @@ func TestShouldHandleRequest(t *testing.T) {
 	}
 
 	cChainNetworkIdentifier := &types.NetworkIdentifier{
-		Blockchain: service.BlockchainName,
+		Blockchain: constants.BlockchainName,
 		Network:    constants.FujiNetwork,
 	}
 
@@ -35,7 +34,7 @@ func TestShouldHandleRequest(t *testing.T) {
 	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(constants.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
 	assert.Nil(t, err)
 
 	testData := []struct {

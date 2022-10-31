@@ -66,7 +66,7 @@ func NewBackend(
 		avaxAssetID:      assetID,
 	}
 
-	if nodeMode == service.ModeOnline {
+	if nodeMode == constants.ModeOnline {
 		if err := backEnd.initChainIDs(); err != nil {
 			return nil, err
 		}

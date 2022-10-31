@@ -7,6 +7,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 // ConstructionBackend represents a backend that implements /construction family of apis for a subset of requests.
@@ -69,7 +70,7 @@ func (s ConstructionService) ConstructionMetadata(
 	ctx context.Context,
 	req *types.ConstructionMetadataRequest,
 ) (*types.ConstructionMetadataResponse, *types.Error) {
-	if s.mode == ModeOffline {
+	if s.mode == constants.ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 
@@ -241,7 +242,7 @@ func (s ConstructionService) ConstructionSubmit(
 	ctx context.Context,
 	req *types.ConstructionSubmitRequest,
 ) (*types.TransactionIdentifierResponse, *types.Error) {
-	if s.mode == ModeOffline {
+	if s.mode == constants.ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 
