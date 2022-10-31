@@ -1,4 +1,4 @@
-package service
+package cchain
 
 import (
 	"testing"
@@ -9,35 +9,35 @@ import (
 func TestChecksumAddress(t *testing.T) {
 	t.Run("valid checksum address", func(t *testing.T) {
 		testAddr := "0x05da63494DfbfF6AA215E074D34aC9A25B616eF2"
-		addr, ok := ChecksumAddress(testAddr)
+		addr, ok := checksumAddress(testAddr)
 		assert.True(t, ok)
 		assert.Equal(t, testAddr, addr)
 	})
 
 	t.Run("modified checksum address", func(t *testing.T) {
 		testAddr := "0x05da63494DfbfF6AA215E074D34aC9A25B616ef2"
-		addr, ok := ChecksumAddress(testAddr)
+		addr, ok := checksumAddress(testAddr)
 		assert.True(t, ok)
 		assert.Equal(t, "0x05da63494DfbfF6AA215E074D34aC9A25B616eF2", addr)
 	})
 
 	t.Run("invalid hex", func(t *testing.T) {
 		testAddr := "0x05da63494DfbfF6AA215E074D34aC9A25B616eK2"
-		addr, ok := ChecksumAddress(testAddr)
+		addr, ok := checksumAddress(testAddr)
 		assert.False(t, ok)
 		assert.Equal(t, "", addr)
 	})
 
 	t.Run("invalid length", func(t *testing.T) {
 		testAddr := "0x05da63494DfbfF6AA215E074D34aC9A25B"
-		addr, ok := ChecksumAddress(testAddr)
+		addr, ok := checksumAddress(testAddr)
 		assert.False(t, ok)
 		assert.Equal(t, "", addr)
 	})
 
 	t.Run("missing 0x", func(t *testing.T) {
 		testAddr := "05da63494DfbfF6AA215E074D34aC9A25B616eF2"
-		addr, ok := ChecksumAddress(testAddr)
+		addr, ok := checksumAddress(testAddr)
 		assert.False(t, ok)
 		assert.Equal(t, "", addr)
 	})

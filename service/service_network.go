@@ -2,16 +2,11 @@ package service
 
 import (
 	"context"
-	"math/big"
 
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/coinbase/rosetta-sdk-go/utils"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/constants"
-	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 )
 
 // NetworkBackend represents a backend that implements /block family of apis for a subset of requests
@@ -33,25 +28,21 @@ type NetworkBackend interface {
 
 // NetworkService implements all /network endpoints
 type NetworkService struct {
-	config        *Config
-	client        client.Client
+	mode          string
+	cChainBackend *cBackend.Backend
 	pChainBackend NetworkBackend
-	genesisBlock  *types.Block
 }
 
 // NewNetworkService returns a new network servicer
 func NewNetworkService(
-	config *Config,
-	client client.Client,
+	mode string,
+	cChainBackend *cBackend.Backend,
 	pChainBackend NetworkBackend,
 ) server.NetworkAPIServicer {
-	genesisBlock := makeGenesisBlock(config.GenesisBlockHash)
-
 	return &NetworkService{
-		config:        config,
-		client:        client,
+		mode:          mode,
+		cChainBackend: cChainBackend,
 		pChainBackend: pChainBackend,
-		genesisBlock:  genesisBlock,
 	}
 }
 
@@ -62,7 +53,7 @@ func (s *NetworkService) NetworkList(
 ) (*types.NetworkListResponse, *types.Error) {
 	return &types.NetworkListResponse{
 		NetworkIdentifiers: []*types.NetworkIdentifier{
-			s.config.NetworkID,
+			s.cChainBackend.NetworkIdentifier(),
 			s.pChainBackend.NetworkIdentifier(),
 		},
 	}, nil
@@ -73,7 +64,7 @@ func (s *NetworkService) NetworkStatus(
 	ctx context.Context,
 	request *types.NetworkRequest,
 ) (*types.NetworkStatusResponse, *types.Error) {
-	if s.config.IsOfflineMode() {
+	if s.mode == ModeOffline {
 		return nil, ErrUnavailableOffline
 	}
 
@@ -81,58 +72,7 @@ func (s *NetworkService) NetworkStatus(
 		return s.pChainBackend.NetworkStatus(ctx, request)
 	}
 
-	// Fetch peers
-	infoPeers, err := s.client.Peers(ctx)
-	if err != nil {
-		return nil, WrapError(ErrClientError, err)
-	}
-	peers := mapper.Peers(infoPeers)
-
-	// Check if all C/X chains are ready
-	if err := checkBootstrapStatus(ctx, s.client); err != nil {
-		if err.Code == ErrNotReady.Code {
-			return &types.NetworkStatusResponse{
-				CurrentBlockTimestamp:  s.genesisBlock.Timestamp,
-				CurrentBlockIdentifier: s.genesisBlock.BlockIdentifier,
-				GenesisBlockIdentifier: s.genesisBlock.BlockIdentifier,
-				SyncStatus:             constants.StageBootstrap,
-				Peers:                  peers,
-			}, nil
-		}
-		return nil, err
-	}
-
-	// Fetch the latest block
-	blockHeader, err := s.client.HeaderByNumber(ctx, nil)
-	if err != nil {
-		return nil, WrapError(ErrClientError, err)
-	}
-	if blockHeader == nil {
-		return nil, WrapError(ErrClientError, "latest block not found")
-	}
-
-	// Fetch the genesis block
-	genesisHeader, err := s.client.HeaderByNumber(ctx, big.NewInt(0))
-	if err != nil {
-		return nil, WrapError(ErrClientError, err)
-	}
-	if genesisHeader == nil {
-		return nil, WrapError(ErrClientError, "genesis block not found")
-	}
-
-	return &types.NetworkStatusResponse{
-		CurrentBlockTimestamp: int64(blockHeader.Time * utils.MillisecondsInSecond),
-		CurrentBlockIdentifier: &types.BlockIdentifier{
-			Index: blockHeader.Number.Int64(),
-			Hash:  blockHeader.Hash().String(),
-		},
-		GenesisBlockIdentifier: &types.BlockIdentifier{
-			Index: genesisHeader.Number.Int64(),
-			Hash:  genesisHeader.Hash().String(),
-		},
-		SyncStatus: constants.StageSynced,
-		Peers:      peers,
-	}, nil
+	return s.cChainBackend.NetworkStatus(ctx, request)
 }
 
 // NetworkOptions implements the /network/options endpoint
@@ -144,40 +84,5 @@ func (s *NetworkService) NetworkOptions(
 		return s.pChainBackend.NetworkOptions(ctx, request)
 	}
 
-	return &types.NetworkOptionsResponse{
-		Version: &types.Version{
-			RosettaVersion:    types.RosettaAPIVersion,
-			NodeVersion:       NodeVersion,
-			MiddlewareVersion: types.String(MiddlewareVersion),
-		},
-		Allow: &types.Allow{
-			OperationStatuses:       constants.OperationStatuses,
-			OperationTypes:          cconstants.CChainOps(),
-			CallMethods:             cconstants.CChainCallMethods(),
-			Errors:                  Errors,
-			HistoricalBalanceLookup: true,
-		},
-	}, nil
-}
-
-func checkBootstrapStatus(ctx context.Context, client client.Client) *types.Error {
-	cReady, err := client.IsBootstrapped(ctx, constants.CChain.String())
-	if err != nil {
-		return WrapError(ErrClientError, err)
-	}
-
-	xReady, err := client.IsBootstrapped(ctx, constants.XChain.String())
-	if err != nil {
-		return WrapError(ErrClientError, err)
-	}
-
-	if !cReady {
-		return WrapError(ErrNotReady, "C-Chain is not ready")
-	}
-
-	if !xReady {
-		return WrapError(ErrNotReady, "X-Chain is not ready")
-	}
-
-	return nil
+	return s.cChainBackend.NetworkOptions(ctx, request)
 }

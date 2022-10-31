@@ -176,20 +176,7 @@ func main() {
 		log.Fatal("server asserter init error:", err)
 	}
 
-	cfgToRemote := &service.Config{
-		Mode:               cfg.Mode,
-		ChainID:            big.NewInt(cfg.CChainID),
-		NetworkID:          networkC,
-		GenesisBlockHash:   cfg.GenesisBlockHash,
-		AvaxAssetID:        assetID,
-		AP5Activation:      AP5Activation,
-		IndexUnknownTokens: cfg.IndexUnknownTokens,
-		IngestionMode:      cfg.IngestionMode,
-		TokenWhiteList:     cfg.TokenWhiteList,
-	}
 	handler := configureRouter(
-		cfgToRemote,
-		cChainClient,
 		cfg.Mode,
 		asserter,
 		cChainBackend,
@@ -246,20 +233,18 @@ func validateNetworkName(cfg *config, cChainClient client.Client) error {
 }
 
 func configureRouter(
-	cfgToRemove *service.Config,
-	clientToRemote client.Client,
 	mode string,
 	asserter *asserter.Asserter,
 	cChainBackend *cchain.Backend,
 	pChainBackend *pchain.Backend,
 	cChainAtomicTxBackend *cchainatomictx.Backend,
 ) http.Handler {
-	networkService := service.NewNetworkService(cfgToRemove, clientToRemote, pChainBackend)
+	networkService := service.NewNetworkService(mode, cChainBackend, pChainBackend)
 	blockService := service.NewBlockService(mode, cChainBackend, pChainBackend)
 	accountService := service.NewAccountService(mode, cChainBackend, pChainBackend, cChainAtomicTxBackend)
 	mempoolService := service.NewMempoolService(mode, cChainBackend)
 	constructionService := service.NewConstructionService(mode, cChainBackend, pChainBackend, cChainAtomicTxBackend)
-	callService := service.NewCallService(cfgToRemove, clientToRemote)
+	callService := service.NewCallService(cChainBackend)
 
 	return server.NewRouter(
 		server.NewNetworkAPIController(networkService, asserter),
