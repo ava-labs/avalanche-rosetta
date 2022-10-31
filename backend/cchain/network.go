@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -24,19 +25,19 @@ func (b *Backend) NetworkStatus(
 	request *types.NetworkRequest,
 ) (*types.NetworkStatusResponse, *types.Error) {
 	if b.config.IsOfflineMode() {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	// Fetch peers
 	infoPeers, err := b.client.Peers(ctx)
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 	peers := mapper.Peers(infoPeers)
 
 	// Check if all C/X chains are ready
 	if err := checkBootstrapStatus(ctx, b.client); err != nil {
-		if err.Code == ErrNotReady.Code {
+		if err.Code == backend.ErrNotReady.Code {
 			return &types.NetworkStatusResponse{
 				CurrentBlockTimestamp:  b.genesisBlock.Timestamp,
 				CurrentBlockIdentifier: b.genesisBlock.BlockIdentifier,
@@ -51,19 +52,19 @@ func (b *Backend) NetworkStatus(
 	// Fetch the latest block
 	blockHeader, err := b.client.HeaderByNumber(ctx, nil)
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 	if blockHeader == nil {
-		return nil, WrapError(ErrClientError, "latest block not found")
+		return nil, backend.WrapError(backend.ErrClientError, "latest block not found")
 	}
 
 	// Fetch the genesis block
 	genesisHeader, err := b.client.HeaderByNumber(ctx, big.NewInt(0))
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 	if genesisHeader == nil {
-		return nil, WrapError(ErrClientError, "genesis block not found")
+		return nil, backend.WrapError(backend.ErrClientError, "genesis block not found")
 	}
 
 	return &types.NetworkStatusResponse{
@@ -96,7 +97,7 @@ func (b *Backend) NetworkOptions(
 			OperationStatuses:       constants.OperationStatuses,
 			OperationTypes:          cconstants.CChainOps(),
 			CallMethods:             cconstants.CChainCallMethods(),
-			Errors:                  Errors,
+			Errors:                  backend.Errors,
 			HistoricalBalanceLookup: true,
 		},
 	}, nil
@@ -105,20 +106,20 @@ func (b *Backend) NetworkOptions(
 func checkBootstrapStatus(ctx context.Context, client client.Client) *types.Error {
 	cReady, err := client.IsBootstrapped(ctx, constants.CChain.String())
 	if err != nil {
-		return WrapError(ErrClientError, err)
+		return backend.WrapError(backend.ErrClientError, err)
 	}
 
 	xReady, err := client.IsBootstrapped(ctx, constants.XChain.String())
 	if err != nil {
-		return WrapError(ErrClientError, err)
+		return backend.WrapError(backend.ErrClientError, err)
 	}
 
 	if !cReady {
-		return WrapError(ErrNotReady, "C-Chain is not ready")
+		return backend.WrapError(backend.ErrNotReady, "C-Chain is not ready")
 	}
 
 	if !xReady {
-		return WrapError(ErrNotReady, "X-Chain is not ready")
+		return backend.WrapError(backend.ErrNotReady, "X-Chain is not ready")
 	}
 
 	return nil

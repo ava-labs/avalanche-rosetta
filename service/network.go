@@ -6,6 +6,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 )
@@ -66,7 +67,7 @@ func (s *NetworkService) NetworkStatus(
 	request *types.NetworkRequest,
 ) (*types.NetworkStatusResponse, *types.Error) {
 	if s.mode == constants.ModeOffline {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(request) {

@@ -15,13 +15,13 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/backend/common"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchain"
 	camapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (
@@ -41,19 +41,19 @@ func (b *Backend) ConstructionPreprocess(
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
 	matches, err := common.MatchOperations(req.Operations)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	firstIn, _ := matches[0].First()
 	firstOut, _ := matches[1].First()
 
 	if firstIn == nil || firstOut == nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "both input and output operations must be specified")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "both input and output operations must be specified")
 	}
 
 	gasUsed, err := b.estimateGasUsed(firstIn.Type, matches)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	preprocessOptions := camapper.Options{
@@ -64,18 +64,18 @@ func (b *Backend) ConstructionPreprocess(
 	case cconstants.Import.String():
 		v, ok := req.Metadata[camapper.MetadataSourceChain]
 		if !ok {
-			return nil, service.WrapError(service.ErrInvalidInput, "source_chain metadata must be provided")
+			return nil, backend.WrapError(backend.ErrInvalidInput, "source_chain metadata must be provided")
 		}
 		chainAlias, ok := v.(string)
 		if !ok {
-			return nil, service.WrapError(service.ErrInvalidInput, "invalid source_chain value")
+			return nil, backend.WrapError(backend.ErrInvalidInput, "invalid source_chain value")
 		}
 
 		preprocessOptions.SourceChain = chainAlias
 	case cconstants.Export.String():
 		chain, _, _, err := address.Parse(firstOut.Account.Address)
 		if err != nil {
-			return nil, service.WrapError(service.ErrInternalError, err)
+			return nil, backend.WrapError(backend.ErrInternalError, err)
 		}
 
 		preprocessOptions.From = firstIn.Account.Address
@@ -84,11 +84,11 @@ func (b *Backend) ConstructionPreprocess(
 		if v, ok := req.Metadata[camapper.MetadataNonce]; ok {
 			stringObj, ok := v.(string)
 			if !ok {
-				return nil, service.WrapError(service.ErrInvalidInput, fmt.Errorf("%s is not a valid nonce string", v))
+				return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid nonce string", v))
 			}
 			bigObj, ok := new(big.Int).SetString(stringObj, 10)
 			if !ok {
-				return nil, service.WrapError(service.ErrInvalidInput, fmt.Errorf("%s is not a valid nonce", v))
+				return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid nonce", v))
 			}
 			preprocessOptions.Nonce = bigObj
 		}
@@ -96,7 +96,7 @@ func (b *Backend) ConstructionPreprocess(
 
 	optionsMap, err := mapper.MarshalJSONMap(preprocessOptions)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return &types.ConstructionPreprocessResponse{
@@ -131,17 +131,17 @@ func (b *Backend) ConstructionMetadata(
 	var input camapper.Options
 	err := mapper.UnmarshalJSONMap(req.Options, &input)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	networkID, err := b.cClient.GetNetworkID(ctx)
 	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	cChainID, err := b.cClient.GetBlockchainID(ctx, constants.CChain.String())
 	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	metadata := camapper.Metadata{
@@ -152,7 +152,7 @@ func (b *Backend) ConstructionMetadata(
 	if input.SourceChain != "" {
 		id, err := b.cClient.GetBlockchainID(ctx, input.SourceChain)
 		if err != nil {
-			return nil, service.WrapError(service.ErrClientError, err)
+			return nil, backend.WrapError(backend.ErrClientError, err)
 		}
 		metadata.SourceChainID = &id
 	}
@@ -160,7 +160,7 @@ func (b *Backend) ConstructionMetadata(
 	if input.DestinationChain != "" {
 		id, err := b.cClient.GetBlockchainID(ctx, input.DestinationChain)
 		if err != nil {
-			return nil, service.WrapError(service.ErrClientError, err)
+			return nil, backend.WrapError(backend.ErrClientError, err)
 		}
 		metadata.DestinationChain = input.DestinationChain
 		metadata.DestinationChainID = &id
@@ -171,7 +171,7 @@ func (b *Backend) ConstructionMetadata(
 		if input.Nonce == nil {
 			nonce, err = b.cClient.NonceAt(ctx, ethcommon.HexToAddress(input.From), nil)
 			if err != nil {
-				return nil, service.WrapError(service.ErrClientError, err)
+				return nil, backend.WrapError(backend.ErrClientError, err)
 			}
 		} else {
 			nonce = input.Nonce.Uint64()
@@ -181,12 +181,12 @@ func (b *Backend) ConstructionMetadata(
 
 	metadataMap, err := mapper.MarshalJSONMap(metadata)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	suggestedFeeAmount, err := b.calculateSuggestedFee(ctx, input.AtomicTxGas)
 	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	return &types.ConstructionMetadataResponse{
@@ -222,12 +222,12 @@ func (b *Backend) ConstructionPayloads(ctx context.Context, req *types.Construct
 func (b *Backend) ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.Transaction)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	hrp, err := mapper.GetHRP(req.NetworkIdentifier)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "incorrect network identifier")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "incorrect network identifier")
 	}
 
 	chainIDs := map[ids.ID]string{}
@@ -264,7 +264,7 @@ func (b *Backend) parsePayloadTxFromString(transaction string) (*common.RosettaT
 func (b *Backend) ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.UnsignedTransaction)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return common.Combine(b, rosettaTx, req.Signatures)
@@ -274,24 +274,24 @@ func (b *Backend) ConstructionCombine(ctx context.Context, req *types.Constructi
 func (b *Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (common.AvaxTx, *types.Error) {
 	cTx, ok := tx.(*cAtomicTx)
 	if !ok {
-		return nil, service.WrapError(service.ErrInvalidInput, "invalid transaction")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "invalid transaction")
 	}
 
 	creds, err := getTxCreds(cTx.Tx.UnsignedAtomicTx, signatures)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "unable attach signatures to transaction")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "unable attach signatures to transaction")
 	}
 
 	unsignedBytes, err := cTx.Marshal()
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "unable to encode unsigned transaction")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "unable to encode unsigned transaction")
 	}
 
 	cTx.Tx.Creds = creds
 
 	signedBytes, err := cTx.Marshal()
 	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, "unable to marshal signed transaction")
+		return nil, backend.WrapError(backend.ErrInternalError, "unable to marshal signed transaction")
 	}
 
 	cTx.Tx.Initialize(unsignedBytes, signedBytes)
@@ -321,7 +321,7 @@ func (b *Backend) ConstructionHash(
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.SignedTransaction)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return common.HashTx(rosettaTx)
@@ -334,7 +334,7 @@ func (b *Backend) ConstructionSubmit(
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.SignedTransaction)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return common.SubmitTx(ctx, b.cClient, rosettaTx)

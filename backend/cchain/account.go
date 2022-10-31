@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/coreth/interfaces"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -22,11 +23,11 @@ func (b *Backend) AccountBalance(
 	req *types.AccountBalanceRequest,
 ) (*types.AccountBalanceResponse, *types.Error) {
 	if b.config.IsOfflineMode() {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if req.AccountIdentifier == nil {
-		return nil, WrapError(ErrInvalidInput, "account identifier is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "account identifier is not provided")
 	}
 
 	header, terr := blockHeaderFromInput(ctx, b.client, req.BlockIdentifier)
@@ -38,7 +39,7 @@ func (b *Backend) AccountBalance(
 
 	nonce, err := b.client.NonceAt(ctx, address, header.Number)
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	metadata := &accountMetadata{
@@ -47,12 +48,12 @@ func (b *Backend) AccountBalance(
 
 	metadataMap, err := mapper.MarshalJSONMap(metadata)
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	avaxBalance, err := b.client.BalanceAt(ctx, address, header.Number)
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	balances := []*types.Amount{}
@@ -67,7 +68,7 @@ func (b *Backend) AccountBalance(
 				balances = append(balances, cmapper.AvaxAmount(avaxBalance))
 				continue
 			}
-			return nil, WrapError(ErrCallInvalidParams, errors.New("non-avax currencies must specify contractAddress in metadata"))
+			return nil, backend.WrapError(backend.ErrCallInvalidParams, errors.New("non-avax currencies must specify contractAddress in metadata"))
 		}
 
 		identifierAddress := req.AccountIdentifier.Address
@@ -77,14 +78,14 @@ func (b *Backend) AccountBalance(
 
 		data, err := hexutil.Decode(BalanceOfMethodPrefix + identifierAddress)
 		if err != nil {
-			return nil, WrapError(ErrCallInvalidParams, fmt.Errorf("%w: marshalling balanceOf call msg data failed", err))
+			return nil, backend.WrapError(backend.ErrCallInvalidParams, fmt.Errorf("%w: marshalling balanceOf call msg data failed", err))
 		}
 
 		contractAddress := ethcommon.HexToAddress(value.(string))
 		callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
 		response, err := b.client.CallContract(ctx, callMsg, header.Number)
 		if err != nil {
-			return nil, WrapError(ErrInternalError, err)
+			return nil, backend.WrapError(backend.ErrInternalError, err)
 		}
 
 		amount := cmapper.Erc20Amount(response, currency, false)
@@ -108,7 +109,7 @@ func (b *Backend) AccountCoins(
 	req *types.AccountCoinsRequest,
 ) (*types.AccountCoinsResponse, *types.Error) {
 	if b.config.IsOfflineMode() {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
-	return nil, ErrNotImplemented
+	return nil, backend.ErrNotImplemented
 }

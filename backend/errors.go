@@ -1,4 +1,4 @@
-package cchain
+package backend
 
 import "github.com/coinbase/rosetta-sdk-go/types"
 
@@ -9,7 +9,7 @@ var (
 	Errors = []*types.Error{
 		ErrNotReady,
 		ErrNotImplemented,
-		// ErrNotSupported, // TODO: used only in Pchain. Move there
+		ErrNotSupported,
 		ErrUnavailableOffline,
 		ErrInternalError,
 		ErrInvalidInput,
@@ -18,19 +18,21 @@ var (
 		ErrBlockNotFound,
 		ErrCallInvalidMethod,
 		ErrCallInvalidParams,
-		// ErrTransactionNotFound,  // TODO: used only in Pchain. Move there
+		ErrTransactionNotFound,
 	}
 
-	ErrNotReady           = makeError(1, "Node is not ready", true)
-	ErrNotImplemented     = makeError(2, "Endpoint is not implemented", false)
-	ErrUnavailableOffline = makeError(4, "Endpoint is not available offline", false)
-	ErrInternalError      = makeError(5, "Internal server error", true)
-	ErrInvalidInput       = makeError(6, "Invalid input", false)
-	ErrClientError        = makeError(7, "Client error", true)
-	ErrBlockInvalidInput  = makeError(8, "Block number or hash is required", false)
-	ErrBlockNotFound      = makeError(9, "Block was not found", true)
-	ErrCallInvalidMethod  = makeError(10, "Invalid call method", false)
-	ErrCallInvalidParams  = makeError(11, "invalid call params", false)
+	ErrNotReady            = makeError(1, "Node is not ready", true)
+	ErrNotImplemented      = makeError(2, "Endpoint is not implemented", false)
+	ErrNotSupported        = makeError(3, "Endpoint is not supported", false)
+	ErrUnavailableOffline  = makeError(4, "Endpoint is not available offline", false)
+	ErrInternalError       = makeError(5, "Internal server error", true)
+	ErrInvalidInput        = makeError(6, "Invalid input", false)
+	ErrClientError         = makeError(7, "Client error", true)
+	ErrBlockInvalidInput   = makeError(8, "Block number or hash is required", false)
+	ErrBlockNotFound       = makeError(9, "Block was not found", true)
+	ErrCallInvalidMethod   = makeError(10, "Invalid call method", false)
+	ErrCallInvalidParams   = makeError(11, "invalid call params", false)
+	ErrTransactionNotFound = makeError(12, "Transaction was not found", true)
 )
 
 func makeError(code int32, message string, retriable bool) *types.Error {

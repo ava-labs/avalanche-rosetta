@@ -6,6 +6,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 )
@@ -54,11 +55,11 @@ func (s AccountService) AccountBalance(
 	req *types.AccountBalanceRequest,
 ) (*types.AccountBalanceResponse, *types.Error) {
 	if s.mode == constants.ModeOffline {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if req.AccountIdentifier == nil {
-		return nil, WrapError(ErrInvalidInput, "account identifier is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "account identifier is not provided")
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(req) {
@@ -81,7 +82,7 @@ func (s AccountService) AccountCoins(
 	req *types.AccountCoinsRequest,
 ) (*types.AccountCoinsResponse, *types.Error) {
 	if s.mode == constants.ModeOffline {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(req) {

@@ -6,6 +6,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 )
@@ -51,14 +52,14 @@ func (s *BlockService) Block(
 	request *types.BlockRequest,
 ) (*types.BlockResponse, *types.Error) {
 	if s.mode == constants.ModeOffline {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if request.BlockIdentifier == nil {
-		return nil, ErrBlockInvalidInput
+		return nil, backend.ErrBlockInvalidInput
 	}
 	if request.BlockIdentifier.Hash == nil && request.BlockIdentifier.Index == nil {
-		return nil, ErrBlockInvalidInput
+		return nil, backend.ErrBlockInvalidInput
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(request) {
@@ -76,11 +77,11 @@ func (s *BlockService) BlockTransaction(
 	request *types.BlockTransactionRequest,
 ) (*types.BlockTransactionResponse, *types.Error) {
 	if s.mode == constants.ModeOffline {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if request.BlockIdentifier == nil {
-		return nil, WrapError(ErrInvalidInput, "block identifier is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "block identifier is not provided")
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(request) {

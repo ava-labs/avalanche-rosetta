@@ -12,6 +12,7 @@ import (
 	corethTypes "github.com/ava-labs/coreth/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchain"
@@ -30,14 +31,14 @@ func (b *Backend) Block(
 	request *types.BlockRequest,
 ) (*types.BlockResponse, *types.Error) {
 	if b.config.IsOfflineMode() {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if request.BlockIdentifier == nil {
-		return nil, ErrBlockInvalidInput
+		return nil, backend.ErrBlockInvalidInput
 	}
 	if request.BlockIdentifier.Hash == nil && request.BlockIdentifier.Index == nil {
-		return nil, ErrBlockInvalidInput
+		return nil, backend.ErrBlockInvalidInput
 	}
 
 	if b.isGenesisBlockRequest(request.BlockIdentifier) {
@@ -60,9 +61,9 @@ func (b *Backend) Block(
 	}
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
-			return nil, ErrBlockNotFound
+			return nil, backend.ErrBlockNotFound
 		}
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	blockIdentifier = &types.BlockIdentifier{
@@ -73,7 +74,7 @@ func (b *Backend) Block(
 	if block.ParentHash().String() != b.config.GenesisBlockHash {
 		parentBlock, err := b.client.HeaderByHash(ctx, block.ParentHash())
 		if err != nil {
-			return nil, WrapError(ErrClientError, err)
+			return nil, backend.WrapError(backend.ErrClientError, err)
 		}
 
 		parentBlockIdentifier = &types.BlockIdentifier{
@@ -111,22 +112,22 @@ func (b *Backend) BlockTransaction(
 	request *types.BlockTransactionRequest,
 ) (*types.BlockTransactionResponse, *types.Error) {
 	if b.config.IsOfflineMode() {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if request.BlockIdentifier == nil {
-		return nil, WrapError(ErrInvalidInput, "block identifier is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "block identifier is not provided")
 	}
 
 	header, err := b.client.HeaderByHash(ctx, ethcommon.HexToHash(request.BlockIdentifier.Hash))
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	hash := ethcommon.HexToHash(request.TransactionIdentifier.Hash)
 	tx, pending, err := b.client.TransactionByHash(ctx, hash)
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 	if pending {
 		return nil, nil
@@ -134,7 +135,7 @@ func (b *Backend) BlockTransaction(
 
 	trace, flattened, err := b.client.TraceTransaction(ctx, tx.Hash().String())
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	transaction, terr := b.fetchTransaction(ctx, tx, header, trace, flattened)
@@ -165,7 +166,7 @@ func (b *Backend) fetchTransactions(
 
 	trace, flattened, err := b.client.TraceBlockByHash(ctx, block.Hash().String())
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	for i, tx := range block.Transactions() {
@@ -189,17 +190,17 @@ func (b *Backend) fetchTransaction(
 ) (*types.Transaction, *types.Error) {
 	msg, err := tx.AsMessage(b.config.Signer(), header.BaseFee)
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	receipt, err := b.client.TransactionReceipt(ctx, tx.Hash())
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	transaction, err := cmapper.Transaction(header, tx, &msg, receipt, trace, flattened, b.client, b.config.IsAnalyticsMode(), b.config.TokenWhiteList, b.config.IndexUnknownTokens)
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return transaction, nil
@@ -217,7 +218,7 @@ func (b *Backend) parseCrossChainTransactions(
 	}
 	crossTxs, err := cmapper.CrossChainTransactions(networkIdentifier, chainIDToAliasMapping, b.config.AvaxAssetID, block, b.config.AP5Activation)
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	for _, tx := range crossTxs {

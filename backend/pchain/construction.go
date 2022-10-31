@@ -12,13 +12,13 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/backend/common"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	camapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (
@@ -38,7 +38,7 @@ func (b *Backend) ConstructionPreprocess(
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
 	matches, err := common.MatchOperations(req.Operations)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	reqMetadata := req.Metadata
@@ -59,7 +59,7 @@ func (b *Backend) ConstructionMetadata(
 ) (*types.ConstructionMetadataResponse, *types.Error) {
 	opMetadata, err := pmapper.ParseOpMetadata(req.Options)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	var suggestedFee *types.Amount
@@ -75,30 +75,30 @@ func (b *Backend) ConstructionMetadata(
 		metadata.Locktime = opMetadata.Locktime
 
 	default:
-		return nil, service.WrapError(
-			service.ErrInternalError,
+		return nil, backend.WrapError(
+			backend.ErrInternalError,
 			fmt.Errorf("invalid tx type for building metadata: %s", opMetadata.Type),
 		)
 	}
 	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	networkID, err := b.pClient.GetNetworkID(ctx)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 	metadata.NetworkID = networkID
 
 	pChainID, err := b.pClient.GetBlockchainID(ctx, constants.PChain.String())
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 	metadata.BlockchainID = pChainID
 
 	metadataMap, err := mapper.MarshalJSONMap(metadata)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return &types.ConstructionMetadataResponse{
@@ -201,7 +201,7 @@ func (b *Backend) ConstructionPayloads(ctx context.Context, req *types.Construct
 func (b *Backend) ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.Transaction)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	netID, _ := constants.FromString(rosettaTx.DestinationChain)
@@ -223,7 +223,7 @@ func (b *Backend) ConstructionParse(ctx context.Context, req *types.Construction
 func (b *Backend) ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.UnsignedTransaction)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return common.Combine(b, rosettaTx, req.Signatures)
@@ -233,29 +233,29 @@ func (b *Backend) ConstructionCombine(ctx context.Context, req *types.Constructi
 func (b *Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (common.AvaxTx, *types.Error) {
 	pTx, ok := tx.(*pTx)
 	if !ok {
-		return nil, service.WrapError(service.ErrInvalidInput, "invalid transaction")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "invalid transaction")
 	}
 
 	ins, err := getTxInputs(pTx.Tx.Unsigned)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	creds, err := common.BuildCredentialList(ins, signatures)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	unsignedBytes, err := pTx.Marshal()
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	pTx.Tx.Creds = creds
 
 	signedBytes, err := pTx.Marshal()
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	pTx.Tx.Initialize(unsignedBytes, signedBytes)
@@ -294,7 +294,7 @@ func (b *Backend) ConstructionHash(
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.SignedTransaction)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return common.HashTx(rosettaTx)
@@ -307,7 +307,7 @@ func (b *Backend) ConstructionSubmit(
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	rosettaTx, err := b.parsePayloadTxFromString(req.SignedTransaction)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return common.SubmitTx(ctx, b, rosettaTx)

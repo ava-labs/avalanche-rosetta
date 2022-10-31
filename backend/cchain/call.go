@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -20,14 +21,14 @@ func (b *Backend) Call(
 	req *types.CallRequest,
 ) (*types.CallResponse, *types.Error) {
 	if b.config.IsOfflineMode() {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	switch req.Method {
 	case "eth_getTransactionReceipt":
 		return b.callGetTransactionReceipt(ctx, req)
 	default:
-		return nil, ErrCallInvalidMethod
+		return nil, backend.ErrCallInvalidMethod
 	}
 }
 
@@ -37,26 +38,26 @@ func (b *Backend) callGetTransactionReceipt(
 ) (*types.CallResponse, *types.Error) {
 	var input GetTransactionReceiptInput
 	if err := types.UnmarshalMap(req.Parameters, &input); err != nil {
-		return nil, WrapError(ErrCallInvalidParams, err)
+		return nil, backend.WrapError(backend.ErrCallInvalidParams, err)
 	}
 
 	if len(input.TxHash) == 0 {
-		return nil, WrapError(ErrCallInvalidParams, "tx_hash missing from params")
+		return nil, backend.WrapError(backend.ErrCallInvalidParams, "tx_hash missing from params")
 	}
 
 	receipt, err := b.client.TransactionReceipt(ctx, common.HexToHash(input.TxHash))
 	if err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	jsonOutput, err := receipt.MarshalJSON()
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	var receiptMap map[string]interface{}
 	if err := json.Unmarshal(jsonOutput, &receiptMap); err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return &types.CallResponse{Result: receiptMap}, nil

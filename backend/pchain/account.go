@@ -9,12 +9,12 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/backend/common"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/math"
@@ -37,10 +37,10 @@ var (
 // AccountBalance implements /account/balance endpoint for P-chain
 func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
 	if req.AccountIdentifier == nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "account identifier is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "account identifier is not provided")
 	}
 	if req.BlockIdentifier != nil {
-		return nil, service.WrapError(service.ErrNotSupported, "historical balance lookups are not supported")
+		return nil, backend.WrapError(backend.ErrNotSupported, "historical balance lookups are not supported")
 	}
 
 	currencyAssetIDs, wrappedErr := b.buildCurrencyAssetIDs(ctx, req.Currencies)
@@ -74,12 +74,12 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 	case "": // Defaults to total balance
 		balanceValue = balance.Total
 	default:
-		return nil, service.WrapError(service.ErrInvalidInput, "unknown account type "+balanceType)
+		return nil, backend.WrapError(backend.ErrInvalidInput, "unknown account type "+balanceType)
 	}
 
 	block, err := b.indexerParser.ParseNonGenesisBlock(ctx, "", height)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "unable to get height")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "unable to get height")
 	}
 
 	return &types.AccountBalanceResponse{
@@ -99,11 +99,11 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 // AccountCoins implements /account/coins endpoint for P-chain
 func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error) {
 	if req.AccountIdentifier == nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "account identifier is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "account identifier is not provided")
 	}
 	addr, err := address.ParseToID(req.AccountIdentifier.Address)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "unable to convert address")
 	}
 
 	assetIDs, wrappedErr := b.buildCurrencyAssetIDs(ctx, req.Currencies)
@@ -132,7 +132,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 	for _, utxo := range utxos {
 		amounter, ok := utxo.Out.(avax.Amounter)
 		if !ok {
-			return nil, service.WrapError(service.ErrInternalError, errUnableToGetUTXOOut)
+			return nil, backend.WrapError(backend.ErrInternalError, errUnableToGetUTXOOut)
 		}
 		coin := &types.Coin{
 			CoinIdentifier: &types.CoinIdentifier{Identifier: utxo.UTXOID.String()},
@@ -146,7 +146,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 
 	block, err := b.indexerParser.ParseNonGenesisBlock(ctx, "", height)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "unable to get height")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "unable to get height")
 	}
 
 	// this is needed just for sorting. Uniqueness is guaranteed by utxos uniqueness
@@ -163,7 +163,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImportable bool, assetIds ids.Set) (uint64, *AccountBalance, *types.Error) {
 	addr, err := address.ParseToID(addrString)
 	if err != nil {
-		return 0, nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
+		return 0, nil, backend.WrapError(backend.ErrInvalidInput, "unable to convert address")
 	}
 
 	// utxos from fetchUTXOsAndStakedOutputs are guarateed to:
@@ -178,13 +178,13 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImpo
 
 	balance, err := b.getBalancesWithoutMultisig(utxos)
 	if err != nil {
-		return 0, nil, service.WrapError(service.ErrInternalError, err)
+		return 0, nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	// parse staked UTXO bytes to UTXO structs
 	stakedAmount, err := b.calculateStakedAmount(stakedUTXOBytes)
 	if err != nil {
-		return 0, nil, service.WrapError(service.ErrInternalError, err)
+		return 0, nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	balance.Staked = stakedAmount
@@ -195,7 +195,7 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImpo
 
 // Copy of the platformvm service's GetBalance implementation.
 // This is needed as multisig UTXOs are cleaned in parseUTXOs and its output must be used for the calculations. Ref:
-// https://github.com/ava-labs/avalanchego/blob/0950acab667e0c16a55e9a9bb72bcbe25c3b88cf/vms/platformvm/service.go#L184
+// https://github.com/ava-labs/avalanchego/blob/0950acab667e0c16a55e9a9bb72bcbe25c3b88cf/vms/platformvm/backend.go#L184
 func (b *Backend) getBalancesWithoutMultisig(utxos []avax.UTXO) (*AccountBalance, error) {
 	currentTime := uint64(time.Now().Unix())
 
@@ -273,10 +273,10 @@ func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, currencies []*types
 	for _, reqCurrency := range currencies {
 		description, err := b.pClient.GetAssetDescription(ctx, reqCurrency.Symbol)
 		if err != nil {
-			return nil, service.WrapError(service.ErrInternalError, "unable to get asset description")
+			return nil, backend.WrapError(backend.ErrInternalError, "unable to get asset description")
 		}
 		if int32(description.Denomination) != reqCurrency.Decimals {
-			return nil, service.WrapError(service.ErrInvalidInput, "incorrect currency decimals")
+			return nil, backend.WrapError(backend.ErrInvalidInput, "incorrect currency decimals")
 		}
 		assetIDs.Add(description.AssetID)
 	}
@@ -293,7 +293,7 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.Short
 	// fetch preHeight before the balance fetch
 	preHeight, err := b.pClient.GetHeight(ctx)
 	if err != nil {
-		return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get chain height pre-lookup")
+		return 0, nil, nil, backend.WrapError(backend.ErrInvalidInput, "unable to get chain height pre-lookup")
 	}
 
 	sourceChains := []constants.ChainIDAlias{constants.AnyChain}
@@ -310,13 +310,13 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.Short
 		// fetch all UTXOs for addr
 		chainUtxoBytes, err := b.getAccountUTXOs(ctx, addr, sc)
 		if err != nil {
-			return 0, nil, nil, service.WrapError(service.ErrInternalError, err)
+			return 0, nil, nil, backend.WrapError(backend.ErrInternalError, err)
 		}
 		utxoBytes = append(utxoBytes, chainUtxoBytes...)
 	}
 
 	if err != nil {
-		return 0, nil, nil, service.WrapError(service.ErrInternalError, err)
+		return 0, nil, nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	var stakedUTXOBytes [][]byte
@@ -324,23 +324,23 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.Short
 		// fetch staked outputs for addr
 		_, stakedUTXOBytes, err = b.pClient.GetStake(ctx, []ids.ShortID{addr})
 		if err != nil {
-			return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get stake")
+			return 0, nil, nil, backend.WrapError(backend.ErrInvalidInput, "unable to get stake")
 		}
 	}
 
 	// fetch postHeight after the balance fetch and compare with preHeight
 	postHeight, err := b.pClient.GetHeight(ctx)
 	if err != nil {
-		return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get chain height post-lookup")
+		return 0, nil, nil, backend.WrapError(backend.ErrInvalidInput, "unable to get chain height post-lookup")
 	}
 	if postHeight != preHeight {
-		return 0, nil, nil, service.WrapError(service.ErrInternalError, "new block added while fetching utxos")
+		return 0, nil, nil, backend.WrapError(backend.ErrInternalError, "new block added while fetching utxos")
 	}
 
 	// parse UTXO bytes to UTXO structs
 	utxos, err := b.parseAndFilterUTXOs(utxoBytes, assetIds)
 	if err != nil {
-		return 0, nil, nil, service.WrapError(service.ErrInternalError, err)
+		return 0, nil, nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return postHeight, utxos, stakedUTXOBytes, nil

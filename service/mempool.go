@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/coinbase/rosetta-sdk-go/server"
@@ -29,7 +30,7 @@ func (s MempoolService) Mempool(
 	req *types.NetworkRequest,
 ) (*types.MempoolResponse, *types.Error) {
 	if s.mode == constants.ModeOffline {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	// TODO ABENEGIA: use ShouldHandleRequest for p, c and x chains

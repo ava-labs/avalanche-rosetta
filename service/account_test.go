@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cltmocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
@@ -146,7 +147,7 @@ func TestAccountCoins(t *testing.T) {
 
 		resp, err := service.AccountCoins(context.Background(), req)
 
-		assert.Equal(t, ErrNotImplemented, err)
+		assert.Equal(t, backend.ErrNotImplemented, err)
 		assert.Nil(t, resp)
 		atomicBackendMock.AssertExpectations(t)
 	})

@@ -9,11 +9,11 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/backend/common"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (
@@ -82,18 +82,18 @@ func (p pTxBuilder) BuildTx(operations []*types.Operation, metadataMap map[strin
 	var metadata pmapper.Metadata
 	err := mapper.UnmarshalJSONMap(metadataMap, &metadata)
 	if err != nil {
-		return nil, nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	matches, err := common.MatchOperations(operations)
 	if err != nil {
-		return nil, nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	opType := matches[0].Operations[0].Type
 	tx, signers, err := pmapper.BuildTx(opType, matches, metadata, p.codec, p.avaxAssetID)
 	if err != nil {
-		return nil, nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return &pTx{

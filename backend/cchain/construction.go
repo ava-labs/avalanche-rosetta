@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchain"
@@ -37,12 +38,12 @@ func (b *Backend) ConstructionDerive(
 	req *types.ConstructionDeriveRequest,
 ) (*types.ConstructionDeriveResponse, *types.Error) {
 	if req.PublicKey == nil {
-		return nil, WrapError(ErrInvalidInput, "public key is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "public key is not provided")
 	}
 
 	key, err := ethcrypto.DecompressPubkey(req.PublicKey.Bytes)
 	if err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return &types.ConstructionDeriveResponse{
@@ -62,7 +63,7 @@ func (b *Backend) ConstructionPreprocess(
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
 	operationDescriptions, err := b.CreateOperationDescription(req.Operations)
 	if err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	descriptions := &parser.Descriptions{
@@ -72,7 +73,7 @@ func (b *Backend) ConstructionPreprocess(
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
 	if err != nil {
-		return nil, WrapError(ErrInvalidInput, "unclear intent")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "unclear intent")
 	}
 
 	fromOp, _ := matches[0].First()
@@ -84,11 +85,11 @@ func (b *Backend) ConstructionPreprocess(
 
 	checkFrom, ok := checksumAddress(fromAddress)
 	if !ok {
-		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
+		return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
 	}
 	checkTo, ok := checksumAddress(toAddress)
 	if !ok {
-		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
+		return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
 	}
 
 	preprocessOptions := &options{
@@ -102,40 +103,40 @@ func (b *Backend) ConstructionPreprocess(
 	if v, ok := req.Metadata["gas_price"]; ok {
 		stringObj, ok := v.(string)
 		if !ok {
-			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid gas price string", v))
+			return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid gas price string", v))
 		}
 		bigObj, ok := new(big.Int).SetString(stringObj, 10)
 		if !ok {
-			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid gas price", v))
+			return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid gas price", v))
 		}
 		preprocessOptions.GasPrice = bigObj
 	}
 	if v, ok := req.Metadata["gas_limit"]; ok {
 		stringObj, ok := v.(string)
 		if !ok {
-			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid gas limit string", v))
+			return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid gas limit string", v))
 		}
 		bigObj, ok := new(big.Int).SetString(stringObj, 10)
 		if !ok {
-			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid gas limit", v))
+			return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid gas limit", v))
 		}
 		preprocessOptions.GasLimit = bigObj
 	}
 	if v, ok := req.Metadata["nonce"]; ok {
 		stringObj, ok := v.(string)
 		if !ok {
-			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid nonce string", v))
+			return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid nonce string", v))
 		}
 		bigObj, ok := new(big.Int).SetString(stringObj, 10)
 		if !ok {
-			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid nonce", v))
+			return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid nonce", v))
 		}
 		preprocessOptions.Nonce = bigObj
 	}
 
 	marshaled, err := mapper.MarshalJSONMap(preprocessOptions)
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return &types.ConstructionPreprocessResponse{
@@ -154,16 +155,16 @@ func (b *Backend) ConstructionMetadata(
 	req *types.ConstructionMetadataRequest,
 ) (*types.ConstructionMetadataResponse, *types.Error) {
 	if b.config.IsOfflineMode() {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	var input options
 	if err := mapper.UnmarshalJSONMap(req.Options, &input); err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	if len(input.From) == 0 {
-		return nil, WrapError(ErrInvalidInput, "from address is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "from address is not provided")
 	}
 
 	var nonce uint64
@@ -171,7 +172,7 @@ func (b *Backend) ConstructionMetadata(
 	if input.Nonce == nil {
 		nonce, err = b.client.NonceAt(ctx, ethcommon.HexToAddress(input.From), nil)
 		if err != nil {
-			return nil, WrapError(ErrClientError, err)
+			return nil, backend.WrapError(backend.ErrClientError, err)
 		}
 	} else {
 		nonce = input.Nonce.Uint64()
@@ -180,7 +181,7 @@ func (b *Backend) ConstructionMetadata(
 	var gasPrice *big.Int
 	if input.GasPrice == nil {
 		if gasPrice, err = b.client.SuggestGasPrice(ctx); err != nil {
-			return nil, WrapError(ErrClientError, err)
+			return nil, backend.WrapError(backend.ErrClientError, err)
 		}
 
 		if input.SuggestedFeeMultiplier != nil {
@@ -203,7 +204,7 @@ func (b *Backend) ConstructionMetadata(
 		}
 
 		if err != nil {
-			return nil, WrapError(ErrClientError, err)
+			return nil, backend.WrapError(backend.ErrClientError, err)
 		}
 	} else {
 		gasLimit = input.GasLimit.Uint64()
@@ -217,7 +218,7 @@ func (b *Backend) ConstructionMetadata(
 
 	metadataMap, err := mapper.MarshalJSONMap(metadata)
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	suggestedFee := gasPrice.Int64() * int64(gasLimit)
@@ -246,7 +247,7 @@ func (b *Backend) ConstructionPayloads(
 ) (*types.ConstructionPayloadsResponse, *types.Error) {
 	operationDescriptions, err := b.CreateOperationDescription(req.Operations)
 	if err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	descriptions := &parser.Descriptions{
@@ -256,12 +257,12 @@ func (b *Backend) ConstructionPayloads(
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
 	if err != nil {
-		return nil, WrapError(ErrInvalidInput, "unclear intent")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "unclear intent")
 	}
 
 	var metadata metadata
 	if err := mapper.UnmarshalJSONMap(req.Metadata, &metadata); err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	toOp, amount := matches[1].First()
@@ -277,12 +278,12 @@ func (b *Backend) ConstructionPayloads(
 
 	checkFrom, ok := checksumAddress(fromAddress)
 	if !ok {
-		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
+		return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
 	}
 
 	checkTo, ok := checksumAddress(toAddress)
 	if !ok {
-		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
+		return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
 	}
 	var transferData []byte
 	var sendToAddress ethcommon.Address
@@ -292,7 +293,7 @@ func (b *Backend) ConstructionPayloads(
 	} else {
 		contract, ok := fromCurrency.Metadata[cmapper.ContractAddressMetadata].(string)
 		if !ok {
-			return nil, WrapError(ErrInvalidInput,
+			return nil, backend.WrapError(backend.ErrInvalidInput,
 				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
 		}
 
@@ -330,7 +331,7 @@ func (b *Backend) ConstructionPayloads(
 
 	unsignedTxJSON, err := json.Marshal(unsignedTx)
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return &types.ConstructionPayloadsResponse{
@@ -352,17 +353,17 @@ func (b *Backend) ConstructionParse(
 
 	if !req.Signed {
 		if err := json.Unmarshal([]byte(req.Transaction), &tx); err != nil {
-			return nil, WrapError(ErrInvalidInput, err)
+			return nil, backend.WrapError(backend.ErrInvalidInput, err)
 		}
 	} else {
 		var wrappedTx signedTransactionWrapper
 		if err := json.Unmarshal([]byte(req.Transaction), &wrappedTx); err != nil {
-			return nil, WrapError(ErrInvalidInput, err)
+			return nil, backend.WrapError(backend.ErrInvalidInput, err)
 		}
 
 		var t ethtypes.Transaction
 		if err := t.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
-			return nil, WrapError(ErrInvalidInput, err)
+			return nil, backend.WrapError(backend.ErrInvalidInput, err)
 		}
 
 		tx.To = t.To().String()
@@ -376,7 +377,7 @@ func (b *Backend) ConstructionParse(
 
 		msg, err := t.AsMessage(b.config.Signer(), nil)
 		if err != nil {
-			return nil, WrapError(ErrInvalidInput, err)
+			return nil, backend.WrapError(backend.ErrInvalidInput, err)
 		}
 		tx.From = msg.From().Hex()
 	}
@@ -388,7 +389,7 @@ func (b *Backend) ConstructionParse(
 	if len(tx.Data) != 0 {
 		toAddress, amountSent, err := parseErc20TransferData(tx.Data)
 		if err != nil {
-			return nil, WrapError(ErrInvalidInput, err)
+			return nil, backend.WrapError(backend.ErrInvalidInput, err)
 		}
 
 		value = amountSent
@@ -403,13 +404,13 @@ func (b *Backend) ConstructionParse(
 	// Ensure valid from address
 	checkFrom, ok := checksumAddress(tx.From)
 	if !ok {
-		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", tx.From))
+		return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid address", tx.From))
 	}
 
 	// Ensure valid to address
 	checkTo, ok := checksumAddress(toAddressHex)
 	if !ok {
-		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
+		return nil, backend.WrapError(backend.ErrInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
 	}
 
 	ops := []*types.Operation{
@@ -454,7 +455,7 @@ func (b *Backend) ConstructionParse(
 	}
 	metaMap, err := mapper.MarshalJSONMap(metadata)
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	if req.Signed {
@@ -486,15 +487,15 @@ func (b *Backend) ConstructionCombine(
 	req *types.ConstructionCombineRequest,
 ) (*types.ConstructionCombineResponse, *types.Error) {
 	if len(req.UnsignedTransaction) == 0 {
-		return nil, WrapError(ErrInvalidInput, "transaction data is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "transaction data is not provided")
 	}
 	if len(req.Signatures) == 0 {
-		return nil, WrapError(ErrInvalidInput, "signature is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "signature is not provided")
 	}
 
 	var unsignedTx transaction
 	if err := json.Unmarshal([]byte(req.UnsignedTransaction), &unsignedTx); err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	ethTransaction := ethtypes.NewTransaction(
@@ -509,19 +510,19 @@ func (b *Backend) ConstructionCombine(
 	signer := ethtypes.LatestSignerForChainID(unsignedTx.ChainID)
 	signedTx, err := ethTransaction.WithSignature(signer, req.Signatures[0].Bytes)
 	if err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	signedTxJSON, err := signedTx.MarshalJSON()
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	wrappedSignedTx := signedTransactionWrapper{SignedTransaction: signedTxJSON, Currency: unsignedTx.Currency}
 
 	wrappedSignedTxJSON, err := json.Marshal(wrappedSignedTx)
 	if err != nil {
-		return nil, WrapError(ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return &types.ConstructionCombineResponse{
@@ -537,17 +538,17 @@ func (b *Backend) ConstructionHash(
 	req *types.ConstructionHashRequest,
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	if len(req.SignedTransaction) == 0 {
-		return nil, WrapError(ErrInvalidInput, "signed transaction value is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "signed transaction value is not provided")
 	}
 
 	var wrappedTx signedTransactionWrapper
 	if err := json.Unmarshal([]byte(req.SignedTransaction), &wrappedTx); err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	var signedTx ethtypes.Transaction
 	if err := signedTx.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return &types.TransactionIdentifierResponse{
@@ -565,25 +566,25 @@ func (b *Backend) ConstructionSubmit(
 	req *types.ConstructionSubmitRequest,
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	if b.config.IsOfflineMode() {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if len(req.SignedTransaction) == 0 {
-		return nil, WrapError(ErrInvalidInput, "signed transaction value is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "signed transaction value is not provided")
 	}
 
 	var wrappedTx signedTransactionWrapper
 	if err := json.Unmarshal([]byte(req.SignedTransaction), &wrappedTx); err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	var signedTx ethtypes.Transaction
 	if err := signedTx.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
-		return nil, WrapError(ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	if err := b.client.SendTransaction(ctx, &signedTx); err != nil {
-		return nil, WrapError(ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	return &types.TransactionIdentifierResponse{

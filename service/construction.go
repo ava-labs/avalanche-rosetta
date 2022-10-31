@@ -6,6 +6,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	cBackend "github.com/ava-labs/avalanche-rosetta/backend/cchain"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 )
@@ -71,7 +72,7 @@ func (s ConstructionService) ConstructionMetadata(
 	req *types.ConstructionMetadataRequest,
 ) (*types.ConstructionMetadataResponse, *types.Error) {
 	if s.mode == constants.ModeOffline {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(req) {
@@ -95,7 +96,7 @@ func (s ConstructionService) ConstructionHash(
 	req *types.ConstructionHashRequest,
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	if len(req.SignedTransaction) == 0 {
-		return nil, WrapError(ErrInvalidInput, "signed transaction value is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "signed transaction value is not provided")
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(req) {
@@ -121,10 +122,10 @@ func (s ConstructionService) ConstructionCombine(
 	req *types.ConstructionCombineRequest,
 ) (*types.ConstructionCombineResponse, *types.Error) {
 	if len(req.UnsignedTransaction) == 0 {
-		return nil, WrapError(ErrInvalidInput, "transaction data is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "transaction data is not provided")
 	}
 	if len(req.Signatures) == 0 {
-		return nil, WrapError(ErrInvalidInput, "signature is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "signature is not provided")
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(req) {
@@ -149,7 +150,7 @@ func (s ConstructionService) ConstructionDerive(
 	req *types.ConstructionDeriveRequest,
 ) (*types.ConstructionDeriveResponse, *types.Error) {
 	if req.PublicKey == nil {
-		return nil, WrapError(ErrInvalidInput, "public key is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "public key is not provided")
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(req) {
@@ -243,11 +244,11 @@ func (s ConstructionService) ConstructionSubmit(
 	req *types.ConstructionSubmitRequest,
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	if s.mode == constants.ModeOffline {
-		return nil, ErrUnavailableOffline
+		return nil, backend.ErrUnavailableOffline
 	}
 
 	if len(req.SignedTransaction) == 0 {
-		return nil, WrapError(ErrInvalidInput, "signed transaction value is not provided")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "signed transaction value is not provided")
 	}
 
 	if s.pChainBackend.ShouldHandleRequest(req) {

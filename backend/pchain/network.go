@@ -5,11 +5,11 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 // NetworkIdentifier returns P-chain network identifier
@@ -23,14 +23,14 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 	// Fetch peers
 	infoPeers, err := b.pClient.Peers(ctx)
 	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 	peers := mapper.Peers(infoPeers)
 
 	// Check if network is bootstrapped
 	ready, err := b.pClient.IsBootstrapped(ctx, constants.PChain.String())
 	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	if !ready {
@@ -47,7 +47,7 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 	// Current block height
 	currentBlock, err := b.indexerParser.ParseCurrentBlock(ctx)
 	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	return &types.NetworkStatusResponse{
@@ -74,7 +74,7 @@ func (b *Backend) NetworkOptions(ctx context.Context, request *types.NetworkRequ
 			OperationStatuses:       constants.OperationStatuses,
 			OperationTypes:          pconstants.TxTypes(),
 			CallMethods:             pmapper.CallMethods,
-			Errors:                  service.Errors,
+			Errors:                  backend.Errors,
 			HistoricalBalanceLookup: false,
 		},
 	}, nil

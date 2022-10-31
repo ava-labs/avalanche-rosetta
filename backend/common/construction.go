@@ -14,11 +14,11 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (
@@ -33,17 +33,17 @@ var (
 func DeriveBech32Address(fac *crypto.FactorySECP256K1R, chainIDAlias constants.ChainIDAlias, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	pub, err := fac.ToPublicKey(req.PublicKey.Bytes)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	hrp, getErr := mapper.GetHRP(req.NetworkIdentifier)
 	if getErr != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	addr, err := address.Format(chainIDAlias.String(), hrp, pub.Address().Bytes())
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	return &types.ConstructionDeriveResponse{
@@ -162,7 +162,7 @@ func BuildPayloads(
 	var metadata pmapper.Metadata
 	err := mapper.UnmarshalJSONMap(req.Metadata, &metadata)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	if metadata.ExportMetadata != nil {
@@ -172,7 +172,7 @@ func BuildPayloads(
 
 	txJSON, err := json.Marshal(rosettaTx)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, err)
+		return nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return &types.ConstructionPayloadsResponse{
@@ -193,7 +193,7 @@ func Parse(parser TxParser, payloadsTx *RosettaTx, isSigned bool) (*types.Constr
 	inputAddresses := getInputAddresses(payloadsTx)
 	operations, err := parser.ParseTx(payloadsTx, inputAddresses)
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "incorrect transaction input")
+		return nil, backend.WrapError(backend.ErrInvalidInput, "incorrect transaction input")
 	}
 
 	// Generate AccountIdentifierSigners if request is signed
@@ -201,7 +201,7 @@ func Parse(parser TxParser, payloadsTx *RosettaTx, isSigned bool) (*types.Constr
 	if isSigned {
 		payloadSigners, err := payloadsTx.GetAccountIdentifiers(operations)
 		if err != nil {
-			return nil, service.WrapError(service.ErrInvalidInput, err)
+			return nil, backend.WrapError(backend.ErrInvalidInput, err)
 		}
 
 		signers = payloadSigners
@@ -247,7 +247,7 @@ func Combine(
 		DestinationChainID:       rosettaTx.DestinationChainID,
 	})
 	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, "unable to encode signed transaction")
+		return nil, backend.WrapError(backend.ErrInternalError, "unable to encode signed transaction")
 	}
 
 	return &types.ConstructionCombineResponse{
@@ -341,12 +341,12 @@ func SubmitTx(
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	bytes, err := rosettaTx.Tx.Marshal()
 	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	txID, err := issuer.IssueTx(ctx, bytes)
 	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
+		return nil, backend.WrapError(backend.ErrClientError, err)
 	}
 
 	return &types.TransactionIdentifierResponse{

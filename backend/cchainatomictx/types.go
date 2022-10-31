@@ -9,10 +9,10 @@ import (
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend"
 	"github.com/ava-labs/avalanche-rosetta/backend/common"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (
@@ -75,18 +75,18 @@ func (c cAtomicTxBuilder) BuildTx(operations []*types.Operation, metadata map[st
 	cMetadata := cmapper.Metadata{}
 	err := mapper.UnmarshalJSONMap(metadata, &cMetadata)
 	if err != nil {
-		return nil, nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	matches, err := common.MatchOperations(operations)
 	if err != nil {
-		return nil, nil, service.WrapError(service.ErrInvalidInput, err)
+		return nil, nil, backend.WrapError(backend.ErrInvalidInput, err)
 	}
 
 	opType := matches[0].Operations[0].Type
 	tx, signers, err := cmapper.BuildTx(opType, matches, cMetadata, c.codec, c.avaxAssetID)
 	if err != nil {
-		return nil, nil, service.WrapError(service.ErrInternalError, err)
+		return nil, nil, backend.WrapError(backend.ErrInternalError, err)
 	}
 
 	return &cAtomicTx{
