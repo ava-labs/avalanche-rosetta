@@ -15,7 +15,6 @@ var (
 	errGenesisBlockRequired    = errors.New("genesis block hash is not provided")
 	errInvalidTokenAddress     = errors.New("invalid token address provided")
 	errInvalidErc20Address     = errors.New("not all token addresses provided are valid erc20s")
-	errInvalidIngestionMode    = errors.New("invalid rosetta ingestion mode")
 	errInvalidUnknownTokenMode = errors.New("cannot index unknown tokens while in standard ingestion mode")
 )
 
