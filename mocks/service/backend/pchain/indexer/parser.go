@@ -5,7 +5,7 @@ package chain
 import (
 	context "context"
 
-	indexer "github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
+	indexer "github.com/ava-labs/avalanche-rosetta/backend/pchain/indexer"
 	mock "github.com/stretchr/testify/mock"
 )
 

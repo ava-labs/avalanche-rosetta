@@ -3,7 +3,7 @@
 package chain
 
 import (
-	common "github.com/ava-labs/avalanche-rosetta/service/backend/common"
+	common "github.com/ava-labs/avalanche-rosetta/backend/common"
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/coinbase/rosetta-sdk-go/types"

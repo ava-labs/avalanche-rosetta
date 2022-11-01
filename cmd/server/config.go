@@ -8,15 +8,13 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 var (
-	errInvalidMode             = errors.New("invalid rosetta mode")
 	errGenesisBlockRequired    = errors.New("genesis block hash is not provided")
 	errInvalidTokenAddress     = errors.New("invalid token address provided")
 	errInvalidErc20Address     = errors.New("not all token addresses provided are valid erc20s")
-	errInvalidIngestionMode    = errors.New("invalid rosetta ingestion mode")
 	errInvalidUnknownTokenMode = errors.New("cannot index unknown tokens while in standard ingestion mode")
 )
 
@@ -26,7 +24,7 @@ type config struct {
 	IndexerBaseURL   string `json:"indexer_base_url"`
 	ListenAddr       string `json:"listen_addr"`
 	NetworkName      string `json:"network_name"`
-	ChainID          int64  `json:"chain_id"`
+	CChainID         int64  `json:"chain_id"`
 	LogRequests      bool   `json:"log_requests"`
 	GenesisBlockHash string `json:"genesis_block_hash"`
 
@@ -51,11 +49,11 @@ func readConfig(path string) (*config, error) {
 
 func (c *config) applyDefaults() {
 	if c.Mode == "" {
-		c.Mode = service.ModeOnline
+		c.Mode = constants.Online.String()
 	}
 
 	if c.IngestionMode == "" {
-		c.IngestionMode = service.StandardIngestion
+		c.IngestionMode = constants.StandardIngestion.String()
 	}
 
 	if c.RPCBaseURL == "" {
@@ -72,8 +70,8 @@ func (c *config) applyDefaults() {
 }
 
 func (c *config) validate() error {
-	if !(c.Mode == service.ModeOffline || c.Mode == service.ModeOnline) {
-		return errInvalidMode
+	if _, err := constants.GetNodeMode(c.Mode); err != nil {
+		return err
 	}
 
 	if c.GenesisBlockHash == "" {
@@ -88,11 +86,11 @@ func (c *config) validate() error {
 		}
 	}
 
-	if !(c.IngestionMode == service.AnalyticsIngestion || c.IngestionMode == service.StandardIngestion) {
-		return errInvalidIngestionMode
+	if _, err := constants.GetNodeIngestion(c.Mode); err != nil {
+		return err
 	}
 
-	if c.IngestionMode == service.StandardIngestion && c.IndexUnknownTokens {
+	if c.IngestionMode == constants.StandardIngestion.String() && c.IndexUnknownTokens {
 		return errInvalidUnknownTokenMode
 	}
 	return nil

@@ -15,19 +15,20 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/backend/cchain"
+	"github.com/ava-labs/avalanche-rosetta/backend/cchainatomictx"
+	"github.com/ava-labs/avalanche-rosetta/backend/pchain"
+	"github.com/ava-labs/avalanche-rosetta/backend/pchain/indexer"
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/cchainatomictx"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
 
 var (
 	cmdName    = "avalanche-rosetta"
-	cmdVersion = service.MiddlewareVersion
+	cmdVersion = constants.MiddlewareVersion
 )
 
 var opts struct {
@@ -73,7 +74,7 @@ func main() {
 	// bootstrapping, it will fail.
 	//
 	// TODO: Only perform this check after the underlying node is bootstrapped
-	if cfg.Mode == service.ModeOnline && cfg.ValidateERC20Whitelist {
+	if cfg.Mode == constants.Online.String() && cfg.ValidateERC20Whitelist {
 		if err := cfg.validateWhitelistOnlyValidErc20s(cChainClient); err != nil {
 			log.Fatal("token whitelist validation error:", err)
 		}
@@ -81,10 +82,10 @@ func main() {
 
 	log.Println("starting server in", cfg.Mode, "mode")
 
-	if cfg.ChainID == 0 {
+	if cfg.CChainID == 0 {
 		log.Println("chain id is not provided, fetching from rpc...")
 
-		if cfg.Mode == service.ModeOffline {
+		if cfg.Mode == constants.Offline.String() {
 			log.Fatal("cant fetch chain id in offline mode")
 		}
 
@@ -92,12 +93,12 @@ func main() {
 		if err != nil {
 			log.Fatal("cant fetch chain id from rpc:", err)
 		}
-		cfg.ChainID = chainID.Int64()
+		cfg.CChainID = chainID.Int64()
 	}
 
 	var assetID string
 	var AP5Activation uint64
-	switch cfg.ChainID {
+	switch cfg.CChainID {
 	case constants.MainnetCChainID:
 		assetID = constants.MainnetCAssetID
 		AP5Activation = constants.MainnetAP5Activation.Uint64()
@@ -105,7 +106,7 @@ func main() {
 		assetID = constants.FujiCAssetID
 		AP5Activation = constants.FujiAP5Activation.Uint64()
 	default:
-		log.Fatal("invalid ChainID:", cfg.ChainID)
+		log.Fatal("invalid ChainID:", cfg.CChainID)
 	}
 
 	if err := validateNetworkName(cfg, cChainClient); err != nil {
@@ -113,14 +114,14 @@ func main() {
 	}
 
 	networkP := &types.NetworkIdentifier{
-		Blockchain: service.BlockchainName,
+		Blockchain: constants.BlockchainName,
 		Network:    cfg.NetworkName,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
 			Network: constants.PChain.String(),
 		},
 	}
 	networkC := &types.NetworkIdentifier{
-		Blockchain: service.BlockchainName,
+		Blockchain: constants.BlockchainName,
 		Network:    cfg.NetworkName,
 	}
 
@@ -129,29 +130,35 @@ func main() {
 		log.Fatal("parse asset id failed:", err)
 	}
 
-	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCBaseURL, cfg.IndexerBaseURL)
-	pIndexerParser, err := indexer.NewParser(pChainClient)
-	if err != nil {
-		log.Fatal("unable to initialize p-chain indexer parser:", err)
-	}
-	pChainBackend, err := pchain.NewBackend(cfg.Mode, pChainClient, pIndexerParser, avaxAssetID, networkP)
-	if err != nil {
-		log.Fatal("unable to initialize p-chain backend:", err)
-	}
-
-	cChainAtomicTxBackend := cchainatomictx.NewBackend(cChainClient, avaxAssetID)
-
-	serviceConfig := &service.Config{
-		Mode:               cfg.Mode,
-		ChainID:            big.NewInt(cfg.ChainID),
+	// Create C-chain backend
+	nodeMode, _ := constants.GetNodeMode(cfg.Mode)
+	ingestionMode, _ := constants.GetNodeIngestion(cfg.Mode)
+	cChainConfig := &cchain.Config{
+		Mode:               nodeMode,
+		ChainID:            big.NewInt(cfg.CChainID),
 		NetworkID:          networkC,
 		GenesisBlockHash:   cfg.GenesisBlockHash,
 		AvaxAssetID:        assetID,
 		AP5Activation:      AP5Activation,
 		IndexUnknownTokens: cfg.IndexUnknownTokens,
-		IngestionMode:      cfg.IngestionMode,
+		IngestionMode:      ingestionMode,
 		TokenWhiteList:     cfg.TokenWhiteList,
 	}
+	cChainBackend := cchain.NewBackend(cChainConfig, cChainClient)
+
+	// Create P-Chain backend
+	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCBaseURL, cfg.IndexerBaseURL)
+	pIndexerParser, err := indexer.NewParser(pChainClient)
+	if err != nil {
+		log.Fatal("unable to initialize p-chain indexer parser:", err)
+	}
+	pChainBackend, err := pchain.NewBackend(nodeMode, pChainClient, pIndexerParser, avaxAssetID, networkP)
+	if err != nil {
+		log.Fatal("unable to initialize p-chain backend:", err)
+	}
+
+	// Create P->X-AtomicChain backend
+	cChainAtomicTxBackend := cchainatomictx.NewBackend(cChainClient, avaxAssetID)
 
 	var operationTypes []string
 	operationTypes = append(operationTypes, cconstants.CChainOps()...)
@@ -171,7 +178,13 @@ func main() {
 		log.Fatal("server asserter init error:", err)
 	}
 
-	handler := configureRouter(serviceConfig, asserter, cChainClient, pChainBackend, cChainAtomicTxBackend)
+	handler := configureRouter(
+		nodeMode,
+		asserter,
+		cChainBackend,
+		pChainBackend,
+		cChainAtomicTxBackend,
+	)
 	if cfg.LogRequests {
 		handler = inspectMiddleware(handler)
 	}
@@ -181,8 +194,8 @@ func main() {
 
 	log.Printf(
 		`using avax (chain=%q chainid="%d" network=%q) rpc endpoint: %v`,
-		service.BlockchainName,
-		cfg.ChainID,
+		constants.BlockchainName,
+		cfg.CChainID,
 		cfg.NetworkName,
 		cfg.RPCBaseURL,
 	)
@@ -192,7 +205,7 @@ func main() {
 }
 
 func validateNetworkName(cfg *config, cChainClient client.Client) error {
-	if cfg.Mode == service.ModeOffline {
+	if cfg.Mode == constants.Offline.String() {
 		if cfg.NetworkName == "" {
 			return fmt.Errorf("network name is not provided, can't fetch network name in offline mode")
 		}
@@ -222,18 +235,18 @@ func validateNetworkName(cfg *config, cChainClient client.Client) error {
 }
 
 func configureRouter(
-	serviceConfig *service.Config,
+	mode constants.NodeMode,
 	asserter *asserter.Asserter,
-	apiClient client.Client,
+	cChainBackend *cchain.Backend,
 	pChainBackend *pchain.Backend,
 	cChainAtomicTxBackend *cchainatomictx.Backend,
 ) http.Handler {
-	networkService := service.NewNetworkService(serviceConfig, apiClient, pChainBackend)
-	blockService := service.NewBlockService(serviceConfig, apiClient, pChainBackend)
-	accountService := service.NewAccountService(serviceConfig, apiClient, pChainBackend, cChainAtomicTxBackend)
-	mempoolService := service.NewMempoolService(serviceConfig, apiClient)
-	constructionService := service.NewConstructionService(serviceConfig, apiClient, pChainBackend, cChainAtomicTxBackend)
-	callService := service.NewCallService(serviceConfig, apiClient)
+	networkService := service.NewNetworkService(mode, cChainBackend, pChainBackend)
+	blockService := service.NewBlockService(mode, cChainBackend, pChainBackend)
+	accountService := service.NewAccountService(mode, cChainBackend, pChainBackend, cChainAtomicTxBackend)
+	mempoolService := service.NewMempoolService(mode, cChainBackend)
+	constructionService := service.NewConstructionService(mode, cChainBackend, pChainBackend, cChainAtomicTxBackend)
+	callService := service.NewCallService(cChainBackend)
 
 	return server.NewRouter(
 		server.NewNetworkAPIController(networkService, asserter),

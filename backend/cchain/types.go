@@ -1,8 +1,9 @@
-package service
+package cchain
 
 import (
 	"encoding/json"
 	"math/big"
+	"strconv"
 
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -148,6 +149,139 @@ func (m *metadata) UnmarshalJSON(data []byte) error {
 	m.Nonce = nonce
 
 	return nil
+}
+
+type parseMetadata struct {
+	Nonce    uint64   `json:"nonce"`
+	GasPrice *big.Int `json:"gas_price"`
+	GasLimit uint64   `json:"gas_limit"`
+	ChainID  *big.Int `json:"chain_id"`
+}
+
+type transaction struct {
+	From     string          `json:"from"`
+	To       string          `json:"to"`
+	Value    *big.Int        `json:"value"`
+	Data     []byte          `json:"data"`
+	Nonce    uint64          `json:"nonce"`
+	GasPrice *big.Int        `json:"gas_price"`
+	GasLimit uint64          `json:"gas"`
+	ChainID  *big.Int        `json:"chain_id"`
+	Currency *types.Currency `json:"currency,omitempty"`
+}
+
+type transactionWire struct {
+	From     string          `json:"from"`
+	To       string          `json:"to"`
+	Value    string          `json:"value"`
+	Data     string          `json:"data"`
+	Nonce    string          `json:"nonce"`
+	GasPrice string          `json:"gas_price"`
+	GasLimit string          `json:"gas"`
+	ChainID  string          `json:"chain_id"`
+	Currency *types.Currency `json:"currency,omitempty"`
+}
+
+func (t *transaction) MarshalJSON() ([]byte, error) {
+	tw := &transactionWire{
+		From:     t.From,
+		To:       t.To,
+		Value:    hexutil.EncodeBig(t.Value),
+		Data:     hexutil.Encode(t.Data),
+		Nonce:    hexutil.EncodeUint64(t.Nonce),
+		GasPrice: hexutil.EncodeBig(t.GasPrice),
+		GasLimit: hexutil.EncodeUint64(t.GasLimit),
+		ChainID:  hexutil.EncodeBig(t.ChainID),
+		Currency: t.Currency,
+	}
+
+	return json.Marshal(tw)
+}
+
+func (t *transaction) UnmarshalJSON(data []byte) error {
+	var tw transactionWire
+	if err := json.Unmarshal(data, &tw); err != nil {
+		return err
+	}
+
+	value, err := hexutil.DecodeBig(tw.Value)
+	if err != nil {
+		return err
+	}
+
+	twData, err := hexutil.Decode(tw.Data)
+	if err != nil {
+		return err
+	}
+
+	nonce, err := hexutil.DecodeUint64(tw.Nonce)
+	if err != nil {
+		return err
+	}
+
+	gasPrice, err := hexutil.DecodeBig(tw.GasPrice)
+	if err != nil {
+		return err
+	}
+
+	gasLimit, err := hexutil.DecodeUint64(tw.GasLimit)
+	if err != nil {
+		return err
+	}
+
+	chainID, err := hexutil.DecodeBig(tw.ChainID)
+	if err != nil {
+		return err
+	}
+
+	t.From = tw.From
+	t.To = tw.To
+	t.Value = value
+	t.Data = twData
+	t.Nonce = nonce
+	t.GasPrice = gasPrice
+	t.GasLimit = gasLimit
+	t.ChainID = chainID
+	t.GasPrice = gasPrice
+	t.Currency = tw.Currency
+	return nil
+}
+
+type accountMetadata struct {
+	Nonce uint64 `json:"nonce"`
+}
+
+type accountMetadataWire struct {
+	Nonce string `json:"nonce"`
+}
+
+func (m *accountMetadata) MarshalJSON() ([]byte, error) {
+	mw := &accountMetadataWire{
+		Nonce: strconv.FormatUint(m.Nonce, 10),
+	}
+
+	return json.Marshal(mw)
+}
+
+func (m *accountMetadata) UnmarshalJSON(data []byte) error {
+	var mw accountMetadataWire
+	if err := json.Unmarshal(data, &mw); err != nil {
+		return err
+	}
+
+	nonce, err := strconv.ParseUint(mw.Nonce, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	m.Nonce = nonce
+	return nil
+}
+
+// has0xPrefix validates str begins with '0x' or '0X'.
+// Copied from the go-ethereum hextuil.go library
+func has0xPrefix(str string) bool {
+	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
 }
 
 type signedTransactionWrapper struct {
