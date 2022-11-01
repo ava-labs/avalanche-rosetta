@@ -3,7 +3,7 @@ package cchainatomictx
 import (
 	"context"
 	"errors"
-	"strconv"
+	"math/big"
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/utils/math"
@@ -47,14 +47,10 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 		}
 	}
 
+	balance := mapper.AtomicAvaxAmount(new(big.Int).SetUint64(balanceValue))
 	return &types.AccountBalanceResponse{
 		BlockIdentifier: blockIdentifier,
-		Balances: []*types.Amount{
-			{
-				Value:    strconv.FormatUint(balanceValue, 10),
-				Currency: mapper.AvaxCurrency,
-			},
-		},
+		Balances:        []*types.Amount{balance},
 	}, nil
 }
 
@@ -161,15 +157,14 @@ func (b *Backend) processUtxos(sourceChain constants.ChainIDAlias, utxos [][]byt
 			return nil, errUnableToGetUTXOOutput
 		}
 
+		amount := mapper.AtomicAvaxAmount(new(big.Int).SetUint64(transferableOut.Amount()))
+		amount.Metadata = map[string]interface{}{
+			"source_chain": sourceChain.String(),
+		}
+
 		coin := &types.Coin{
 			CoinIdentifier: &types.CoinIdentifier{Identifier: utxo.UTXOID.String()},
-			Amount: &types.Amount{
-				Value:    strconv.FormatUint(transferableOut.Amount(), 10),
-				Currency: mapper.AvaxCurrency,
-				Metadata: map[string]interface{}{
-					"source_chain": sourceChain.String(),
-				},
-			},
+			Amount:         amount,
 		}
 		coins = append(coins, coin)
 	}

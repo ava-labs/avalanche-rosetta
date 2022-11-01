@@ -67,7 +67,7 @@ func TestAccountBalance(t *testing.T) {
 		evmMock.AssertExpectations(t)
 
 		assert.Equal(t, 1, len(resp.Balances))
-		assert.Equal(t, mapper.AvaxCurrency, resp.Balances[0].Currency)
+		assert.Equal(t, mapper.AtomicAvaxCurrency, resp.Balances[0].Currency)
 		assert.Equal(t, "2500000", resp.Balances[0].Value)
 	})
 }
@@ -113,15 +113,15 @@ func TestAccountCoins(t *testing.T) {
 		assert.Equal(t, 3, len(resp.Coins))
 
 		assert.Equal(t, utxos[0].id, resp.Coins[0].CoinIdentifier.Identifier)
-		assert.Equal(t, mapper.AvaxCurrency, resp.Coins[0].Amount.Currency)
+		assert.Equal(t, mapper.AtomicAvaxCurrency, resp.Coins[0].Amount.Currency)
 		assert.Equal(t, strconv.FormatUint(utxos[0].amount, 10), resp.Coins[0].Amount.Value)
 
 		assert.Equal(t, utxos[3].id, resp.Coins[1].CoinIdentifier.Identifier)
-		assert.Equal(t, mapper.AvaxCurrency, resp.Coins[1].Amount.Currency)
+		assert.Equal(t, mapper.AtomicAvaxCurrency, resp.Coins[1].Amount.Currency)
 		assert.Equal(t, strconv.FormatUint(utxos[3].amount, 10), resp.Coins[1].Amount.Value)
 
 		assert.Equal(t, utxos[1].id, resp.Coins[2].CoinIdentifier.Identifier)
-		assert.Equal(t, mapper.AvaxCurrency, resp.Coins[2].Amount.Currency)
+		assert.Equal(t, mapper.AtomicAvaxCurrency, resp.Coins[2].Amount.Currency)
 		assert.Equal(t, strconv.FormatUint(utxos[1].amount, 10), resp.Coins[2].Amount.Value)
 	})
 }
