@@ -320,7 +320,7 @@ func TestPreprocessMetadata(t *testing.T) {
 	ctx := context.Background()
 	client := &mocks.Client{}
 	networkIdentifier := &types.NetworkIdentifier{
-		Network:    "Fuji",
+		Network:    mapper.FujiNetwork,
 		Blockchain: "Avalanche",
 	}
 	skippedBackend := &backendMocks.ConstructionBackend{}
