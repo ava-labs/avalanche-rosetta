@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
@@ -216,7 +217,7 @@ func validateNetworkName(cfg *config, cChainClient client.Client) error {
 		return nil
 	}
 
-	if cfg.NetworkName != networkName {
+	if strings.ToLower(cfg.NetworkName) != networkName {
 		return fmt.Errorf("configured network name %s does not match with avalanche go client one %s",
 			cfg.NetworkName,
 			networkName,
