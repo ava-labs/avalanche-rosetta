@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
@@ -113,6 +114,10 @@ func main() {
 		log.Fatal("invalid network name:", err)
 	}
 
+	// Note: Rosetta is currently configure with capitalized NetworkNames
+	// and service network requests are carried our with capital case.
+	// while avalanchego requires lower-case network names.
+	// We convert to lower case upon specific calls to avalanchego clients.
 	networkP := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
 		Network:    cfg.NetworkName,
@@ -213,7 +218,7 @@ func validateNetworkName(cfg *config, cChainClient client.Client) error {
 		return nil
 	}
 
-	if cfg.NetworkName != networkName {
+	if strings.ToLower(cfg.NetworkName) != networkName {
 		return fmt.Errorf("configured network name %s does not match with avalanche go client one %s",
 			cfg.NetworkName,
 			networkName,
