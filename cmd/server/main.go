@@ -17,6 +17,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/cchainatomictx"
@@ -99,12 +100,12 @@ func main() {
 	var assetID string
 	var AP5Activation uint64
 	switch cfg.ChainID {
-	case mapper.MainnetChainID:
-		assetID = mapper.MainnetAssetID
-		AP5Activation = mapper.MainnetAP5Activation.Uint64()
-	case mapper.FujiChainID:
-		assetID = mapper.FujiAssetID
-		AP5Activation = mapper.FujiAP5Activation.Uint64()
+	case constants.MainnetChainID:
+		assetID = constants.MainnetAssetID
+		AP5Activation = constants.MainnetAP5Activation.Uint64()
+	case constants.FujiChainID:
+		assetID = constants.FujiAssetID
+		AP5Activation = constants.FujiAP5Activation.Uint64()
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
 	}
@@ -121,7 +122,7 @@ func main() {
 		Blockchain: service.BlockchainName,
 		Network:    cfg.NetworkName,
 		SubNetworkIdentifier: &types.SubNetworkIdentifier{
-			Network: mapper.PChainNetworkIdentifier,
+			Network: constants.PChain.String(),
 		},
 	}
 	networkC := &types.NetworkIdentifier{

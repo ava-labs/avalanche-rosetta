@@ -12,6 +12,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -25,7 +26,7 @@ var (
 
 // ConstructionDerive implements /construction/derive endpoint for P-chain
 func (b *Backend) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
-	return common.DeriveBech32Address(b.fac, mapper.PChainNetworkIdentifier, req)
+	return common.DeriveBech32Address(b.fac, constants.PChain, req)
 }
 
 // ConstructionPreprocess implements /construction/preprocess endpoint for P-chain
@@ -87,7 +88,7 @@ func (b *Backend) ConstructionMetadata(
 	}
 	metadata.NetworkID = networkID
 
-	pChainID, err := b.pClient.GetBlockchainID(ctx, mapper.PChainNetworkIdentifier)
+	pChainID, err := b.pClient.GetBlockchainID(ctx, constants.PChain.String())
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
@@ -201,9 +202,10 @@ func (b *Backend) ConstructionParse(ctx context.Context, req *types.Construction
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	chainIDs := map[ids.ID]string{}
+	netID, _ := constants.FromString(rosettaTx.DestinationChain)
+	chainIDs := map[ids.ID]constants.ChainIDAlias{}
 	if rosettaTx.DestinationChainID != nil {
-		chainIDs[*rosettaTx.DestinationChainID] = rosettaTx.DestinationChain
+		chainIDs[*rosettaTx.DestinationChainID] = netID
 	}
 
 	txParser := pTxParser{

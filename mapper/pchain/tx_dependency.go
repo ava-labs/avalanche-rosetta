@@ -3,7 +3,7 @@ package pchain
 import (
 	"fmt"
 
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
@@ -84,7 +84,7 @@ func (bd BlockTxDependencies) GetReferencedAccounts(hrp string) (map[string]*typ
 				continue
 			}
 
-			addr, err := address.Format(mapper.PChainNetworkIdentifier, hrp, addrs[0])
+			addr, err := address.Format(constants.PChain.String(), hrp, addrs[0])
 			addresses[utxo.UTXOID.String()] = &types.AccountIdentifier{Address: addr}
 			if err != nil {
 				return nil, err

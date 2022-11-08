@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 const (
@@ -137,7 +138,7 @@ func Transaction(
 
 func crossChainTransaction(
 	networkIdentifier *types.NetworkIdentifier,
-	chainIDToAliasMapping map[ids.ID]string,
+	chainIDToAliasMapping map[ids.ID]constants.ChainIDAlias,
 	rawIdx int,
 	avaxAssetID string,
 	tx *evm.Tx,
@@ -256,7 +257,7 @@ func crossChainTransaction(
 
 func createExportedOuts(
 	networkIdentifier *types.NetworkIdentifier,
-	chainAlias string,
+	chainAlias constants.ChainIDAlias,
 	txID ids.ID,
 	exportedOuts []*avax.TransferableOutput,
 ) ([]*types.Operation, error) {
@@ -271,7 +272,7 @@ func createExportedOuts(
 		transferOutput := out.Output().(*secp256k1fx.TransferOutput)
 		if transferOutput != nil && len(transferOutput.Addrs) > 0 {
 			var err error
-			addr, err = address.Format(chainAlias, hrp, transferOutput.Addrs[0][:])
+			addr, err = address.Format(chainAlias.String(), hrp, transferOutput.Addrs[0][:])
 			if err != nil {
 				return nil, err
 			}
@@ -300,7 +301,7 @@ func createExportedOuts(
 
 func CrossChainTransactions(
 	networkIdentifier *types.NetworkIdentifier,
-	chainIDToAliasMapping map[ids.ID]string,
+	chainIDToAliasMapping map[ids.ID]constants.ChainIDAlias,
 	avaxAssetID string,
 	block *ethtypes.Block,
 	ap5Activation uint64,

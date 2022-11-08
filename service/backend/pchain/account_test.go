@@ -12,6 +12,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
@@ -42,8 +43,8 @@ var (
 func TestAccountBalance(t *testing.T) {
 	ctx := context.Background()
 	pChainMock := &mocks.PChainClient{}
-	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
-	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
+	pChainMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(ids.ID{'C'}, nil)
+	pChainMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
@@ -81,9 +82,9 @@ func TestAccountBalance(t *testing.T) {
 			ctx,
 			&types.AccountBalanceRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{
@@ -122,18 +123,18 @@ func TestAccountBalance(t *testing.T) {
 		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
 		pageSize := uint32(1024)
 		backend.getUTXOsPageSize = pageSize
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "C", pageSize, ids.ShortEmpty, ids.Empty).
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.CChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{utxo0Bytes, utxo1Bytes}, pChainAddrID, utxo1Id, nil).Once()
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "X", pageSize, ids.ShortEmpty, ids.Empty).
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.XChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{}, pChainAddrID, ids.Empty, nil).Once()
 
 		resp, err := backend.AccountBalance(
 			ctx,
 			&types.AccountBalanceRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{
@@ -178,9 +179,9 @@ func TestAccountBalance(t *testing.T) {
 			ctx,
 			&types.AccountBalanceRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{
@@ -203,8 +204,8 @@ func TestAccountBalance(t *testing.T) {
 func TestAccountCoins(t *testing.T) {
 	ctx := context.Background()
 	pChainMock := &mocks.PChainClient{}
-	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.CChainNetworkIdentifier).Return(ids.ID{'C'}, nil)
-	pChainMock.Mock.On("GetBlockchainID", ctx, mapper.XChainNetworkIdentifier).Return(ids.ID{'X'}, nil)
+	pChainMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(ids.ID{'C'}, nil)
+	pChainMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
@@ -241,9 +242,9 @@ func TestAccountCoins(t *testing.T) {
 			ctx,
 			&types.AccountCoinsRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{
@@ -308,18 +309,18 @@ func TestAccountCoins(t *testing.T) {
 		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
 		pageSize := uint32(1024)
 		backend.getUTXOsPageSize = pageSize
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "C", pageSize, ids.ShortEmpty, ids.Empty).
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.CChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{utxo0Bytes}, pChainAddrID, utxo0Id, nil).Once()
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "X", pageSize, ids.ShortEmpty, ids.Empty).
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.XChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{utxo1Bytes}, pChainAddrID, utxo1Id, nil).Once()
 
 		resp, err := backend.AccountCoins(
 			ctx,
 			&types.AccountCoinsRequest{
 				NetworkIdentifier: &types.NetworkIdentifier{
-					Network: mapper.FujiNetwork,
+					Network: constants.FujiNetwork,
 					SubNetworkIdentifier: &types.SubNetworkIdentifier{
-						Network: mapper.PChainNetworkIdentifier,
+						Network: constants.PChain.String(),
 					},
 				},
 				AccountIdentifier: &types.AccountIdentifier{

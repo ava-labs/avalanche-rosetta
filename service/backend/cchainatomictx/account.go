@@ -10,6 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
@@ -73,9 +74,9 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 
 func (b *Backend) getAccountCoins(ctx context.Context, address string) (*types.BlockIdentifier, []*types.Coin, *types.Error) {
 	var coins []*types.Coin
-	sourceChains := []string{
-		mapper.PChainNetworkIdentifier,
-		mapper.XChainNetworkIdentifier,
+	sourceChains := []constants.ChainIDAlias{
+		constants.PChain,
+		constants.XChain,
 	}
 
 	preHeader, err := b.cClient.HeaderByNumber(ctx, nil)
@@ -110,7 +111,7 @@ func (b *Backend) getAccountCoins(ctx context.Context, address string) (*types.B
 	return blockIdentifier, coins, nil
 }
 
-func (b *Backend) fetchCoinsFromChain(ctx context.Context, address string, sourceChain string) ([]*types.Coin, *types.Error) {
+func (b *Backend) fetchCoinsFromChain(ctx context.Context, address string, sourceChain constants.ChainIDAlias) ([]*types.Coin, *types.Error) {
 	var coins []*types.Coin
 
 	// Used for pagination
@@ -118,7 +119,7 @@ func (b *Backend) fetchCoinsFromChain(ctx context.Context, address string, sourc
 
 	for {
 		// GetUTXOs controlled by addr
-		utxos, newUtxoIndex, err := b.cClient.GetAtomicUTXOs(ctx, []string{address}, sourceChain, b.getUTXOsPageSize, lastUtxoIndex.Address, lastUtxoIndex.UTXO)
+		utxos, newUtxoIndex, err := b.cClient.GetAtomicUTXOs(ctx, []string{address}, sourceChain.String(), b.getUTXOsPageSize, lastUtxoIndex.Address, lastUtxoIndex.UTXO)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, "unable to get UTXOs")
 		}
@@ -142,7 +143,7 @@ func (b *Backend) fetchCoinsFromChain(ctx context.Context, address string, sourc
 	return coins, nil
 }
 
-func (b *Backend) processUtxos(sourceChain string, utxos [][]byte) ([]*types.Coin, error) {
+func (b *Backend) processUtxos(sourceChain constants.ChainIDAlias, utxos [][]byte) ([]*types.Coin, error) {
 	coins := make([]*types.Coin, 0)
 	for _, utxoBytes := range utxos {
 		utxo := avax.UTXO{}
@@ -158,7 +159,7 @@ func (b *Backend) processUtxos(sourceChain string, utxos [][]byte) ([]*types.Coi
 
 		amount := mapper.AtomicAvaxAmount(new(big.Int).SetUint64(transferableOut.Amount()))
 		amount.Metadata = map[string]interface{}{
-			"source_chain": sourceChain,
+			"source_chain": sourceChain.String(),
 		}
 
 		coin := &types.Coin{

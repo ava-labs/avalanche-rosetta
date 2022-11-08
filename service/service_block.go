@@ -14,6 +14,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -241,8 +242,8 @@ func (s *BlockService) parseCrossChainTransactions(
 	result := []*types.Transaction{}
 
 	// This map is used to create addresses for cross chain export outputs
-	chainIDToAliasMapping := map[ids.ID]string{
-		ids.Empty: mapper.PChainNetworkIdentifier,
+	chainIDToAliasMapping := map[ids.ID]constants.ChainIDAlias{
+		ids.Empty: constants.PChain,
 	}
 	crossTxs, err := mapper.CrossChainTransactions(networkIdentifier, chainIDToAliasMapping, s.config.AvaxAssetID, block, s.config.AP5Activation)
 	if err != nil {

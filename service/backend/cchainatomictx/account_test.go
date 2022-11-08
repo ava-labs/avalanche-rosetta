@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 )
@@ -49,10 +50,10 @@ func TestAccountBalance(t *testing.T) {
 		var nilBigInt *big.Int
 		evmMock.On("HeaderByNumber", mock.Anything, nilBigInt).Return(blockHeader, nil).Twice()
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, "P", backend.getUTXOsPageSize, "", "").
+			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.PChain.String(), backend.getUTXOsPageSize, "", "").
 			Return(utxos, api.Index{}, nil)
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, "X", backend.getUTXOsPageSize, "", "").
+			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.XChain.String(), backend.getUTXOsPageSize, "", "").
 			Return([][]byte{}, api.Index{}, nil)
 
 		resp, apiErr := backend.AccountBalance(context.Background(), &types.AccountBalanceRequest{
@@ -87,16 +88,16 @@ func TestAccountCoins(t *testing.T) {
 		var nilBigInt *big.Int
 		evmMock.On("HeaderByNumber", mock.Anything, nilBigInt).Return(blockHeader, nil).Twice()
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, "P", backend.getUTXOsPageSize, "", "").
+			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.PChain.String(), backend.getUTXOsPageSize, "", "").
 			Return([][]byte{utxo0Bytes, utxo1Bytes}, api.Index{Address: accountAddress, UTXO: utxos[1].id}, nil)
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, "P", backend.getUTXOsPageSize, accountAddress, utxos[1].id).
+			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.PChain.String(), backend.getUTXOsPageSize, accountAddress, utxos[1].id).
 			Return([][]byte{utxo2Bytes, utxo3Bytes}, api.Index{Address: accountAddress, UTXO: utxos[3].id}, nil)
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, "P", backend.getUTXOsPageSize, accountAddress, utxos[3].id).
+			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.PChain.String(), backend.getUTXOsPageSize, accountAddress, utxos[3].id).
 			Return([][]byte{utxo3Bytes}, api.Index{Address: accountAddress, UTXO: utxos[3].id}, nil)
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, "X", backend.getUTXOsPageSize, "", "").
+			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.XChain.String(), backend.getUTXOsPageSize, "", "").
 			Return([][]byte{}, api.Index{}, nil)
 
 		resp, apiErr := backend.AccountCoins(context.Background(), &types.AccountCoinsRequest{

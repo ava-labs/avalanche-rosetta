@@ -9,6 +9,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -104,7 +105,7 @@ func (p pTxBuilder) BuildTx(operations []*types.Operation, metadataMap map[strin
 
 type pTxParser struct {
 	hrp         string
-	chainIDs    map[ids.ID]string
+	chainIDs    map[ids.ID]constants.ChainIDAlias
 	avaxAssetID ids.ID
 }
 

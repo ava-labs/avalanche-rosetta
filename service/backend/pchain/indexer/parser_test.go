@@ -12,7 +12,7 @@ import (
 	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 
 	"github.com/ava-labs/avalanchego/api"
@@ -188,7 +188,7 @@ func TestFixtures(t *testing.T) {
 
 func initializeTxCtx(txs []*txs.Tx, networkID uint32) {
 	aliaser := ids.NewAliaser()
-	_ = aliaser.Alias(constants.PlatformChainID, mapper.PChainNetworkIdentifier)
+	_ = aliaser.Alias(constants.PlatformChainID, rosConst.PChain.String())
 	ctx := &snow.Context{
 		BCLookup:  aliaser,
 		NetworkID: networkID,

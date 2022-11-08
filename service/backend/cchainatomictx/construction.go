@@ -15,6 +15,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -28,7 +29,7 @@ var (
 
 // ConstructionDerive implements /construction/derive endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
-	return common.DeriveBech32Address(b.fac, mapper.CChainNetworkIdentifier, req)
+	return common.DeriveBech32Address(b.fac, constants.CChain, req)
 }
 
 // ConstructionPreprocess implements /construction/preprocess endpoint for C-chain atomic transactions
@@ -136,7 +137,7 @@ func (b *Backend) ConstructionMetadata(
 		return nil, service.WrapError(service.ErrClientError, err)
 	}
 
-	cChainID, err := b.cClient.GetBlockchainID(ctx, mapper.CChainNetworkIdentifier)
+	cChainID, err := b.cClient.GetBlockchainID(ctx, constants.CChain.String())
 	if err != nil {
 		return nil, service.WrapError(service.ErrClientError, err)
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 
+	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 )
@@ -17,9 +18,9 @@ import (
 var (
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	cChainID, _    = ids.FromString("yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")
-	chainIDs       = map[ids.ID]string{
-		ids.Empty: mapper.PChainNetworkIdentifier,
-		cChainID:  mapper.CChainNetworkIdentifier,
+	chainIDs       = map[ids.ID]rosConst.ChainIDAlias{
+		ids.Empty: rosConst.PChain,
+		cChainID:  rosConst.CChain,
 	}
 
 	pchainClient = &mocks.PChainClient{}
@@ -112,7 +113,7 @@ func TestMapOutOperation(t *testing.T) {
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	outOps := newTxOps(false)
-	err := parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, mapper.PChainNetworkIdentifier)
+	err := parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, rosConst.PChain)
 	assert.Nil(t, err)
 
 	rosettaOutOp := outOps.Outs

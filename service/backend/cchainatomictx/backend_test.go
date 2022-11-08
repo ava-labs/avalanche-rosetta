@@ -7,6 +7,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -15,7 +16,7 @@ import (
 func TestShouldHandleRequest(t *testing.T) {
 	cChainNetworkIdentifier := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
-		Network:    mapper.FujiNetwork,
+		Network:    constants.FujiNetwork,
 	}
 
 	bech32AccountIdentifier := &types.AccountIdentifier{Address: "C-avax1us3us4s4mv0g85vxjm8va04ewdl27wcwnqwejf"}
