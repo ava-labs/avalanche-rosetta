@@ -12,11 +12,13 @@ import (
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 
 	pBlocks "github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	proposerBlk "github.com/ava-labs/avalanchego/vms/proposervm/block"
+
+	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
@@ -179,10 +181,10 @@ func (p *parser) parseBlockAtHeight(ctx context.Context, height uint64) (*Parsed
 }
 
 func (p *parser) parseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
-	hashID, err := ids.FromString(hash)
-	if err != nil {
-		return nil, err
-	}
+	// convert hash string to ids.ID, possibly cropping extra bytes
+	hashBytes := ethcommon.FromHex(hash)
+	hashID := ids.Empty
+	copy(hashID[:], hashBytes[len(hashBytes)-len(hashID):])
 
 	container, err := p.pChainClient.GetContainerByID(ctx, hashID)
 	if err != nil {
