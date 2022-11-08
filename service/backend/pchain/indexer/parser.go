@@ -30,6 +30,10 @@ var (
 )
 
 // Parser defines the interface for a P-chain indexer parser
+// Note: we use indexer just because platformVM does not currently offer a way to retrieve
+// blocks by height. However we do NOT want to use the indexer to retrieve blocks by ID; instead
+// we'll use platformvm.GetBlock api for that. The reason is that we want to use
+// platformVM-level block ID as P-chain blocks identifier rather than proposerVM-level.
 type Parser interface {
 	// GetGenesisBlock parses and returns the Genesis block
 	GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error)
@@ -194,7 +198,7 @@ func (p *parser) parseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 }
 
 // [parseProposerBlock] parses blocks are retrieved from index api.
-// [parseProposerBlock] tries to parse block asProposerVM block first.
+// [parseProposerBlock] tries to parse block as ProposerVM block first.
 // In case of failure, it tries to parse it as a pre-proposerVM block.
 func (p *parser) parseProposerBlock(blkBytes []byte) (*ParsedBlock, error) {
 	pChainBlkBytes := blkBytes
