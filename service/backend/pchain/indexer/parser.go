@@ -199,7 +199,7 @@ func (p *parser) parseBlock(blkBytes []byte) (*ParsedBlock, error) {
 	pChainBlkBytes := blkBytes
 	proBlkData := Proposer{}
 
-	proBlk, _, err := proposerBlk.Parse(blkBytes)
+	proBlk, err := proposerBlk.Parse(blkBytes)
 	if err == nil {
 		// inner proposerVM bytes, to be parsed as P-chain block
 		pChainBlkBytes = proBlk.Block()
