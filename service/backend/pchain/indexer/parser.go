@@ -83,7 +83,7 @@ func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	blk, err := p.parseBlock(container.Bytes)
+	blk, err := p.parseProposerBlock(container.Bytes)
 	if err != nil {
 		return 0, err
 	}
@@ -175,7 +175,7 @@ func (p *parser) parseBlockAtHeight(ctx context.Context, height uint64) (*Parsed
 		return nil, err
 	}
 
-	return p.parseBlock(container.Bytes)
+	return p.parseProposerBlock(container.Bytes)
 }
 
 func (p *parser) parseBlockWithHash(ctx context.Context, hash string) (*ParsedBlock, error) {
@@ -184,20 +184,21 @@ func (p *parser) parseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 		return nil, err
 	}
 
-	container, err := p.pChainClient.GetContainerByID(ctx, hashID)
+	// Note that has
+	blkBytes, err := p.pChainClient.GetBlock(ctx, hashID)
 	if err != nil {
 		return nil, err
 	}
 
-	return p.parseBlock(container.Bytes)
+	return p.parsePChainBlock(blkBytes, Proposer{})
 }
 
-// [parseBlock] parses blocks are retrieved from index api.
-// [parseBlock] tries to parse block asProposerVM block first.
+// [parseProposerBlock] parses blocks are retrieved from index api.
+// [parseProposerBlock] tries to parse block asProposerVM block first.
 // In case of failure, it tries to parse it as a pre-proposerVM block.
-func (p *parser) parseBlock(blkBytes []byte) (*ParsedBlock, error) {
+func (p *parser) parseProposerBlock(blkBytes []byte) (*ParsedBlock, error) {
 	pChainBlkBytes := blkBytes
-	proBlkData := Proposer{}
+	proposerData := Proposer{}
 
 	proBlk, err := proposerBlk.Parse(blkBytes)
 	if err == nil {
@@ -206,7 +207,7 @@ func (p *parser) parseBlock(blkBytes []byte) (*ParsedBlock, error) {
 
 		// retrieve relevant proposer data
 		if b, ok := proBlk.(proposerBlk.SignedBlock); ok {
-			proBlkData = Proposer{
+			proposerData = Proposer{
 				ID:           b.ID(),
 				ParentID:     b.ParentID(),
 				NodeID:       b.Proposer(),
@@ -214,13 +215,17 @@ func (p *parser) parseBlock(blkBytes []byte) (*ParsedBlock, error) {
 				Timestamp:    b.Timestamp().Unix(),
 			}
 		} else {
-			proBlkData = Proposer{
+			proposerData = Proposer{
 				ID:       proBlk.ID(),
 				ParentID: proBlk.ParentID(),
 			}
 		}
 	}
 
+	return p.parsePChainBlock(pChainBlkBytes, proposerData)
+}
+
+func (p *parser) parsePChainBlock(pChainBlkBytes []byte, proposerData Proposer) (*ParsedBlock, error) {
 	blk, err := pBlocks.Parse(p.codec, pChainBlkBytes)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
@@ -233,7 +238,7 @@ func (p *parser) parseBlock(blkBytes []byte) (*ParsedBlock, error) {
 	// We retrieve timestamps from the block to have a deployment-independent timestamp.
 	// This blkTime is not guarateed to be monotonic before Banff blocks, whose Mainnet
 	// activation happened on Tuesday, 2022 October 18 at 12 p.m. EDT.
-	blkTime, err := retrieveTime(blk, proBlk)
+	blkTime, err := retrieveTime(blk, proposerData)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieving block time: %w", err)
 	}
@@ -246,11 +251,11 @@ func (p *parser) parseBlock(blkBytes []byte) (*ParsedBlock, error) {
 
 		Height:   blk.Height(),
 		Txs:      txes,
-		Proposer: proBlkData,
+		Proposer: proposerData,
 	}, nil
 }
 
-func retrieveTime(pchainBlk pBlocks.Block, proBlk proposerBlk.Block) (time.Time, error) {
+func retrieveTime(pchainBlk pBlocks.Block, proposer Proposer) (time.Time, error) {
 	switch b := pchainBlk.(type) {
 	// Banff blocks serialize pchain time
 	case *pBlocks.BanffProposalBlock:
@@ -284,10 +289,8 @@ func retrieveTime(pchainBlk pBlocks.Block, proBlk proposerBlk.Block) (time.Time,
 	// if available. While proposer timestamp should be close
 	// to pchain time at block creation, time monotonicity is
 	// not guaranteed.
-	if proBlk != nil {
-		if signedProBlk, ok := proBlk.(proposerBlk.SignedBlock); ok {
-			return signedProBlk.Timestamp(), nil
-		}
+	if proposer.Timestamp != 0 {
+		return time.Unix(proposer.Timestamp, 0), nil
 	}
 
 	// Fallback to the genesis timestamp. We cannot simply

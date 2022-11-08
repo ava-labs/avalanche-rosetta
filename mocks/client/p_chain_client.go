@@ -196,34 +196,6 @@ func (_m *PChainClient) GetBlockchainID(_a0 context.Context, _a1 string, _a2 ...
 	return r0, r1
 }
 
-// GetContainerByID provides a mock function with given fields: ctx, containerID, options
-func (_m *PChainClient) GetContainerByID(ctx context.Context, containerID ids.ID, options ...rpc.Option) (indexer.Container, error) {
-	_va := make([]interface{}, len(options))
-	for _i := range options {
-		_va[_i] = options[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, containerID)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 indexer.Container
-	if rf, ok := ret.Get(0).(func(context.Context, ids.ID, ...rpc.Option) indexer.Container); ok {
-		r0 = rf(ctx, containerID, options...)
-	} else {
-		r0 = ret.Get(0).(indexer.Container)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, ids.ID, ...rpc.Option) error); ok {
-		r1 = rf(ctx, containerID, options...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetContainerByIndex provides a mock function with given fields: ctx, index, options
 func (_m *PChainClient) GetContainerByIndex(ctx context.Context, index uint64, options ...rpc.Option) (indexer.Container, error) {
 	_va := make([]interface{}, len(options))

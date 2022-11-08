@@ -23,8 +23,9 @@ var _ PChainClient = &pchainClient{}
 // These methods are cloned from the underlying avalanchego client interfaces, following the example of Client interface used to support C-chain operations.
 type PChainClient interface {
 	// indexer.Client methods
+	// Note: we use indexer only to be able to retrieve blocks by height.
+	// Blocks by ID are retrieved via platformVM.GetBlock, thus ignoring the proposerVM part
 	GetContainerByIndex(ctx context.Context, index uint64, options ...rpc.Option) (indexer.Container, error)
-	GetContainerByID(ctx context.Context, containerID ids.ID, options ...rpc.Option) (indexer.Container, error)
 	GetLastAccepted(context.Context, ...rpc.Option) (indexer.Container, error)
 
 	// platformvm.Client methods
