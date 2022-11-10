@@ -31,7 +31,7 @@ func EqualFoldContains(arr []string, str string) bool {
 // GetHRP fetches hrp for address formatting.
 func GetHRP(networkIdentifier *types.NetworkIdentifier) (string, error) {
 	var hrp string
-	switch networkIdentifier.Network {
+	switch strings.ToLower(networkIdentifier.Network) {
 	case rosConst.FujiNetwork:
 		hrp = constants.GetHRP(constants.FujiID)
 	case rosConst.MainnetNetwork:

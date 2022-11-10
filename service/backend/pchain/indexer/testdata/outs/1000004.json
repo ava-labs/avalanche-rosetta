@@ -4,12 +4,5 @@
   "parent": "DGRnAy4HYV52uWCRKZV6UXw9s9qZKCat5Xss8PANDaR5mngUz",
   "timestamp": 1599696000000,
   "height": 1000005,
-  "transactions": [],
-  "proposer": {
-    "id": "2Rq1S9c78zZeVg51YB2oGZ6YGtLHkmKezTpAJgZeVS7QSL5pQZ",
-    "parent": "2fFCtHiHjdS2Vua7LuHorvMcTCtrDhs5oFAtHQiaRbcsDJi687",
-    "nodeID": "NodeID-111111111111111111116DBWJs",
-    "pChainHeight": 0,
-    "timestamp": 0
-  }
+  "transactions": []
 }
