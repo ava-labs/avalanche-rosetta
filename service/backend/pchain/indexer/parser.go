@@ -47,10 +47,8 @@ type Parser interface {
 }
 
 type parser struct {
-	// ideally parser should rely only on pchain indexer apis.
 	// The full PChainClient is currently needed just to retrieve
 	// NetworkID.
-	// TODO: reduce pChainClient to indexer methods only
 	// TODO: consider introducing a cache for parsed blocks
 	pChainClient client.PChainClient
 
@@ -188,7 +186,8 @@ func (p *parser) parseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 		return nil, err
 	}
 
-	// Note that has
+	// hashID is P-Chain block ID (not proposerVM block ID). Hence we try pulling
+	// block from P-Chain API (not the indexer, which tracks proposerVM blocks)
 	blkBytes, err := p.pChainClient.GetBlock(ctx, hashID)
 	if err != nil {
 		return nil, err
