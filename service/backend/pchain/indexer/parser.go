@@ -26,6 +26,7 @@ var (
 	_ Parser = &parser{}
 
 	genesisTimestamp         = time.Date(2020, time.September, 10, 0, 0, 0, 0, time.UTC)
+	noProposerTime           = time.Time{}
 	errMissingBlockIndexHash = errors.New("a positive block index, a block hash or both must be specified")
 )
 
@@ -46,10 +47,8 @@ type Parser interface {
 }
 
 type parser struct {
-	// ideally parser should rely only on pchain indexer apis.
 	// The full PChainClient is currently needed just to retrieve
 	// NetworkID.
-	// TODO: reduce pChainClient to indexer methods only
 	// TODO: consider introducing a cache for parsed blocks
 	pChainClient client.PChainClient
 
@@ -139,7 +138,6 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 			BlockType: "GenesisBlock",
 			Timestamp: genesisTimestamp.UnixMilli(),
 			Txs:       genesisTxs,
-			Proposer:  Proposer{},
 		},
 		GenesisBlockData: GenesisBlockData{
 			Message:       genesisState.Message,
@@ -188,13 +186,14 @@ func (p *parser) parseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 		return nil, err
 	}
 
-	// Note that has
+	// hashID is P-Chain block ID (not proposerVM block ID). Hence we try pulling
+	// block from P-Chain API (not the indexer, which tracks proposerVM blocks)
 	blkBytes, err := p.pChainClient.GetBlock(ctx, hashID)
 	if err != nil {
 		return nil, err
 	}
 
-	return p.parsePChainBlock(blkBytes, Proposer{})
+	return p.parsePChainBlock(blkBytes, noProposerTime)
 }
 
 // [parseProposerBlock] parses blocks are retrieved from index api.
@@ -202,7 +201,7 @@ func (p *parser) parseBlockWithHash(ctx context.Context, hash string) (*ParsedBl
 // In case of failure, it tries to parse it as a pre-proposerVM block.
 func (p *parser) parseProposerBlock(blkBytes []byte) (*ParsedBlock, error) {
 	pChainBlkBytes := blkBytes
-	proposerData := Proposer{}
+	proposerTime := noProposerTime
 
 	proBlk, err := proposerBlk.Parse(blkBytes)
 	if err == nil {
@@ -211,25 +210,14 @@ func (p *parser) parseProposerBlock(blkBytes []byte) (*ParsedBlock, error) {
 
 		// retrieve relevant proposer data
 		if b, ok := proBlk.(proposerBlk.SignedBlock); ok {
-			proposerData = Proposer{
-				ID:           b.ID(),
-				ParentID:     b.ParentID(),
-				NodeID:       b.Proposer(),
-				PChainHeight: b.PChainHeight(),
-				Timestamp:    b.Timestamp().Unix(),
-			}
-		} else {
-			proposerData = Proposer{
-				ID:       proBlk.ID(),
-				ParentID: proBlk.ParentID(),
-			}
+			proposerTime = b.Timestamp()
 		}
 	}
 
-	return p.parsePChainBlock(pChainBlkBytes, proposerData)
+	return p.parsePChainBlock(pChainBlkBytes, proposerTime)
 }
 
-func (p *parser) parsePChainBlock(pChainBlkBytes []byte, proposerData Proposer) (*ParsedBlock, error) {
+func (p *parser) parsePChainBlock(pChainBlkBytes []byte, proposerTime time.Time) (*ParsedBlock, error) {
 	blk, err := pBlocks.Parse(p.codec, pChainBlkBytes)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
@@ -242,7 +230,7 @@ func (p *parser) parsePChainBlock(pChainBlkBytes []byte, proposerData Proposer) 
 	// We retrieve timestamps from the block to have a deployment-independent timestamp.
 	// This blkTime is not guarateed to be monotonic before Banff blocks, whose Mainnet
 	// activation happened on Tuesday, 2022 October 18 at 12 p.m. EDT.
-	blkTime, err := retrieveTime(blk, proposerData)
+	blkTime, err := retrieveTime(blk, proposerTime)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieving block time: %w", err)
 	}
@@ -253,13 +241,12 @@ func (p *parser) parsePChainBlock(pChainBlkBytes []byte, proposerData Proposer) 
 		ParentID:  blk.Parent(),
 		Timestamp: blkTime.UnixMilli(),
 
-		Height:   blk.Height(),
-		Txs:      txes,
-		Proposer: proposerData,
+		Height: blk.Height(),
+		Txs:    txes,
 	}, nil
 }
 
-func retrieveTime(pchainBlk pBlocks.Block, proposer Proposer) (time.Time, error) {
+func retrieveTime(pchainBlk pBlocks.Block, proposerTime time.Time) (time.Time, error) {
 	switch b := pchainBlk.(type) {
 	// Banff blocks serialize pchain time
 	case *pBlocks.BanffProposalBlock:
@@ -293,8 +280,8 @@ func retrieveTime(pchainBlk pBlocks.Block, proposer Proposer) (time.Time, error)
 	// if available. While proposer timestamp should be close
 	// to pchain time at block creation, time monotonicity is
 	// not guaranteed.
-	if proposer.Timestamp != 0 {
-		return time.Unix(proposer.Timestamp, 0), nil
+	if !proposerTime.IsZero() {
+		return proposerTime, nil
 	}
 
 	// Fallback to the genesis timestamp. We cannot simply
