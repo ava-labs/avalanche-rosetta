@@ -11,5 +11,12 @@
       },
       "credentials": []
     }
-  ]
+  ],
+  "proposer": {
+    "id": "2jsPqeaxacqgMBjQFuiHGiwTjD4kbXqmgbVxXPjTCUtsY5CnJv",
+    "parent": "KXR1Ys335NiUE9XKPt7ixBjHQsmrVuH681fZaPmfGnENcuKsG",
+    "nodeID": "NodeID-E14zCEsVh4oxzcWUVrs7kFGA8ffrhYvNn",
+    "pChainHeight": 999745,
+    "timestamp": 1638504095
+  }
 }

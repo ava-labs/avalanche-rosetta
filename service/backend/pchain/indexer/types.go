@@ -14,6 +14,7 @@ type ParsedBlock struct {
 	Timestamp int64     `json:"timestamp"`
 	Height    uint64    `json:"height"`
 	Txs       []*txs.Tx `json:"transactions"`
+	Proposer  `json:"proposer"`
 }
 
 // GenesisBlockData contains Genesis state details
@@ -27,4 +28,13 @@ type GenesisBlockData struct {
 type ParsedGenesisBlock struct {
 	ParsedBlock
 	GenesisBlockData `json:"data"`
+}
+
+// Proposer contains the details of block proposers
+type Proposer struct {
+	ID           ids.ID     `json:"id"`
+	ParentID     ids.ID     `json:"parent"`
+	NodeID       ids.NodeID `json:"nodeID"`
+	PChainHeight uint64     `json:"pChainHeight"`
+	Timestamp    int64      `json:"timestamp"`
 }

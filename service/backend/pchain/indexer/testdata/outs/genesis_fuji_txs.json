@@ -806,6 +806,13 @@
       "credentials": []
     }
   ],
+  "proposer": {
+    "id": "11111111111111111111111111111111LpoYY",
+    "parent": "11111111111111111111111111111111LpoYY",
+    "nodeID": "NodeID-111111111111111111116DBWJs",
+    "pChainHeight": 0,
+    "timestamp": 0
+  },
   "data": {
     "message": "hi mom",
     "initialSupply": 360000000000000000,

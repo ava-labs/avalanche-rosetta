@@ -49,5 +49,12 @@
         }
       ]
     }
-  ]
+  ],
+  "proposer": {
+    "id": "pxgTHS2xtw5NQV7G9YbHZLoZvRdgsrjhMEvewDYdSGFNYJ7TG",
+    "parent": "23WLYvUku2FJA6PnXvimRTap9k4bf4uQfYtH6Hbd2fzjW4rTob",
+    "nodeID": "NodeID-N2t1CAS75972obgtRPHwVanMnRF1rRo1B",
+    "pChainHeight": 810424,
+    "timestamp": 1632508114
+  }
 }

@@ -4,5 +4,12 @@
   "parent": "2Mbfba1sSJw9yrp1ZGpEs4aa7AFkBEofmrXty1CPL2hrnqGeVT",
   "timestamp": 1599696000000,
   "height": 1000003,
-  "transactions": []
+  "transactions": [],
+  "proposer": {
+    "id": "oT3nzNB93Lz6vq7Z3BBzgrWYLtNZ6iq8c9V6CikKL5T9nBG4c",
+    "parent": "2jsPqeaxacqgMBjQFuiHGiwTjD4kbXqmgbVxXPjTCUtsY5CnJv",
+    "nodeID": "NodeID-111111111111111111116DBWJs",
+    "pChainHeight": 0,
+    "timestamp": 0
+  }
 }
