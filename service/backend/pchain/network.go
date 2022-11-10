@@ -6,6 +6,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -38,7 +39,7 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 			CurrentBlockIdentifier: b.getGenesisIdentifier(),
 			CurrentBlockTimestamp:  genesisBlock.Timestamp,
 			GenesisBlockIdentifier: b.getGenesisIdentifier(),
-			SyncStatus:             mapper.StageBootstrap,
+			SyncStatus:             constants.StageBootstrap,
 			Peers:                  peers,
 		}, nil
 	}
@@ -56,7 +57,7 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 		},
 		CurrentBlockTimestamp:  currentBlock.Timestamp,
 		GenesisBlockIdentifier: b.getGenesisIdentifier(),
-		SyncStatus:             mapper.StageSynced,
+		SyncStatus:             constants.StageSynced,
 		Peers:                  peers,
 	}, nil
 }
@@ -70,8 +71,8 @@ func (b *Backend) NetworkOptions(ctx context.Context, request *types.NetworkRequ
 			MiddlewareVersion: types.String(service.MiddlewareVersion),
 		},
 		Allow: &types.Allow{
-			OperationStatuses:       mapper.OperationStatuses,
-			OperationTypes:          pmapper.OperationTypes,
+			OperationStatuses:       constants.OperationStatuses,
+			OperationTypes:          pconstants.TxTypes(),
 			CallMethods:             pmapper.CallMethods,
 			Errors:                  service.Errors,
 			HistoricalBalanceLookup: false,

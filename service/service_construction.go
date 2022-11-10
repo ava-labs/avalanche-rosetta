@@ -20,6 +20,7 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -141,7 +142,7 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasLimit uint64
 	if input.GasLimit == nil {
-		if input.Currency == nil || utils.Equal(input.Currency, mapper.AvaxCurrency) {
+		if input.Currency == nil || utils.Equal(input.Currency, cconstants.AvaxCurrency) {
 			gasLimit, err = s.getNativeTransferGasLimit(ctx, input.To, input.From, input.Value)
 		} else {
 			gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
@@ -353,7 +354,7 @@ func (s ConstructionService) ConstructionParse(
 		tx.From = msg.From().Hex()
 	}
 
-	var opMethod string
+	var opMethod cconstants.Op
 	var value *big.Int
 	var toAddressHex string
 	// Erc20 transfer
@@ -364,11 +365,11 @@ func (s ConstructionService) ConstructionParse(
 		}
 
 		value = amountSent
-		opMethod = mapper.OpErc20Transfer
+		opMethod = cconstants.Erc20Transfer
 		toAddressHex = toAddress.Hex()
 	} else {
 		value = tx.Value
-		opMethod = mapper.OpCall
+		opMethod = cconstants.Call
 		toAddressHex = tx.To
 	}
 
@@ -386,7 +387,7 @@ func (s ConstructionService) ConstructionParse(
 
 	ops := []*types.Operation{
 		{
-			Type: opMethod,
+			Type: opMethod.String(),
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 0,
 			},
@@ -399,7 +400,7 @@ func (s ConstructionService) ConstructionParse(
 			},
 		},
 		{
-			Type: opMethod,
+			Type: opMethod.String(),
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 1,
 			},
@@ -513,7 +514,7 @@ func (s ConstructionService) ConstructionPayloads(
 	}
 	var transferData []byte
 	var sendToAddress ethcommon.Address
-	if utils.Equal(fromCurrency, mapper.AvaxCurrency) {
+	if utils.Equal(fromCurrency, cconstants.AvaxCurrency) {
 		transferData = []byte{}
 		sendToAddress = ethcommon.HexToAddress(checkTo)
 	} else {
@@ -725,8 +726,8 @@ func (s ConstructionService) CreateOperationDescription(
 		return nil, fmt.Errorf("currency info doesn't match between the operations")
 	}
 
-	if utils.Equal(currency, mapper.AvaxCurrency) {
-		return s.createOperationDescription(currency, mapper.OpCall), nil
+	if utils.Equal(currency, cconstants.AvaxCurrency) {
+		return s.createOperationDescription(currency, cconstants.Call), nil
 	}
 
 	// ERC-20s must have contract address in metadata
@@ -734,17 +735,17 @@ func (s ConstructionService) CreateOperationDescription(
 		return nil, fmt.Errorf("contractAddress must be populated in currency metadata")
 	}
 
-	return s.createOperationDescription(currency, mapper.OpErc20Transfer), nil
+	return s.createOperationDescription(currency, cconstants.Erc20Transfer), nil
 }
 
 func (s ConstructionService) createOperationDescription(
 	currency *types.Currency,
-	opType string,
+	opType cconstants.Op,
 ) []*parser.OperationDescription {
 	return []*parser.OperationDescription{
 		// Send
 		{
-			Type: opType,
+			Type: opType.String(),
 			Account: &parser.AccountDescription{
 				Exists: true,
 			},
@@ -757,7 +758,7 @@ func (s ConstructionService) createOperationDescription(
 
 		// Receive
 		{
-			Type: opType,
+			Type: opType.String(),
 			Account: &parser.AccountDescription{
 				Exists: true,
 			},

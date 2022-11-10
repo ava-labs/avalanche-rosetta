@@ -18,6 +18,8 @@ import (
 
 	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 )
 
 const (
@@ -56,8 +58,8 @@ func Transaction(
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: 0,
 			},
-			Type:    OpFee,
-			Status:  types.String(StatusSuccess),
+			Type:    cconstants.Fee.String(),
+			Status:  types.String(constants.StatusSuccess),
 			Account: Account(&sender),
 			Amount:  AvaxAmount(new(big.Int).Neg(txFee)),
 		},
@@ -70,8 +72,8 @@ func Transaction(
 					Index: 0,
 				},
 			},
-			Type:    OpFee,
-			Status:  types.String(StatusSuccess),
+			Type:    cconstants.Fee.String(),
+			Status:  types.String(constants.StatusSuccess),
 			Account: Account(feeReceiver),
 			Amount:  AvaxAmount(txFee),
 		},
@@ -178,14 +180,14 @@ func crossChainTransaction(
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: idx,
 				},
-				Type:   OpImport,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Import.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: out.Address.Hex(),
 				},
 				Amount: &types.Amount{
 					Value:    new(big.Int).Mul(new(big.Int).SetUint64(out.Amount), X2crate).String(),
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
 					"tx":            t.ID().String(),
@@ -210,14 +212,14 @@ func crossChainTransaction(
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: idx,
 				},
-				Type:   OpExport,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Export.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: in.Address.Hex(),
 				},
 				Amount: &types.Amount{
 					Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(X2crate)).String(),
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
 					"tx":                t.ID().String(),
@@ -284,11 +286,11 @@ func createExportedOuts(
 		}
 		operations = append(operations, &types.Operation{
 			Account: &types.AccountIdentifier{Address: addr},
-			Type:    OpExport,
-			Status:  types.String(StatusSuccess),
+			Type:    cconstants.Export.String(),
+			Status:  types.String(constants.StatusSuccess),
 			Amount: &types.Amount{
 				Value:    strconv.FormatUint(out.Out.Amount(), 10),
-				Currency: AtomicAvaxCurrency,
+				Currency: pconstants.AtomicAvaxCurrency,
 			},
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{Identifier: utxoID.String()},
@@ -370,9 +372,9 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 	for _, call := range trace {
 		// Handle partial transaction success
 		metadata := map[string]interface{}{}
-		opStatus := StatusSuccess
+		opStatus := constants.StatusSuccess
 		if call.Revert {
-			opStatus = StatusFailure
+			opStatus = constants.StatusFailure
 			metadata["error"] = call.Error
 		}
 
@@ -386,7 +388,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 		// We can't continue here because we may need to adjust our destroyed
 		// accounts map if a CallTYpe operation resurrects an account.
 		shouldAdd := true
-		if zeroValue && CallType(call.Type) {
+		if zeroValue && cconstants.IsCall(call.Type) {
 			shouldAdd = false
 		}
 
@@ -406,7 +408,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 				},
 				Amount: &types.Amount{
 					Value:    new(big.Int).Neg(call.Value).String(),
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: metadata,
 			}
@@ -414,7 +416,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 				fromOp.Amount = nil
 			} else {
 				_, destroyed := destroyedAccounts[from]
-				if destroyed && opStatus == StatusSuccess {
+				if destroyed && opStatus == constants.StatusSuccess {
 					destroyedAccounts[from] = new(big.Int).Sub(destroyedAccounts[from], call.Value)
 				}
 			}
@@ -424,7 +426,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 
 		// Add to destroyed accounts if SELFDESTRUCT
 		// and overwrite existing balance.
-		if call.Type == OpSelfDestruct {
+		if cconstants.IsSelfDestruct(call.Type) {
 			destroyedAccounts[from] = new(big.Int)
 
 			// If destination of of SELFDESTRUCT is self,
@@ -445,7 +447,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 
 		// If the account is resurrected, we remove it from
 		// the destroyed accounts map.
-		if CreateType(call.Type) {
+		if cconstants.IsCreation(call.Type) {
 			delete(destroyedAccounts, to)
 		}
 
@@ -467,7 +469,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 				},
 				Amount: &types.Amount{
 					Value:    call.Value.String(),
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: metadata,
 			}
@@ -475,7 +477,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 				toOp.Amount = nil
 			} else {
 				_, destroyed := destroyedAccounts[to]
-				if destroyed && opStatus == StatusSuccess {
+				if destroyed && opStatus == constants.StatusSuccess {
 					destroyedAccounts[to] = new(big.Int).Add(destroyedAccounts[to], call.Value)
 				}
 			}
@@ -499,14 +501,14 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: ops[len(ops)-1].OperationIdentifier.Index + 1,
 			},
-			Type:   OpDestruct,
-			Status: types.String(StatusSuccess),
+			Type:   cconstants.Destruct.String(),
+			Status: types.String(constants.StatusSuccess),
 			Account: &types.AccountIdentifier{
 				Address: acct,
 			},
 			Amount: &types.Amount{
 				Value:    new(big.Int).Neg(val).String(),
-				Currency: AvaxCurrency,
+				Currency: cconstants.AvaxCurrency,
 			},
 		})
 	}
@@ -524,8 +526,8 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
-			Status:  types.String(StatusSuccess),
-			Type:    OpErc20Mint,
+			Status:  types.String(constants.StatusSuccess),
+			Type:    cconstants.Erc20Mint.String(),
 			Amount:  Erc20Amount(transferLog.Data, currency, false),
 			Account: Account(&toAddress),
 		}}
@@ -537,8 +539,8 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
-			Status:  types.String(StatusSuccess),
-			Type:    OpErc20Burn,
+			Status:  types.String(constants.StatusSuccess),
+			Type:    cconstants.Erc20Burn.String(),
 			Amount:  Erc20Amount(transferLog.Data, currency, true),
 			Account: Account(&fromAddress),
 		}}
@@ -549,8 +551,8 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen,
 		},
-		Status:  types.String(StatusSuccess),
-		Type:    OpErc20Transfer,
+		Status:  types.String(constants.StatusSuccess),
+		Type:    cconstants.Erc20Transfer.String(),
 		Amount:  Erc20Amount(transferLog.Data, currency, true),
 		Account: Account(&fromAddress),
 	}, {
@@ -558,8 +560,8 @@ func erc20Ops(transferLog *ethtypes.Log, currency *types.Currency, opsLen int64)
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen + 1,
 		},
-		Status:  types.String(StatusSuccess),
-		Type:    OpErc20Transfer,
+		Status:  types.String(constants.StatusSuccess),
+		Type:    cconstants.Erc20Transfer.String(),
 		Amount:  Erc20Amount(transferLog.Data, currency, false),
 		Account: Account(&toAddress),
 		RelatedOperations: []*types.OperationIdentifier{
@@ -584,8 +586,8 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
-			Status:   types.String(StatusSuccess),
-			Type:     OpErc721Mint,
+			Status:   types.String(constants.StatusSuccess),
+			Type:     cconstants.Erc721Mint.String(),
 			Account:  Account(&toAddress),
 			Metadata: metadata,
 		}}
@@ -597,8 +599,8 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 			OperationIdentifier: &types.OperationIdentifier{
 				Index: opsLen,
 			},
-			Status:   types.String(StatusSuccess),
-			Type:     OpErc721Burn,
+			Status:   types.String(constants.StatusSuccess),
+			Type:     cconstants.Erc721Burn.String(),
 			Account:  Account(&fromAddress),
 			Metadata: metadata,
 		}}
@@ -609,8 +611,8 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen,
 		},
-		Status:   types.String(StatusSuccess),
-		Type:     OpErc721TransferSender,
+		Status:   types.String(constants.StatusSuccess),
+		Type:     cconstants.Erc721TransferSender.String(),
 		Account:  Account(&fromAddress),
 		Metadata: metadata,
 	}, {
@@ -618,8 +620,8 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 		OperationIdentifier: &types.OperationIdentifier{
 			Index: opsLen + 1,
 		},
-		Status:   types.String(StatusSuccess),
-		Type:     OpErc721TransferReceive,
+		Status:   types.String(constants.StatusSuccess),
+		Type:     cconstants.Erc721TransferReceive.String(),
 		Account:  Account(&toAddress),
 		Metadata: metadata,
 		RelatedOperations: []*types.OperationIdentifier{

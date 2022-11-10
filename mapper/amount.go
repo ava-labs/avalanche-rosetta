@@ -3,6 +3,8 @@ package mapper
 import (
 	"math/big"
 
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -19,12 +21,12 @@ func Amount(value *big.Int, currency *types.Currency) *types.Amount {
 }
 
 func AvaxAmount(value *big.Int) *types.Amount {
-	return Amount(value, AvaxCurrency)
+	return Amount(value, cconstants.AvaxCurrency)
 }
 
 // AtomicAvaxAmount creates a Rosetta Amount representing AVAX amount in nAVAXs with given quantity
 func AtomicAvaxAmount(value *big.Int) *types.Amount {
-	return Amount(value, AtomicAvaxCurrency)
+	return Amount(value, pconstants.AtomicAvaxCurrency)
 }
 
 func Erc20Amount(

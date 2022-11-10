@@ -13,6 +13,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -63,11 +64,11 @@ func (b *Backend) ConstructionMetadata(
 	var suggestedFee *types.Amount
 	var metadata *pmapper.Metadata
 	switch opMetadata.Type {
-	case pmapper.OpImportAvax:
+	case pconstants.ImportAvax.String():
 		metadata, suggestedFee, err = b.buildImportMetadata(ctx, req.Options)
-	case pmapper.OpExportAvax:
+	case pconstants.ExportAvax.String():
 		metadata, suggestedFee, err = b.buildExportMetadata(ctx, req.Options)
-	case pmapper.OpAddValidator, pmapper.OpAddDelegator:
+	case pconstants.AddValidator.String(), pconstants.AddDelegator.String():
 		metadata, suggestedFee, err = b.buildStakingMetadata(req.Options)
 		metadata.Threshold = opMetadata.Threshold
 		metadata.Locktime = opMetadata.Locktime

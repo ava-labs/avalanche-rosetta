@@ -10,6 +10,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -94,7 +95,7 @@ func (s *NetworkService) NetworkStatus(
 				CurrentBlockTimestamp:  s.genesisBlock.Timestamp,
 				CurrentBlockIdentifier: s.genesisBlock.BlockIdentifier,
 				GenesisBlockIdentifier: s.genesisBlock.BlockIdentifier,
-				SyncStatus:             mapper.StageBootstrap,
+				SyncStatus:             constants.StageBootstrap,
 				Peers:                  peers,
 			}, nil
 		}
@@ -129,7 +130,7 @@ func (s *NetworkService) NetworkStatus(
 			Index: genesisHeader.Number.Int64(),
 			Hash:  genesisHeader.Hash().String(),
 		},
-		SyncStatus: mapper.StageSynced,
+		SyncStatus: constants.StageSynced,
 		Peers:      peers,
 	}, nil
 }
@@ -150,9 +151,9 @@ func (s *NetworkService) NetworkOptions(
 			MiddlewareVersion: types.String(MiddlewareVersion),
 		},
 		Allow: &types.Allow{
-			OperationStatuses:       mapper.OperationStatuses,
-			OperationTypes:          mapper.OperationTypes,
-			CallMethods:             mapper.CallMethods,
+			OperationStatuses:       constants.OperationStatuses,
+			OperationTypes:          cconstants.CChainOps(),
+			CallMethods:             cconstants.CChainCallMethods(),
 			Errors:                  Errors,
 			HistoricalBalanceLookup: true,
 		},

@@ -13,14 +13,13 @@ import (
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
+	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
-
-	"github.com/ava-labs/avalanche-rosetta/mapper"
-	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
 var (
@@ -91,7 +90,7 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 		Balances: []*types.Amount{
 			{
 				Value:    strconv.FormatUint(balanceValue, 10),
-				Currency: mapper.AtomicAvaxCurrency,
+				Currency: pconstants.AtomicAvaxCurrency,
 			},
 		},
 	}, nil
@@ -139,7 +138,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 			CoinIdentifier: &types.CoinIdentifier{Identifier: utxo.UTXOID.String()},
 			Amount: &types.Amount{
 				Value:    strconv.FormatUint(amounter.Amount(), 10),
-				Currency: mapper.AtomicAvaxCurrency,
+				Currency: pconstants.AtomicAvaxCurrency,
 			},
 		}
 		coins = append(coins, coin)

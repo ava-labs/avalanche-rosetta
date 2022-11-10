@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	ethtypes "github.com/ava-labs/coreth/core/types"
@@ -45,8 +47,8 @@ func TestERC20Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   OpErc20Transfer,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Erc20Transfer.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -64,8 +66,8 @@ func TestERC20Ops(t *testing.T) {
 						Index: 1,
 					},
 				},
-				Type:   OpErc20Transfer,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Erc20Transfer.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0x5d95ae932D42E53Bb9DA4DE65E9b7263A4fA8564",
 				},
@@ -93,8 +95,8 @@ func TestERC20Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   OpErc20Burn,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Erc20Burn.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -122,8 +124,8 @@ func TestERC20Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   OpErc20Mint,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Erc20Mint.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -153,8 +155,8 @@ func TestERC721Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   OpErc721TransferSender,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Erc721TransferSender.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -172,8 +174,8 @@ func TestERC721Ops(t *testing.T) {
 						Index: 1,
 					},
 				},
-				Type:   OpErc721TransferReceive,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Erc721TransferReceive.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0x5d95ae932D42E53Bb9DA4DE65E9b7263A4fA8564",
 				},
@@ -201,8 +203,8 @@ func TestERC721Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   OpErc721Burn,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Erc721Burn.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -230,8 +232,8 @@ func TestERC721Ops(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   OpErc721Mint,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Erc721Mint.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0xf1B77573A8525aCfa116a785092d1Ba90D96BF37",
 				},
@@ -275,14 +277,14 @@ func TestCrossChainExportedOuts(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 0,
 				},
-				Type:   OpExport,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Export.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "0x3158e80abD5A1e1aa716003C9Db096792C379621",
 				},
 				Amount: &types.Amount{
 					Value:    "-1280750000000000",
-					Currency: AvaxCurrency,
+					Currency: cconstants.AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
 					"tx":                "7QUPqUAMdny53bVptZ2DgxLLN4qZ5X7MnBPseUKYnoh5C5v47",
@@ -300,14 +302,14 @@ func TestCrossChainExportedOuts(t *testing.T) {
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: 1,
 				},
-				Type:   OpExport,
-				Status: types.String(StatusSuccess),
+				Type:   cconstants.Export.String(),
+				Status: types.String(constants.StatusSuccess),
 				Account: &types.AccountIdentifier{
 					Address: "P-fuji1eql2fhqet2f8tg6funmpdja5tc374vhmdj2xz2",
 				},
 				Amount: &types.Amount{
 					Value:    "1000000",
-					Currency: AtomicAvaxCurrency,
+					Currency: pconstants.AtomicAvaxCurrency,
 				},
 				CoinChange: &types.CoinChange{
 					CoinIdentifier: &types.CoinIdentifier{

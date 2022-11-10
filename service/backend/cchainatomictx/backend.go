@@ -8,6 +8,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -51,9 +52,9 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	case *types.ConstructionMetadataRequest:
 		return r.Options[cmapper.MetadataAtomicTxGas] != nil
 	case *types.ConstructionPreprocessRequest:
-		return cmapper.IsAtomicOpType(r.Operations[0].Type)
+		return cconstants.IsAtomicOp(r.Operations[0].Type)
 	case *types.ConstructionPayloadsRequest:
-		return cmapper.IsAtomicOpType(r.Operations[0].Type)
+		return cconstants.IsAtomicOp(r.Operations[0].Type)
 	case *types.ConstructionParseRequest:
 		return b.isCchainAtomicTx(r.Transaction)
 	case *types.ConstructionCombineRequest:

@@ -15,6 +15,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common/math"
 
+	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
@@ -33,13 +34,13 @@ func BuildTx(
 	avaxAssetID ids.ID,
 ) (*txs.Tx, []*types.AccountIdentifier, error) {
 	switch opType {
-	case OpImportAvax:
+	case pconstants.ImportAvax.String():
 		return buildImportTx(matches, payloadMetadata, codec, avaxAssetID)
-	case OpExportAvax:
+	case pconstants.ExportAvax.String():
 		return buildExportTx(matches, payloadMetadata, codec, avaxAssetID)
-	case OpAddValidator:
+	case pconstants.AddValidator.String():
 		return buildAddValidatorTx(matches, payloadMetadata, codec, avaxAssetID)
-	case OpAddDelegator:
+	case pconstants.AddDelegator.String():
 		return buildAddDelegatorTx(matches, payloadMetadata, codec, avaxAssetID)
 	default:
 		return nil, nil, fmt.Errorf("invalid tx type: %s", opType)
@@ -309,9 +310,9 @@ func buildInputs(
 		}
 
 		switch opMetadata.Type {
-		case OpTypeImport:
+		case pconstants.Import.String():
 			imported = append(imported, in)
-		case OpTypeInput:
+		case pconstants.Input.String():
 			ins = append(ins, in)
 		default:
 			return nil, nil, nil, fmt.Errorf("invalid option type: %s", op.Type)
@@ -386,11 +387,11 @@ func buildOutputs(
 		}
 
 		switch opMetadata.Type {
-		case OpTypeOutput:
+		case pconstants.Output.String():
 			outs = append(outs, out)
-		case OpTypeStakeOutput:
+		case pconstants.Stake.String():
 			stakeOutputs = append(stakeOutputs, out)
-		case OpTypeExport:
+		case pconstants.Export.String():
 			exported = append(exported, out)
 		default:
 			return nil, nil, nil, fmt.Errorf("invalid option type: %s", op.Type)

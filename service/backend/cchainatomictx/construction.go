@@ -16,6 +16,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
+	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -59,7 +60,7 @@ func (b *Backend) ConstructionPreprocess(
 	}
 
 	switch firstIn.Type {
-	case mapper.OpImport:
+	case cconstants.Import.String():
 		v, ok := req.Metadata[cmapper.MetadataSourceChain]
 		if !ok {
 			return nil, service.WrapError(service.ErrInvalidInput, "source_chain metadata must be provided")
@@ -70,7 +71,7 @@ func (b *Backend) ConstructionPreprocess(
 		}
 
 		preprocessOptions.SourceChain = chainAlias
-	case mapper.OpExport:
+	case cconstants.Export.String():
 		chain, _, _, err := address.Parse(firstOut.Account.Address)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
