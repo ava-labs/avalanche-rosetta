@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	MainnetChainID = 43114
-	MainnetAssetID = "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
+	CaminoChainID = 500
+	CaminoAssetID = "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
 
-	ColumbusChainID = 43113
+	ColumbusChainID = 501
 	ColumbusAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
 
 	ContractAddressMetadata  = "contractAddress"
@@ -42,7 +42,7 @@ const (
 )
 
 var (
-	MainnetAP5Activation  = params.CaminoChainConfig.ApricotPhase5BlockTimestamp
+	CaminoAP5Activation   = params.CaminoChainConfig.ApricotPhase5BlockTimestamp
 	ColumbusAP5Activation = params.ColumbusChainConfig.ApricotPhase5BlockTimestamp
 
 	StageBootstrap = &types.SyncStatus{
@@ -55,8 +55,8 @@ var (
 		Stage:  types.String("SYNCED"),
 	}
 
-	AvaxCurrency = &types.Currency{
-		Symbol:   "AVAX",
+	CamCurrency = &types.Currency{
+		Symbol:   "CAM",
 		Decimals: 18,
 	}
 

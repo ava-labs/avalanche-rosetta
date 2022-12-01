@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/chain4travel/caminogo/version"
+	"github.com/ava-labs/avalanchego/version"
 )
 
 var NodeVersion = fmt.Sprintf(

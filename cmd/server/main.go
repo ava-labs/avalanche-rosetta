@@ -87,9 +87,9 @@ func main() {
 	var assetID string
 	var AP5Activation uint64
 	switch cfg.ChainID {
-	case mapper.MainnetChainID:
-		assetID = mapper.MainnetAssetID
-		AP5Activation = mapper.MainnetAP5Activation.Uint64()
+	case mapper.CaminoChainID:
+		assetID = mapper.CaminoAssetID
+		AP5Activation = mapper.CaminoAP5Activation.Uint64()
 	case mapper.ColumbusChainID:
 		assetID = mapper.ColumbusAssetID
 		AP5Activation = mapper.ColumbusAP5Activation.Uint64()
@@ -132,7 +132,7 @@ func main() {
 		ChainID:            big.NewInt(cfg.ChainID),
 		NetworkID:          network,
 		GenesisBlockHash:   cfg.GenesisBlockHash,
-		AvaxAssetID:        assetID,
+		CamAssetID:         assetID,
 		AP5Activation:      AP5Activation,
 		IndexUnknownTokens: cfg.IndexUnknownTokens,
 		IngestionMode:      cfg.IngestionMode,
@@ -148,7 +148,7 @@ func main() {
 	router := server.CorsMiddleware(handler)
 
 	log.Printf(
-		`using avax (chain=%q chainid="%d" network=%q) rpc endpoint: %v`,
+		`using cam (chain=%q chainid="%d" network=%q) rpc endpoint: %v`,
 		service.BlockchainName,
 		cfg.ChainID,
 		cfg.NetworkName,

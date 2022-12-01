@@ -3,6 +3,7 @@ module github.com/chain4travel/camino-rosetta
 go 1.19
 
 require (
+	github.com/ava-labs/avalanchego v0.0.0-00010101000000-000000000000
 	github.com/chain4travel/caminoethvm v0.1.1
 	github.com/chain4travel/caminogo v0.2.0
 	github.com/coinbase/rosetta-sdk-go v0.6.5
@@ -82,3 +83,5 @@ require (
 replace github.com/ava-labs/avalanchego => github.com/chain4travel/caminogo v0.3.1-alpha1
 
 replace github.com/ava-labs/coreth => github.com/chain4travel/caminoethvm v0.2.1-alpha1
+
+replace github.com/ava-labs/avalanche-ledger-go => github.com/chain4travel/camino-ledger-go v0.0.10-c4t2

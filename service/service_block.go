@@ -209,7 +209,7 @@ func (s *BlockService) parseCrossChainTransactions(
 ) ([]*types.Transaction, *types.Error) {
 	result := []*types.Transaction{}
 
-	crossTxs, err := mapper.CrossChainTransactions(s.config.AvaxAssetID, block, s.config.AP5Activation)
+	crossTxs, err := mapper.CrossChainTransactions(s.config.CamAssetID, block, s.config.AP5Activation)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}

@@ -7,11 +7,11 @@ PROJECT             ?= camino-rosetta
 GIT_COMMIT          ?= $(shell git rev-parse HEAD)
 GO_VERSION          ?= $(shell go version | awk {'print $$3'})
 WORKDIR             ?= $(shell pwd)
-DOCKER_ORG          ?= avaplatform
+DOCKER_ORG          ?= c4tplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-CAMINO_VERSION   ?= v1.9.3
+CAMINO_VERSION   ?= v0.2.0
 
 build:
 	export CGO_CFLAGS="-O -D__BLST_PORTABLE__" && go build -o ./rosetta-server ./cmd/server

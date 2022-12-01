@@ -75,6 +75,7 @@ github.com/btcsuite/btcd v0.0.0-20171128150713-2e60448ffcc6/go.mod h1:Dmm/EzmjnC
 github.com/btcsuite/btcd v0.0.0-20190315201642-aa6e0f35703c/go.mod h1:DrZx5ec/dmnfpw9KyYoQyYo7d0KEvTkk/5M/vbZjAr8=
 github.com/btcsuite/btcd v0.20.1-beta/go.mod h1:wVuoA8VJLEcwgqHBwHmzLRazpKxTv13Px/pDuV7OomQ=
 github.com/btcsuite/btcd v0.21.0-beta/go.mod h1:ZSWyehm27aAuS9bvkATT+Xte3hjHZ+MRgMY/8NJ7K94=
+github.com/btcsuite/btcd v0.23.1 h1:IB8cVQcC2X5mHbnfirLG5IZnkWYNTPlLZVrxUYSotbE=
 github.com/btcsuite/btcd/btcec/v2 v2.2.0 h1:fzn1qaOt32TuLjFlkzYSsBC35Q3KUjT1SwPxiMSCF5k=
 github.com/btcsuite/btcd/btcec/v2 v2.2.0/go.mod h1:U7MHm051Al6XmscBQ0BoNydpOTsFAn707034b5nY8zU=
 github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 h1:q0rUy8C/TYNBQS1+CGKw68tLOFYSNEs0TFnxxnS9+4U=
@@ -103,6 +104,8 @@ github.com/chain4travel/caminoethvm v0.1.1 h1:0/iwPCscxckxlfYEt5ZT5//u4ok7/1tbXp
 github.com/chain4travel/caminoethvm v0.1.1/go.mod h1:sJ070HuN5qhEEGzBc8lmX4l0Zx8Wg0bpHLkwTwYJX4I=
 github.com/chain4travel/caminogo v0.2.0 h1:77/bR/c6oA9BW8YIVqkCVhIG76X6WRZhGVzjqswWgx4=
 github.com/chain4travel/caminogo v0.2.0/go.mod h1:phXVVpkhyFSS5fl6hCUMaaPJ5P4NZ5AqcFwROhjJiZ4=
+github.com/chain4travel/caminogo v0.3.1-alpha1 h1:VfZ/h3YEU/mN5EzAklY0udnN8nU/pyGFAX71qL3Ty/E=
+github.com/chain4travel/caminogo v0.3.1-alpha1/go.mod h1:t48eDion2Bx2uMLVYJ0JIfPT+Oall+cXmP0Jd6b3ueo=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
