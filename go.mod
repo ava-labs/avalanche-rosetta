@@ -1,10 +1,10 @@
-module github.com/ava-labs/avalanche-rosetta
+module github.com/chain4travel/camino-rosetta
 
 go 1.19
 
 require (
-	github.com/ava-labs/avalanchego v1.9.3
-	github.com/ava-labs/coreth v0.11.3-rc.1
+	github.com/chain4travel/caminogo v1.9.3
+	github.com/chain4travel/coreth v0.11.3-rc.1
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/stretchr/testify v1.8.1
@@ -18,7 +18,7 @@ require (
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/VictoriaMetrics/fastcache v1.10.0 // indirect
 	github.com/aead/siphash v1.0.1 // indirect
-	github.com/ava-labs/avalanche-ledger-go v0.0.13 // indirect
+	github.com/chain4travel/camino-ledger-go v0.0.13 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd v0.23.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect

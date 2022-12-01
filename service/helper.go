@@ -6,10 +6,10 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/chain4travel/camino-rosetta/client"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethtypes "github.com/chain4travel/caminoethvm/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 

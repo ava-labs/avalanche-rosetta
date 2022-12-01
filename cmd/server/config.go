@@ -5,13 +5,13 @@ import (
 	"errors"
 	"os"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/chain4travel/camino-rosetta/client"
+	"github.com/chain4travel/camino-rosetta/service"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 var (
-	errMissingRPC              = errors.New("avalanche rpc endpoint is not provided")
+	errMissingRPC              = errors.New("camino rpc endpoint is not provided")
 	errInvalidMode             = errors.New("invalid rosetta mode")
 	errGenesisBlockRequired    = errors.New("genesis block hash is not provided")
 	errInvalidTokenAddress     = errors.New("invalid token address provided")

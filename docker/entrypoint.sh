@@ -1,13 +1,13 @@
 #!/bin/bash
 
-export AVALANCHE_NETWORK=${AVALANCHE_NETWORK:-testnet}
-export AVALANCHE_CHAIN=${AVALANCHE_CHAIN:-43113}
-export AVALANCHE_MODE=${AVALANCHE_MODE:-online}
-export AVALANCHE_GENESIS_HASH=${AVALANCHE_GENESIS_HASH:-"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b"}
+export CAMINO_NETWORK=${CAMINO_NETWORK:-testnet}
+export CAMINO_CHAIN=${CAMINO_CHAIN:-43113}
+export CAMINO_MODE=${CAMINO_MODE:-online}
+export CAMINO_GENESIS_HASH=${CAMINO_GENESIS_HASH:-"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b"}
 
-cat <<EOF > /app/avalanchego-config.json
+cat <<EOF > /app/caminogo-config.json
 {
-  "network-id": "$AVALANCHE_NETWORK",
+  "network-id": "$CAMINO_NETWORK",
   "http-host": "0.0.0.0",
   "api-keystore-enabled": false,
   "api-admin-enabled": false,
@@ -34,13 +34,13 @@ EOF
 
 cat <<EOF > /app/rosetta-config.json
 {
-  "mode": "$AVALANCHE_MODE",
+  "mode": "$CAMINO_MODE",
   "rpc_endpoint": "http://localhost:9650",
   "listen_addr": "0.0.0.0:8080",
   "network_id": 1,
-  "network_name": "$AVALANCHE_NETWORK",
-  "chain_id": $AVALANCHE_CHAIN,
-  "genesis_block_hash": "$AVALANCHE_GENESIS_HASH"
+  "network_name": "$CAMINO_NETWORK",
+  "chain_id": $CAMINO_CHAIN,
+  "genesis_block_hash": "$CAMINO_GENESIS_HASH"
 }
 EOF
 
@@ -50,8 +50,8 @@ if [ -n "$@" ]; then
 fi
 
 exec /app/rosetta-runner \
-  -mode $AVALANCHE_MODE \
-  -avalanche-bin /app/avalanchego \
-  -avalanche-config /app/avalanchego-config.json \
+  -mode $CAMINO_MODE \
+  -camino-bin /app/caminogo \
+  -camino-config /app/caminogo-config.json \
   -rosetta-bin /app/rosetta-server \
   -rosetta-config rosetta-config.json

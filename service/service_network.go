@@ -8,8 +8,8 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/chain4travel/camino-rosetta/client"
+	"github.com/chain4travel/camino-rosetta/mapper"
 )
 
 // NetworkService implements all /network endpoints

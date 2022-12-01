@@ -12,12 +12,12 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/utils"
 	"golang.org/x/crypto/sha3"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/interfaces"
+	ethtypes "github.com/chain4travel/caminoethvm/core/types"
+	"github.com/chain4travel/caminoethvm/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/chain4travel/camino-rosetta/client"
+	"github.com/chain4travel/camino-rosetta/mapper"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
@@ -677,7 +677,7 @@ func (s ConstructionService) getNativeTransferGasLimit(
 	value *big.Int,
 ) (uint64, error) {
 	// Guard against malformed inputs that may have been generated using
-	// a previous version of avalanche-rosetta.
+	// a previous version of camino-rosetta.
 	if len(to) == 0 || value == nil {
 		return nativeTransferGasLimit, nil
 	}

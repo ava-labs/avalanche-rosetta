@@ -3,7 +3,7 @@ package service
 import (
 	"math/big"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethtypes "github.com/chain4travel/caminoethvm/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 

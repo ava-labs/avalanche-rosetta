@@ -3,7 +3,7 @@ package mapper
 import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/ava-labs/avalanchego/api/info"
+	"github.com/chain4travel/caminogo/api/info"
 )
 
 func Peers(peers []info.Peer) []*types.Peer {

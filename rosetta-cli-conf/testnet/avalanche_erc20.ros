@@ -36,7 +36,7 @@ request_funds(1){
 
 create_account(1){
   create{
-    network = {"network":"Fuji", "blockchain":"Avalanche"};
+    network = {"network":"Columbus", "blockchain":"Camino"};
     key = generate_key({"curve_type": "secp256k1"});
     account = derive({
       "network_identifier": {{network}},
@@ -53,7 +53,7 @@ create_account(1){
 
 simple_transfer_erc20(1){
   transfer{
-    transfer.network = {"network":"Fuji", "blockchain":"Avalanche"};
+    transfer.network = {"network":"Columbus", "blockchain":"Camino"};
     avax_currency = {"symbol":"AVAX", "decimals":18};
 
     currency = {"symbol":"DAI", "decimals":18, "metadata": {"contractAddress": "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9"}};

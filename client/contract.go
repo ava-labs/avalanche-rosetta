@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/ava-labs/avalanchego/cache"
-	"github.com/ava-labs/coreth/ethclient"
+	"github.com/chain4travel/caminoethvm/ethclient"
+	"github.com/chain4travel/caminogo/cache"
 	"github.com/ethereum/go-ethereum/common"
 )
 

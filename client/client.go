@@ -5,10 +5,10 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ava-labs/avalanchego/api/info"
-	"github.com/ava-labs/avalanchego/utils/rpc"
-	ethtypes "github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/interfaces"
+	ethtypes "github.com/chain4travel/caminoethvm/core/types"
+	"github.com/chain4travel/caminoethvm/interfaces"
+	"github.com/chain4travel/caminogo/api/info"
+	"github.com/chain4travel/caminogo/utils/rpc"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
@@ -44,7 +44,7 @@ type client struct {
 	*ContractClient
 }
 
-// NewClient returns a new client for Avalanche APIs
+// NewClient returns a new client for Camino APIs
 func NewClient(ctx context.Context, endpoint string) (Client, error) {
 	endpoint = strings.TrimSuffix(endpoint, "/")
 

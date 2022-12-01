@@ -3,7 +3,7 @@
 				check-testnet-data check-testnet-construction check-testnet-construction-erc20 \
 				check-mainnet-data check-mainnet-construction
 
-PROJECT             ?= avalanche-rosetta
+PROJECT             ?= camino-rosetta
 GIT_COMMIT          ?= $(shell git rev-parse HEAD)
 GO_VERSION          ?= $(shell go version | awk {'print $$3'})
 WORKDIR             ?= $(shell pwd)
@@ -11,7 +11,7 @@ DOCKER_ORG          ?= avaplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.9.3
+CAMINO_VERSION   ?= v1.9.3
 
 build:
 	export CGO_CFLAGS="-O -D__BLST_PORTABLE__" && go build -o ./rosetta-server ./cmd/server
@@ -25,7 +25,7 @@ test:
 
 docker-build:
 	docker build \
-		--build-arg AVALANCHE_VERSION=${AVALANCHE_VERSION} \
+		--build-arg CAMINO_VERSION=${CAMINO_VERSION} \
 		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
 		-t ${DOCKER_TAG} \
 		-f Dockerfile \
@@ -37,10 +37,10 @@ run-testnet:
 		--rm \
 		-d \
 		-v ${WORKDIR}/data:/data \
-		-e AVALANCHE_NETWORK=Fuji \
-		-e AVALANCHE_CHAIN=43113 \
-		-e AVALANCHE_MODE=online \
-		--name avalanche-testnet \
+		-e CAMINO_NETWORK=Columbus \
+		-e CAMINO_CHAIN=43113 \
+		-e CAMINO_MODE=online \
+		--name camino-testnet \
 		-p 8080:8080 \
 		-p 9650:9650 \
 		-p 9651:9651 \
@@ -52,10 +52,10 @@ run-testnet-offline:
 	docker run \
 		--rm \
 		-d \
-		-e AVALANCHE_NETWORK=Fuji \
-		-e AVALANCHE_CHAIN=43113 \
-		-e AVALANCHE_MODE=offline \
-		--name avalanche-testnet-offline \
+		-e CAMINO_NETWORK=Columbus \
+		-e CAMINO_CHAIN=43113 \
+		-e CAMINO_MODE=offline \
+		--name camino-testnet-offline \
 		-p 8080:8080 \
 		-p 9650:9650 \
 		-it \
@@ -67,10 +67,10 @@ run-mainnet:
 		--rm \
 		-d \
 		-v ${WORKDIR}/data:/data \
-		-e AVALANCHE_NETWORK=Mainnet \
-		-e AVALANCHE_CHAIN=43114 \
-		-e AVALANCHE_MODE=online \
-		--name avalanche-mainnet \
+		-e CAMINO_NETWORK=Mainnet \
+		-e CAMINO_CHAIN=43114 \
+		-e CAMINO_MODE=online \
+		--name camino-mainnet \
 		-p 8080:8080 \
 		-p 9650:9650 \
 		-p 9651:9651 \
@@ -82,10 +82,10 @@ run-mainnet-offline:
 	docker run \
 		--rm \
 		-d \
-		-e AVALANCHE_NETWORK=Mainnet \
-		-e AVALANCHE_CHAIN=43114 \
-		-e AVALANCHE_MODE=offline \
-		--name avalanche-mainnet-offline \
+		-e CAMINO_NETWORK=Mainnet \
+		-e CAMINO_CHAIN=43114 \
+		-e CAMINO_MODE=offline \
+		--name camino-mainnet-offline \
 		-p 8080:8080 \
 		-p 9650:9650 \
 		-it \

@@ -26,7 +26,7 @@ request_funds(1){
 
 create_account(1){
   create{
-    network = {"network":"Mainnet", "blockchain":"Avalanche"};
+    network = {"network":"Mainnet", "blockchain":"Camino"};
     key = generate_key({"curve_type": "secp256k1"});
     account = derive({
       "network_identifier": {{network}},
@@ -43,7 +43,7 @@ create_account(1){
 
 transfer(10){
   transfer{
-    transfer.network = {"network":"Mainnet", "blockchain":"Avalanche"};
+    transfer.network = {"network":"Mainnet", "blockchain":"Camino"};
     currency = {"symbol":"AVAX", "decimals":18};
     sender = find_balance({
       "minimum_balance":{
@@ -95,7 +95,7 @@ transfer(10){
 
 return_funds(10){
   transfer{
-    transfer.network = {"network":"Mainnet", "blockchain":"Avalanche"};
+    transfer.network = {"network":"Mainnet", "blockchain":"Camino"};
     currency = {"symbol":"AVAX", "decimals":18};
     max_fee = "4725000000000000"; // 0.004725 AVAX
     sender = find_balance({

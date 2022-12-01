@@ -12,9 +12,9 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
-	"github.com/ava-labs/coreth/interfaces"
+	"github.com/chain4travel/camino-rosetta/client"
+	"github.com/chain4travel/camino-rosetta/mapper"
+	"github.com/chain4travel/caminoethvm/interfaces"
 )
 
 // AccountService implements the /account/* endpoints

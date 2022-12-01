@@ -13,13 +13,13 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
-	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/chain4travel/camino-rosetta/client"
+	"github.com/chain4travel/camino-rosetta/mapper"
+	"github.com/chain4travel/camino-rosetta/service"
 )
 
 var (
-	cmdName    = "avalanche-rosetta"
+	cmdName    = "camino-rosetta"
 	cmdVersion = service.MiddlewareVersion
 )
 
@@ -90,9 +90,9 @@ func main() {
 	case mapper.MainnetChainID:
 		assetID = mapper.MainnetAssetID
 		AP5Activation = mapper.MainnetAP5Activation.Uint64()
-	case mapper.FujiChainID:
-		assetID = mapper.FujiAssetID
-		AP5Activation = mapper.FujiAP5Activation.Uint64()
+	case mapper.ColumbusChainID:
+		assetID = mapper.ColumbusAssetID
+		AP5Activation = mapper.ColumbusAP5Activation.Uint64()
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
 	}
