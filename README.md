@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="resources/CaminoLogoRed.png?raw=true">
+  <img src="resources/camino-logo.png?raw=true">
 </div>
 
 ---
