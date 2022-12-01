@@ -42,8 +42,8 @@ const (
 )
 
 var (
-	MainnetAP5Activation  = params.CaminoMainnetChainConfig.ApricotPhase5BlockTimestamp
-	ColumbusAP5Activation = params.CaColumbusChainConfig.ApricotPhase5BlockTimestamp
+	MainnetAP5Activation  = params.CaminoChainConfig.ApricotPhase5BlockTimestamp
+	ColumbusAP5Activation = params.ColumbusChainConfig.ApricotPhase5BlockTimestamp
 
 	StageBootstrap = &types.SyncStatus{
 		Synced: types.Bool(false),
