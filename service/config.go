@@ -17,6 +17,7 @@ type Config struct {
 	IngestionMode      string
 	TokenWhiteList     []string
 	IndexUnknownTokens bool
+	BridgeTokenList    []string
 
 	// Upgrade Times
 	AP5Activation uint64
