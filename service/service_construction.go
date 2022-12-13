@@ -320,11 +320,13 @@ func (s ConstructionService) ConstructionParse(
 	if len(tx.Data) != 0 {
 		unwrapMethodID := getMethodID(unwrapFnSignature)
 		transferMethodID := getMethodID(transferFnSignature)
-		if hexutil.Encode(tx.Data[:4]) == hexutil.Encode(unwrapMethodID) {
+
+		switch hexutil.Encode(tx.Data[:4]) {
+		case hexutil.Encode(unwrapMethodID):
 			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
-		} else if hexutil.Encode(tx.Data[:4]) == hexutil.Encode(transferMethodID) {
+		case hexutil.Encode(transferMethodID):
 			ops, checkFrom, wrappedErr = createTransferOps(tx)
-		} else {
+		default:
 			wrappedErr = wrapError(
 				errInvalidInput,
 				fmt.Errorf("method %x is not supported", tx.Data[:4]),
