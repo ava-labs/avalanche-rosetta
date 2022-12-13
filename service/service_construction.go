@@ -109,11 +109,11 @@ func (s ConstructionService) ConstructionMetadata(
 			}
 		} else {
 			if input.Metadata != nil {
-				if input.Metadata.UnwrapBridgeTx {
-					gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
-				} else {
+				if !input.Metadata.UnwrapBridgeTx {
 					return nil, wrapError(errInvalidInput, "UnwrapBridgeTx must be populated if input.Metadata is provided")
 				}
+
+				gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
 			} else {
 				gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
 			}
