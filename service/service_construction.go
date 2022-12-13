@@ -319,15 +319,17 @@ func (s ConstructionService) ConstructionParse(
 	)
 	if len(tx.Data) != 0 {
 		unwrapMethodID := getMethodID(unwrapFnSignature)
+		transferMethodID := getMethodID(transferFnSignature)
 		if hexutil.Encode(tx.Data[:4]) == hexutil.Encode(unwrapMethodID) {
 			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
-		} else {
+		} else if hexutil.Encode(tx.Data[:4]) == hexutil.Encode(transferMethodID) {
 			ops, checkFrom, wrappedErr = createTransferOps(tx)
+		} else {
+			wrappedErr = wrapError(errInvalidInput, "method is not supported")
 		}
 	} else {
 		ops, checkFrom, wrappedErr = createTransferOps(tx)
 	}
-
 	if wrappedErr != nil {
 		return nil, wrappedErr
 	}
