@@ -325,7 +325,10 @@ func (s ConstructionService) ConstructionParse(
 		} else if hexutil.Encode(tx.Data[:4]) == hexutil.Encode(transferMethodID) {
 			ops, checkFrom, wrappedErr = createTransferOps(tx)
 		} else {
-			wrappedErr = wrapError(errInvalidInput, "method is not supported")
+			wrappedErr = wrapError(
+				errInvalidInput,
+				fmt.Errorf("method %x is not supported", tx.Data[:4]),
+			)
 		}
 	} else {
 		ops, checkFrom, wrappedErr = createTransferOps(tx)
