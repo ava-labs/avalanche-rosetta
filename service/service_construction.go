@@ -111,6 +111,8 @@ func (s ConstructionService) ConstructionMetadata(
 			if input.Metadata != nil {
 				if input.Metadata.UnwrapBridgeTx {
 					gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
+				} else {
+					return nil, wrapError(errInvalidInput, "UnwrapBridgeTx must be populated if input.Metadata is provided")
 				}
 			} else {
 				gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
@@ -309,10 +311,12 @@ func (s ConstructionService) ConstructionParse(
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
-	var ops []*types.Operation
-	var checkFrom *string
-	var wrappedErr *types.Error
 
+	var (
+		ops        []*types.Operation
+		checkFrom  *string
+		wrappedErr *types.Error
+	)
 	if len(tx.Data) != 0 {
 		unwrapMethodID := getMethodID(unwrapFnSignature)
 		if hexutil.Encode(tx.Data[:4]) == hexutil.Encode(unwrapMethodID) {
@@ -348,9 +352,11 @@ func (s ConstructionService) ConstructionParse(
 }
 
 func createTransferOps(tx transaction) ([]*types.Operation, *string, *types.Error) {
-	var opMethod string
-	var value *big.Int
-	var toAddressHex string
+	var (
+		opMethod     string
+		value        *big.Int
+		toAddressHex string
+	)
 
 	// Erc20 transfer
 	if len(tx.Data) != 0 {
@@ -467,10 +473,12 @@ func (s ConstructionService) ConstructionPayloads(
 	ctx context.Context,
 	req *types.ConstructionPayloadsRequest,
 ) (*types.ConstructionPayloadsResponse, *types.Error) {
-	var tx *ethtypes.Transaction
-	var unsignedTx *transaction
-	var checkFrom *string
-	var wrappedErr *types.Error
+	var (
+		tx         *ethtypes.Transaction
+		unsignedTx *transaction
+		checkFrom  *string
+		wrappedErr *types.Error
+	)
 
 	if isUnwrapRequest(req.Metadata) {
 		tx, unsignedTx, checkFrom, wrappedErr = s.createUnwrapPayload(req)
@@ -968,22 +976,19 @@ func (s ConstructionService) createOperationDescriptionTransfer(
 func (s ConstructionService) createOperationDescriptionBridgeUnwrap(
 	currency *types.Currency,
 ) []*parser.OperationDescription {
-	var descriptions []*parser.OperationDescription
-
-	send := parser.OperationDescription{
-		Type: mapper.OpErc20Burn,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.NegativeAmountSign,
-			Currency: currency,
+	return []*parser.OperationDescription{
+		{
+			Type: mapper.OpErc20Burn,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.NegativeAmountSign,
+				Currency: currency,
+			},
 		},
 	}
-
-	descriptions = append(descriptions, &send)
-	return descriptions
 }
 
 func (s ConstructionService) getNativeTransferGasLimit(
