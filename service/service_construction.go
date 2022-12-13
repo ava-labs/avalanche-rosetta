@@ -34,6 +34,12 @@ const (
 	unwrapFnSignature   = "unwrap(uint256,uint256)"
 )
 
+var (
+	// preallocate methodIDs used in parse functions
+	transferMethodID = hexutil.Encode(getMethodID(transferFnSignature))
+	unwrapMethodID   = hexutil.Encode(getMethodID(unwrapFnSignature))
+)
+
 // ConstructionService implements /construction/* endpoints
 type ConstructionService struct {
 	config *Config
@@ -319,10 +325,10 @@ func (s ConstructionService) ConstructionParse(
 	)
 	if len(tx.Data) != 0 {
 		switch hexutil.Encode(tx.Data[:4]) {
-		case hexutil.Encode(getMethodID(unwrapFnSignature)):
-			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
-		case hexutil.Encode(getMethodID(transferFnSignature)):
+		case transferMethodID:
 			ops, checkFrom, wrappedErr = createTransferOps(tx)
+		case unwrapMethodID:
+			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
 		default:
 			wrappedErr = wrapError(
 				errInvalidInput,
