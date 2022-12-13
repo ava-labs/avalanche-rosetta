@@ -495,7 +495,6 @@ func (s ConstructionService) ConstructionPayloads(
 	} else {
 		tx, unsignedTx, checkFrom, wrappedErr = s.createTransferPayload(req)
 	}
-
 	if wrappedErr != nil {
 		return nil, wrappedErr
 	}
@@ -1101,8 +1100,7 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 	if len(data) != genericTransferBytesLength {
 		return nil, nil, fmt.Errorf("incorrect length for data array")
 	}
-	methodID := getMethodID(transferFnSignature)
-	if hexutil.Encode(data[:4]) != hexutil.Encode(methodID) {
+	if hexutil.Encode(data[:4]) != transferMethodID {
 		return nil, nil, fmt.Errorf("incorrect methodID signature")
 	}
 
@@ -1115,8 +1113,7 @@ func parseUnwrapData(data []byte) (*big.Int, *big.Int, error) {
 	if len(data) != genericUnwrapBytesLength {
 		return nil, nil, fmt.Errorf("incorrect length for data array")
 	}
-	methodID := getMethodID(unwrapFnSignature)
-	if hexutil.Encode(data[:4]) != hexutil.Encode(methodID) {
+	if hexutil.Encode(data[:4]) != unwrapMethodID {
 		return nil, nil, fmt.Errorf("incorrect methodID signature")
 	}
 
