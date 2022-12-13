@@ -1,4 +1,4 @@
-package mapper
+package cchain
 
 import (
 	"encoding/hex"
@@ -162,7 +162,7 @@ func TestERC721Ops(t *testing.T) {
 				},
 				Metadata: map[string]interface{}{
 					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
+					indexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 			{
@@ -181,7 +181,7 @@ func TestERC721Ops(t *testing.T) {
 				},
 				Metadata: map[string]interface{}{
 					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
+					indexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 		}, erc721Ops(log, 1))
@@ -210,7 +210,7 @@ func TestERC721Ops(t *testing.T) {
 				},
 				Metadata: map[string]interface{}{
 					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
+					indexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 		}, erc721Ops(log, 1))
@@ -239,7 +239,7 @@ func TestERC721Ops(t *testing.T) {
 				},
 				Metadata: map[string]interface{}{
 					ContractAddressMetadata:  "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-					IndexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
+					indexTransferredMetadata: "0x0000000000000000000000000000000000000000000000000000000000000051",
 				},
 			},
 		}, erc721Ops(log, 1))

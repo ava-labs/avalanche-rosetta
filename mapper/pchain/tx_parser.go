@@ -20,6 +20,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 )
 
 var (
@@ -142,7 +143,7 @@ func (t *TxParser) Parse(signedTx *txs.Tx) (*types.Transaction, error) {
 		if ops.ImportIns != nil {
 			importedInputs := addOperationIdentifiers(ops.ImportIns, idx)
 			idx += len(importedInputs)
-			txMetadata[mapper.MetadataImportedInputs] = importedInputs
+			txMetadata[metadataImportedInputs] = importedInputs
 		}
 
 		if ops.ExportOuts != nil {
@@ -478,7 +479,7 @@ func (t *TxParser) insToOperations(
 
 func (t *TxParser) buildAmount(value *big.Int, assetID ids.ID) (*types.Amount, error) {
 	if assetID == t.cfg.AvaxAssetID {
-		return mapper.AtomicAvaxAmount(value), nil
+		return cchainatomictx.AtomicAvaxAmount(value), nil
 	}
 
 	if t.cfg.IsConstruction {

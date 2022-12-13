@@ -9,7 +9,6 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
 )
@@ -48,7 +47,7 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	case *types.AccountCoinsRequest:
 		return cmapper.IsCChainBech32Address(r.AccountIdentifier)
 	case *types.ConstructionDeriveRequest:
-		return r.Metadata[mapper.MetadataAddressFormat] == mapper.AddressFormatBech32
+		return r.Metadata[metadataAddressFormat] == addressFormatBech32
 	case *types.ConstructionMetadataRequest:
 		return r.Options[cmapper.MetadataAtomicTxGas] != nil
 	case *types.ConstructionPreprocessRequest:

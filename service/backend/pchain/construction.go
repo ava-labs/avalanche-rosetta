@@ -15,6 +15,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	camapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
@@ -170,7 +171,7 @@ func (b *Backend) buildStakingMetadata(options map[string]interface{}) (*pmapper
 		Shares:          preprocessOptions.Shares,
 	}
 
-	zeroAvax := mapper.AtomicAvaxAmount(big.NewInt(0))
+	zeroAvax := camapper.AtomicAvaxAmount(big.NewInt(0))
 
 	return &pmapper.Metadata{StakingMetadata: stakingMetadata}, zeroAvax, nil
 }
@@ -182,7 +183,7 @@ func (b *Backend) getBaseTxFee(ctx context.Context) (*types.Amount, error) {
 	}
 
 	feeAmount := new(big.Int).SetUint64(uint64(fees.TxFee))
-	suggestedFee := mapper.AtomicAvaxAmount(feeAmount)
+	suggestedFee := camapper.AtomicAvaxAmount(feeAmount)
 	return suggestedFee, nil
 }
 

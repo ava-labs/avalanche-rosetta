@@ -3,11 +3,10 @@ package service
 import (
 	"context"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
+	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchain"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
-
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 // MempoolService implements the /mempool/* endpoints
@@ -40,8 +39,8 @@ func (s MempoolService) Mempool(
 
 	return &types.MempoolResponse{
 		TransactionIdentifiers: append(
-			mapper.MempoolTransactionsIDs(content.Pending),
-			mapper.MempoolTransactionsIDs(content.Queued)...,
+			cmapper.MempoolTransactionsIDs(content.Pending),
+			cmapper.MempoolTransactionsIDs(content.Queued)...,
 		),
 	}, nil
 }

@@ -13,6 +13,7 @@ import (
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 )
 
@@ -270,7 +271,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	assert.Equal(t, types.CoinCreated, rosettaTransaction.Operations[0].CoinChange.CoinAction)
 
 	// Verify that export output are properly generated
-	importInputs, ok := rosettaTransaction.Metadata[mapper.MetadataImportedInputs].([]*types.Operation)
+	importInputs, ok := rosettaTransaction.Metadata[metadataImportedInputs].([]*types.Operation)
 	assert.True(t, ok)
 
 	importedInput := importTx.ImportedInputs[0]
@@ -279,7 +280,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 		Type:                pconstants.ImportAvax.String(),
 		Status:              types.String(rosConst.StatusSuccess),
 		Account:             nil,
-		Amount:              mapper.AtomicAvaxAmount(big.NewInt(-int64(importedInput.Input().Amount()))),
+		Amount:              cchainatomictx.AtomicAvaxAmount(big.NewInt(-int64(importedInput.Input().Amount()))),
 		CoinChange: &types.CoinChange{
 			CoinIdentifier: &types.CoinIdentifier{Identifier: importedInput.UTXOID.String()},
 			CoinAction:     types.CoinSpent,

@@ -1,4 +1,4 @@
-package mapper
+package cchain
 
 import (
 	"fmt"
@@ -20,6 +20,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	cconstants "github.com/ava-labs/avalanche-rosetta/constants/cchain"
 	pconstants "github.com/ava-labs/avalanche-rosetta/constants/pchain"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 const (
@@ -90,7 +91,7 @@ func Transaction(
 		}
 
 		// If in standard mode, token address must be whitelisted
-		if !isAnalyticsMode && !EqualFoldContains(standardModeWhiteList, log.Address.String()) {
+		if !isAnalyticsMode && !mapper.EqualFoldContains(standardModeWhiteList, log.Address.String()) {
 			continue
 		}
 
@@ -117,7 +118,7 @@ func Transaction(
 				continue
 			}
 
-			erc20Ops := erc20Ops(log, ToCurrency(symbol, decimals, log.Address), int64(len(ops)))
+			erc20Ops := erc20Ops(log, toCurrency(symbol, decimals, log.Address), int64(len(ops)))
 			ops = append(ops, erc20Ops...)
 		default:
 		}
@@ -263,7 +264,7 @@ func createExportedOuts(
 	txID ids.ID,
 	exportedOuts []*avax.TransferableOutput,
 ) ([]*types.Operation, error) {
-	hrp, err := GetHRP(networkIdentifier)
+	hrp, err := mapper.GetHRP(networkIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +336,7 @@ func CrossChainTransactions(
 
 		if len(exportedOuts) > 0 {
 			transaction.Metadata = map[string]interface{}{
-				MetadataExportedOutputs: exportedOuts,
+				mapper.MetadataExportedOutputs: exportedOuts,
 			}
 		}
 		transactions = append(transactions, transaction)
@@ -577,7 +578,7 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 	toAddress := common.BytesToAddress(transferLog.Topics[2].Bytes())
 	metadata := map[string]interface{}{
 		ContractAddressMetadata:  transferLog.Address.String(),
-		IndexTransferredMetadata: transferLog.Topics[3].String(),
+		indexTransferredMetadata: transferLog.Topics[3].String(),
 	}
 
 	// Mint

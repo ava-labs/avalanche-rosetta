@@ -19,6 +19,8 @@ const (
 	SubAccountTypeLockedStakeable    = "locked_stakeable"
 	SubAccountTypeLockedNotStakeable = "locked_not_stakeable"
 	SubAccountTypeStaked             = "staked"
+
+	metadataImportedInputs = "imported_inputs"
 )
 
 var CallMethods = []string{}

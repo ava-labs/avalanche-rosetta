@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	camapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
@@ -88,7 +88,7 @@ func TestExportTxConstruction(t *testing.T) {
 			RelatedOperations:   nil,
 			Type:                opExport,
 			Account:             cAccountIdentifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-10_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(-10_000_000)),
 		},
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
@@ -97,7 +97,7 @@ func TestExportTxConstruction(t *testing.T) {
 			},
 			Type:    opExport,
 			Account: pAccountIdentifier,
-			Amount:  mapper.AtomicAvaxAmount(big.NewInt(9_719_250)),
+			Amount:  camapper.AtomicAvaxAmount(big.NewInt(9_719_250)),
 		},
 	}
 
@@ -296,7 +296,7 @@ func TestImportTxConstruction(t *testing.T) {
 			OperationIdentifier: &types.OperationIdentifier{Index: 0},
 			Type:                opImport,
 			Account:             cAccountBech32Identifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-15_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(-15_000_000)),
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
 				CoinAction:     types.CoinSpent,
@@ -306,7 +306,7 @@ func TestImportTxConstruction(t *testing.T) {
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
 			Type:                opImport,
 			Account:             cAccountBech32Identifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-5_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(-5_000_000)),
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID2},
 				CoinAction:     types.CoinSpent,
@@ -320,7 +320,7 @@ func TestImportTxConstruction(t *testing.T) {
 			},
 			Type:    opImport,
 			Account: cAccountIdentifier,
-			Amount:  mapper.AtomicAvaxAmount(big.NewInt(19_692_050)),
+			Amount:  camapper.AtomicAvaxAmount(big.NewInt(19_692_050)),
 		},
 	}
 

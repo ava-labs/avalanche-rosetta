@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	camapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
 	"github.com/ava-labs/avalanche-rosetta/service"
@@ -111,7 +111,7 @@ func TestExportTxConstruction(t *testing.T) {
 			RelatedOperations:   nil,
 			Type:                opExportAvax,
 			Account:             pAccountIdentifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-1_000_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(-1_000_000_000)),
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
 				CoinAction:     types.CoinSpent,
@@ -126,7 +126,7 @@ func TestExportTxConstruction(t *testing.T) {
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
 			Type:                opExportAvax,
 			Account:             cAccountIdentifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(999_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(999_000_000)),
 			Metadata: map[string]interface{}{
 				"type":      opTypeExport,
 				"threshold": 1.0,
@@ -329,7 +329,7 @@ func TestImportTxConstruction(t *testing.T) {
 			RelatedOperations:   nil,
 			Type:                opImportAvax,
 			Account:             cAccountIdentifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-1_000_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(-1_000_000_000)),
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
 				CoinAction:     types.CoinSpent,
@@ -344,7 +344,7 @@ func TestImportTxConstruction(t *testing.T) {
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
 			Type:                opImportAvax,
 			Account:             pAccountIdentifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(999_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(999_000_000)),
 			Metadata: map[string]interface{}{
 				"type":      opTypeOutput,
 				"threshold": 1.0,
@@ -548,7 +548,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 			RelatedOperations:   nil,
 			Type:                opAddValidator,
 			Account:             pAccountIdentifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-2_000_000_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(-2_000_000_000_000)),
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
 				CoinAction:     "coin_spent",
@@ -563,7 +563,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
 			Type:                opAddValidator,
 			Account:             pAccountIdentifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(2_000_000_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(2_000_000_000_000)),
 			Metadata: map[string]interface{}{
 				"type":      opTypeStake,
 				"locktime":  0.0,
@@ -784,7 +784,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 			RelatedOperations:   nil,
 			Type:                opAddDelegator,
 			Account:             pAccountIdentifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-25_000_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(-25_000_000_000)),
 			CoinChange: &types.CoinChange{
 				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
 				CoinAction:     "coin_spent",
@@ -799,7 +799,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
 			Type:                opAddDelegator,
 			Account:             pAccountIdentifier,
-			Amount:              mapper.AtomicAvaxAmount(big.NewInt(25_000_000_000)),
+			Amount:              camapper.AtomicAvaxAmount(big.NewInt(25_000_000_000)),
 			Metadata: map[string]interface{}{
 				"type":      opTypeStake,
 				"locktime":  0.0,

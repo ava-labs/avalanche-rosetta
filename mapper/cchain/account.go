@@ -1,4 +1,4 @@
-package mapper
+package cchain
 
 import (
 	"github.com/coinbase/rosetta-sdk-go/types"
