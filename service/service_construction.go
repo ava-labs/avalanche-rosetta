@@ -34,6 +34,12 @@ const (
 	unwrapFnSignature   = "unwrap(uint256,uint256)"
 )
 
+var (
+	// preallocate methodIDs used in parse functions
+	transferMethodID = hexutil.Encode(getMethodID(transferFnSignature))
+	unwrapMethodID   = hexutil.Encode(getMethodID(unwrapFnSignature))
+)
+
 // ConstructionService implements /construction/* endpoints
 type ConstructionService struct {
 	config *Config
@@ -109,9 +115,11 @@ func (s ConstructionService) ConstructionMetadata(
 			}
 		} else {
 			if input.Metadata != nil {
-				if input.Metadata.UnwrapBridgeTx {
-					gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
+				if !input.Metadata.UnwrapBridgeTx {
+					return nil, wrapError(errInvalidInput, "UnwrapBridgeTx must be populated if input.Metadata is provided")
 				}
+
+				gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
 			} else {
 				gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
 			}
@@ -309,21 +317,27 @@ func (s ConstructionService) ConstructionParse(
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}
-	var ops []*types.Operation
-	var checkFrom *string
-	var wrappedErr *types.Error
 
+	var (
+		ops        []*types.Operation
+		checkFrom  *string
+		wrappedErr *types.Error
+	)
 	if len(tx.Data) != 0 {
-		unwrapMethodID := getMethodID(unwrapFnSignature)
-		if hexutil.Encode(tx.Data[:4]) == hexutil.Encode(unwrapMethodID) {
-			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
-		} else {
+		switch hexutil.Encode(tx.Data[:4]) {
+		case transferMethodID:
 			ops, checkFrom, wrappedErr = createTransferOps(tx)
+		case unwrapMethodID:
+			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
+		default:
+			wrappedErr = wrapError(
+				errInvalidInput,
+				fmt.Errorf("method %x is not supported", tx.Data[:4]),
+			)
 		}
 	} else {
 		ops, checkFrom, wrappedErr = createTransferOps(tx)
 	}
-
 	if wrappedErr != nil {
 		return nil, wrappedErr
 	}
@@ -348,9 +362,11 @@ func (s ConstructionService) ConstructionParse(
 }
 
 func createTransferOps(tx transaction) ([]*types.Operation, *string, *types.Error) {
-	var opMethod string
-	var value *big.Int
-	var toAddressHex string
+	var (
+		opMethod     string
+		value        *big.Int
+		toAddressHex string
+	)
 
 	// Erc20 transfer
 	if len(tx.Data) != 0 {
@@ -467,10 +483,12 @@ func (s ConstructionService) ConstructionPayloads(
 	ctx context.Context,
 	req *types.ConstructionPayloadsRequest,
 ) (*types.ConstructionPayloadsResponse, *types.Error) {
-	var tx *ethtypes.Transaction
-	var unsignedTx *transaction
-	var checkFrom *string
-	var wrappedErr *types.Error
+	var (
+		tx         *ethtypes.Transaction
+		unsignedTx *transaction
+		checkFrom  *string
+		wrappedErr *types.Error
+	)
 
 	if isUnwrapRequest(req.Metadata) {
 		tx, unsignedTx, checkFrom, wrappedErr = s.createUnwrapPayload(req)
@@ -968,22 +986,19 @@ func (s ConstructionService) createOperationDescriptionTransfer(
 func (s ConstructionService) createOperationDescriptionBridgeUnwrap(
 	currency *types.Currency,
 ) []*parser.OperationDescription {
-	var descriptions []*parser.OperationDescription
-
-	send := parser.OperationDescription{
-		Type: mapper.OpErc20Burn,
-		Account: &parser.AccountDescription{
-			Exists: true,
-		},
-		Amount: &parser.AmountDescription{
-			Exists:   true,
-			Sign:     parser.NegativeAmountSign,
-			Currency: currency,
+	return []*parser.OperationDescription{
+		{
+			Type: mapper.OpErc20Burn,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.NegativeAmountSign,
+				Currency: currency,
+			},
 		},
 	}
-
-	descriptions = append(descriptions, &send)
-	return descriptions
 }
 
 func (s ConstructionService) getNativeTransferGasLimit(
