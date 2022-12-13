@@ -48,7 +48,7 @@ func NewBackend(
 	assetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
 ) (*Backend, error) {
-	genHandler, err := newGenesisHandler(indexerParser)
+	genHandler, err := newGenesisHandler(nodeMode, indexerParser)
 	if err != nil {
 		return nil, err
 	}
