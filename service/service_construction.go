@@ -897,7 +897,10 @@ func (s ConstructionService) CreateTransferOperationDescription(
 	operations []*types.Operation,
 ) ([]*parser.OperationDescription, error) {
 	if len(operations) != 2 {
-		return nil, fmt.Errorf("invalid number of operations")
+		return nil, fmt.Errorf(
+			"invalid number of operations. expected 1 got %d in CreateUnwrapOperationDescription with opts: %v",
+			len(operations), operations,
+		)
 	}
 
 	firstCurrency := operations[0].Amount.Currency
@@ -927,7 +930,10 @@ func (s ConstructionService) CreateUnwrapOperationDescription(
 	operations []*types.Operation,
 ) ([]*parser.OperationDescription, error) {
 	if len(operations) != 1 {
-		return nil, fmt.Errorf("invalid number of operations")
+		return nil, fmt.Errorf(
+			"invalid number of operations. expected 1 got %d in CreateUnwrapOperationDescription with opts: %v",
+			len(operations), operations,
+		)
 	}
 
 	firstCurrency := operations[0].Amount.Currency
