@@ -318,13 +318,10 @@ func (s ConstructionService) ConstructionParse(
 		wrappedErr *types.Error
 	)
 	if len(tx.Data) != 0 {
-		unwrapMethodID := getMethodID(unwrapFnSignature)
-		transferMethodID := getMethodID(transferFnSignature)
-
 		switch hexutil.Encode(tx.Data[:4]) {
-		case hexutil.Encode(unwrapMethodID):
+		case hexutil.Encode(getMethodID(unwrapFnSignature)):
 			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
-		case hexutil.Encode(transferMethodID):
+		case hexutil.Encode(getMethodID(transferFnSignature)):
 			ops, checkFrom, wrappedErr = createTransferOps(tx)
 		default:
 			wrappedErr = wrapError(
