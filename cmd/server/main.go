@@ -136,10 +136,14 @@ func main() {
 	}
 
 	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCBaseURL, cfg.IndexerBaseURL)
-	pIndexerParser, err := indexer.NewParser(pChainClient)
-	if err != nil {
-		log.Fatal("unable to initialize p-chain indexer parser:", err)
+	var pIndexerParser indexer.Parser
+	if cfg.Mode == service.ModeOnline {
+		pIndexerParser, err = indexer.NewParser(pChainClient)
+		if err != nil {
+			log.Fatal("unable to initialize p-chain indexer parser:", err)
+		}
 	}
+
 	pChainBackend, err := pchain.NewBackend(cfg.Mode, pChainClient, pIndexerParser, avaxAssetID, networkP)
 	if err != nil {
 		log.Fatal("unable to initialize p-chain backend:", err)

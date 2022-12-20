@@ -3,7 +3,6 @@ package pchain
 import (
 	"context"
 
-	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
@@ -11,6 +10,9 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
+
+	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
 
 var _ genesisHandler = &gHandler{}
@@ -25,7 +27,7 @@ type genesisHandler interface {
 	buildGenesisAllocationTx() (*txs.Tx, error)
 }
 
-func newGenesisHandler(indexerParser indexer.Parser) (genesisHandler, error) {
+func newGenesisHandler(nodeMode string, indexerParser indexer.Parser) (genesisHandler, error) {
 	gh := &gHandler{
 		indexerParser: indexerParser,
 
@@ -35,7 +37,14 @@ func newGenesisHandler(indexerParser indexer.Parser) (genesisHandler, error) {
 		genesisCodec: blocks.GenesisCodec,
 	}
 
-	return gh, gh.loadGenesisBlk()
+	var err error
+
+	// Initializing genesis block from indexer only in online mode
+	if nodeMode == service.ModeOnline {
+		err = gh.loadGenesisBlk()
+	}
+
+	return gh, err
 }
 
 type gHandler struct {
