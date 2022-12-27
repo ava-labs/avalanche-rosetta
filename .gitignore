@@ -14,6 +14,7 @@ rosetta-runner
 tmp
 vendor/
 config/*.json
+!config_unwrap.json
 bin/*
 rosetta-data
 .avalanchego

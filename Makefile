@@ -11,7 +11,7 @@ DOCKER_ORG          ?= avaplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.9.2
+AVALANCHE_VERSION   ?= v1.9.3
 
 build:
 	export CGO_CFLAGS="-O -D__BLST_PORTABLE__" && go build -o ./rosetta-server ./cmd/server
@@ -99,9 +99,13 @@ check-testnet-data:
 check-testnet-construction:
 	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/testnet/config.json
 
-# Perform the Testnet construction check for ERC-20s
+# Perform the Testnet construction check for ERC-20 transfers
 check-testnet-construction-erc20:
 	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/testnet/config_erc20.json
+
+# Perform the Testnet construction check for unwrap bridge tokens
+check-testnet-construction-unwrap:
+	rosetta-cli check:construction --configuration-file=rosetta-cli-conf/testnet/config_unwrap.json
 
 # Perform the Mainnet data check
 check-mainnet-data:

@@ -13,25 +13,31 @@ import (
 const BalanceOfMethodPrefix = "0x70a08231000000000000000000000000"
 
 type options struct {
-	From                   string          `json:"from"`
-	To                     string          `json:"to"`
-	Value                  *big.Int        `json:"value"`
-	SuggestedFeeMultiplier *float64        `json:"suggested_fee_multiplier,omitempty"`
-	GasPrice               *big.Int        `json:"gas_price,omitempty"`
-	GasLimit               *big.Int        `json:"gas_limit,omitempty"`
-	Nonce                  *big.Int        `json:"nonce,omitempty"`
-	Currency               *types.Currency `json:"currency,omitempty"`
+	From                   string           `json:"from"`
+	To                     string           `json:"to"`
+	Value                  *big.Int         `json:"value"`
+	SuggestedFeeMultiplier *float64         `json:"suggested_fee_multiplier,omitempty"`
+	GasPrice               *big.Int         `json:"gas_price,omitempty"`
+	GasLimit               *big.Int         `json:"gas_limit,omitempty"`
+	Nonce                  *big.Int         `json:"nonce,omitempty"`
+	Currency               *types.Currency  `json:"currency,omitempty"`
+	Metadata               *metadataOptions `json:"metadata,omitempty"`
 }
 
 type optionsWire struct {
-	From                   string          `json:"from"`
-	To                     string          `json:"to"`
-	Value                  string          `json:"value"`
-	SuggestedFeeMultiplier *float64        `json:"suggested_fee_multiplier,omitempty"`
-	GasPrice               string          `json:"gas_price,omitempty"`
-	GasLimit               string          `json:"gas_limit,omitempty"`
-	Nonce                  string          `json:"nonce,omitempty"`
-	Currency               *types.Currency `json:"currency,omitempty"`
+	From                   string           `json:"from"`
+	To                     string           `json:"to"`
+	Value                  string           `json:"value"`
+	SuggestedFeeMultiplier *float64         `json:"suggested_fee_multiplier,omitempty"`
+	GasPrice               string           `json:"gas_price,omitempty"`
+	GasLimit               string           `json:"gas_limit,omitempty"`
+	Nonce                  string           `json:"nonce,omitempty"`
+	Currency               *types.Currency  `json:"currency,omitempty"`
+	Metadata               *metadataOptions `json:"metadata,omitempty"`
+}
+
+type metadataOptions struct {
+	UnwrapBridgeTx bool `json:"bridge_unwrap"`
 }
 
 func (o *options) MarshalJSON() ([]byte, error) {
@@ -40,6 +46,7 @@ func (o *options) MarshalJSON() ([]byte, error) {
 		To:                     o.To,
 		SuggestedFeeMultiplier: o.SuggestedFeeMultiplier,
 		Currency:               o.Currency,
+		Metadata:               o.Metadata,
 	}
 	if o.Value != nil {
 		ow.Value = hexutil.EncodeBig(o.Value)
@@ -66,6 +73,7 @@ func (o *options) UnmarshalJSON(data []byte) error {
 	o.To = ow.To
 	o.SuggestedFeeMultiplier = ow.SuggestedFeeMultiplier
 	o.Currency = ow.Currency
+	o.Metadata = ow.Metadata
 
 	if len(ow.Value) > 0 {
 		value, err := hexutil.DecodeBig(ow.Value)
@@ -103,22 +111,25 @@ func (o *options) UnmarshalJSON(data []byte) error {
 }
 
 type metadata struct {
-	Nonce    uint64   `json:"nonce"`
-	GasPrice *big.Int `json:"gas_price"`
-	GasLimit uint64   `json:"gas_limit"`
+	Nonce          uint64   `json:"nonce"`
+	GasPrice       *big.Int `json:"gas_price"`
+	GasLimit       uint64   `json:"gas_limit"`
+	UnwrapBridgeTx bool     `json:"bridge_unwrap"`
 }
 
 type metadataWire struct {
-	Nonce    string `json:"nonce"`
-	GasPrice string `json:"gas_price"`
-	GasLimit string `json:"gas_limit"`
+	Nonce          string `json:"nonce"`
+	GasPrice       string `json:"gas_price"`
+	GasLimit       string `json:"gas_limit"`
+	UnwrapBridgeTx bool   `json:"bridge_unwrap"`
 }
 
 func (m *metadata) MarshalJSON() ([]byte, error) {
 	mw := &metadataWire{
-		Nonce:    hexutil.Uint64(m.Nonce).String(),
-		GasPrice: hexutil.EncodeBig(m.GasPrice),
-		GasLimit: hexutil.Uint64(m.GasLimit).String(),
+		Nonce:          hexutil.Uint64(m.Nonce).String(),
+		GasPrice:       hexutil.EncodeBig(m.GasPrice),
+		GasLimit:       hexutil.Uint64(m.GasLimit).String(),
+		UnwrapBridgeTx: m.UnwrapBridgeTx,
 	}
 
 	return json.Marshal(mw)
@@ -129,6 +140,8 @@ func (m *metadata) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &mw); err != nil {
 		return err
 	}
+
+	m.UnwrapBridgeTx = mw.UnwrapBridgeTx
 
 	gasPrice, err := hexutil.DecodeBig(mw.GasPrice)
 	if err != nil {
