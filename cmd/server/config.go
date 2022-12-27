@@ -8,6 +8,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
 )
 
@@ -32,6 +33,7 @@ type config struct {
 
 	IngestionMode          string   `json:"ingestion_mode"`
 	TokenWhiteList         []string `json:"token_whitelist"`
+	BridgeTokenList        []string `json:"bridge_tokens"`
 	IndexUnknownTokens     bool     `json:"index_unknown_tokens"`
 	ValidateERC20Whitelist bool     `json:"validate_erc20_whitelist"`
 }
@@ -84,6 +86,19 @@ func (c *config) validate() error {
 		for _, token := range c.TokenWhiteList {
 			if !ethcommon.IsHexAddress(token) {
 				return errInvalidTokenAddress
+			}
+		}
+	}
+
+	if len(c.BridgeTokenList) != 0 {
+		for _, token := range c.BridgeTokenList {
+			if !ethcommon.IsHexAddress(token) {
+				return errInvalidTokenAddress
+			}
+
+			// include all bridge tokens within list of tokens whitelisted for indexing
+			if !mapper.EqualFoldContains(c.TokenWhiteList, token) {
+				c.TokenWhiteList = append(c.TokenWhiteList, c.BridgeTokenList...)
 			}
 		}
 	}

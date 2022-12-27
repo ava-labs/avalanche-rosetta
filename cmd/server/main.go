@@ -161,6 +161,7 @@ func main() {
 		IndexUnknownTokens: cfg.IndexUnknownTokens,
 		IngestionMode:      cfg.IngestionMode,
 		TokenWhiteList:     cfg.TokenWhiteList,
+		BridgeTokenList:    cfg.BridgeTokenList,
 	}
 
 	var operationTypes []string

@@ -1,0 +1,104 @@
+request_funds(1){
+  find_account{
+    currency = {"symbol":"AVAX", "decimals":18};
+
+    erc20_currency = {"symbol":"WETH.e", "decimals":18, "metadata": {"contractAddress": "0x7fCDc2C1EF3e4A0bCC8155a558bB20a7218f2b05"}};
+    random_account = find_balance({
+      "minimum_balance":{
+        "value": "0",
+        "currency": {{currency}}
+      },
+      "create_limit":1
+    });
+  },
+
+  // Create a separate scenario to request funds so that
+  // the address we are using to request funds does not
+  // get rolled back if funds do not yet exist.
+  request{
+    loaded_account = find_balance({
+      "account_identifier": {{random_account.account_identifier}},
+      "minimum_balance":{
+        "value": "10000000000000000", // 0.01 AVAX
+        "currency": {{currency}}
+      }
+    });
+    
+    loaded_account2 = find_balance({
+      "account_identifier": {{random_account.account_identifier}},
+      "minimum_balance":{
+        "value": "100000000000000", // 0.0001 WETH.e
+        "currency": {{erc20_currency}}
+      }
+    });
+  }
+}
+
+create_account(1){
+  create{
+    network = {"network":"Fuji", "blockchain":"Avalanche"};
+    key = generate_key({"curve_type": "secp256k1"});
+    account = derive({
+      "network_identifier": {{network}},
+      "public_key": {{key.public_key}}
+    });
+
+    // If the account is not saved, the key will be lost!
+    save_account({
+      "account_identifier": {{account.account_identifier}},
+      "keypair": {{key}}
+    });
+  }
+}
+
+simple_unwrap(1){
+  transfer{
+    transfer.network = {"network":"Fuji", "blockchain":"Avalanche"};
+    avax_currency = {"symbol":"AVAX", "decimals":18};
+
+    currency = {"symbol":"WETH.e", "decimals":18, "metadata": {"contractAddress": "0x7fCDc2C1EF3e4A0bCC8155a558bB20a7218f2b05"}};
+    sender = find_balance({
+      "minimum_balance":{
+        "value": "100000000000000", // 0.0001 WETH.e
+        "currency": {{currency}}
+      }
+    });
+    unused = find_balance({
+      "account_identifier": {{sender.account_identifier}},
+      "minimum_balance":{
+        "value": "10000000000000000", // 0.01 AVAX
+        "currency": {{avax_currency}}
+      }
+    });
+    
+    recipient_amount = random_number({"minimum": "1", "maximum": {{sender.balance.value}}});
+    print_message({"recipient_amount":{{recipient_amount}}});
+
+    // Find recipient and construct operations
+    sender_amount = 0 - {{recipient_amount}};
+    recipient = find_balance({
+      "not_account_identifier":[{{sender.account_identifier}}],
+      "minimum_balance":{
+        "value": "0",
+        "currency": {{currency}}
+      },
+      "create_limit": 100,
+      "create_probability": 50
+    });
+    transfer.preprocess_metadata = {
+        "bridge_unwrap": true
+    };
+    transfer.confirmation_depth = "1";
+    transfer.operations = [
+      {
+        "operation_identifier":{"index":0},
+        "type":"ERC20_BURN",
+        "account":{{sender.account_identifier}},
+        "amount":{
+          "value":{{sender_amount}},
+          "currency":{{currency}}
+        }
+      }
+    ];
+  }
+}
