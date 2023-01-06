@@ -93,6 +93,9 @@ func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 	return blk.Height, nil
 }
 
+// GetGenesisBlock is called to initialize P-chain genesis information upon startup.
+// GetGenesisBlock should not call the indexer, to ensure backward compatibility with
+// previous installations which do no host a block indexer.
 func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error) {
 	bytes, _, err := genesis.FromConfig(genesis.GetConfig(p.networkID))
 	if err != nil {
@@ -110,14 +113,14 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 	genesisTxs = append(genesisTxs, genesisState.Validators...)
 	genesisTxs = append(genesisTxs, genesisState.Chains...)
 
-	// Genesis commit block's parent ID is the hash of genesis state
-	var genesisParentID ids.ID = hashing.ComputeHash256Array(bytes)
-
-	// Genesis Block is not indexed by the indexer, but its block ID can be accessed from block 0's parent id
-	genesisChildBlock, err := p.parseBlockAtHeight(ctx, 1)
+	// Build genesis ID and ParentID as it's done in platformVM'State,
+	// without polling indexer (for backward compatibility).
+	genesisParentID := hashing.ComputeHash256Array(bytes)
+	genesisBlock, err := pBlocks.NewApricotCommitBlock(genesisParentID, 0)
 	if err != nil {
 		return nil, err
 	}
+	genesisBlockID := genesisBlock.ID()
 
 	// genesis gets its own context to unlock caching
 	genesisCtx := &snow.Context{
@@ -127,8 +130,6 @@ func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, erro
 	for _, utxo := range genesisState.UTXOs {
 		utxo.UTXO.Out.InitCtx(genesisCtx)
 	}
-
-	genesisBlockID := genesisChildBlock.ParentID
 
 	return &ParsedGenesisBlock{
 		ParsedBlock: ParsedBlock{

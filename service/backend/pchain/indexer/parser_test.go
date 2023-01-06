@@ -52,10 +52,6 @@ var idxs = []uint64{
 	1000004,
 }
 
-// mainnet block 1 container bytes
-// parent id is 2FUFPVPxbTpKNn39moGSzsmGroYES4NZRdw3mJgNvMkMiMHJ9e which is the mainnet genesis block id
-var genesisContainerBytes, _ = formatting.Decode(formatting.Hex, "0x000000000000a48d314805d44175be879e110a552187085ceb3611be6a43acd1dba798ae2427000000000000000100000013000000005f695aa000000000a89d88b0")
-
 func readFixture(path string, sprintfArgs ...interface{}) []byte {
 	relpath := fmt.Sprintf(path, sprintfArgs...)
 	ret, err := os.ReadFile(fmt.Sprintf("testdata/%s", relpath))
@@ -70,10 +66,7 @@ func TestMain(m *testing.M) {
 	ctx := context.Background()
 
 	pchainClient := &mocks.PChainClient{}
-
 	pchainClient.On("GetNetworkID", mock.Anything).Return(constants.MainnetID, nil).Once()
-	pchainClient.On("GetContainerByIndex", mock.Anything, uint64(0)).
-		Return(indexer.Container{Bytes: genesisContainerBytes}, nil).Once()
 
 	for _, idx := range idxs {
 		ret := readFixture("ins/%v.json", idx)
@@ -138,8 +131,6 @@ func TestGenesisBlockParseTxs(t *testing.T) {
 
 	pchainClient := &mocks.PChainClient{}
 	pchainClient.On("GetNetworkID", mock.Anything).Return(constants.FujiID, nil).Once()
-	pchainClient.On("GetContainerByIndex", mock.Anything, uint64(0)).
-		Return(indexer.Container{Bytes: genesisContainerBytes}, nil).Once()
 
 	p, err := NewParser(pchainClient)
 	if err != nil {
