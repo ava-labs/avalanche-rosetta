@@ -6,6 +6,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
@@ -262,8 +263,7 @@ func buildOutputOwner(
 		}
 		rewardAddrs[i] = addrID
 	}
-
-	ids.SortShortIDs(rewardAddrs)
+	utils.Sort(rewardAddrs)
 
 	return &secp256k1fx.OutputOwners{
 		Locktime:  locktime,
@@ -319,8 +319,8 @@ func buildInputs(
 		signers = append(signers, op.Account)
 	}
 
-	avax.SortTransferableInputs(ins)
-	avax.SortTransferableInputs(imported)
+	utils.Sort(ins)
+	utils.Sort(imported)
 
 	return ins, imported, signers, nil
 }

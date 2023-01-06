@@ -16,6 +16,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/math"
+	"github.com/ava-labs/avalanchego/utils/set"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -161,7 +162,7 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 	}, nil
 }
 
-func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImportable bool, assetIds ids.Set) (uint64, *AccountBalance, *types.Error) {
+func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImportable bool, assetIds set.Set[ids.ID]) (uint64, *AccountBalance, *types.Error) {
 	addr, err := address.ParseToID(addrString)
 	if err != nil {
 		return 0, nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
@@ -269,8 +270,8 @@ utxoFor:
 	return accountBalance, nil
 }
 
-func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, currencies []*types.Currency) (ids.Set, *types.Error) {
-	assetIDs := ids.NewSet(len(currencies))
+func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, currencies []*types.Currency) (set.Set[ids.ID], *types.Error) {
+	assetIDs := set.NewSet[ids.ID](len(currencies))
 	for _, reqCurrency := range currencies {
 		description, err := b.pClient.GetAssetDescription(ctx, reqCurrency.Symbol)
 		if err != nil {
@@ -290,7 +291,7 @@ func (b *Backend) buildCurrencyAssetIDs(ctx context.Context, currencies []*types
 // Since these APIs don't return the corresponding block height or hash,
 // which is needed for both /account/balance and /account/coins, chain height is checked before and after
 // and if they differ, an error is returned.
-func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.ShortID, fetchStaked bool, fetchSharedMemory bool, assetIds ids.Set) (uint64, []avax.UTXO, [][]byte, *types.Error) {
+func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.ShortID, fetchStaked bool, fetchSharedMemory bool, assetIds set.Set[ids.ID]) (uint64, []avax.UTXO, [][]byte, *types.Error) {
 	// fetch preHeight before the balance fetch
 	preHeight, err := b.pClient.GetHeight(ctx)
 	if err != nil {
@@ -379,11 +380,11 @@ func (b *Backend) calculateStakedAmount(stakeUTXOs [][]byte) (uint64, error) {
 	return staked, nil
 }
 
-func (b *Backend) parseAndFilterUTXOs(utxoBytes [][]byte, assetIDs ids.Set) ([]avax.UTXO, error) {
+func (b *Backend) parseAndFilterUTXOs(utxoBytes [][]byte, assetIDs set.Set[ids.ID]) ([]avax.UTXO, error) {
 	utxos := []avax.UTXO{}
 
 	// when results are paginated, duplicate UTXOs may be provided. guarantee uniqueness
-	utxoIDs := ids.NewSet(len(utxoBytes))
+	utxoIDs := set.NewSet[ids.ID](len(utxoBytes))
 	for _, bytes := range utxoBytes {
 		utxo := avax.UTXO{}
 		_, err := b.codec.Unmarshal(bytes, &utxo)

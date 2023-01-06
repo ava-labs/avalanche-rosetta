@@ -82,7 +82,7 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 }
 
 func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
-	container, err := p.pChainClient.GetLastAccepted(ctx)
+	container, _, err := p.pChainClient.GetLastAccepted(ctx)
 	if err != nil {
 		return 0, err
 	}

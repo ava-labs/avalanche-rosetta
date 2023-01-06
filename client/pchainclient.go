@@ -27,7 +27,7 @@ type PChainClient interface {
 	// Blocks by ID are retrieved via platformVM.GetBlock, thus ignoring the proposerVM part
 	// and using Pchain Block ID rather than encompassing Snowman++ block ID
 	GetContainerByIndex(ctx context.Context, index uint64, options ...rpc.Option) (indexer.Container, error)
-	GetLastAccepted(context.Context, ...rpc.Option) (indexer.Container, error)
+	GetLastAccepted(context.Context, ...rpc.Option) (indexer.Container, uint64, error)
 
 	// platformvm.Client methods
 	GetUTXOs(

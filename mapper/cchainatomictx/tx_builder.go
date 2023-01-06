@@ -6,6 +6,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
@@ -130,7 +131,7 @@ func buildImportedInputs(matches []*parser.Match, avaxAssetID ids.ID) ([]*avax.T
 		})
 		signers = append(signers, op.Account)
 	}
-	avax.SortTransferableInputs(importedInputs)
+	utils.Sort(importedInputs)
 
 	return importedInputs, signers, nil
 }

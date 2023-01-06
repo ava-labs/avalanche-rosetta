@@ -5,6 +5,7 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
@@ -60,8 +61,7 @@ func (bd BlockTxDependencies) GetTxDependenciesIDs(tx txs.UnsignedTx) ([]ids.ID,
 	for _, txnID := range txIDs {
 		uniqueTxIDs = append(uniqueTxIDs, txnID)
 	}
-
-	ids.SortIDs(uniqueTxIDs)
+	utils.Sort(uniqueTxIDs)
 
 	return uniqueTxIDs, nil
 }

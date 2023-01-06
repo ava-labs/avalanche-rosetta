@@ -256,7 +256,7 @@ func (b *Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (co
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	pTx.Tx.Initialize(unsignedBytes, signedBytes)
+	pTx.Tx.SetBytes(unsignedBytes, signedBytes)
 
 	return pTx, nil
 }
