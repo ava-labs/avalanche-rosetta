@@ -18,17 +18,17 @@ const (
 )
 
 var (
-	mode            string
-	avalancheBin    string
-	avalancheConfig string
-	rosettaBin      string
-	rosettaConfig   string
+	mode          string
+	caminoBin     string
+	caminoConfig  string
+	rosettaBin    string
+	rosettaConfig string
 )
 
 func init() {
 	flag.StringVar(&mode, "mode", online, "Operation mode (online/offline)")
-	flag.StringVar(&avalancheBin, "avalanche-bin", "", "Path to avalanche binary")
-	flag.StringVar(&avalancheConfig, "avalanche-config", "", "Path to avalanche config")
+	flag.StringVar(&caminoBin, "camino-bin", "", "Path to camino binary")
+	flag.StringVar(&caminoConfig, "camino-config", "", "Path to camino config")
 	flag.StringVar(&rosettaBin, "rosetta-bin", "", "Path to rosetta binary")
 	flag.StringVar(&rosettaConfig, "rosetta-config", "", "Path to rosetta config")
 	flag.Parse()
@@ -38,11 +38,11 @@ func init() {
 	}
 
 	if mode == online {
-		if avalancheConfig == "" {
-			log.Fatal("avalanche config path is not provided")
+		if caminoConfig == "" {
+			log.Fatal("camino config path is not provided")
 		}
-		if avalancheBin == "" {
-			log.Fatal("avalanche binary path is not provided")
+		if caminoBin == "" {
+			log.Fatal("camino binary path is not provided")
 		}
 	}
 
@@ -63,7 +63,7 @@ func main() {
 	if mode == online {
 		g.Go(func() error {
 			defer cancel()
-			return startCommand(gctx, avalancheBin, "--config-file", avalancheConfig)
+			return startCommand(gctx, caminoBin, "--config-file", caminoConfig)
 		})
 	}
 

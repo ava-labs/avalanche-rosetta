@@ -1,8 +1,6 @@
 request_funds(1){
   find_account{
-    currency = {"symbol":"AVAX", "decimals":18};
-    // You can get test DAI funds from: https://faucet.paradigm.xyz/
-    erc20_currency = {"symbol":"DAI", "decimals":18, "metadata": {"contractAddress": "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9"}};
+    currency = {"symbol":"CAM", "decimals":18};
     random_account = find_balance({
       "minimum_balance":{
         "value": "0",
@@ -19,16 +17,8 @@ request_funds(1){
     loaded_account = find_balance({
       "account_identifier": {{random_account.account_identifier}},
       "minimum_balance":{
-        "value": "10000000000000000", // 0.01 AVAX
+        "value": "10000000000000000", // 0.01 CAM
         "currency": {{currency}}
-      }
-    });
-    
-    loaded_account2 = find_balance({
-      "account_identifier": {{random_account.account_identifier}},
-      "minimum_balance":{
-        "value": "10000000000000000", // 0.01 DAI
-        "currency": {{erc20_currency}}
       }
     });
   }
@@ -36,7 +26,7 @@ request_funds(1){
 
 create_account(1){
   create{
-    network = {"network":"Fuji", "blockchain":"Avalanche"};
+    network = {"network":"Mainnet", "blockchain":"Camino"};
     key = generate_key({"curve_type": "secp256k1"});
     account = derive({
       "network_identifier": {{network}},
@@ -51,28 +41,19 @@ create_account(1){
   }
 }
 
-simple_transfer_erc20(1){
+transfer(10){
   transfer{
-    transfer.network = {"network":"Fuji", "blockchain":"Avalanche"};
-    avax_currency = {"symbol":"AVAX", "decimals":18};
-
-    currency = {"symbol":"DAI", "decimals":18, "metadata": {"contractAddress": "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9"}};
+    transfer.network = {"network":"Mainnet", "blockchain":"Camino"};
+    currency = {"symbol":"CAM", "decimals":18};
     sender = find_balance({
       "minimum_balance":{
-        "value": "10000000000000000", // 0.01 DAI
+        "value": "10000000000000000", // 0.01 CAM
         "currency": {{currency}}
-      }
-    });
-    unused = find_balance({
-      "account_identifier": {{sender.account_identifier}},
-      "minimum_balance":{
-        "value": "10000000000000000", // 0.01 AVAX
-        "currency": {{avax_currency}}
       }
     });
 
     // Set the recipient_amount as some value <= sender.balance-max_fee
-    max_fee = "4725000000000000"; // 0.004725 AVAX
+    max_fee = "4725000000000000"; // 0.004725 CAM
     available_amount = {{sender.balance.value}} - {{max_fee}};
     recipient_amount = random_number({"minimum": "1", "maximum": {{available_amount}}});
     print_message({"recipient_amount":{{recipient_amount}}});
@@ -92,7 +73,7 @@ simple_transfer_erc20(1){
     transfer.operations = [
       {
         "operation_identifier":{"index":0},
-        "type":"ERC20_TRANSFER",
+        "type":"CALL",
         "account":{{sender.account_identifier}},
         "amount":{
           "value":{{sender_amount}},
@@ -101,11 +82,53 @@ simple_transfer_erc20(1){
       },
       {
         "operation_identifier":{"index":1},
-        "related_operations":[{"index":0}],
-        "type":"ERC20_TRANSFER",
+        "type":"CALL",
         "account":{{recipient.account_identifier}},
         "amount":{
           "value":{{recipient_amount}},
+          "currency":{{currency}}
+        }
+      }
+    ];
+  }
+}
+
+return_funds(10){
+  transfer{
+    transfer.network = {"network":"Mainnet", "blockchain":"Camino"};
+    currency = {"symbol":"CAM", "decimals":18};
+    max_fee = "4725000000000000"; // 0.004725 CAM
+    sender = find_balance({
+      "minimum_balance":{
+        "value": {{max_fee}},
+        "currency": {{currency}}
+      }
+    });
+
+    // Set the recipient_amount as some sender.balance-max_fee
+    available_amount = {{sender.balance.value}} - {{max_fee}};
+    print_message({"available_amount":{{available_amount}}});
+    sender_amount = 0 - {{available_amount}};
+
+    // Provide a static address as the recipient and construct operations
+    faucet = {"address":"0x6f0f6DA1852857d7789f68a28bba866671f3880D"};
+    transfer.confirmation_depth = "1";
+    transfer.operations = [
+      {
+        "operation_identifier":{"index":0},
+        "type":"CALL",
+        "account":{{sender.account_identifier}},
+        "amount":{
+          "value":{{sender_amount}},
+          "currency":{{currency}}
+        }
+      },
+      {
+        "operation_identifier":{"index":1},
+        "type":"CALL",
+        "account":{{faucet}},
+        "amount":{
+          "value":{{available_amount}},
           "currency":{{currency}}
         }
       }

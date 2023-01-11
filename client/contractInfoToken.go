@@ -8,9 +8,9 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ava-labs/coreth/accounts/abi"
-	"github.com/ava-labs/coreth/accounts/abi/bind"
-	"github.com/ava-labs/coreth/core/types"
+	"github.com/chain4travel/caminoethvm/accounts/abi"
+	"github.com/chain4travel/caminoethvm/accounts/abi/bind"
+	"github.com/chain4travel/caminoethvm/core/types"
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"

@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/chain4travel/camino-rosetta/mapper"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -330,6 +330,6 @@ func (t *signedTransactionWrapper) UnmarshalJSON(data []byte) error {
 
 	// Handle legacy format (will error during processing if invalid)
 	t.SignedTransaction = data
-	t.Currency = mapper.AvaxCurrency
+	t.Currency = mapper.CamCurrency
 	return nil
 }

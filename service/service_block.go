@@ -9,11 +9,11 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
 
-	corethTypes "github.com/ava-labs/coreth/core/types"
+	corethTypes "github.com/chain4travel/caminoethvm/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/chain4travel/camino-rosetta/client"
+	"github.com/chain4travel/camino-rosetta/mapper"
 )
 
 // BlockService implements the /block/* endpoints
@@ -209,7 +209,7 @@ func (s *BlockService) parseCrossChainTransactions(
 ) ([]*types.Transaction, *types.Error) {
 	result := []*types.Transaction{}
 
-	crossTxs, err := mapper.CrossChainTransactions(s.config.AvaxAssetID, block, s.config.AP5Activation)
+	crossTxs, err := mapper.CrossChainTransactions(s.config.CamAssetID, block, s.config.AP5Activation)
 	if err != nil {
 		return nil, wrapError(errInternalError, err)
 	}

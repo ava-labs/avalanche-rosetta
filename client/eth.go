@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ava-labs/coreth/eth/tracers"
-	"github.com/ava-labs/coreth/ethclient"
-	"github.com/ava-labs/coreth/rpc"
+	"github.com/chain4travel/caminoethvm/eth/tracers"
+	"github.com/chain4travel/caminoethvm/ethclient"
+	"github.com/chain4travel/caminoethvm/rpc"
 )
 
 var (

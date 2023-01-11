@@ -8,7 +8,7 @@
 *.json
 *.log
 *.out
-avalanche-rosetta
+camino-rosetta
 rosetta-server
 rosetta-runner
 tmp
@@ -16,7 +16,7 @@ vendor/
 config/*.json
 bin/*
 rosetta-data
-.avalanchego
+.caminogo
 *.swp
 data
 .vscode*

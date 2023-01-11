@@ -3,14 +3,14 @@ package mapper
 import (
 	"testing"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethtypes "github.com/chain4travel/caminoethvm/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 )
 
-var WAVAX = &types.Currency{
-	Symbol:   "WAVAX",
+var WCAM = &types.Currency{
+	Symbol:   "WCAM",
 	Decimals: 18,
 	Metadata: map[string]interface{}{
 		"contractAddress": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
@@ -47,7 +47,7 @@ func TestERC20Ops(t *testing.T) {
 				},
 				Amount: &types.Amount{
 					Value:    "-44000000000000000000000",
-					Currency: WAVAX,
+					Currency: WCAM,
 				},
 			},
 			{
@@ -66,10 +66,10 @@ func TestERC20Ops(t *testing.T) {
 				},
 				Amount: &types.Amount{
 					Value:    "44000000000000000000000",
-					Currency: WAVAX,
+					Currency: WCAM,
 				},
 			},
-		}, erc20Ops(log, WAVAX, 1))
+		}, erc20Ops(log, WCAM, 1))
 	})
 
 	t.Run("burn op", func(t *testing.T) {
@@ -95,10 +95,10 @@ func TestERC20Ops(t *testing.T) {
 				},
 				Amount: &types.Amount{
 					Value:    "-44000000000000000000000",
-					Currency: WAVAX,
+					Currency: WCAM,
 				},
 			},
-		}, erc20Ops(log, WAVAX, 1))
+		}, erc20Ops(log, WCAM, 1))
 	})
 
 	t.Run("mint op", func(t *testing.T) {
@@ -124,10 +124,10 @@ func TestERC20Ops(t *testing.T) {
 				},
 				Amount: &types.Amount{
 					Value:    "44000000000000000000000",
-					Currency: WAVAX,
+					Currency: WCAM,
 				},
 			},
-		}, erc20Ops(log, WAVAX, 1))
+		}, erc20Ops(log, WCAM, 1))
 	})
 }
 

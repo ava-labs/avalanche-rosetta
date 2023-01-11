@@ -3,7 +3,7 @@ package service
 import (
 	"math/big"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethtypes "github.com/chain4travel/caminoethvm/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
@@ -13,7 +13,7 @@ type Config struct {
 	ChainID            *big.Int
 	NetworkID          *types.NetworkIdentifier
 	GenesisBlockHash   string
-	AvaxAssetID        string
+	CamAssetID         string
 	IngestionMode      string
 	TokenWhiteList     []string
 	IndexUnknownTokens bool
