@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches: 
-      - master
+      - c4t
   pull_request:
 
 env:
