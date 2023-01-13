@@ -11,7 +11,7 @@ DOCKER_ORG          ?= c4tplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-CAMINO_VERSION   	?= v0.2.0
+CAMINO_VERSION   	?= v0.4.1-rc2
 
 build:
 	export CGO_CFLAGS="-O -D__BLST_PORTABLE__" && go build -o ./rosetta-server ./cmd/server

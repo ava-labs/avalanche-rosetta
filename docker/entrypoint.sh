@@ -51,7 +51,7 @@ fi
 
 exec /app/rosetta-runner \
   -mode $CAMINO_MODE \
-  -camino-bin /app/caminogo \
+  -camino-bin /app/camino-node \
   -camino-config /app/caminogo-config.json \
   -rosetta-bin /app/rosetta-server \
   -rosetta-config rosetta-config.json
