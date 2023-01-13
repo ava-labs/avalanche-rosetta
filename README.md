@@ -32,10 +32,10 @@ Before you start running the server you need to create a configuration file:
 
 ```json
 {
-  "rpc_endpoint": "https://columbus.camino.foundation",
+  "rpc_endpoint": "https://columbus.camino.network",
   "mode": "online",
   "listen_addr": "0.0.0.0:8080",
-  "genesis_block_hash" :"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b",
+  "genesis_block_hash" :"0x62e22411c311431cac7d766334106134b708629d3ed24f22e259f67fa383712b",
   "network_name": "Columbus",
   "chain_id": 501
 }
@@ -58,7 +58,7 @@ Full configuration example:
   "network_name": "Columbus",
   "chain_id": 501,
   "log_requests": true,
-  "genesis_block_hash" :"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b",
+  "genesis_block_hash" :"0x62e22411c311431cac7d766334106134b708629d3ed24f22e259f67fa383712b",
   "index_unknown_tokens": false,
   "ingestion_mode" : "standard",
   "token_whitelist" : [],
