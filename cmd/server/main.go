@@ -9,7 +9,6 @@ import (
 	"log"
 	"math/big"
 	"net/http"
-	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
@@ -204,31 +203,18 @@ func main() {
 
 func validateNetworkName(cfg *config, cChainClient client.Client) error {
 	if cfg.Mode == service.ModeOffline {
-		if cfg.NetworkName == "" {
+		if cfg.NetworkName != "" {
 			return fmt.Errorf("network name is not provided, can't fetch network name in offline mode")
 		}
 
 		return nil
 	}
 
-	log.Println("fetching network name from rpc...")
-	networkName, err := cChainClient.GetNetworkName(context.Background())
-	if err != nil {
-		return fmt.Errorf("cant fetch network name: %w", err)
-	}
-
-	if cfg.NetworkName == "" {
-		log.Printf("network name is not provided, set to %s", networkName)
-		cfg.NetworkName = networkName
-		return nil
-	}
-
-	if strings.ToLower(cfg.NetworkName) != networkName {
-		return fmt.Errorf("configured network name %s does not match with avalanche go client one %s",
-			cfg.NetworkName,
-			networkName,
-		)
-	}
+	// Note: we don't check here whether cfg.NetworkName matches the name exposed by
+	// avalanchego via client.GetNetworkName. This is because we are not guaranteed
+	// that avalanchego node is ready to serve API requests when Rosetta is started.
+	// So we trust the configure network name for now and defer checks to specif
+	// requests.
 	return nil
 }
 

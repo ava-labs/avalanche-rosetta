@@ -53,7 +53,7 @@ func NewBackend(
 		return nil, err
 	}
 
-	backEnd := &Backend{
+	b := &Backend{
 		genesisHandler:   genHandler,
 		fac:              &crypto.FactorySECP256K1R{},
 		networkID:        networkIdentifier,
@@ -67,24 +67,24 @@ func NewBackend(
 	}
 
 	if nodeMode == service.ModeOnline {
-		if err := backEnd.initChainIDs(); err != nil {
+		if err := b.initChainIDs(); err != nil {
+			return nil, err
+		}
+
+		if b.networkHRP, err = mapper.GetHRP(b.networkID); err != nil {
 			return nil, err
 		}
 	}
 
-	backEnd.networkHRP, err = mapper.GetHRP(networkIdentifier)
-	if err != nil {
-		return nil, err
+	b.txParserCfg = pmapper.TxParserConfig{
+		IsConstruction: false,
+		Hrp:            b.networkHRP,
+		ChainIDs:       b.chainIDs,
+		AvaxAssetID:    b.avaxAssetID,
+		PChainClient:   b.pClient,
 	}
 
-	backEnd.txParserCfg = pmapper.TxParserConfig{
-		IsConstruction: false,
-		Hrp:            backEnd.networkHRP,
-		ChainIDs:       backEnd.chainIDs,
-		AvaxAssetID:    backEnd.avaxAssetID,
-		PChainClient:   backEnd.pClient,
-	}
-	return backEnd, err
+	return b, nil
 }
 
 // ShouldHandleRequest returns whether a given request should be handled by this backend
