@@ -315,6 +315,34 @@ func (_m *PChainClient) GetNetworkID(_a0 context.Context, _a1 ...rpc.Option) (ui
 	return r0, r1
 }
 
+// GetNetworkName provides a mock function with given fields: _a0, _a1
+func (_m *PChainClient) GetNetworkName(_a0 context.Context, _a1 ...rpc.Option) (string, error) {
+	_va := make([]interface{}, len(_a1))
+	for _i := range _a1 {
+		_va[_i] = _a1[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, _a0)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(context.Context, ...rpc.Option) string); ok {
+		r0 = rf(_a0, _a1...)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, ...rpc.Option) error); ok {
+		r1 = rf(_a0, _a1...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetNodeID provides a mock function with given fields: _a0, _a1
 func (_m *PChainClient) GetNodeID(_a0 context.Context, _a1 ...rpc.Option) (ids.NodeID, *signer.ProofOfPossession, error) {
 	_va := make([]interface{}, len(_a1))

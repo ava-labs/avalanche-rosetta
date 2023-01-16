@@ -9,7 +9,6 @@ import (
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/rpc"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	"github.com/ava-labs/coreth/plugin/evm"
@@ -21,11 +20,7 @@ var _ Client = &client{}
 
 type Client interface {
 	// info.Client methods
-	IsBootstrapped(context.Context, string, ...rpc.Option) (bool, error)
-	GetNetworkName(context.Context, ...rpc.Option) (string, error)
-	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)
-	GetNetworkID(context.Context, ...rpc.Option) (uint32, error)
-	GetBlockchainID(context.Context, string, ...rpc.Option) (ids.ID, error)
+	InfoClient
 
 	ChainID(context.Context) (*big.Int, error)
 	BlockByHash(context.Context, ethcommon.Hash) (*ethtypes.Block, error)
