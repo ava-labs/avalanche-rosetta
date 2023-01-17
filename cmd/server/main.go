@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -84,11 +83,6 @@ func main() {
 
 	if cfg.ChainID == 0 {
 		log.Println("chain id is not provided, fetching from rpc...")
-
-		if cfg.Mode == service.ModeOffline {
-			log.Fatal("cant fetch chain id in offline mode")
-		}
-
 		chainID, err := cChainClient.ChainID(context.Background())
 		if err != nil {
 			log.Fatal("cant fetch chain id from rpc:", err)
@@ -107,10 +101,6 @@ func main() {
 		AP5Activation = constants.FujiAP5Activation.Uint64()
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
-	}
-
-	if err := validateNetworkName(cfg, cChainClient); err != nil {
-		log.Fatal("invalid network name:", err)
 	}
 
 	// Note: Rosetta is currently configure with capitalized NetworkNames
@@ -199,23 +189,6 @@ func main() {
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
 	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))
-}
-
-func validateNetworkName(cfg *config, cChainClient client.Client) error {
-	if cfg.Mode == service.ModeOffline {
-		if cfg.NetworkName != "" {
-			return fmt.Errorf("network name is not provided, can't fetch network name in offline mode")
-		}
-
-		return nil
-	}
-
-	// Note: we don't check here whether cfg.NetworkName matches the name exposed by
-	// avalanchego via client.GetNetworkName. This is because we are not guaranteed
-	// that avalanchego node is ready to serve API requests when Rosetta is started.
-	// So we trust the configure network name for now and defer checks to specif
-	// requests.
-	return nil
 }
 
 func configureRouter(
