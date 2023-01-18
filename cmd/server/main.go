@@ -93,6 +93,9 @@ func main() {
 	case mapper.FujiChainID:
 		assetID = mapper.FujiAssetID
 		AP5Activation = mapper.FujiAP5Activation.Uint64()
+	case mapper.LocalChainID:
+		assetID = mapper.LocalAssetID
+		AP5Activation = mapper.FujiAP5Activation.Uint64()
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
 	}
