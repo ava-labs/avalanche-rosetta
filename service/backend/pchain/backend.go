@@ -35,7 +35,6 @@ type Backend struct {
 	getUTXOsPageSize uint32
 	codec            codec.Manager
 	codecVersion     uint16
-	chainIDs         map[ids.ID]constants.ChainIDAlias
 	avaxAssetID      ids.ID
 	txParserCfg      pmapper.TxParserConfig
 }
@@ -62,15 +61,10 @@ func NewBackend(
 		codec:            blocks.Codec,
 		codecVersion:     blocks.Version,
 		indexerParser:    indexerParser,
-		chainIDs:         map[ids.ID]constants.ChainIDAlias{},
 		avaxAssetID:      assetID,
 	}
 
 	if nodeMode == service.ModeOnline {
-		if err := b.initChainIDs(); err != nil {
-			return nil, err
-		}
-
 		if b.networkHRP, err = mapper.GetHRP(b.networkID); err != nil {
 			return nil, err
 		}
@@ -79,7 +73,7 @@ func NewBackend(
 	b.txParserCfg = pmapper.TxParserConfig{
 		IsConstruction: false,
 		Hrp:            b.networkHRP,
-		ChainIDs:       b.chainIDs,
+		ChainIDs:       nil,
 		AvaxAssetID:    b.avaxAssetID,
 		PChainClient:   b.pClient,
 	}
@@ -121,25 +115,25 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	return false
 }
 
-func (b *Backend) initChainIDs() error {
-	ctx := context.Background()
-	b.chainIDs = map[ids.ID]constants.ChainIDAlias{
+func lazyInitChainIDs(pClient client.PChainClient) (map[ids.ID]constants.ChainIDAlias, error) {
+	chainIDs := map[ids.ID]constants.ChainIDAlias{
 		ids.Empty: constants.PChain,
 	}
 
-	cChainID, err := b.pClient.GetBlockchainID(ctx, constants.CChain.String())
+	ctx := context.Background()
+	cChainID, err := pClient.GetBlockchainID(ctx, constants.CChain.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
-	b.chainIDs[cChainID] = constants.CChain
+	chainIDs[cChainID] = constants.CChain
 
-	xChainID, err := b.pClient.GetBlockchainID(ctx, constants.XChain.String())
+	xChainID, err := pClient.GetBlockchainID(ctx, constants.XChain.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
-	b.chainIDs[xChainID] = constants.XChain
+	chainIDs[xChainID] = constants.XChain
 
-	return nil
+	return chainIDs, nil
 }
 
 // isPChain checks network identifier to make sure sub-network identifier set to "P"
