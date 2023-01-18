@@ -78,6 +78,14 @@ func (c *config) validate() error {
 		return errInvalidMode
 	}
 
+	if c.Mode == service.ModeOffline && c.ChainID == 0 {
+		return errors.New("chainID must be configured when offline mode is selected")
+	}
+
+	if c.NetworkName == "" {
+		return errors.New("network name not provided")
+	}
+
 	if c.GenesisBlockHash == "" {
 		return errGenesisBlockRequired
 	}

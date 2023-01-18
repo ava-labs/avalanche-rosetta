@@ -22,6 +22,11 @@ var _ PChainClient = &pchainClient{}
 //
 // These methods are cloned from the underlying avalanchego client interfaces, following the example of Client interface used to support C-chain operations.
 type PChainClient interface {
+	// info.Client methods
+	InfoClient
+	GetNodeID(context.Context, ...rpc.Option) (ids.NodeID, *signer.ProofOfPossession, error)
+	GetTxFee(context.Context, ...rpc.Option) (*info.GetTxFeeResponse, error)
+
 	// indexer.Client methods
 	// Note: we use indexer only to be able to retrieve blocks by height.
 	// Blocks by ID are retrieved via platformVM.GetBlock, thus ignoring the proposerVM part
@@ -57,14 +62,6 @@ type PChainClient interface {
 
 	// avm.Client methods
 	GetAssetDescription(ctx context.Context, assetID string, options ...rpc.Option) (*avm.GetAssetDescriptionReply, error)
-
-	// info.Client methods
-	IsBootstrapped(context.Context, string, ...rpc.Option) (bool, error)
-	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)
-	GetNodeID(context.Context, ...rpc.Option) (ids.NodeID, *signer.ProofOfPossession, error)
-	GetNetworkID(context.Context, ...rpc.Option) (uint32, error)
-	GetBlockchainID(context.Context, string, ...rpc.Option) (ids.ID, error)
-	GetTxFee(context.Context, ...rpc.Option) (*info.GetTxFeeResponse, error)
 }
 
 type (

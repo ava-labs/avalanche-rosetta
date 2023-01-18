@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"context"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
-	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
@@ -85,11 +83,6 @@ func main() {
 
 	if cfg.ChainID == 0 {
 		log.Println("chain id is not provided, fetching from rpc...")
-
-		if cfg.Mode == service.ModeOffline {
-			log.Fatal("cant fetch chain id in offline mode")
-		}
-
 		chainID, err := cChainClient.ChainID(context.Background())
 		if err != nil {
 			log.Fatal("cant fetch chain id from rpc:", err)
@@ -108,10 +101,6 @@ func main() {
 		AP5Activation = constants.FujiAP5Activation.Uint64()
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
-	}
-
-	if err := validateNetworkName(cfg, cChainClient); err != nil {
-		log.Fatal("invalid network name:", err)
 	}
 
 	// Note: Rosetta is currently configure with capitalized NetworkNames
@@ -200,37 +189,6 @@ func main() {
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
 	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))
-}
-
-func validateNetworkName(cfg *config, cChainClient client.Client) error {
-	if cfg.Mode == service.ModeOffline {
-		if cfg.NetworkName != "" {
-			return fmt.Errorf("network name is not provided, can't fetch network name in offline mode")
-		}
-		cfg.NetworkName = ""
-
-		return nil
-	}
-
-	log.Println("fetching network name from rpc...")
-	networkName, err := cChainClient.GetNetworkName(context.Background())
-	if err != nil {
-		return fmt.Errorf("cant fetch network name: %w", err)
-	}
-
-	if cfg.NetworkName == "" {
-		log.Printf("network name is not provided, set to %s", networkName)
-		cfg.NetworkName = networkName
-		return nil
-	}
-
-	if strings.ToLower(cfg.NetworkName) != networkName {
-		return fmt.Errorf("configured network name %s does not match with avalanche go client one %s",
-			cfg.NetworkName,
-			networkName,
-		)
-	}
-	return nil
 }
 
 func configureRouter(
