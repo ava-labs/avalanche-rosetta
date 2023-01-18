@@ -1,8 +1,6 @@
 package pchain
 
 import (
-	"context"
-
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto"
@@ -113,27 +111,6 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	}
 
 	return false
-}
-
-func lazyInitChainIDs(pClient client.PChainClient) (map[ids.ID]constants.ChainIDAlias, error) {
-	chainIDs := map[ids.ID]constants.ChainIDAlias{
-		ids.Empty: constants.PChain,
-	}
-
-	ctx := context.Background()
-	cChainID, err := pClient.GetBlockchainID(ctx, constants.CChain.String())
-	if err != nil {
-		return nil, err
-	}
-	chainIDs[cChainID] = constants.CChain
-
-	xChainID, err := pClient.GetBlockchainID(ctx, constants.XChain.String())
-	if err != nil {
-		return nil, err
-	}
-	chainIDs[xChainID] = constants.XChain
-
-	return chainIDs, nil
 }
 
 // isPChain checks network identifier to make sure sub-network identifier set to "P"
