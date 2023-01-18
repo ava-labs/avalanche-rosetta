@@ -39,7 +39,13 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 		metadata            map[string]interface{}
 	)
 
-	if b.isGenesisBlockRequest(blockIndex, hash) {
+	isGenesisReq, err := b.isGenesisBlockRequest(blockIndex, hash)
+	switch {
+	case err != nil:
+		// avalanchego node may be not ready or reachable
+		return nil, service.WrapError(service.ErrClientError, err)
+
+	case isGenesisReq:
 		genesisTxs, err := b.getFullGenesisTxs()
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
@@ -61,7 +67,8 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 		metadata = map[string]interface{}{
 			pmapper.MetadataMessage: genesisBlock.Message,
 		}
-	} else {
+
+	default:
 		block, err := b.indexerParser.ParseNonGenesisBlock(ctx, hash, uint64(blockIndex))
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
@@ -111,7 +118,13 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		targetCodec   codec.Manager
 	)
 
-	if b.isGenesisBlockRequest(request.BlockIdentifier.Index, request.BlockIdentifier.Hash) {
+	isGenesisReq, err := b.isGenesisBlockRequest(request.BlockIdentifier.Index, request.BlockIdentifier.Hash)
+	switch {
+	case err != nil:
+		// avalanchego node may be not ready or reachable
+		return nil, service.WrapError(service.ErrClientError, err)
+
+	case isGenesisReq:
 		genesisTxs, err := b.getFullGenesisTxs()
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
@@ -120,7 +133,8 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 		targetTxs = genesisTxs
 		dependencyTxs = nil
 		targetCodec = blocks.GenesisCodec
-	} else {
+
+	default:
 		block, err := b.indexerParser.ParseNonGenesisBlock(ctx, request.BlockIdentifier.Hash, uint64(request.BlockIdentifier.Index))
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)

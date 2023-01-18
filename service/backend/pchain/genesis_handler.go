@@ -18,7 +18,7 @@ import (
 var _ genesisHandler = &gHandler{}
 
 type genesisHandler interface {
-	isGenesisBlockRequest(index int64, hash string) bool
+	isGenesisBlockRequest(index int64, hash string) (bool, error)
 	getGenesisBlock() *indexer.ParsedGenesisBlock
 	getGenesisIdentifier() *types.BlockIdentifier
 
@@ -41,51 +41,71 @@ func newGenesisHandler(nodeMode string, indexerParser indexer.Parser) (genesisHa
 
 	// Initializing genesis block from indexer only in online mode
 	if nodeMode == service.ModeOnline {
-		err = gh.loadGenesisBlk()
+		err = gh.lazyLoadGenesisBlk()
 	}
 
 	return gh, err
 }
 
 type gHandler struct {
-	indexerParser     indexer.Parser
-	genesisCodec      codec.Manager
+	indexerParser indexer.Parser
+	genesisCodec  codec.Manager
+
+	// genesisBlk is lazily initialized, as soon as
+	// pChainClient is ready to serve requests
+	genesisBlkFetched bool
 	genesisBlk        *indexer.ParsedGenesisBlock
 	genesisIdentifier *types.BlockIdentifier
-	allocationTx      *txs.Tx
+
+	allocationTx *txs.Tx
 }
 
-func (gh *gHandler) loadGenesisBlk() error {
+func (gh *gHandler) lazyLoadGenesisBlk() error {
+	if gh.genesisBlkFetched {
+		return nil // already initialized
+	}
+
 	genesisBlk, err := gh.indexerParser.GetGenesisBlock(context.Background())
-	if err != nil {
-		return err
+	if err == nil {
+		gh.genesisBlkFetched = true
+		gh.genesisBlk = genesisBlk
+		gh.genesisIdentifier = &types.BlockIdentifier{
+			Index: int64(genesisBlk.Height),
+			Hash:  genesisBlk.BlockID.String(),
+		}
 	}
-	gh.genesisBlk = genesisBlk
-	gh.genesisIdentifier = &types.BlockIdentifier{
-		Index: int64(genesisBlk.Height),
-		Hash:  genesisBlk.BlockID.String(),
-	}
+
 	return nil
 }
 
-func (gh *gHandler) isGenesisBlockRequest(index int64, hash string) bool {
+func (gh *gHandler) isGenesisBlockRequest(index int64, hash string) (bool, error) {
+	if err := gh.lazyLoadGenesisBlk(); err != nil {
+		return false, err
+	}
+
 	// if hash is provided, make sure it matches genesis block hash
 	if hash != "" {
-		return hash == gh.genesisBlk.BlockID.String()
+		return hash == gh.genesisBlk.BlockID.String(), nil
 	}
 
 	// if hash is omitted, check if the height matches the genesis block height
-	return index == int64(gh.genesisBlk.Height)
+	return index == int64(gh.genesisBlk.Height), nil
 }
 
+// getGenesisBlock is a simple getter for genesisBlk. It does not check
+// whether genesisBlk has been duly initialized. Check is up to caller
 func (gh *gHandler) getGenesisBlock() *indexer.ParsedGenesisBlock {
 	return gh.genesisBlk
 }
 
+// getGenesisIdentifier is a simple getter for genesisIdentifier. It does not check
+// whether genesisIdentifier has been duly initialized. Check is up to caller
 func (gh *gHandler) getGenesisIdentifier() *types.BlockIdentifier {
 	return gh.genesisIdentifier
 }
 
+// getFullGenesisTxs does not check whether genesis
+// has been duly initialized. Check is up to caller
 func (gh *gHandler) getFullGenesisTxs() ([]*txs.Tx, error) {
 	res := gh.genesisBlk.Txs
 	allocationTx, err := gh.buildGenesisAllocationTx()

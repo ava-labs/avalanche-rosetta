@@ -55,7 +55,7 @@ type parser struct {
 	codec        codec.Manager
 	codecVersion uint16
 
-	// networkID is lazily initiazed, as soon as
+	// networkID is lazily initialized, as soon as
 	// pChainClient is ready to serve requests
 	networkIDFetched bool
 	networkID        uint32
@@ -91,7 +91,7 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 
 func (p *parser) lazyInitNetworkID(ctx context.Context) error {
 	if p.networkIDFetched {
-		return nil // already inited
+		return nil // already initialized
 	}
 	networkID, err := p.pChainClient.GetNetworkID(ctx)
 	if err != nil {
