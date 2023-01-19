@@ -45,10 +45,7 @@ func NewBackend(
 	assetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
 ) (*Backend, error) {
-	genHandler, err := newGenesisHandler(nodeMode, indexerParser)
-	if err != nil {
-		return nil, err
-	}
+	genHandler := newGenesisHandler(nodeMode, indexerParser)
 
 	b := &Backend{
 		genesisHandler:   genHandler,
@@ -63,6 +60,7 @@ func NewBackend(
 	}
 
 	if nodeMode == service.ModeOnline {
+		var err error
 		if b.networkHRP, err = mapper.GetHRP(b.networkID); err != nil {
 			return nil, err
 		}

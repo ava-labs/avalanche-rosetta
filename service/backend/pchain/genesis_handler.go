@@ -2,6 +2,7 @@ package pchain
 
 import (
 	"context"
+	"errors"
 
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
@@ -27,7 +28,7 @@ type genesisHandler interface {
 	buildGenesisAllocationTx() (*txs.Tx, error)
 }
 
-func newGenesisHandler(nodeMode string, indexerParser indexer.Parser) (genesisHandler, error) {
+func newGenesisHandler(nodeMode string, indexerParser indexer.Parser) genesisHandler {
 	gh := &gHandler{
 		indexerParser: indexerParser,
 
@@ -37,14 +38,12 @@ func newGenesisHandler(nodeMode string, indexerParser indexer.Parser) (genesisHa
 		genesisCodec: blocks.GenesisCodec,
 	}
 
-	var err error
-
 	// Initializing genesis block from indexer only in online mode
 	if nodeMode == service.ModeOnline {
-		err = gh.lazyLoadGenesisBlk()
+		_ = gh.lazyLoadGenesisBlk()
 	}
 
-	return gh, err
+	return gh
 }
 
 type gHandler struct {
@@ -60,9 +59,9 @@ type gHandler struct {
 	allocationTx *txs.Tx
 }
 
-func (gh *gHandler) lazyLoadGenesisBlk() error {
+func (gh *gHandler) lazyLoadGenesisBlk() bool {
 	if gh.genesisBlkFetched {
-		return nil // already initialized
+		return true // genesis block loaded
 	}
 
 	genesisBlk, err := gh.indexerParser.GetGenesisBlock(context.Background())
@@ -73,14 +72,15 @@ func (gh *gHandler) lazyLoadGenesisBlk() error {
 			Index: int64(genesisBlk.Height),
 			Hash:  genesisBlk.BlockID.String(),
 		}
+		return true // genesis block loaded
 	}
 
-	return nil
+	return false // genesis block not loaded
 }
 
 func (gh *gHandler) isGenesisBlockRequest(index int64, hash string) (bool, error) {
-	if err := gh.lazyLoadGenesisBlk(); err != nil {
-		return false, err
+	if loaded := gh.lazyLoadGenesisBlk(); !loaded {
+		return false, errors.New("could not load genesis data")
 	}
 
 	// if hash is provided, make sure it matches genesis block hash
