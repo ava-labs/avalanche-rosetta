@@ -1,8 +1,6 @@
 package pchain
 
 import (
-	"context"
-
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto"
@@ -35,7 +33,6 @@ type Backend struct {
 	getUTXOsPageSize uint32
 	codec            codec.Manager
 	codecVersion     uint16
-	chainIDs         map[ids.ID]constants.ChainIDAlias
 	avaxAssetID      ids.ID
 	txParserCfg      pmapper.TxParserConfig
 }
@@ -48,10 +45,7 @@ func NewBackend(
 	assetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
 ) (*Backend, error) {
-	genHandler, err := newGenesisHandler(nodeMode, indexerParser)
-	if err != nil {
-		return nil, err
-	}
+	genHandler := newGenesisHandler(nodeMode, indexerParser)
 
 	b := &Backend{
 		genesisHandler:   genHandler,
@@ -62,15 +56,11 @@ func NewBackend(
 		codec:            blocks.Codec,
 		codecVersion:     blocks.Version,
 		indexerParser:    indexerParser,
-		chainIDs:         map[ids.ID]constants.ChainIDAlias{},
 		avaxAssetID:      assetID,
 	}
 
 	if nodeMode == service.ModeOnline {
-		if err := b.initChainIDs(); err != nil {
-			return nil, err
-		}
-
+		var err error
 		if b.networkHRP, err = mapper.GetHRP(b.networkID); err != nil {
 			return nil, err
 		}
@@ -79,7 +69,7 @@ func NewBackend(
 	b.txParserCfg = pmapper.TxParserConfig{
 		IsConstruction: false,
 		Hrp:            b.networkHRP,
-		ChainIDs:       b.chainIDs,
+		ChainIDs:       nil,
 		AvaxAssetID:    b.avaxAssetID,
 		PChainClient:   b.pClient,
 	}
@@ -119,27 +109,6 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	}
 
 	return false
-}
-
-func (b *Backend) initChainIDs() error {
-	ctx := context.Background()
-	b.chainIDs = map[ids.ID]constants.ChainIDAlias{
-		ids.Empty: constants.PChain,
-	}
-
-	cChainID, err := b.pClient.GetBlockchainID(ctx, constants.CChain.String())
-	if err != nil {
-		return err
-	}
-	b.chainIDs[cChainID] = constants.CChain
-
-	xChainID, err := b.pClient.GetBlockchainID(ctx, constants.XChain.String())
-	if err != nil {
-		return err
-	}
-	b.chainIDs[xChainID] = constants.XChain
-
-	return nil
 }
 
 // isPChain checks network identifier to make sure sub-network identifier set to "P"

@@ -185,8 +185,6 @@ func TestExportTxConstruction(t *testing.T) {
 
 	ctx := context.Background()
 	clientMock := &mocks.PChainClient{}
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
@@ -401,8 +399,6 @@ func TestImportTxConstruction(t *testing.T) {
 
 	ctx := context.Background()
 	clientMock := &mocks.PChainClient{}
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
@@ -640,8 +636,6 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 
 	ctx := context.Background()
 	clientMock := &mocks.PChainClient{}
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
@@ -874,8 +868,6 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 
 	ctx := context.Background()
 	clientMock := &mocks.PChainClient{}
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)

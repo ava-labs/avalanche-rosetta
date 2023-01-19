@@ -23,7 +23,6 @@ import (
 
 var (
 	errNilPChainClient                = errors.New("pchain client can only be nil during construction")
-	errNilChainIDs                    = errors.New("chain ids cannot be nil")
 	errNilInputTxAccounts             = errors.New("input tx accounts cannot be nil")
 	errUnknownDestinationChain        = errors.New("unknown destination chain")
 	errNoDependencyTxs                = errors.New("no dependency txs provided")
@@ -43,12 +42,40 @@ type TxParserConfig struct {
 	IsConstruction bool
 	// Hrp used for address formatting
 	Hrp string
+
 	// ChainIDs maps chain id to chain id alias mappings
+	// ChainIDs may provided by TxParser called or lazily initialized,
+	// as soon as pChainClient is ready to serve requests
 	ChainIDs map[ids.ID]constants.ChainIDAlias
+
 	// AvaxAssetID contains asset id for AVAX currency
 	AvaxAssetID ids.ID
 	// PChainClient holds a P-chain client, used to lookup asset descriptions for non-AVAX assets
 	PChainClient client.PChainClient
+}
+
+func (cfg *TxParserConfig) lazyInitChainIDs() error {
+	if cfg.ChainIDs != nil {
+		return nil // mapping provided by caller
+	}
+
+	cfg.ChainIDs = map[ids.ID]constants.ChainIDAlias{
+		ids.Empty: constants.PChain,
+	}
+
+	ctx := context.Background()
+	cChainID, err := cfg.PChainClient.GetBlockchainID(ctx, constants.CChain.String())
+	if err != nil {
+		return err
+	}
+	cfg.ChainIDs[cChainID] = constants.CChain
+
+	xChainID, err := cfg.PChainClient.GetBlockchainID(ctx, constants.XChain.String())
+	if err != nil {
+		return err
+	}
+	cfg.ChainIDs[xChainID] = constants.XChain
+	return nil
 }
 
 // TxParser parses P-chain transactions and generate corresponding Rosetta operations
@@ -67,8 +94,8 @@ func NewTxParser(
 	inputTxAccounts map[string]*types.AccountIdentifier,
 	dependencyTxs BlockTxDependencies,
 ) (*TxParser, error) {
-	if cfg.ChainIDs == nil {
-		return nil, errNilChainIDs
+	if err := cfg.lazyInitChainIDs(); err != nil {
+		return nil, err
 	}
 
 	if inputTxAccounts == nil {

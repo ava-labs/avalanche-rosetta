@@ -55,11 +55,17 @@ type parser struct {
 	codec        codec.Manager
 	codecVersion uint16
 
-	networkID uint32
-	aliaser   ids.Aliaser
+	// networkID is lazily initialized, as soon as
+	// pChainClient is ready to serve requests
+	networkIDFetched bool
+	networkID        uint32
+
+	aliaser ids.Aliaser
 }
 
 // NewParser creates a new P-chain indexer parser
+// Note: NewParser should not contain calls to pChainClient as we
+// cannot assume client is ready to serve requests immediately
 func NewParser(pChainClient client.PChainClient) (Parser, error) {
 	aliaser := ids.NewAliaser()
 	err := aliaser.Alias(constants.PlatformChainID, rosConst.PChain.String())
@@ -67,18 +73,34 @@ func NewParser(pChainClient client.PChainClient) (Parser, error) {
 		return nil, err
 	}
 
+	networkIDFetched := false
 	networkID, err := pChainClient.GetNetworkID(context.Background())
-	if err != nil {
-		return nil, err
+	if err == nil {
+		networkIDFetched = true
 	}
 
 	return &parser{
-		pChainClient: pChainClient,
-		codec:        pBlocks.Codec,
-		codecVersion: pBlocks.Version,
-		networkID:    networkID,
-		aliaser:      aliaser,
+		pChainClient:     pChainClient,
+		codec:            pBlocks.Codec,
+		codecVersion:     pBlocks.Version,
+		networkIDFetched: networkIDFetched,
+		networkID:        networkID,
+		aliaser:          aliaser,
 	}, nil
+}
+
+func (p *parser) lazyInitNetworkID(ctx context.Context) error {
+	if p.networkIDFetched {
+		return nil // already initialized
+	}
+	networkID, err := p.pChainClient.GetNetworkID(ctx)
+	if err != nil {
+		return err
+	}
+
+	p.networkIDFetched = true
+	p.networkID = networkID
+	return nil
 }
 
 func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
@@ -97,6 +119,10 @@ func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 // GetGenesisBlock should not call the indexer, to ensure backward compatibility with
 // previous installations which do no host a block indexer.
 func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error) {
+	if err := p.lazyInitNetworkID(ctx); err != nil {
+		return nil, err
+	}
+
 	bytes, _, err := genesis.FromConfig(genesis.GetConfig(p.networkID))
 	if err != nil {
 		return nil, err
