@@ -47,7 +47,10 @@ func NewBackend(
 	networkIdentifier *types.NetworkIdentifier,
 	avalancheNetworkID uint32,
 ) (*Backend, error) {
-	genHandler := newGenesisHandler(nodeMode, indexerParser)
+	genHandler, err := newGenesisHandler(nodeMode, indexerParser)
+	if err != nil {
+		return nil, err
+	}
 
 	b := &Backend{
 		genesisHandler:     genHandler,
