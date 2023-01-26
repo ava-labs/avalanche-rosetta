@@ -200,7 +200,7 @@ func TestExportTxConstruction(t *testing.T) {
 		parserMock,
 		avaxAssetID,
 		pChainNetworkIdentifier,
-		uint32(avalancheNetworkID),
+		avalancheNetworkID,
 	)
 	assert.Nil(t, err)
 
@@ -420,7 +420,7 @@ func TestImportTxConstruction(t *testing.T) {
 		parserMock,
 		avaxAssetID,
 		pChainNetworkIdentifier,
-		uint32(avalancheNetworkID),
+		avalancheNetworkID,
 	)
 	assert.Nil(t, err)
 
@@ -663,7 +663,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 		parserMock,
 		avaxAssetID,
 		pChainNetworkIdentifier,
-		uint32(avalancheNetworkID),
+		avalancheNetworkID,
 	)
 	assert.Nil(t, err)
 
@@ -901,7 +901,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 		parserMock,
 		avaxAssetID,
 		pChainNetworkIdentifier,
-		uint32(avalancheNetworkID),
+		avalancheNetworkID,
 	)
 	assert.Nil(t, err)
 

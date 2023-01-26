@@ -26,7 +26,7 @@ type genesisHandler interface {
 	buildGenesisAllocationTx() (*txs.Tx, error)
 }
 
-func newGenesisHandler(nodeMode string, indexerParser indexer.Parser) (genesisHandler, error) {
+func newGenesisHandler(indexerParser indexer.Parser) (genesisHandler, error) {
 	gh := &gHandler{
 		indexerParser: indexerParser,
 
