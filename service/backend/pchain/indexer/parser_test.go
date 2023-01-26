@@ -64,9 +64,7 @@ func readFixture(path string, sprintfArgs ...interface{}) []byte {
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
-
 	pchainClient := &mocks.PChainClient{}
-	pchainClient.On("GetNetworkID", mock.Anything).Return(constants.MainnetID, nil).Once()
 
 	for _, idx := range idxs {
 		ret := readFixture("ins/%v.json", idx)
@@ -93,7 +91,7 @@ func TestMain(m *testing.M) {
 
 	pchainClient.On("GetHeight", ctx, mock.Anything).Return(uint64(1000000), nil)
 
-	p, err = NewParser(pchainClient)
+	p, err = NewParser(pchainClient, constants.MainnetID)
 	if err != nil {
 		panic(err)
 	}
@@ -128,11 +126,9 @@ func TestGenesisBlockCreateChainTxs(t *testing.T) {
 
 func TestGenesisBlockParseTxs(t *testing.T) {
 	a := assert.New(t)
-
 	pchainClient := &mocks.PChainClient{}
-	pchainClient.On("GetNetworkID", mock.Anything).Return(constants.FujiID, nil).Once()
 
-	p, err := NewParser(pchainClient)
+	p, err := NewParser(pchainClient, constants.FujiID)
 	if err != nil {
 		panic(err)
 	}

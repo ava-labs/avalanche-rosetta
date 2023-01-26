@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/ava-labs/avalanchego/ids"
+	avaConst "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -34,7 +35,7 @@ var (
 	cChainID, _ = ids.FromString("yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")
 	pChainID    = ids.Empty
 
-	networkID = 5
+	avalancheNetworkID = avaConst.FujiID
 
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 )
@@ -52,7 +53,7 @@ func buildRosettaSignerJSON(coinIdentifiers []string, signers []*types.AccountId
 }
 
 func TestConstructionDerive(t *testing.T) {
-	backend := NewBackend(nil, ids.Empty)
+	backend := NewBackend(nil, ids.Empty, avalancheNetworkID)
 
 	t.Run("c-chain address", func(t *testing.T) {
 		src := "02e0d4392cfa224d4be19db416b3cf62e90fb2b7015e7b62a95c8cb490514943f6"
@@ -110,7 +111,7 @@ func TestExportTxConstruction(t *testing.T) {
 	suggestedFeeValue := "280750"
 
 	payloadsMetadata := map[string]interface{}{
-		"network_id":           float64(networkID),
+		"network_id":           float64(avalancheNetworkID),
 		"c_chain_id":           cChainID.String(),
 		"destination_chain":    constants.PChain.String(),
 		"destination_chain_id": pChainID.String(),
@@ -154,7 +155,7 @@ func TestExportTxConstruction(t *testing.T) {
 
 	ctx := context.Background()
 	clientMock := &mocks.Client{}
-	backend := NewBackend(clientMock, avaxAssetID)
+	backend := NewBackend(clientMock, avaxAssetID, avalancheNetworkID)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
 		req := &types.ConstructionPreprocessRequest{
@@ -176,7 +177,6 @@ func TestExportTxConstruction(t *testing.T) {
 			Options:           metadataOptions,
 		}
 
-		clientMock.On("GetNetworkID", ctx).Return(uint32(networkID), nil)
 		clientMock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
 		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.
@@ -337,7 +337,7 @@ func TestImportTxConstruction(t *testing.T) {
 
 	payloadsMetadata := map[string]interface{}{
 		"nonce":           0.,
-		"network_id":      float64(networkID),
+		"network_id":      float64(avalancheNetworkID),
 		"c_chain_id":      cChainID.String(),
 		"source_chain_id": pChainID.String(),
 	}
@@ -385,7 +385,7 @@ func TestImportTxConstruction(t *testing.T) {
 
 	ctx := context.Background()
 	clientMock := &mocks.Client{}
-	backend := NewBackend(clientMock, avaxAssetID)
+	backend := NewBackend(clientMock, avaxAssetID, avalancheNetworkID)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
 		req := &types.ConstructionPreprocessRequest{
@@ -408,7 +408,6 @@ func TestImportTxConstruction(t *testing.T) {
 			Options:           metadataOptions,
 		}
 
-		clientMock.On("GetNetworkID", ctx).Return(uint32(networkID), nil)
 		clientMock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
 		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.On("EstimateBaseFee", ctx).Return(big.NewInt(25_000_000_000), nil)

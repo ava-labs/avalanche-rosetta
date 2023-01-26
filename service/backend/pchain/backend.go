@@ -25,16 +25,17 @@ var (
 
 type Backend struct {
 	genesisHandler
-	fac              *crypto.FactorySECP256K1R
-	networkID        *types.NetworkIdentifier
-	networkHRP       string
-	pClient          client.PChainClient
-	indexerParser    indexer.Parser
-	getUTXOsPageSize uint32
-	codec            codec.Manager
-	codecVersion     uint16
-	avaxAssetID      ids.ID
-	txParserCfg      pmapper.TxParserConfig
+	fac                *crypto.FactorySECP256K1R
+	networkID          *types.NetworkIdentifier
+	networkHRP         string
+	avalancheNetworkID uint32
+	pClient            client.PChainClient
+	indexerParser      indexer.Parser
+	getUTXOsPageSize   uint32
+	codec              codec.Manager
+	codecVersion       uint16
+	avaxAssetID        ids.ID
+	txParserCfg        pmapper.TxParserConfig
 }
 
 // NewBackend creates a P-chain service backend
@@ -44,19 +45,21 @@ func NewBackend(
 	indexerParser indexer.Parser,
 	assetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
+	avalancheNetworkID uint32,
 ) (*Backend, error) {
 	genHandler := newGenesisHandler(nodeMode, indexerParser)
 
 	b := &Backend{
-		genesisHandler:   genHandler,
-		fac:              &crypto.FactorySECP256K1R{},
-		networkID:        networkIdentifier,
-		pClient:          pClient,
-		getUTXOsPageSize: 1024,
-		codec:            blocks.Codec,
-		codecVersion:     blocks.Version,
-		indexerParser:    indexerParser,
-		avaxAssetID:      assetID,
+		genesisHandler:     genHandler,
+		fac:                &crypto.FactorySECP256K1R{},
+		networkID:          networkIdentifier,
+		pClient:            pClient,
+		getUTXOsPageSize:   1024,
+		codec:              blocks.Codec,
+		codecVersion:       blocks.Version,
+		indexerParser:      indexerParser,
+		avaxAssetID:        assetID,
+		avalancheNetworkID: avalancheNetworkID,
 	}
 
 	if nodeMode == service.ModeOnline {

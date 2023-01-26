@@ -19,23 +19,25 @@ var (
 )
 
 type Backend struct {
-	fac              *crypto.FactorySECP256K1R
-	cClient          client.Client
-	getUTXOsPageSize uint32
-	codec            codec.Manager
-	codecVersion     uint16
-	avaxAssetID      ids.ID
+	fac                *crypto.FactorySECP256K1R
+	avalancheNetworkID uint32
+	cClient            client.Client
+	getUTXOsPageSize   uint32
+	codec              codec.Manager
+	codecVersion       uint16
+	avaxAssetID        ids.ID
 }
 
 // NewBackend creates a C-chain atomic transaction service backend
-func NewBackend(cClient client.Client, avaxAssetID ids.ID) *Backend {
+func NewBackend(cClient client.Client, avaxAssetID ids.ID, avalancheNetworkID uint32) *Backend {
 	return &Backend{
-		fac:              &crypto.FactorySECP256K1R{},
-		cClient:          cClient,
-		getUTXOsPageSize: 1024,
-		codec:            evm.Codec,
-		codecVersion:     0,
-		avaxAssetID:      avaxAssetID,
+		fac:                &crypto.FactorySECP256K1R{},
+		avalancheNetworkID: avalancheNetworkID,
+		cClient:            cClient,
+		getUTXOsPageSize:   1024,
+		codec:              evm.Codec,
+		codecVersion:       0,
+		avaxAssetID:        avaxAssetID,
 	}
 }
 
