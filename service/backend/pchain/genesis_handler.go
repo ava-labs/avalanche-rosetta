@@ -2,7 +2,6 @@ package pchain
 
 import (
 	"context"
-	"errors"
 
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
@@ -12,7 +11,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
 
@@ -28,7 +26,7 @@ type genesisHandler interface {
 	buildGenesisAllocationTx() (*txs.Tx, error)
 }
 
-func newGenesisHandler(nodeMode string, indexerParser indexer.Parser) genesisHandler {
+func newGenesisHandler(indexerParser indexer.Parser) (genesisHandler, error) {
 	gh := &gHandler{
 		indexerParser: indexerParser,
 
@@ -38,51 +36,34 @@ func newGenesisHandler(nodeMode string, indexerParser indexer.Parser) genesisHan
 		genesisCodec: blocks.GenesisCodec,
 	}
 
-	// Initializing genesis block from indexer only in online mode
-	if nodeMode == service.ModeOnline {
-		_ = gh.lazyLoadGenesisBlk()
-	}
-
-	return gh
+	// initializing genesis block. No network calls are involved.
+	return gh, gh.loadGenesisBlk()
 }
 
 type gHandler struct {
 	indexerParser indexer.Parser
 	genesisCodec  codec.Manager
 
-	// genesisBlk is lazily initialized, as soon as
-	// pChainClient is ready to serve requests
-	genesisBlkFetched bool
 	genesisBlk        *indexer.ParsedGenesisBlock
 	genesisIdentifier *types.BlockIdentifier
 
 	allocationTx *txs.Tx
 }
 
-func (gh *gHandler) lazyLoadGenesisBlk() bool {
-	if gh.genesisBlkFetched {
-		return true // genesis block loaded
-	}
-
+func (gh *gHandler) loadGenesisBlk() error {
 	genesisBlk, err := gh.indexerParser.GetGenesisBlock(context.Background())
-	if err == nil {
-		gh.genesisBlkFetched = true
-		gh.genesisBlk = genesisBlk
-		gh.genesisIdentifier = &types.BlockIdentifier{
-			Index: int64(genesisBlk.Height),
-			Hash:  genesisBlk.BlockID.String(),
-		}
-		return true // genesis block loaded
+	if err != nil {
+		return err
 	}
-
-	return false // genesis block not loaded
+	gh.genesisBlk = genesisBlk
+	gh.genesisIdentifier = &types.BlockIdentifier{
+		Index: int64(genesisBlk.Height),
+		Hash:  genesisBlk.BlockID.String(),
+	}
+	return nil
 }
 
 func (gh *gHandler) isGenesisBlockRequest(index int64, hash string) (bool, error) {
-	if loaded := gh.lazyLoadGenesisBlk(); !loaded {
-		return false, errors.New("could not load genesis data")
-	}
-
 	// if hash is provided, make sure it matches genesis block hash
 	if hash != "" {
 		return hash == gh.genesisBlk.BlockID.String(), nil
@@ -92,20 +73,14 @@ func (gh *gHandler) isGenesisBlockRequest(index int64, hash string) (bool, error
 	return index == int64(gh.genesisBlk.Height), nil
 }
 
-// getGenesisBlock is a simple getter for genesisBlk. It does not check
-// whether genesisBlk has been duly initialized. Check is up to caller
 func (gh *gHandler) getGenesisBlock() *indexer.ParsedGenesisBlock {
 	return gh.genesisBlk
 }
 
-// getGenesisIdentifier is a simple getter for genesisIdentifier. It does not check
-// whether genesisIdentifier has been duly initialized. Check is up to caller
 func (gh *gHandler) getGenesisIdentifier() *types.BlockIdentifier {
 	return gh.genesisIdentifier
 }
 
-// getFullGenesisTxs does not check whether genesis
-// has been duly initialized. Check is up to caller
 func (gh *gHandler) getFullGenesisTxs() ([]*txs.Tx, error) {
 	res := gh.genesisBlk.Txs
 	allocationTx, err := gh.buildGenesisAllocationTx()

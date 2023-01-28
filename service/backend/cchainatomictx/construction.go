@@ -132,18 +132,13 @@ func (b *Backend) ConstructionMetadata(
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	networkID, err := b.cClient.GetNetworkID(ctx)
-	if err != nil {
-		return nil, service.WrapError(service.ErrClientError, err)
-	}
-
 	cChainID, err := b.cClient.GetBlockchainID(ctx, constants.CChain.String())
 	if err != nil {
 		return nil, service.WrapError(service.ErrClientError, err)
 	}
 
 	metadata := cmapper.Metadata{
-		NetworkID: networkID,
+		NetworkID: b.avalancheNetworkID,
 		CChainID:  cChainID,
 	}
 

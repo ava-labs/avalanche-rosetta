@@ -11,8 +11,6 @@ import (
 // InfoClient collects all Avalanchego info.Client methods common
 // to Rosetta Clients
 type InfoClient interface {
-	GetNetworkName(context.Context, ...rpc.Option) (string, error)
-	GetNetworkID(context.Context, ...rpc.Option) (uint32, error)
 	GetBlockchainID(context.Context, string, ...rpc.Option) (ids.ID, error)
 	IsBootstrapped(context.Context, string, ...rpc.Option) (bool, error)
 	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)

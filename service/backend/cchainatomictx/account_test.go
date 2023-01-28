@@ -38,7 +38,7 @@ var blockHeader = &ethtypes.Header{
 
 func TestAccountBalance(t *testing.T) {
 	evmMock := &mocks.Client{}
-	backend := NewBackend(evmMock, ids.Empty)
+	backend := NewBackend(evmMock, ids.Empty, avalancheNetworkID)
 	accountAddress := "C-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl"
 
 	t.Run("C-chain atomic tx balance is sum of UTXOs", func(t *testing.T) {
@@ -74,7 +74,7 @@ func TestAccountBalance(t *testing.T) {
 
 func TestAccountCoins(t *testing.T) {
 	evmMock := &mocks.Client{}
-	backend := NewBackend(evmMock, ids.Empty)
+	backend := NewBackend(evmMock, ids.Empty, avalancheNetworkID)
 	// changing page size to 2 to test pagination as well
 	backend.getUTXOsPageSize = 2
 	accountAddress := "C-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl"

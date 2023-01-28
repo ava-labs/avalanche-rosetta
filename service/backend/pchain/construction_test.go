@@ -10,6 +10,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
+	avaConst "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	ajson "github.com/ava-labs/avalanchego/utils/json"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -41,7 +42,7 @@ var (
 
 	nodeID = "NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S"
 
-	networkID = 5
+	avalancheNetworkID = avaConst.FujiID
 
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 
@@ -73,10 +74,16 @@ func TestConstructionDerive(t *testing.T) {
 	pChainMock := &mocks.PChainClient{}
 	pChainMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
 	pChainMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
-	pChainMock.Mock.On("GetNetworkID", ctx).Return(uint32(5), nil)
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, pChainMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(
+		service.ModeOnline,
+		pChainMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
 	assert.Nil(t, err)
 
 	t.Run("p-chain address", func(t *testing.T) {
@@ -145,7 +152,7 @@ func TestExportTxConstruction(t *testing.T) {
 	}
 
 	payloadsMetadata := map[string]interface{}{
-		"network_id":           float64(networkID),
+		"network_id":           float64(avalancheNetworkID),
 		"destination_chain":    constants.CChain.String(),
 		"destination_chain_id": cChainID.String(),
 		"blockchain_id":        pChainID.String(),
@@ -187,7 +194,14 @@ func TestExportTxConstruction(t *testing.T) {
 	clientMock := &mocks.PChainClient{}
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(
+		service.ModeOnline,
+		clientMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
 	assert.Nil(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -206,7 +220,6 @@ func TestExportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
-		clientMock.On("GetNetworkID", ctx).Return(uint32(networkID), nil)
 		clientMock.On("GetTxFee", ctx).Return(&info.GetTxFeeResponse{TxFee: ajson.Uint64(txFee)}, nil)
 		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
@@ -361,7 +374,7 @@ func TestImportTxConstruction(t *testing.T) {
 	}
 
 	payloadsMetadata := map[string]interface{}{
-		"network_id":      float64(networkID),
+		"network_id":      float64(avalancheNetworkID),
 		"source_chain_id": cChainID.String(),
 		"blockchain_id":   pChainID.String(),
 	}
@@ -401,7 +414,14 @@ func TestImportTxConstruction(t *testing.T) {
 	clientMock := &mocks.PChainClient{}
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(
+		service.ModeOnline,
+		clientMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
 	assert.Nil(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -420,7 +440,6 @@ func TestImportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
-		clientMock.On("GetNetworkID", ctx).Return(uint32(networkID), nil)
 		clientMock.On("GetTxFee", ctx).Return(&info.GetTxFeeResponse{TxFee: ajson.Uint64(txFee)}, nil)
 		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
@@ -591,7 +610,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	}
 
 	payloadsMetadata := map[string]interface{}{
-		"network_id":       float64(networkID),
+		"network_id":       float64(avalancheNetworkID),
 		"blockchain_id":    pChainID.String(),
 		"node_id":          nodeID,
 		"start":            float64(startTime),
@@ -638,7 +657,14 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	clientMock := &mocks.PChainClient{}
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(
+		service.ModeOnline,
+		clientMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
 	assert.Nil(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -657,7 +683,6 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
-		clientMock.On("GetNetworkID", ctx).Return(uint32(networkID), nil)
 		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
 
 		resp, err := backend.ConstructionMetadata(
@@ -823,7 +848,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	}
 
 	payloadsMetadata := map[string]interface{}{
-		"network_id":       float64(networkID),
+		"network_id":       float64(avalancheNetworkID),
 		"blockchain_id":    pChainID.String(),
 		"node_id":          nodeID,
 		"start":            float64(startTime),
@@ -870,7 +895,14 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	clientMock := &mocks.PChainClient{}
 	parserMock := &idxmocks.Parser{}
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	backend, err := NewBackend(service.ModeOnline, clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier)
+	backend, err := NewBackend(
+		service.ModeOnline,
+		clientMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
 	assert.Nil(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -889,7 +921,6 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
-		clientMock.On("GetNetworkID", ctx).Return(uint32(networkID), nil)
 		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
 
 		resp, err := backend.ConstructionMetadata(

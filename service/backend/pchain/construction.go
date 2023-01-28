@@ -82,16 +82,12 @@ func (b *Backend) ConstructionMetadata(
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
 
-	networkID, err := b.pClient.GetNetworkID(ctx)
-	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, err)
-	}
-	metadata.NetworkID = networkID
-
 	pChainID, err := b.pClient.GetBlockchainID(ctx, constants.PChain.String())
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
+
+	metadata.NetworkID = b.avalancheNetworkID
 	metadata.BlockchainID = pChainID
 
 	metadataMap, err := mapper.MarshalJSONMap(metadata)

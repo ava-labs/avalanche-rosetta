@@ -125,20 +125,24 @@ func main() {
 	}
 
 	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCBaseURL, cfg.IndexerBaseURL)
-	var pIndexerParser indexer.Parser
-	if cfg.Mode == service.ModeOnline {
-		pIndexerParser, err = indexer.NewParser(pChainClient)
-		if err != nil {
-			log.Fatal("unable to initialize p-chain indexer parser:", err)
-		}
+	pIndexerParser, err := indexer.NewParser(pChainClient, cfg.avalancheNetworkID())
+	if err != nil {
+		log.Fatal("unable to initialize p-chain indexer parser:", err)
 	}
 
-	pChainBackend, err := pchain.NewBackend(cfg.Mode, pChainClient, pIndexerParser, avaxAssetID, networkP)
+	pChainBackend, err := pchain.NewBackend(
+		cfg.Mode,
+		pChainClient,
+		pIndexerParser,
+		avaxAssetID,
+		networkP,
+		cfg.avalancheNetworkID(),
+	)
 	if err != nil {
 		log.Fatal("unable to initialize p-chain backend:", err)
 	}
 
-	cChainAtomicTxBackend := cchainatomictx.NewBackend(cChainClient, avaxAssetID)
+	cChainAtomicTxBackend := cchainatomictx.NewBackend(cChainClient, avaxAssetID, cfg.avalancheNetworkID())
 
 	serviceConfig := &service.Config{
 		Mode:               cfg.Mode,
