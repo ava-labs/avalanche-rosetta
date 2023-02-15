@@ -131,18 +131,14 @@ func Transaction(
 }
 
 func crossChainTransaction(
-	rawIdx int,
 	avaxAssetID string,
 	tx *evm.Tx,
 ) ([]*types.Operation, error) {
-	var (
-		ops = []*types.Operation{}
-		idx = int64(rawIdx)
-	)
+	ops := []*types.Operation{}
 
 	// Prepare transaction for ID calcuation
 	if err := tx.Sign(evm.Codec, nil); err != nil {
-		return nil, err
+		return ops, err
 	}
 
 	switch t := tx.UnsignedAtomicTx.(type) {
@@ -160,14 +156,14 @@ func crossChainTransaction(
 			i++
 		}
 
-		for _, out := range t.Outs {
+		for idx, out := range t.Outs {
 			if out.AssetID.String() != avaxAssetID {
 				continue
 			}
 
-			op := &types.Operation{
+			ops = append(ops, &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
-					Index: idx,
+					Index: int64(idx),
 				},
 				Type:   OpImport,
 				Status: types.String(StatusSuccess),
@@ -187,19 +183,17 @@ func crossChainTransaction(
 					"meta":          t.Metadata,
 					"asset_id":      out.AssetID.String(),
 				},
-			}
-			ops = append(ops, op)
-			idx++
+			})
 		}
 	case *evm.UnsignedExportTx:
-		for _, in := range t.Ins {
+		for idx, in := range t.Ins {
 			if in.AssetID.String() != avaxAssetID {
 				continue
 			}
 
-			op := &types.Operation{
+			ops = append(ops, &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
-					Index: idx,
+					Index: int64(idx),
 				},
 				Type:   OpExport,
 				Status: types.String(StatusSuccess),
@@ -218,9 +212,7 @@ func crossChainTransaction(
 					"meta":              t.Metadata,
 					"asset_id":          in.AssetID.String(),
 				},
-			}
-			ops = append(ops, op)
-			idx++
+			})
 		}
 	default:
 		return nil, fmt.Errorf("unsupported transaction: %T", t)
@@ -245,26 +237,19 @@ func CrossChainTransactions(
 		return nil, err
 	}
 
-	ops := []*types.Operation{}
 	for _, tx := range atomicTxs {
-		txOps, err := crossChainTransaction(len(ops), avaxAssetID, tx)
+		ops, err := crossChainTransaction(avaxAssetID, tx)
 		if err != nil {
 			return nil, err
 		}
-		ops = append(ops, txOps...)
-	}
 
-	// TODO: migrate to using atomic transaction ID instead of marking as a block
-	// transaction
-	//
-	// NOTE: We need to be very careful about this because it will require
-	// integrators to re-index the chain to get the new result.
-	transactions = append(transactions, &types.Transaction{
-		TransactionIdentifier: &types.TransactionIdentifier{
-			Hash: block.Hash().String(),
-		},
-		Operations: ops,
-	})
+		transactions = append(transactions, &types.Transaction{
+			TransactionIdentifier: &types.TransactionIdentifier{
+				Hash: tx.ID().String(),
+			},
+			Operations: ops,
+		})
+	}
 
 	return transactions, nil
 }
