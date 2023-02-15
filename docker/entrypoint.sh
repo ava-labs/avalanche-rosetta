@@ -23,6 +23,7 @@ mkdir -p /app/configs/chains/C
 
 cat <<EOF > /app/configs/chains/C/config.json
 {
+  "state-sync-enabled": false,
   "snowman-api-enabled": false,
   "coreth-admin-api-enabled": false,
   "rpc-gas-cap": 2500000000,
