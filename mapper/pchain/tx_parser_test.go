@@ -4,13 +4,14 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 
-	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
+	"github.com/ava-labs/avalanchego/ids"
+	avaconst "github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/vms/components/avax"
+
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 )
@@ -18,9 +19,9 @@ import (
 var (
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	cChainID, _    = ids.FromString("yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")
-	chainIDs       = map[ids.ID]rosConst.ChainIDAlias{
-		ids.Empty: rosConst.PChain,
-		cChainID:  rosConst.CChain,
+	chainIDs       = map[ids.ID]constants.ChainIDAlias{
+		ids.Empty: constants.PChain,
+		cChainID:  constants.CChain,
 	}
 
 	pchainClient = &mocks.PChainClient{}
@@ -34,7 +35,7 @@ func TestMapInOperation(t *testing.T) {
 
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
@@ -82,7 +83,7 @@ func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
 
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 
 		// passing empty as AVAX id, so that
@@ -106,14 +107,14 @@ func TestMapOutOperation(t *testing.T) {
 
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	outOps := newTxOps(false)
-	err := parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, rosConst.PChain)
+	err := parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, constants.PChain)
 	assert.Nil(t, err)
 
 	rosettaOutOp := outOps.Outs
@@ -139,7 +140,7 @@ func TestMapAddValidatorTx(t *testing.T) {
 
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
@@ -168,7 +169,7 @@ func TestMapAddDelegatorTx(t *testing.T) {
 
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
@@ -215,7 +216,7 @@ func TestMapImportTx(t *testing.T) {
 
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
@@ -247,7 +248,7 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
@@ -301,7 +302,7 @@ func TestMapExportTx(t *testing.T) {
 
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
@@ -330,7 +331,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
@@ -360,7 +361,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	// setting isConstruction to true in order to include exported output in the operations
 	parserCfg = TxParserConfig{
 		IsConstruction: true,
-		Hrp:            constants.FujiHRP,
+		Hrp:            avaconst.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,

@@ -10,7 +10,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
-	"github.com/ava-labs/avalanchego/utils/constants"
+	avaconst "github.com/ava-labs/avalanchego/utils/constants"
 )
 
 var (
@@ -87,7 +87,7 @@ func (c *config) validate() error {
 		return errors.New("network name not provided")
 	}
 
-	if _, err := constants.NetworkID(c.NetworkName); err != nil {
+	if _, err := avaconst.NetworkID(c.NetworkName); err != nil {
 		return errors.New("network name not mapping to any known network ID")
 	}
 
@@ -142,6 +142,6 @@ func (c *config) validateWhitelistOnlyValidErc20s(cli client.Client) error {
 
 func (c *config) avalancheNetworkID() uint32 {
 	// error checked in config.validate
-	res, _ := constants.NetworkID(c.NetworkName)
+	res, _ := avaconst.NetworkID(c.NetworkName)
 	return res
 }

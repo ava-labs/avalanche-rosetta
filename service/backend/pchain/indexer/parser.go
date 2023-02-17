@@ -10,16 +10,15 @@ import (
 	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/utils/constants"
+	avaconst "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
-
 	pBlocks "github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	proposerBlk "github.com/ava-labs/avalanchego/vms/proposervm/block"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
-	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 var (
@@ -65,7 +64,7 @@ type parser struct {
 // cannot assume client is ready to serve requests immediately
 func NewParser(pChainClient client.PChainClient, avalancheNetworkID uint32) (Parser, error) {
 	aliaser := ids.NewAliaser()
-	err := aliaser.Alias(constants.PlatformChainID, rosConst.PChain.String())
+	err := aliaser.Alias(avaconst.PlatformChainID, constants.PChain.String())
 	if err != nil {
 		return nil, err
 	}

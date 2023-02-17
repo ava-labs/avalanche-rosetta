@@ -7,13 +7,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/formatting"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
+	"github.com/ava-labs/avalanchego/ids"
+	avaconst "github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/utils/formatting"
+	"github.com/ava-labs/avalanchego/vms/components/avax"
+
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 var errUnrecognizedNetwork = errors.New("can't recognize network")
@@ -32,10 +33,10 @@ func EqualFoldContains(arr []string, str string) bool {
 func GetHRP(networkIdentifier *types.NetworkIdentifier) (string, error) {
 	var hrp string
 	switch strings.ToLower(networkIdentifier.Network) {
-	case rosConst.FujiNetwork:
-		hrp = constants.GetHRP(constants.FujiID)
-	case rosConst.MainnetNetwork:
-		hrp = constants.GetHRP(constants.MainnetID)
+	case constants.FujiNetwork:
+		hrp = avaconst.GetHRP(avaconst.FujiID)
+	case constants.MainnetNetwork:
+		hrp = avaconst.GetHRP(avaconst.MainnetID)
 	default:
 		return "", errUnrecognizedNetwork
 	}

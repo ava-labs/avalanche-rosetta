@@ -7,21 +7,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-
-	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/indexer"
+	"github.com/ava-labs/avalanchego/snow"
+	avaconst "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting"
-	"github.com/stretchr/testify/assert"
+	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 
-	"github.com/stretchr/testify/mock"
+	"github.com/ava-labs/avalanche-rosetta/constants"
+	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 )
 
 var (
@@ -91,7 +90,7 @@ func TestMain(m *testing.M) {
 
 	pchainClient.On("GetHeight", ctx, mock.Anything).Return(uint64(1000000), nil)
 
-	p, err = NewParser(pchainClient, constants.MainnetID)
+	p, err = NewParser(pchainClient, avaconst.MainnetID)
 	if err != nil {
 		panic(err)
 	}
@@ -128,7 +127,7 @@ func TestGenesisBlockParseTxs(t *testing.T) {
 	a := assert.New(t)
 	pchainClient := &mocks.PChainClient{}
 
-	p, err := NewParser(pchainClient, constants.FujiID)
+	p, err := NewParser(pchainClient, avaconst.FujiID)
 	if err != nil {
 		panic(err)
 	}
@@ -139,7 +138,7 @@ func TestGenesisBlockParseTxs(t *testing.T) {
 		panic(err)
 	}
 
-	initializeTxCtx(g.Txs, constants.FujiID)
+	initializeTxCtx(g.Txs, avaconst.FujiID)
 	j, err := stdjson.MarshalIndent(g, "", "  ")
 	if err != nil {
 		panic(err)
@@ -162,7 +161,7 @@ func TestFixtures(t *testing.T) {
 			panic(err)
 		}
 
-		initializeTxCtx(block.Txs, constants.MainnetID)
+		initializeTxCtx(block.Txs, avaconst.MainnetID)
 		j, err := stdjson.Marshal(block)
 		if err != nil {
 			panic(err)
@@ -175,7 +174,7 @@ func TestFixtures(t *testing.T) {
 
 func initializeTxCtx(txs []*txs.Tx, networkID uint32) {
 	aliaser := ids.NewAliaser()
-	_ = aliaser.Alias(constants.PlatformChainID, rosConst.PChain.String())
+	_ = aliaser.Alias(avaconst.PlatformChainID, constants.PChain.String())
 	ctx := &snow.Context{
 		BCLookup:  aliaser,
 		NetworkID: networkID,
