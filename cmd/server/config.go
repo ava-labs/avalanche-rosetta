@@ -23,13 +23,19 @@ var (
 )
 
 type config struct {
-	Mode             string `json:"mode"`
-	RPCBaseURL       string `json:"rpc_base_url"`
-	IndexerBaseURL   string `json:"indexer_base_url"`
-	ListenAddr       string `json:"listen_addr"`
-	NetworkName      string `json:"network_name"`
-	ChainID          int64  `json:"chain_id"`
-	LogRequests      bool   `json:"log_requests"`
+	Mode           string `json:"mode"`
+	RPCBaseURL     string `json:"rpc_base_url"`
+	IndexerBaseURL string `json:"indexer_base_url"`
+	ListenAddr     string `json:"listen_addr"`
+	NetworkName    string `json:"network_name"`
+
+	// ChainID is the C-chain ID for the configured network
+	// It must be specified if Offline mode is chosen
+	ChainID     int64 `json:"chain_id"`
+	LogRequests bool  `json:"log_requests"`
+
+	// GenesisBlockHash is the C-chain genesis block ID
+	// for the configured network
 	GenesisBlockHash string `json:"genesis_block_hash"`
 
 	IngestionMode          string   `json:"ingestion_mode"`

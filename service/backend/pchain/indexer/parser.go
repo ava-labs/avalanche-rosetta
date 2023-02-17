@@ -46,8 +46,6 @@ type Parser interface {
 }
 
 type parser struct {
-	// The full PChainClient is currently needed just to retrieve
-	// NetworkID.
 	// TODO: consider introducing a cache for parsed blocks
 	pChainClient client.PChainClient
 

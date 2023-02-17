@@ -102,6 +102,10 @@ func main() {
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
 	}
+	avaxAssetID, err := ids.FromString(assetID)
+	if err != nil {
+		log.Fatal("parse asset id failed:", err)
+	}
 
 	// Note: Rosetta is currently configure with capitalized NetworkNames
 	// and service network requests are carried our with capital case.
@@ -117,11 +121,6 @@ func main() {
 	networkC := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
 		Network:    cfg.NetworkName,
-	}
-
-	avaxAssetID, err := ids.FromString(assetID)
-	if err != nil {
-		log.Fatal("parse asset id failed:", err)
 	}
 
 	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCBaseURL, cfg.IndexerBaseURL)
