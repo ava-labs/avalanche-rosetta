@@ -142,11 +142,15 @@ func crossChainTransaction(
 	rawIdx int,
 	avaxAssetID string,
 	tx *evm.Tx,
-) ([]*types.Operation, []*types.Operation, error) {
+) ([]*types.Operation, map[string]interface{}, error) {
 	var (
 		ops          = []*types.Operation{}
 		exportedOuts = []*types.Operation{}
 		idx          = int64(rawIdx)
+		metadata     = map[string]interface{}{}
+
+		totalInputAmount  = big.NewInt(0)
+		totalOutputAmount = big.NewInt(0)
 	)
 
 	// Prepare transaction for ID calcuation
@@ -161,6 +165,7 @@ func crossChainTransaction(
 		mTxIDs := map[string]struct{}{}
 		for _, in := range t.ImportedInputs {
 			mTxIDs[in.TxID.String()] = struct{}{}
+			totalInputAmount.Add(totalInputAmount, big.NewInt(int64(in.In.Amount())))
 		}
 		i := 0
 		txIDs := make([]string, len(mTxIDs))
@@ -173,6 +178,9 @@ func crossChainTransaction(
 			if out.AssetID.String() != avaxAssetID {
 				continue
 			}
+
+			outAmount := new(big.Int).SetUint64(out.Amount)
+			totalOutputAmount.Add(totalOutputAmount, outAmount)
 
 			op := &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
@@ -206,6 +214,10 @@ func crossChainTransaction(
 				continue
 			}
 
+			// Add input amounts to tx fee
+			inAmount := new(big.Int).SetUint64(in.Amount)
+			totalInputAmount.Add(totalInputAmount, inAmount)
+
 			op := &types.Operation{
 				OperationIdentifier: &types.OperationIdentifier{
 					Index: idx,
@@ -216,7 +228,7 @@ func crossChainTransaction(
 					Address: in.Address.Hex(),
 				},
 				Amount: &types.Amount{
-					Value:    new(big.Int).Mul(new(big.Int).SetUint64(in.Amount), new(big.Int).Neg(X2crate)).String(),
+					Value:    new(big.Int).Mul(inAmount, new(big.Int).Neg(X2crate)).String(),
 					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
@@ -232,12 +244,14 @@ func crossChainTransaction(
 			idx++
 
 			if alias, ok := chainIDToAliasMapping[t.DestinationChain]; t.ExportedOutputs != nil && ok {
-				operations, err := createExportedOuts(networkIdentifier, alias, t.ID(), t.ExportedOutputs)
+				operations, totalExportedAmount, err := createExportedOuts(networkIdentifier, alias, t.ID(), t.ExportedOutputs)
 				if err != nil {
 					return nil, nil, err
 				}
 
 				exportedOuts = append(exportedOuts, operations...)
+				metadata[MetadataExportedOutputs] = exportedOuts
+				totalOutputAmount.Add(totalOutputAmount, totalExportedAmount)
 			}
 		}
 	default:
@@ -252,7 +266,12 @@ func crossChainTransaction(
 			Index: idx + int64(i),
 		}
 	}
-	return ops, exportedOuts, nil
+
+	// tx fee is the diff between sums of input/importedInput and output/exportedOutput amounts
+	txFeeAtomicAvax := new(big.Int).Sub(totalInputAmount, totalOutputAmount)
+	metadata[MetadataTxFee] = AtomicAvaxAmount(txFeeAtomicAvax)
+
+	return ops, metadata, nil
 }
 
 func createExportedOuts(
@@ -260,13 +279,14 @@ func createExportedOuts(
 	chainAlias constants.ChainIDAlias,
 	txID ids.ID,
 	exportedOuts []*avax.TransferableOutput,
-) ([]*types.Operation, error) {
+) ([]*types.Operation, *big.Int, error) {
 	hrp, err := GetHRP(networkIdentifier)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	operations := []*types.Operation{}
+	totalAmount := big.NewInt(0)
 	for outIndex, out := range exportedOuts {
 		var addr string
 		transferOutput := out.Output().(*secp256k1fx.TransferOutput)
@@ -274,7 +294,7 @@ func createExportedOuts(
 			var err error
 			addr, err = address.Format(chainAlias.String(), hrp, transferOutput.Addrs[0][:])
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		}
 
@@ -282,6 +302,9 @@ func createExportedOuts(
 			TxID:        txID,
 			OutputIndex: uint32(outIndex),
 		}
+
+		totalAmount.Add(totalAmount, new(big.Int).SetUint64(out.Out.Amount()))
+
 		operations = append(operations, &types.Operation{
 			Account: &types.AccountIdentifier{Address: addr},
 			Type:    OpExport,
@@ -296,7 +319,7 @@ func createExportedOuts(
 			},
 		})
 	}
-	return operations, nil
+	return operations, totalAmount, nil
 }
 
 func CrossChainTransactions(
@@ -319,7 +342,7 @@ func CrossChainTransactions(
 	}
 
 	for _, tx := range atomicTxs {
-		txOps, exportedOuts, err := crossChainTransaction(networkIdentifier, chainIDToAliasMapping, 0, avaxAssetID, tx)
+		txOps, metadata, err := crossChainTransaction(networkIdentifier, chainIDToAliasMapping, 0, avaxAssetID, tx)
 		if err != nil {
 			return nil, err
 		}
@@ -329,13 +352,9 @@ func CrossChainTransactions(
 				Hash: tx.ID().String(),
 			},
 			Operations: txOps,
+			Metadata:   metadata,
 		}
 
-		if len(exportedOuts) > 0 {
-			transaction.Metadata = map[string]interface{}{
-				MetadataExportedOutputs: exportedOuts,
-			}
-		}
 		transactions = append(transactions, transaction)
 	}
 
