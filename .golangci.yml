@@ -10,6 +10,11 @@ issues:
   max-same-issues: 0
   exclude:
     - "G114: Use of net/http serve function that has no support for setting timeouts"
+  exclude-rules:
+    # ref: https://github.com/dominikh/go-tools/issues/1365
+    - path: client/pchainclient.go
+      linters:
+        - unused
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.

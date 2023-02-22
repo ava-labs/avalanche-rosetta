@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
@@ -13,6 +12,8 @@ import (
 	"github.com/ava-labs/avalanchego/vms/avm"
 	"github.com/ava-labs/avalanchego/vms/platformvm"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
+
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 // Interface compliance
@@ -59,6 +60,7 @@ type PChainClient interface {
 	GetBlock(ctx context.Context, blockID ids.ID, options ...rpc.Option) ([]byte, error)
 	IssueTx(ctx context.Context, tx []byte, options ...rpc.Option) (ids.ID, error)
 	GetStake(ctx context.Context, addrs []ids.ShortID, options ...rpc.Option) (map[ids.ID]uint64, [][]byte, error)
+	GetCurrentValidators(ctx context.Context, subnetID ids.ID, nodeIDs []ids.NodeID, options ...rpc.Option) ([]platformvm.ClientPermissionlessValidator, error)
 
 	// avm.Client methods
 	GetAssetDescription(ctx context.Context, assetID string, options ...rpc.Option) (*avm.GetAssetDescriptionReply, error)
