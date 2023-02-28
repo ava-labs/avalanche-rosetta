@@ -13,14 +13,14 @@ const (
 // ContractClient is a client for the calling contract information
 type ContractClient struct {
 	ethClient ethclient.Client
-	cache     *cache.LRU
+	cache     *cache.LRU[common.Address, interface{}]
 }
 
 // NewContractClient returns a new ContractInfo client
 func NewContractClient(c ethclient.Client) *ContractClient {
 	return &ContractClient{
 		ethClient: c,
-		cache:     &cache.LRU{Size: contractCacheSize},
+		cache:     &cache.LRU[common.Address, interface{}]{Size: contractCacheSize},
 	}
 }
 
