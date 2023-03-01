@@ -3,11 +3,15 @@ package pchain
 import (
 	"context"
 	"errors"
+	"math/big"
 	"strconv"
+	"strings"
 	"time"
 
+	avaConst "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"golang.org/x/exp/slices"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
@@ -54,6 +58,11 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 	if req.AccountIdentifier.SubAccount != nil {
 		balanceType = req.AccountIdentifier.SubAccount.Address
 	}
+
+	if strings.HasPrefix(balanceType, ids.NodeIDPrefix) {
+		return b.getPendingRewardsBalance(ctx, req)
+	}
+
 	fetchImportable := balanceType == pmapper.SubAccountTypeSharedMemory
 
 	height, balance, typedErr := b.fetchBalance(ctx, req.AccountIdentifier.Address, fetchImportable, currencyAssetIDs)
@@ -159,6 +168,90 @@ func (b *Backend) AccountCoins(ctx context.Context, req *types.AccountCoinsReque
 			Hash:  block.BlockID.String(),
 		},
 		Coins: coins,
+	}, nil
+}
+
+func (b *Backend) getPendingRewardsBalance(ctx context.Context, req *types.AccountBalanceRequest) (*types.AccountBalanceResponse, *types.Error) {
+	addr, err := address.ParseToID(req.AccountIdentifier.Address)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, "malformed address")
+	}
+
+	nodeIDStr := req.AccountIdentifier.SubAccount.Address
+	validatorNodeID, err := ids.NodeIDFromString(nodeIDStr)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, "malformed validator_node_id ")
+	}
+
+	var nodeIDs []ids.NodeID
+	nodeIDs = append(nodeIDs, validatorNodeID)
+
+	validators, err := b.pClient.GetCurrentValidators(ctx, avaConst.PrimaryNetworkID, nodeIDs)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, "unable to fetch validators")
+	}
+
+	validatorRewards := big.NewInt(0)
+	delegationFeeRewards := big.NewInt(0)
+	delegationRewards := big.NewInt(0)
+
+	for _, v := range validators {
+		isValidatorOwner := false
+
+		if slices.Contains(v.ValidationRewardOwner.Addresses, addr) {
+			validatorRewards.Add(validatorRewards, new(big.Int).SetUint64(*v.PotentialReward))
+			isValidatorOwner = true
+		}
+
+		for _, d := range v.Delegators {
+			delegationReward := new(big.Int).SetUint64(*d.PotentialReward)
+			// Representing delegation fee as percentage of 10^6, the same way as
+			// DelegatorShare parameter of AddValidator transaction
+			delegationFeePct := big.NewInt(int64(v.DelegationFee * 10_000))
+			delegationFee := new(big.Int).Div(new(big.Int).Mul(delegationReward, delegationFeePct), big.NewInt(1_000_000))
+
+			// if the address we are searching is the validator owner, add the delegation fee
+			if isValidatorOwner {
+				delegationFeeRewards.Add(delegationFeeRewards, delegationFee)
+			}
+
+			// ff the address delegated to the current validator, add the potential reward minus fee
+			if slices.Contains(d.RewardOwner.Addresses, addr) {
+				delegateReward := new(big.Int).Sub(delegationReward, delegationFee)
+				delegationRewards.Add(delegationRewards, delegateReward)
+			}
+		}
+	}
+
+	totalRewards := big.NewInt(0)
+	totalRewards.Add(totalRewards, validatorRewards)
+	totalRewards.Add(totalRewards, delegationFeeRewards)
+	totalRewards.Add(totalRewards, delegationRewards)
+
+	height, err := b.pClient.GetHeight(ctx)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, "unable to get block height")
+	}
+
+	block, err := b.indexerParser.ParseNonGenesisBlock(ctx, "", height)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, "unable to get current block")
+	}
+
+	return &types.AccountBalanceResponse{
+		BlockIdentifier: &types.BlockIdentifier{
+			Index: int64(height),
+			Hash:  block.BlockID.String(),
+		},
+		Balances: []*types.Amount{{
+			Value:    totalRewards.String(),
+			Currency: mapper.AtomicAvaxCurrency,
+			Metadata: map[string]interface{}{
+				pmapper.MetadataValidatorRewards:     validatorRewards.String(),
+				pmapper.MetadataDelegationRewards:    delegationRewards.String(),
+				pmapper.MetadataDelegationFeeRewards: delegationFeeRewards.String(),
+			},
+		}},
 	}, nil
 }
 

@@ -35,6 +35,10 @@ const (
 	MetadataMessage          = "message"
 	MetadataSigner           = "signer"
 
+	MetadataValidatorRewards     = "validator_rewards"
+	MetadataDelegationRewards    = "delegation_rewards"
+	MetadataDelegationFeeRewards = "delegation_fee_rewards"
+
 	SubAccountTypeSharedMemory       = "shared_memory"
 	SubAccountTypeUnlocked           = "unlocked"
 	SubAccountTypeLockedStakeable    = "locked_stakeable"

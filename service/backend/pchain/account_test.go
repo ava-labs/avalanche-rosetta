@@ -8,6 +8,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/avm"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
@@ -38,6 +39,12 @@ var (
 	pChainAddr = "P-avax1yp8v6x7kf7ar2q5g0cs0a9jk4cmt0sgam72zfz"
 
 	dummyGenesis = &indexer.ParsedGenesisBlock{}
+
+	mockAssetDescription = &avm.GetAssetDescriptionReply{
+		Name:         "Avalanche",
+		Symbol:       mapper.AtomicAvaxCurrency.Symbol,
+		Denomination: 9,
+	}
 )
 
 func TestAccountBalance(t *testing.T) {
@@ -65,11 +72,6 @@ func TestAccountBalance(t *testing.T) {
 		stakeUtxoBytes := makeStakeUtxoBytes(t, backend, utxos[1].amount)
 
 		// Mock on GetAssetDescription
-		mockAssetDescription := &avm.GetAssetDescriptionReply{
-			Name:         "Avalanche",
-			Symbol:       mapper.AtomicAvaxCurrency.Symbol,
-			Denomination: 9,
-		}
 		pChainMock.Mock.On("GetAssetDescription", ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
 
 		// once before other calls, once after
@@ -206,6 +208,152 @@ func TestAccountBalance(t *testing.T) {
 	})
 }
 
+func TestAccountPendingRewardsBalance(t *testing.T) {
+	ctx := context.Background()
+	pChainMock := &mocks.PChainClient{}
+	parserMock := &idxmocks.Parser{}
+
+	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
+	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
+
+	validator1NodeID, _ := ids.NodeIDFromString("NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S")
+	validator1Reward := uint64(100000)
+	validator1AddressStr := "P-fuji1csj0hzu7rtljuhqnzp8m9shawlcefuvyl0m3e9"
+	validator1Address, _ := address.ParseToID(validator1AddressStr)
+	validator1ValidationRewardOwner := &platformvm.ClientOwner{Addresses: []ids.ShortID{validator1Address}}
+
+	delegate1Reward := uint64(20000)
+	delegate1AddressStr := "P-fuji1raffss40pyr7hdhyp7p4hs6p049hjlc60xxwks"
+	delegate1Address, _ := address.ParseToID(delegate1AddressStr)
+	delegate1RewardOwner := &platformvm.ClientOwner{Addresses: []ids.ShortID{delegate1Address}}
+
+	delegate2Reward := uint64(30000)
+	delegate2AddressStr := "P-fuji1tlt564kc8mqwr575lyg539r8h6xg7hfmgxnkcg"
+	delegate2Address, _ := address.ParseToID(delegate2AddressStr)
+	delegate2RewardOwner := &platformvm.ClientOwner{Addresses: []ids.ShortID{delegate2Address}}
+
+	validators := []platformvm.ClientPermissionlessValidator{
+		{
+			ClientStaker:          platformvm.ClientStaker{NodeID: validator1NodeID},
+			ValidationRewardOwner: validator1ValidationRewardOwner,
+			PotentialReward:       &validator1Reward,
+			DelegationFee:         10,
+			Delegators: []platformvm.ClientDelegator{
+				{
+					RewardOwner:     delegate1RewardOwner,
+					PotentialReward: &delegate1Reward,
+				},
+				{
+					RewardOwner:     delegate2RewardOwner,
+					PotentialReward: &delegate2Reward,
+				},
+			},
+		},
+	}
+
+	backend, err := NewBackend(
+		service.ModeOnline,
+		pChainMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
+	assert.Nil(t, err)
+
+	t.Run("Pending Rewards Validator By NodeID", func(t *testing.T) {
+		pChainMock.Mock.On("GetCurrentValidators", ctx, ids.Empty, []ids.NodeID{validator1NodeID}).Return(validators, nil)
+		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil)
+
+		resp, err := backend.AccountBalance(
+			ctx,
+			&types.AccountBalanceRequest{
+				NetworkIdentifier: &types.NetworkIdentifier{
+					Network: constants.FujiNetwork,
+					SubNetworkIdentifier: &types.SubNetworkIdentifier{
+						Network: constants.PChain.String(),
+					},
+				},
+				AccountIdentifier: &types.AccountIdentifier{
+					Address: validator1AddressStr,
+					SubAccount: &types.SubAccountIdentifier{
+						Address: validator1NodeID.String(),
+					},
+				},
+			},
+		)
+
+		expected := &types.AccountBalanceResponse{
+			BlockIdentifier: &types.BlockIdentifier{
+				Index: int64(blockHeight),
+				Hash:  parsedBlock.BlockID.String(),
+			},
+			Balances: []*types.Amount{
+				{
+					Value:    "105000",
+					Currency: mapper.AtomicAvaxCurrency,
+					Metadata: map[string]interface{}{
+						pmapper.MetadataValidatorRewards:     "100000", // 100000 from validation
+						pmapper.MetadataDelegationFeeRewards: "5000",   // 10% fee of total 50000 delegation
+						pmapper.MetadataDelegationRewards:    "0",
+					},
+				},
+			},
+		}
+
+		assert.Nil(t, err)
+		assert.Equal(t, expected, resp)
+		pChainMock.AssertExpectations(t)
+		parserMock.AssertExpectations(t)
+	})
+
+	t.Run("Pending Rewards Delegate by NodeID", func(t *testing.T) {
+		pChainMock.Mock.On("GetCurrentValidators", ctx, ids.Empty, []ids.NodeID{validator1NodeID}).Return(validators, nil)
+		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil)
+
+		resp, err := backend.AccountBalance(
+			ctx,
+			&types.AccountBalanceRequest{
+				NetworkIdentifier: &types.NetworkIdentifier{
+					Network: constants.FujiNetwork,
+					SubNetworkIdentifier: &types.SubNetworkIdentifier{
+						Network: constants.PChain.String(),
+					},
+				},
+				AccountIdentifier: &types.AccountIdentifier{
+					Address: delegate1AddressStr,
+					SubAccount: &types.SubAccountIdentifier{
+						Address: validator1NodeID.String(),
+					},
+				},
+			},
+		)
+
+		expected := &types.AccountBalanceResponse{
+			BlockIdentifier: &types.BlockIdentifier{
+				Index: int64(blockHeight),
+				Hash:  parsedBlock.BlockID.String(),
+			},
+			Balances: []*types.Amount{
+				{
+					Value:    "18000",
+					Currency: mapper.AtomicAvaxCurrency,
+					Metadata: map[string]interface{}{
+						pmapper.MetadataDelegationRewards:    "18000", // 10 percent goes to validator, remaining is here
+						pmapper.MetadataValidatorRewards:     "0",
+						pmapper.MetadataDelegationFeeRewards: "0",
+					},
+				},
+			},
+		}
+
+		assert.Nil(t, err)
+		assert.Equal(t, expected, resp)
+		pChainMock.AssertExpectations(t)
+		parserMock.AssertExpectations(t)
+	})
+}
+
 func TestAccountCoins(t *testing.T) {
 	ctx := context.Background()
 	pChainMock := &mocks.PChainClient{}
@@ -224,11 +372,6 @@ func TestAccountCoins(t *testing.T) {
 
 	t.Run("Account Coins Test regular coins", func(t *testing.T) {
 		// Mock on GetAssetDescription
-		mockAssetDescription := &avm.GetAssetDescriptionReply{
-			Name:         "Avalanche",
-			Symbol:       mapper.AtomicAvaxCurrency.Symbol,
-			Denomination: 9,
-		}
 		pChainMock.Mock.On("GetAssetDescription", ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
 
 		// Mock on GetUTXOs
@@ -300,11 +443,6 @@ func TestAccountCoins(t *testing.T) {
 
 	t.Run("Account Coins Test shared memory coins", func(t *testing.T) {
 		// Mock on GetAssetDescription
-		mockAssetDescription := &avm.GetAssetDescriptionReply{
-			Name:         "Avalanche",
-			Symbol:       mapper.AtomicAvaxCurrency.Symbol,
-			Denomination: 9,
-		}
 		pChainMock.Mock.On("GetAssetDescription", ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
 
 		// Mock on GetUTXOs
