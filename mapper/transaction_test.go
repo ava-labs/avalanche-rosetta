@@ -2,16 +2,19 @@ package mapper
 
 import (
 	"encoding/hex"
+	"math/big"
 	"testing"
 
-	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 var WAVAX = &types.Currency{
@@ -244,6 +247,59 @@ func TestERC721Ops(t *testing.T) {
 	})
 }
 
+func TestCrossChainImportedInputs(t *testing.T) {
+	t.Run("Cross chain imported input in metadata", func(t *testing.T) {
+		var (
+			rawIdx      = 0
+			avaxAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
+			hexTx       = "0x000000000000000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d5000000000000000000000000000000000000000000000000000000000000000000000001d4e3812503247f042cc9bbb3395ceca49e28687726489b0ea2d4dd259fadb8b6000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000500000000772651c00000000100000000000000013158e80abd5a1e1aa716003c9db096792c37962100000000772209123d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000010000000900000001309767786d3c3548f34373c858f2bab210c6bd6c837d069e314930273d32acc361e86a05bc5bd251e4cb5809bbca7680361ed3263ff5ba2aa467294bfa000aef00cfb71da5"
+			decodeTx, _ = formatting.Decode(formatting.Hex, hexTx)
+			tx          = &evm.Tx{}
+
+			networkIdentifier = &types.NetworkIdentifier{
+				Network: constants.FujiNetwork,
+			}
+			chainIDToAliasMapping = map[ids.ID]constants.ChainIDAlias{
+				ids.Empty: constants.PChain,
+			}
+		)
+
+		_, err := evm.Codec.Unmarshal(decodeTx, tx)
+		assert.Nil(t, err)
+		ops, metadata, err := crossChainTransaction(networkIdentifier, chainIDToAliasMapping, rawIdx, avaxAssetID, tx)
+		assert.Nil(t, err)
+		assert.Nil(t, metadata[MetadataExportedOutputs])
+		assert.Equal(t, AtomicAvaxAmount(big.NewInt(280750)), metadata[MetadataTxFee])
+
+		unsignedImportTx := tx.UnsignedAtomicTx.(*evm.UnsignedImportTx)
+		assert.Equal(t, []*types.Operation{
+			{
+				OperationIdentifier: &types.OperationIdentifier{
+					Index: 0,
+				},
+				Type:   OpImport,
+				Status: types.String(StatusSuccess),
+				Account: &types.AccountIdentifier{
+					Address: "0x3158e80abD5A1e1aa716003C9Db096792C379621",
+				},
+				Amount: &types.Amount{
+					Value:    "1998719250000000000",
+					Currency: AvaxCurrency,
+				},
+				Metadata: map[string]interface{}{
+					"asset_id":      "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK",
+					"blockchain_id": "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp",
+					"meta":          unsignedImportTx.Metadata,
+					"network_id":    uint32(5),
+					"source_chain":  "11111111111111111111111111111111LpoYY",
+					"tx":            "G8BG8APvViEryMzeEMb4YM49TtZeozLPsQ8aR44aZf7waGWJR",
+					"tx_ids":        []string{"2ckxSTK6TbZuC2kwoTD5QWmwiGCq4EXMGQpZWcdJK2ye9v4dSE"},
+				},
+			},
+		}, ops)
+	})
+}
+
 func TestCrossChainExportedOuts(t *testing.T) {
 	t.Run("Cross chain exported outputs in metadata", func(t *testing.T) {
 		var (
@@ -267,8 +323,9 @@ func TestCrossChainExportedOuts(t *testing.T) {
 		meta.Initialize(metaUnsignedBytes, metaBytes)
 		_, err := evm.Codec.Unmarshal(decodeTx, tx)
 		assert.Nil(t, err)
-		ops, exportedOuts, err := crossChainTransaction(networkIdentifier, chainIDToAliasMapping, rawIdx, avaxAssetID, tx)
+		ops, metadata, err := crossChainTransaction(networkIdentifier, chainIDToAliasMapping, rawIdx, avaxAssetID, tx)
 		assert.Nil(t, err)
+		assert.Equal(t, AtomicAvaxAmount(big.NewInt(280750)), metadata[MetadataTxFee])
 
 		assert.Equal(t, []*types.Operation{
 			{
@@ -316,6 +373,6 @@ func TestCrossChainExportedOuts(t *testing.T) {
 					CoinAction: types.CoinCreated,
 				},
 			},
-		}, exportedOuts)
+		}, metadata[MetadataExportedOutputs])
 	})
 }

@@ -33,6 +33,7 @@ const (
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
 
+	MetadataTxFee           = "tx_fee"
 	MetadataImportedInputs  = "imported_inputs"
 	MetadataExportedOutputs = "exported_outputs"
 	MetadataAddressFormat   = "address_format"
