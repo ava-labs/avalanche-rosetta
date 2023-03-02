@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/utils/cb58"
-	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
@@ -23,8 +23,8 @@ type signResponse struct {
 
 type signingServer struct {
 	port       uint
-	privateKey *crypto.PrivateKeySECP256K1R
-	publicKey  *crypto.PublicKeySECP256K1R
+	privateKey *secp256k1.PrivateKey
+	publicKey  *secp256k1.PublicKey
 }
 
 func (s *signingServer) SignBytes(address string, bytes []byte) (*types.Signature, error) {
@@ -97,20 +97,20 @@ func (s *signingServer) run() {
 	}
 }
 
-func parsePrivateKeyString(keyStr string) (*crypto.PrivateKeySECP256K1R, *crypto.PublicKeySECP256K1R, error) {
+func parsePrivateKeyString(keyStr string) (*secp256k1.PrivateKey, *secp256k1.PublicKey, error) {
 	parts := strings.Split(keyStr, "-")
 	pkBytes, err := cb58.Decode(parts[1])
 	if err != nil {
 		return nil, nil, err
 	}
-	factory := crypto.FactorySECP256K1R{}
-	keyIntf, err := factory.ToPrivateKey(pkBytes)
+	factory := secp256k1.Factory{}
+	key, err := factory.ToPrivateKey(pkBytes)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	pk := keyIntf.PublicKey()
-	return keyIntf.(*crypto.PrivateKeySECP256K1R), pk.(*crypto.PublicKeySECP256K1R), nil
+	pk := key.PublicKey()
+	return key, pk, nil
 }
 
 func newSigningServer(port uint, privateKeyStr string) *signingServer {

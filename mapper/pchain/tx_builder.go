@@ -10,7 +10,6 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -174,7 +173,7 @@ func buildAddValidatorTx(
 			Memo:         memo,
 		}},
 		StakeOuts: stakeOutputs,
-		Validator: validator.Validator{
+		Validator: txs.Validator{
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,
@@ -238,7 +237,7 @@ func buildAddDelegatorTx(
 			Memo:         memo,
 		}},
 		StakeOuts: stakeOutputs,
-		Validator: validator.Validator{
+		Validator: txs.Validator{
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,

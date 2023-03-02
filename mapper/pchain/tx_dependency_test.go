@@ -5,18 +5,17 @@ import (
 	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/stretchr/testify/require"
 )
 
-var preFundedKeys = crypto.BuildTestKeys()
+var preFundedKeys = secp256k1.TestKeys()
 
 func TestTxDependencyIsCreateChain(t *testing.T) {
 	require := require.New(t)
@@ -165,7 +164,7 @@ func TestTxDependencyIsAddValidator(t *testing.T) {
 			Ins:          []*avax.TransferableInput{in},
 			Outs:         []*avax.TransferableOutput{out},
 		}},
-		Validator: validator.Validator{
+		Validator: txs.Validator{
 			NodeID: ids.GenerateTestNodeID(),
 			Start:  uint64(clk.Time().Unix()),
 			End:    uint64(clk.Time().Add(time.Hour).Unix()),

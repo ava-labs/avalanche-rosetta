@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
@@ -29,7 +29,7 @@ var (
 )
 
 // DeriveBech32Address derives Bech32 addresses for the given chain using public key and hrp provided in the request
-func DeriveBech32Address(fac *crypto.FactorySECP256K1R, chainIDAlias constants.ChainIDAlias, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
+func DeriveBech32Address(fac *secp256k1.Factory, chainIDAlias constants.ChainIDAlias, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	pub, err := fac.ToPublicKey(req.PublicKey.Bytes)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
@@ -299,13 +299,13 @@ func BuildSingletonCredentialList(signatures []*types.Signature) ([]verify.Verif
 
 func buildCredential(numSigs int, sigOffset *int, signatures []*types.Signature) (*secp256k1fx.Credential, error) {
 	cred := &secp256k1fx.Credential{}
-	cred.Sigs = make([][crypto.SECP256K1RSigLen]byte, numSigs)
+	cred.Sigs = make([][secp256k1.SignatureLen]byte, numSigs)
 	for j := 0; j < numSigs; j++ {
 		if *sigOffset >= len(signatures) {
 			return nil, errInsufficientSignatures
 		}
 
-		if len(signatures[*sigOffset].Bytes) != crypto.SECP256K1RSigLen {
+		if len(signatures[*sigOffset].Bytes) != secp256k1.SignatureLen {
 			return nil, errInvalidSignatureLen
 		}
 		copy(cred.Sigs[j][:], signatures[*sigOffset].Bytes)

@@ -7,7 +7,7 @@ import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
@@ -99,7 +99,7 @@ func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([
 
 	// we do not use the signers as signing is performed externally to Rosetta
 	// instead we are using a dummy array with the same length as ins
-	evmSigners := make([][]*crypto.PrivateKeySECP256K1R, len(ins))
+	evmSigners := make([][]*secp256k1.PrivateKey, len(ins))
 	evm.SortEVMInputsAndSigners(ins, evmSigners)
 
 	return ins, signers

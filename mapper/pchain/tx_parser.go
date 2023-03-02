@@ -12,7 +12,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -331,7 +330,7 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 		return nil, err
 	}
 
-	var v *validator.Validator
+	var v *txs.Validator
 	switch utx := dep.Tx.Unsigned.(type) {
 	case *txs.AddValidatorTx:
 		v = &utx.Validator
@@ -349,7 +348,7 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 	return ops, nil
 }
 
-func addMetadataToStakeOuts(ops *txOps, validator *validator.Validator) {
+func addMetadataToStakeOuts(ops *txOps, validator *txs.Validator) {
 	if validator == nil {
 		return
 	}

@@ -7,7 +7,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
@@ -187,7 +186,7 @@ func buildAddDelegator() (*txs.Tx, *txs.AddDelegatorTx, map[string]*types.Accoun
 				Memo: []byte{},
 			},
 		},
-		Validator: validator.Validator{
+		Validator: txs.Validator{
 			NodeID: validatorID,
 			Start:  1656058022,
 			End:    1657872569,
@@ -259,7 +258,7 @@ func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.Account
 				Memo: []byte{},
 			},
 		},
-		Validator: validator.Validator{
+		Validator: txs.Validator{
 			NodeID: validatorID,
 			Start:  1656084079,
 			End:    1687620079,
