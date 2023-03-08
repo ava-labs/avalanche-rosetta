@@ -10,15 +10,15 @@ const (
 	contractCacheSize = 1024
 )
 
-type ContractInfo struct {
-	Symbol   string
-	Decimals uint8
-}
-
 // ContractClient is a client for the calling contract information
 type ContractClient struct {
 	ethClient ethclient.Client
 	cache     *cache.LRU[common.Address, *ContractInfo]
+}
+
+type ContractInfo struct {
+	Symbol   string
+	Decimals uint8
 }
 
 // NewContractClient returns a new ContractInfo client
@@ -31,6 +31,8 @@ func NewContractClient(c ethclient.Client) *ContractClient {
 
 // GetContractInfo returns the symbol and decimals for [addr].
 func (c *ContractClient) GetContractInfo(addr common.Address, erc20 bool) (string, uint8, error) {
+	// We don't define another struct because this is never used outside of this
+	// function.
 	if currency, cached := c.cache.Get(addr); cached {
 		return currency.Symbol, currency.Decimals, nil
 	}

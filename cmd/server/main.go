@@ -9,13 +9,20 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/cchainatomictx"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
+
+	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
 
 var (
@@ -48,11 +55,15 @@ func main() {
 	if err != nil {
 		log.Fatal("config read error:", err)
 	}
-	if err := cfg.Validate(); err != nil {
+
+	// set defaults for unspecified configs
+	cfg.applyDefaults()
+
+	if err := cfg.validate(); err != nil {
 		log.Fatal("config validation error:", err)
 	}
 
-	apiClient, err := client.NewClient(context.Background(), cfg.RPCEndpoint)
+	cChainClient, err := client.NewClient(context.Background(), cfg.RPCBaseURL)
 	if err != nil {
 		log.Fatal("client init error:", err)
 	}
@@ -63,7 +74,7 @@ func main() {
 	//
 	// TODO: Only perform this check after the underlying node is bootstrapped
 	if cfg.Mode == service.ModeOnline && cfg.ValidateERC20Whitelist {
-		if err := cfg.ValidateWhitelistOnlyValidErc20s(apiClient); err != nil {
+		if err := cfg.validateWhitelistOnlyValidErc20s(cChainClient); err != nil {
 			log.Fatal("token whitelist validation error:", err)
 		}
 	}
@@ -72,12 +83,7 @@ func main() {
 
 	if cfg.ChainID == 0 {
 		log.Println("chain id is not provided, fetching from rpc...")
-
-		if cfg.Mode == service.ModeOffline {
-			log.Fatal("cant fetch chain id in offline mode")
-		}
-
-		chainID, err := apiClient.ChainID(context.Background())
+		chainID, err := cChainClient.ChainID(context.Background())
 		if err != nil {
 			log.Fatal("cant fetch chain id from rpc:", err)
 		}
@@ -87,50 +93,61 @@ func main() {
 	var assetID string
 	var AP5Activation uint64
 	switch cfg.ChainID {
-	case mapper.MainnetChainID:
-		assetID = mapper.MainnetAssetID
-		AP5Activation = mapper.MainnetAP5Activation.Uint64()
-	case mapper.FujiChainID:
-		assetID = mapper.FujiAssetID
-		AP5Activation = mapper.FujiAP5Activation.Uint64()
+	case constants.MainnetChainID:
+		assetID = constants.MainnetAssetID
+		AP5Activation = constants.MainnetAP5Activation.Uint64()
+	case constants.FujiChainID:
+		assetID = constants.FujiAssetID
+		AP5Activation = constants.FujiAP5Activation.Uint64()
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
 	}
 
-	if cfg.NetworkName == "" {
-		log.Println("network name is not provided, fetching from rpc...")
-
-		if cfg.Mode == service.ModeOffline {
-			log.Fatal("cant fetch network name in offline mode")
-		}
-
-		networkName, err := apiClient.GetNetworkName(context.Background())
-		if err != nil {
-			log.Fatal("cant fetch network name:", err)
-		}
-		cfg.NetworkName = networkName
+	// Note: Rosetta is currently configure with capitalized NetworkNames
+	// and service network requests are carried our with capital case.
+	// while avalanchego requires lower-case network names.
+	// We convert to lower case upon specific calls to avalanchego clients.
+	networkP := &types.NetworkIdentifier{
+		Blockchain: service.BlockchainName,
+		Network:    cfg.NetworkName,
+		SubNetworkIdentifier: &types.SubNetworkIdentifier{
+			Network: constants.PChain.String(),
+		},
 	}
-
-	network := &types.NetworkIdentifier{
+	networkC := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
 		Network:    cfg.NetworkName,
 	}
 
-	asserter, err := asserter.NewServer(
-		mapper.OperationTypes,               // supported operation types
-		true,                                // historical balance lookup
-		[]*types.NetworkIdentifier{network}, // supported networks
-		[]string{},                          // call methods
-		false,                               // mempool coins
+	avaxAssetID, err := ids.FromString(assetID)
+	if err != nil {
+		log.Fatal("parse asset id failed:", err)
+	}
+
+	pChainClient := client.NewPChainClient(context.Background(), cfg.RPCBaseURL, cfg.IndexerBaseURL)
+	pIndexerParser, err := indexer.NewParser(pChainClient, cfg.avalancheNetworkID())
+	if err != nil {
+		log.Fatal("unable to initialize p-chain indexer parser:", err)
+	}
+
+	pChainBackend, err := pchain.NewBackend(
+		cfg.Mode,
+		pChainClient,
+		pIndexerParser,
+		avaxAssetID,
+		networkP,
+		cfg.avalancheNetworkID(),
 	)
 	if err != nil {
-		log.Fatal("server asserter init error:", err)
+		log.Fatal("unable to initialize p-chain backend:", err)
 	}
+
+	cChainAtomicTxBackend := cchainatomictx.NewBackend(cChainClient, avaxAssetID, cfg.avalancheNetworkID())
 
 	serviceConfig := &service.Config{
 		Mode:               cfg.Mode,
 		ChainID:            big.NewInt(cfg.ChainID),
-		NetworkID:          network,
+		NetworkID:          networkC,
 		GenesisBlockHash:   cfg.GenesisBlockHash,
 		AvaxAssetID:        assetID,
 		AP5Activation:      AP5Activation,
@@ -140,7 +157,25 @@ func main() {
 		BridgeTokenList:    cfg.BridgeTokenList,
 	}
 
-	handler := configureRouter(serviceConfig, asserter, apiClient)
+	var operationTypes []string
+	operationTypes = append(operationTypes, mapper.OperationTypes...)
+	operationTypes = append(operationTypes, pmapper.OperationTypes...)
+
+	asserter, err := asserter.NewServer(
+		operationTypes, // supported operation types
+		true,           // historical balance lookup
+		[]*types.NetworkIdentifier{ // supported networks
+			networkP,
+			networkC,
+		}, // supported networks
+		[]string{}, // call methods
+		false,      // mempool coins
+	)
+	if err != nil {
+		log.Fatal("server asserter init error:", err)
+	}
+
+	handler := configureRouter(serviceConfig, asserter, cChainClient, pChainBackend, cChainAtomicTxBackend)
 	if cfg.LogRequests {
 		handler = inspectMiddleware(handler)
 	}
@@ -153,23 +188,25 @@ func main() {
 		service.BlockchainName,
 		cfg.ChainID,
 		cfg.NetworkName,
-		cfg.RPCEndpoint,
+		cfg.RPCBaseURL,
 	)
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
-	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router)) //nolint:gosec
+	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))
 }
 
 func configureRouter(
 	serviceConfig *service.Config,
 	asserter *asserter.Asserter,
 	apiClient client.Client,
+	pChainBackend *pchain.Backend,
+	cChainAtomicTxBackend *cchainatomictx.Backend,
 ) http.Handler {
-	networkService := service.NewNetworkService(serviceConfig, apiClient)
-	blockService := service.NewBlockService(serviceConfig, apiClient)
-	accountService := service.NewAccountService(serviceConfig, apiClient)
+	networkService := service.NewNetworkService(serviceConfig, apiClient, pChainBackend)
+	blockService := service.NewBlockService(serviceConfig, apiClient, pChainBackend)
+	accountService := service.NewAccountService(serviceConfig, apiClient, pChainBackend, cChainAtomicTxBackend)
 	mempoolService := service.NewMempoolService(serviceConfig, apiClient)
-	constructionService := service.NewConstructionService(serviceConfig, apiClient)
+	constructionService := service.NewConstructionService(serviceConfig, apiClient, pChainBackend, cChainAtomicTxBackend)
 	callService := service.NewCallService(serviceConfig, apiClient)
 
 	return server.NewRouter(

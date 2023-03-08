@@ -15,10 +15,11 @@ import (
 	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+
+	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 const (
@@ -40,17 +41,53 @@ var (
 	unwrapMethodID   = hexutil.Encode(getMethodID(unwrapFnSignature))
 )
 
+// ConstructionBackend represents a backend that implements /construction family of apis for a subset of requests.
+// Endpoint handlers in this file delegates requests to corresponding backends based on the request.
+// Each backend implements a ShouldHandleRequest method to determine whether that backend should handle the given request.
+//
+// P-chain and C-chain atomic transaction logic are implemented in pchain.Backend and cchainatomictx.Backend respectively.
+// Eventually, the C-chain non-atomic transaction logic implemented in this file should be extracted to its own backend as well.
+type ConstructionBackend interface {
+	// ShouldHandleRequest returns whether a given request should be handled by this backend
+	ShouldHandleRequest(req interface{}) bool
+	// ConstructionDerive implements /construction/derive endpoint for this backend
+	ConstructionDerive(ctx context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error)
+	// ConstructionPreprocess implements /construction/preprocess endpoint for this backend
+	ConstructionPreprocess(ctx context.Context, req *types.ConstructionPreprocessRequest) (*types.ConstructionPreprocessResponse, *types.Error)
+	// ConstructionMetadata implements /construction/metadata endpoint for this backend
+	ConstructionMetadata(ctx context.Context, req *types.ConstructionMetadataRequest) (*types.ConstructionMetadataResponse, *types.Error)
+	// ConstructionPayloads implements /construction/payloads endpoint for this backend
+	ConstructionPayloads(ctx context.Context, req *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error)
+	// ConstructionParse implements /construction/parse endpoint for this backend
+	ConstructionParse(ctx context.Context, req *types.ConstructionParseRequest) (*types.ConstructionParseResponse, *types.Error)
+	// ConstructionCombine implements /construction/combine endpoint for this backend
+	ConstructionCombine(ctx context.Context, req *types.ConstructionCombineRequest) (*types.ConstructionCombineResponse, *types.Error)
+	// ConstructionHash implements /construction/hash endpoint for this backend
+	ConstructionHash(ctx context.Context, req *types.ConstructionHashRequest) (*types.TransactionIdentifierResponse, *types.Error)
+	// ConstructionSubmit implements /construction/submit endpoint for this backend
+	ConstructionSubmit(ctx context.Context, req *types.ConstructionSubmitRequest) (*types.TransactionIdentifierResponse, *types.Error)
+}
+
 // ConstructionService implements /construction/* endpoints
 type ConstructionService struct {
-	config *Config
-	client client.Client
+	config                *Config
+	client                client.Client
+	cChainAtomicTxBackend ConstructionBackend
+	pChainBackend         ConstructionBackend
 }
 
 // NewConstructionService returns a new construction servicer
-func NewConstructionService(config *Config, client client.Client) server.ConstructionAPIServicer {
+func NewConstructionService(
+	config *Config,
+	client client.Client,
+	pChainBackend ConstructionBackend,
+	cChainAtomicTxBackend ConstructionBackend,
+) server.ConstructionAPIServicer {
 	return &ConstructionService{
-		config: config,
-		client: client,
+		config:                config,
+		client:                client,
+		cChainAtomicTxBackend: cChainAtomicTxBackend,
+		pChainBackend:         pChainBackend,
 	}
 }
 
@@ -65,16 +102,24 @@ func (s ConstructionService) ConstructionMetadata(
 	req *types.ConstructionMetadataRequest,
 ) (*types.ConstructionMetadataResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
-		return nil, errUnavailableOffline
+		return nil, ErrUnavailableOffline
+	}
+
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.ConstructionMetadata(ctx, req)
+	}
+
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.ConstructionMetadata(ctx, req)
 	}
 
 	var input options
-	if err := unmarshalJSONMap(req.Options, &input); err != nil {
-		return nil, wrapError(errInvalidInput, err)
+	if err := mapper.UnmarshalJSONMap(req.Options, &input); err != nil {
+		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	if len(input.From) == 0 {
-		return nil, wrapError(errInvalidInput, "from address is not provided")
+		return nil, WrapError(ErrInvalidInput, "from address is not provided")
 	}
 
 	var nonce uint64
@@ -82,7 +127,7 @@ func (s ConstructionService) ConstructionMetadata(
 	if input.Nonce == nil {
 		nonce, err = s.client.NonceAt(ctx, ethcommon.HexToAddress(input.From), nil)
 		if err != nil {
-			return nil, wrapError(errClientError, err)
+			return nil, WrapError(ErrClientError, err)
 		}
 	} else {
 		nonce = input.Nonce.Uint64()
@@ -90,9 +135,8 @@ func (s ConstructionService) ConstructionMetadata(
 
 	var gasPrice *big.Int
 	if input.GasPrice == nil {
-		gasPrice, err = s.client.SuggestGasPrice(ctx)
-		if err != nil {
-			return nil, wrapError(errClientError, err)
+		if gasPrice, err = s.client.SuggestGasPrice(ctx); err != nil {
+			return nil, WrapError(ErrClientError, err)
 		}
 
 		if input.SuggestedFeeMultiplier != nil {
@@ -111,12 +155,12 @@ func (s ConstructionService) ConstructionMetadata(
 		if input.Currency == nil || types.Hash(input.Currency) == types.Hash(mapper.AvaxCurrency) {
 			gasLimit, err = s.getNativeTransferGasLimit(ctx, input.To, input.From, input.Value)
 			if err != nil {
-				return nil, wrapError(errClientError, err)
+				return nil, WrapError(ErrClientError, err)
 			}
 		} else {
 			if input.Metadata != nil {
 				if !input.Metadata.UnwrapBridgeTx {
-					return nil, wrapError(errInvalidInput, "UnwrapBridgeTx must be populated if input.Metadata is provided")
+					return nil, WrapError(ErrInvalidInput, "UnwrapBridgeTx must be populated if input.Metadata is provided")
 				}
 
 				gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
@@ -124,7 +168,7 @@ func (s ConstructionService) ConstructionMetadata(
 				gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
 			}
 			if err != nil {
-				return nil, wrapError(errClientError, err)
+				return nil, WrapError(ErrClientError, err)
 			}
 		}
 	} else {
@@ -143,9 +187,9 @@ func (s ConstructionService) ConstructionMetadata(
 		}
 	}
 
-	metadataMap, err := marshalJSONMap(metadata)
+	metadataMap, err := mapper.MarshalJSONMap(metadata)
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	suggestedFee := gasPrice.Int64() * int64(gasLimit)
@@ -165,17 +209,25 @@ func (s ConstructionService) ConstructionHash(
 	req *types.ConstructionHashRequest,
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	if len(req.SignedTransaction) == 0 {
-		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
+		return nil, WrapError(ErrInvalidInput, "signed transaction value is not provided")
+	}
+
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.ConstructionHash(ctx, req)
+	}
+
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.ConstructionHash(ctx, req)
 	}
 
 	var wrappedTx signedTransactionWrapper
 	if err := json.Unmarshal([]byte(req.SignedTransaction), &wrappedTx); err != nil {
-		return nil, wrapError(errInvalidInput, err)
+		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	var signedTx ethtypes.Transaction
 	if err := signedTx.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
-		return nil, wrapError(errInvalidInput, err)
+		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	return &types.TransactionIdentifierResponse{
@@ -195,15 +247,23 @@ func (s ConstructionService) ConstructionCombine(
 	req *types.ConstructionCombineRequest,
 ) (*types.ConstructionCombineResponse, *types.Error) {
 	if len(req.UnsignedTransaction) == 0 {
-		return nil, wrapError(errInvalidInput, "transaction data is not provided")
+		return nil, WrapError(ErrInvalidInput, "transaction data is not provided")
 	}
 	if len(req.Signatures) == 0 {
-		return nil, wrapError(errInvalidInput, "signature is not provided")
+		return nil, WrapError(ErrInvalidInput, "signature is not provided")
+	}
+
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.ConstructionCombine(ctx, req)
+	}
+
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.ConstructionCombine(ctx, req)
 	}
 
 	var unsignedTx transaction
 	if err := json.Unmarshal([]byte(req.UnsignedTransaction), &unsignedTx); err != nil {
-		return nil, wrapError(errInvalidInput, err)
+		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	ethTransaction := ethtypes.NewTransaction(
@@ -218,12 +278,12 @@ func (s ConstructionService) ConstructionCombine(
 	signer := ethtypes.LatestSignerForChainID(unsignedTx.ChainID)
 	signedTx, err := ethTransaction.WithSignature(signer, req.Signatures[0].Bytes)
 	if err != nil {
-		return nil, wrapError(errInvalidInput, err)
+		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	signedTxJSON, err := signedTx.MarshalJSON()
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	wrappedSignedTx := signedTransactionWrapper{
@@ -233,7 +293,7 @@ func (s ConstructionService) ConstructionCombine(
 
 	wrappedSignedTxJSON, err := json.Marshal(wrappedSignedTx)
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	return &types.ConstructionCombineResponse{
@@ -250,12 +310,20 @@ func (s ConstructionService) ConstructionDerive(
 	req *types.ConstructionDeriveRequest,
 ) (*types.ConstructionDeriveResponse, *types.Error) {
 	if req.PublicKey == nil {
-		return nil, wrapError(errInvalidInput, "public key is not provided")
+		return nil, WrapError(ErrInvalidInput, "public key is not provided")
+	}
+
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.ConstructionDerive(ctx, req)
+	}
+
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.ConstructionDerive(ctx, req)
 	}
 
 	key, err := ethcrypto.DecompressPubkey(req.PublicKey.Bytes)
 	if err != nil {
-		return nil, wrapError(errInvalidInput, err)
+		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	return &types.ConstructionDeriveResponse{
@@ -274,21 +342,29 @@ func (s ConstructionService) ConstructionParse(
 	ctx context.Context,
 	req *types.ConstructionParseRequest,
 ) (*types.ConstructionParseResponse, *types.Error) {
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.ConstructionParse(ctx, req)
+	}
+
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.ConstructionParse(ctx, req)
+	}
+
 	var tx transaction
 
 	if !req.Signed {
 		if err := json.Unmarshal([]byte(req.Transaction), &tx); err != nil {
-			return nil, wrapError(errInvalidInput, err)
+			return nil, WrapError(ErrInvalidInput, err)
 		}
 	} else {
 		var wrappedTx signedTransactionWrapper
 		if err := json.Unmarshal([]byte(req.Transaction), &wrappedTx); err != nil {
-			return nil, wrapError(errInvalidInput, err)
+			return nil, WrapError(ErrInvalidInput, err)
 		}
 
 		var t ethtypes.Transaction
 		if err := t.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
-			return nil, wrapError(errInvalidInput, err)
+			return nil, WrapError(ErrInvalidInput, err)
 		}
 
 		tx.To = t.To().String()
@@ -302,7 +378,7 @@ func (s ConstructionService) ConstructionParse(
 
 		msg, err := t.AsMessage(s.config.Signer(), nil)
 		if err != nil {
-			return nil, wrapError(errInvalidInput, err)
+			return nil, WrapError(ErrInvalidInput, err)
 		}
 		tx.From = msg.From().Hex()
 	}
@@ -313,9 +389,9 @@ func (s ConstructionService) ConstructionParse(
 		GasLimit: tx.GasLimit,
 		ChainID:  tx.ChainID,
 	}
-	metaMap, err := marshalJSONMap(metadata)
+	metaMap, err := mapper.MarshalJSONMap(metadata)
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	var (
@@ -330,8 +406,8 @@ func (s ConstructionService) ConstructionParse(
 		case unwrapMethodID:
 			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
 		default:
-			wrappedErr = wrapError(
-				errInvalidInput,
+			wrappedErr = WrapError(
+				ErrInvalidInput,
 				fmt.Errorf("method %x is not supported", tx.Data[:4]),
 			)
 		}
@@ -372,7 +448,7 @@ func createTransferOps(tx transaction) ([]*types.Operation, *string, *types.Erro
 	if len(tx.Data) != 0 {
 		toAddress, amountSent, err := parseErc20TransferData(tx.Data)
 		if err != nil {
-			return nil, nil, wrapError(errInvalidInput, err)
+			return nil, nil, WrapError(ErrInvalidInput, err)
 		}
 
 		value = amountSent
@@ -387,8 +463,8 @@ func createTransferOps(tx transaction) ([]*types.Operation, *string, *types.Erro
 	// Ensure valid from address
 	checkFrom, ok := ChecksumAddress(tx.From)
 	if !ok {
-		return nil, nil, wrapError(
-			errInvalidInput,
+		return nil, nil, WrapError(
+			ErrInvalidInput,
 			fmt.Errorf("%s is not a valid address", tx.From),
 		)
 	}
@@ -396,7 +472,7 @@ func createTransferOps(tx transaction) ([]*types.Operation, *string, *types.Erro
 	// Ensure valid to address
 	checkTo, ok := ChecksumAddress(toAddressHex)
 	if !ok {
-		return nil, nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
+		return nil, nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
 	}
 
 	ops := []*types.Operation{
@@ -438,14 +514,14 @@ func createTransferOps(tx transaction) ([]*types.Operation, *string, *types.Erro
 func createUnwrapOps(tx transaction) ([]*types.Operation, *string, *types.Error) {
 	amount, _, err := parseUnwrapData(tx.Data)
 	if err != nil {
-		return nil, nil, wrapError(errInvalidInput, err)
+		return nil, nil, WrapError(ErrInvalidInput, err)
 	}
 
 	// Ensure valid from address
 	checkFrom, ok := ChecksumAddress(tx.From)
 	if !ok {
-		return nil, nil, wrapError(
-			errInvalidInput,
+		return nil, nil, WrapError(
+			ErrInvalidInput,
 			fmt.Errorf("%s is not a valid address", tx.From),
 		)
 	}
@@ -483,6 +559,14 @@ func (s ConstructionService) ConstructionPayloads(
 	ctx context.Context,
 	req *types.ConstructionPayloadsRequest,
 ) (*types.ConstructionPayloadsResponse, *types.Error) {
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.ConstructionPayloads(ctx, req)
+	}
+
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.ConstructionPayloads(ctx, req)
+	}
+
 	var (
 		tx         *ethtypes.Transaction
 		unsignedTx *transaction
@@ -510,7 +594,7 @@ func (s ConstructionService) ConstructionPayloads(
 
 	unsignedTxJSON, err := json.Marshal(unsignedTx)
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	return &types.ConstructionPayloadsResponse{
@@ -524,7 +608,7 @@ func (s ConstructionService) createTransferPayload(
 ) (*ethtypes.Transaction, *transaction, *string, *types.Error) {
 	operationDescriptions, err := s.CreateTransferOperationDescription(req.Operations)
 	if err != nil {
-		return nil, nil, nil, wrapError(errInvalidInput, err.Error())
+		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
 	}
 
 	descriptions := &parser.Descriptions{
@@ -534,7 +618,7 @@ func (s ConstructionService) createTransferPayload(
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
 	if err != nil {
-		return nil, nil, nil, wrapError(errInvalidInput, "unclear intent")
+		return nil, nil, nil, WrapError(ErrInvalidInput, "unclear intent")
 	}
 
 	toOp, amount := matches[1].First()
@@ -546,16 +630,16 @@ func (s ConstructionService) createTransferPayload(
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
-		return nil, nil, nil, wrapError(
-			errInvalidInput,
+		return nil, nil, nil, WrapError(
+			ErrInvalidInput,
 			fmt.Errorf("%s is not a valid address", fromAddress),
 		)
 	}
 
 	checkTo, ok := ChecksumAddress(toAddress)
 	if !ok {
-		return nil, nil, nil, wrapError(
-			errInvalidInput,
+		return nil, nil, nil, WrapError(
+			ErrInvalidInput,
 			fmt.Errorf("%s is not a valid address", toAddress),
 		)
 	}
@@ -567,7 +651,7 @@ func (s ConstructionService) createTransferPayload(
 	} else {
 		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 		if !ok {
-			return nil, nil, nil, wrapError(errInvalidInput,
+			return nil, nil, nil, WrapError(ErrInvalidInput,
 				fmt.Errorf("%s currency doesn't have a contract address in metadata", fromCurrency.Symbol))
 		}
 
@@ -577,8 +661,8 @@ func (s ConstructionService) createTransferPayload(
 	}
 
 	var metadata metadata
-	if err := unmarshalJSONMap(req.Metadata, &metadata); err != nil {
-		return nil, nil, nil, wrapError(errInvalidInput, err)
+	if err := mapper.UnmarshalJSONMap(req.Metadata, &metadata); err != nil {
+		return nil, nil, nil, WrapError(ErrInvalidInput, err)
 	}
 
 	nonce := metadata.Nonce
@@ -614,7 +698,7 @@ func (s ConstructionService) createUnwrapPayload(
 ) (*ethtypes.Transaction, *transaction, *string, *types.Error) {
 	operationDescriptions, err := s.CreateUnwrapOperationDescription(req.Operations)
 	if err != nil {
-		return nil, nil, nil, wrapError(errInvalidInput, err.Error())
+		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
 	}
 
 	descriptions := &parser.Descriptions{
@@ -624,7 +708,7 @@ func (s ConstructionService) createUnwrapPayload(
 
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
 	if err != nil {
-		return nil, nil, nil, wrapError(errInvalidInput, "unclear intent")
+		return nil, nil, nil, WrapError(ErrInvalidInput, "unclear intent")
 	}
 
 	fromOp, amount := matches[0].First()
@@ -636,16 +720,16 @@ func (s ConstructionService) createUnwrapPayload(
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
-		return nil, nil, nil, wrapError(
-			errInvalidInput,
+		return nil, nil, nil, WrapError(
+			ErrInvalidInput,
 			fmt.Errorf("%s is not a valid address", fromAddress),
 		)
 	}
 
 	contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 	if !ok {
-		return nil, nil, nil, wrapError(
-			errInvalidInput,
+		return nil, nil, nil, WrapError(
+			ErrInvalidInput,
 			fmt.Errorf(
 				"%s currency doesn't have a contract address in metadata",
 				fromCurrency.Symbol,
@@ -654,8 +738,8 @@ func (s ConstructionService) createUnwrapPayload(
 	}
 
 	if !mapper.EqualFoldContains(s.config.BridgeTokenList, contract) {
-		return nil, nil, nil, wrapError(
-			errInvalidInput,
+		return nil, nil, nil, WrapError(
+			ErrInvalidInput,
 			fmt.Errorf(
 				"%s contract address not in configured list of supported bridge tokens",
 				contract,
@@ -667,8 +751,8 @@ func (s ConstructionService) createUnwrapPayload(
 	sendToAddress := ethcommon.HexToAddress(contract)
 
 	var metadata metadata
-	if err := unmarshalJSONMap(req.Metadata, &metadata); err != nil {
-		return nil, nil, nil, wrapError(errInvalidInput, err)
+	if err := mapper.UnmarshalJSONMap(req.Metadata, &metadata); err != nil {
+		return nil, nil, nil, WrapError(ErrInvalidInput, err)
 	}
 
 	nonce := metadata.Nonce
@@ -709,14 +793,24 @@ func (s ConstructionService) ConstructionPreprocess(
 	ctx context.Context,
 	req *types.ConstructionPreprocessRequest,
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
-	var operationDescriptions []*parser.OperationDescription
-	var preprocessOptions *options
-	var err error
-	var typesError *types.Error
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.ConstructionPreprocess(ctx, req)
+	}
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.ConstructionPreprocess(ctx, req)
+	}
+
+	var (
+		operationDescriptions []*parser.OperationDescription
+		preprocessOptions     *options
+		err                   error
+		typesError            *types.Error
+	)
+
 	if isUnwrapRequest(req.Metadata) {
 		operationDescriptions, err = s.CreateUnwrapOperationDescription(req.Operations)
 		if err != nil {
-			return nil, wrapError(errInvalidInput, err.Error())
+			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
 		preprocessOptions, typesError = s.createUnwrapPreprocessOptions(operationDescriptions, req)
 		if typesError != nil {
@@ -725,7 +819,7 @@ func (s ConstructionService) ConstructionPreprocess(
 	} else {
 		operationDescriptions, err = s.CreateTransferOperationDescription(req.Operations)
 		if err != nil {
-			return nil, wrapError(errInvalidInput, err.Error())
+			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
 		preprocessOptions, typesError = s.createTransferPreprocessOptions(operationDescriptions, req)
 		if typesError != nil {
@@ -736,46 +830,46 @@ func (s ConstructionService) ConstructionPreprocess(
 	if v, ok := req.Metadata["gas_price"]; ok {
 		stringObj, ok := v.(string)
 		if !ok {
-			return nil, wrapError(
-				errInvalidInput,
+			return nil, WrapError(
+				ErrInvalidInput,
 				fmt.Errorf("%s is not a valid gas price string", v),
 			)
 		}
 		bigObj, ok := new(big.Int).SetString(stringObj, 10)
 		if !ok {
-			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas price", v))
+			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid gas price", v))
 		}
 		preprocessOptions.GasPrice = bigObj
 	}
 	if v, ok := req.Metadata["gas_limit"]; ok {
 		stringObj, ok := v.(string)
 		if !ok {
-			return nil, wrapError(
-				errInvalidInput,
+			return nil, WrapError(
+				ErrInvalidInput,
 				fmt.Errorf("%s is not a valid gas limit string", v),
 			)
 		}
 		bigObj, ok := new(big.Int).SetString(stringObj, 10)
 		if !ok {
-			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid gas limit", v))
+			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid gas limit", v))
 		}
 		preprocessOptions.GasLimit = bigObj
 	}
 	if v, ok := req.Metadata["nonce"]; ok {
 		stringObj, ok := v.(string)
 		if !ok {
-			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid nonce string", v))
+			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid nonce string", v))
 		}
 		bigObj, ok := new(big.Int).SetString(stringObj, 10)
 		if !ok {
-			return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid nonce", v))
+			return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid nonce", v))
 		}
 		preprocessOptions.Nonce = bigObj
 	}
 
-	marshaled, err := marshalJSONMap(preprocessOptions)
+	marshaled, err := mapper.MarshalJSONMap(preprocessOptions)
 	if err != nil {
-		return nil, wrapError(errInternalError, err)
+		return nil, WrapError(ErrInternalError, err)
 	}
 
 	return &types.ConstructionPreprocessResponse{
@@ -791,25 +885,33 @@ func (s ConstructionService) ConstructionSubmit(
 	req *types.ConstructionSubmitRequest,
 ) (*types.TransactionIdentifierResponse, *types.Error) {
 	if s.config.IsOfflineMode() {
-		return nil, errUnavailableOffline
+		return nil, ErrUnavailableOffline
 	}
 
 	if len(req.SignedTransaction) == 0 {
-		return nil, wrapError(errInvalidInput, "signed transaction value is not provided")
+		return nil, WrapError(ErrInvalidInput, "signed transaction value is not provided")
+	}
+
+	if s.pChainBackend.ShouldHandleRequest(req) {
+		return s.pChainBackend.ConstructionSubmit(ctx, req)
+	}
+
+	if s.cChainAtomicTxBackend.ShouldHandleRequest(req) {
+		return s.cChainAtomicTxBackend.ConstructionSubmit(ctx, req)
 	}
 
 	var wrappedTx signedTransactionWrapper
 	if err := json.Unmarshal([]byte(req.SignedTransaction), &wrappedTx); err != nil {
-		return nil, wrapError(errInvalidInput, err)
+		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	var signedTx ethtypes.Transaction
 	if err := signedTx.UnmarshalJSON(wrappedTx.SignedTransaction); err != nil {
-		return nil, wrapError(errInvalidInput, err)
+		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	if err := s.client.SendTransaction(ctx, &signedTx); err != nil {
-		return nil, wrapError(errClientError, err)
+		return nil, WrapError(ErrClientError, err)
 	}
 
 	return &types.TransactionIdentifierResponse{
@@ -885,7 +987,7 @@ func (s ConstructionService) createTransferPreprocessOptions(
 	}
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
 	if err != nil {
-		return nil, wrapError(errInvalidInput, "unclear intent")
+		return nil, WrapError(ErrInvalidInput, "unclear intent")
 	}
 
 	fromOp, _ := matches[0].First()
@@ -897,11 +999,11 @@ func (s ConstructionService) createTransferPreprocessOptions(
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
-		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
+		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
 	}
 	checkTo, ok := ChecksumAddress(toAddress)
 	if !ok {
-		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
+		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
 	}
 
 	return &options{
@@ -923,7 +1025,7 @@ func (s ConstructionService) createUnwrapPreprocessOptions(
 	}
 	matches, err := parser.MatchOperations(descriptions, req.Operations)
 	if err != nil {
-		return nil, wrapError(errInvalidInput, "unclear intent")
+		return nil, WrapError(ErrInvalidInput, "unclear intent")
 	}
 
 	fromOp, amount := matches[0].First()
@@ -936,7 +1038,7 @@ func (s ConstructionService) createUnwrapPreprocessOptions(
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
-		return nil, wrapError(errInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
+		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
 	}
 
 	metadata := &metadataOptions{

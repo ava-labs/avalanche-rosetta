@@ -11,7 +11,7 @@ DOCKER_ORG          ?= avaplatform
 DOCKER_IMAGE        ?= ${DOCKER_ORG}/${PROJECT}
 DOCKER_LABEL        ?= latest
 DOCKER_TAG          ?= ${DOCKER_IMAGE}:${DOCKER_LABEL}
-AVALANCHE_VERSION   ?= v1.9.9
+AVALANCHE_VERSION   ?= v1.9.11
 
 build:
 	export CGO_CFLAGS="-O -D__BLST_PORTABLE__" && go build -o ./rosetta-server ./cmd/server
@@ -118,3 +118,6 @@ check-mainnet-construction:
 mocks:
 	rm -rf mocks;
 	mockery --dir client --all --case underscore --outpkg client --output mocks/client;
+	mockery --dir service --name '.*Backend' --case underscore --outpkg chain --output mocks/service;
+	mockery --dir service/backend --all --case underscore --outpkg chain --output mocks/service/backend;
+	mockery --dir service/backend/pchain/indexer --all --case underscore --outpkg chain --output mocks/service/backend/pchain/indexer;

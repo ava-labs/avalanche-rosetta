@@ -1,0 +1,3693 @@
+{
+	"info": {
+		"_postman_id": "afdd0b91-b049-4c38-9410-fdaaff7f275c",
+		"name": "Avalanche Rosetta",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Network",
+			"item": [
+				{
+					"name": "P Chain",
+					"item": [
+						{
+							"name": "/network/options",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/network/options",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"network",
+										"options"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/network/status",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/network/status",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"network",
+										"status"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "C Chain",
+					"item": [
+						{
+							"name": "/network/options",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/network/options",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"network",
+										"options"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/network/status",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/network/status",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"network",
+										"status"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "/network/list",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Endpoint}}/network/list",
+							"host": [
+								"{{Endpoint}}"
+							],
+							"path": [
+								"network",
+								"list"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Construction",
+			"item": [
+				{
+					"name": "Derive",
+					"item": [
+						{
+							"name": "P Chain",
+							"item": [
+								{
+									"name": "/construction/derive",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"public_key\": {\n        \"hex_bytes\": \"{{PublicKey}}\",\n        \"curve_type\": \"secp256k1\"\n    }\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/derive",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"derive"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "C Chain",
+							"item": [
+								{
+									"name": "/construction/derive",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"public_key\": {\n        \"hex_bytes\": \"{{PublicKey}}\",\n        \"curve_type\": \"secp256k1\"\n    }\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/derive",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"derive"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "C Chain Bech32",
+							"item": [
+								{
+									"name": "/construction/derive",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"Fuji\"\n    },\n    \"public_key\": {\n        \"hex_bytes\": \"{{PublicKey}}\",\n        \"curve_type\": \"secp256k1\"\n    },\n    \"metadata\": {\n        \"address_format\": \"bech32\"\n    }\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/derive",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"derive"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "P Chain",
+					"item": [
+						{
+							"name": "ExportAvax",
+							"item": [
+								{
+									"name": "/construction/preprocess",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
+													"",
+													"const response = pm.response.json();",
+													"Utils.set(pm.environment, EnvVar.Options, response.options);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"EXPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"-1000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"coin_change\": {\n                \"coin_action\": \"coin_spent\",\n                \"coin_identifier\": {\n                    \"identifier\": \"NGcWaGCzBUtUsD85wDuX1DwbHFkvMHwJ9tDFiN7HCCnVcB9B8:0\"\n                }\n            },\n            \"metadata\": {\n                \"type\": \"INPUT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"EXPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{CChainBech32Address}}\"\n            },\n            \"amount\": {\n                \"value\": \"8000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"EXPORT\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"destination_chain\": \"C\"\n    }\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/preprocess",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"preprocess"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/metadata",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Metadata, response.metadata);",
+													"Utils.set(pm.environment, EnvVar.SuggestedFee, response.suggested_fee[0]);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('options', Utils.get(pm.environment, EnvVar.Options));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"options\": {{options}},\n    \"public_keys\": [\n        {\n            \"hex_bytes\": \"{{PublicKey}}\",\n            \"curve_type\": \"secp256k1\"\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/metadata?",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"metadata"
+											],
+											"query": [
+												{
+													"key": "",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/payloads",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.UnsignedTx, response.unsigned_transaction);",
+													"Utils.set(pm.environment, EnvVar.SigningPayloads, response.payloads);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
+													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.Metadata));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/payloads",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"payloads"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (unsigned)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed\": false,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "test signing utility - /sign",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Signatures, response.signatures);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SigningPayloads));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"payloads\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{SignerEndpoint}}/sign",
+											"host": [
+												"{{SignerEndpoint}}"
+											],
+											"path": [
+												"sign"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/combine",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.SignedTx, response.signed_transaction);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));",
+													"pm.variables.set('signatures', Utils.get(pm.environment, EnvVar.Signatures));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"unsigned_transaction\": {{transaction}},\n    \"signatures\": {{signatures}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/combine",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"combine"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (signed)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed\": true,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/hash",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/hash",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"hash"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/submit",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/submit",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"submit"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
+											"pm.environment.set('requestType', 'p-chain-export')",
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											""
+										]
+									}
+								}
+							]
+						},
+						{
+							"name": "ImportAvax",
+							"item": [
+								{
+									"name": "/construction/preprocess",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
+													"",
+													"const response = pm.response.json();",
+													"Utils.set(pm.environment, EnvVar.Options, response.options);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"IMPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{CChainBech32Address}}\"\n            },\n            \"amount\": {\n                \"value\": \"-1001000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 18\n                }\n            },\n            \"coin_change\": {\n                \"coin_action\": \"coin_spent\",\n                \"coin_identifier\": {\n                    \"identifier\": \"qnfiXfiskzghMdzWPEesLV9GZ2DypbEZLKAWmPLigk5U5oAYL:0\"\n                }\n            },\n            \"metadata\": {\n                \"type\": \"IMPORT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"IMPORT_AVAX\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"1000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"OUTPUT\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"source_chain\": \"C\"\n    }\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/preprocess",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"preprocess"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/metadata",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Metadata, response.metadata);",
+													"Utils.set(pm.environment, EnvVar.SuggestedFee, response.suggested_fee[0]);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('options', Utils.get(pm.environment, EnvVar.Options));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"options\": {{options}},\n    \"public_keys\": [\n        {\n            \"hex_bytes\": \"{{PublicKey}}\",\n            \"curve_type\": \"secp256k1\"\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/metadata",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"metadata"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/payloads",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.UnsignedTx, response.unsigned_transaction);",
+													"Utils.set(pm.environment, EnvVar.SigningPayloads, response.payloads);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
+													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.Metadata));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/payloads",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"payloads"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (unsigned)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed\": false,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "test signing utility - /sign",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Signatures, response.signatures);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SigningPayloads));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"payloads\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{SignerEndpoint}}/sign",
+											"host": [
+												"{{SignerEndpoint}}"
+											],
+											"path": [
+												"sign"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/combine",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.SignedTx, response.signed_transaction);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));",
+													"pm.variables.set('signatures', Utils.get(pm.environment, EnvVar.Signatures));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"unsigned_transaction\": {{transaction}},\n    \"signatures\": {{signatures}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/combine",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"combine"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (signed)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestType = pm.environment.get('requestType')",
+													"",
+													"const response = pm.response.json();",
+													"const options = response.options;",
+													"",
+													"pm.environment.set(`${requestType}-metadata-options`, JSON.stringify(options, null, 2));",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed\": true,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/hash",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/hash",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"hash"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/submit",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/submit",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"submit"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
+											"pm.environment.set('requestType', 'p-chain-import')",
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											""
+										]
+									}
+								}
+							]
+						},
+						{
+							"name": "AddValidator",
+							"item": [
+								{
+									"name": "/construction/preprocess",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
+													"",
+													"const response = pm.response.json();",
+													"Utils.set(pm.environment, EnvVar.Options, response.options);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"const startTimestamp = Math.floor(Date.now() / 1000) + 60;",
+													"const endTimestamp = startTimestamp + 86400 * 2; // 2 day staking period",
+													"",
+													"pm.variables.set('startTimestamp', startTimestamp);",
+													"pm.variables.set('endTimestamp', endTimestamp);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"ADD_VALIDATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"-2877137500\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"coin_change\": {\n                \"coin_action\": \"coin_spent\",\n                \"coin_identifier\": {\n                    \"identifier\": \"pyQfA1Aq9vLaDETjeQe5DAwVxr2KAYdHg4CHzawmaj9oA6ppn:0\"\n                }\n            },\n            \"metadata\": {\n                \"type\": \"INPUT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"ADD_VALIDATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"2000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"STAKE\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 2\n            },\n            \"type\": \"ADD_VALIDATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"877137500\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"OUTPUT\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"node_id\": \"NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S\",\n\t    \"start\": {{startTimestamp}},\n        \"end\": {{endTimestamp}},\n        \"shares\": 100000\n    }\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/preprocess",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"preprocess"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/metadata",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Metadata, response.metadata);",
+													"Utils.set(pm.environment, EnvVar.SuggestedFee, response.suggested_fee[0]);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('options', Utils.get(pm.environment, EnvVar.Options));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"options\": {{options}},\n    \"public_keys\": [\n        {\n            \"hex_bytes\": \"{{PublicKey}}\",\n            \"curve_type\": \"secp256k1\"\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/metadata",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"metadata"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/payloads",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.UnsignedTx, response.unsigned_transaction);",
+													"Utils.set(pm.environment, EnvVar.SigningPayloads, response.payloads);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
+													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.Metadata));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/payloads",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"payloads"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (unsigned)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed\": false,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "test signing utility - /sign",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Signatures, response.signatures);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SigningPayloads));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"payloads\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{SignerEndpoint}}/sign",
+											"host": [
+												"{{SignerEndpoint}}"
+											],
+											"path": [
+												"sign"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/combine",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.SignedTx, response.signed_transaction);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));",
+													"pm.variables.set('signatures', Utils.get(pm.environment, EnvVar.Signatures));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"unsigned_transaction\": {{transaction}},\n    \"signatures\": {{signatures}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/combine",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"combine"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (signed)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestType = pm.environment.get('requestType')",
+													"",
+													"const response = pm.response.json();",
+													"const options = response.options;",
+													"",
+													"pm.environment.set(`${requestType}-metadata-options`, JSON.stringify(options, null, 2));",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed\": true,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/hash",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/hash",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"hash"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/submit",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/submit",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"submit"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
+											"pm.environment.set('requestType', 'p-chain-add-validator')",
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											""
+										]
+									}
+								}
+							]
+						},
+						{
+							"name": "AddDelegator",
+							"item": [
+								{
+									"name": "/construction/preprocess",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
+													"",
+													"const response = pm.response.json();",
+													"Utils.set(pm.environment, EnvVar.Options, response.options);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"const startTimestamp = Math.floor(Date.now() / 1000) + 60;",
+													"const endTimestamp = startTimestamp + 86400 ; // 1 day staking period",
+													"",
+													"pm.variables.set('startTimestamp', startTimestamp);",
+													"pm.variables.set('endTimestamp', endTimestamp);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"ADD_DELEGATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"-1000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"coin_change\": {\n                \"coin_action\": \"coin_spent\",\n                \"coin_identifier\": {\n                    \"identifier\": \"2c6AtXKfyZLxVKCUs7TS3bZN6uu1VvWC2ebV9RYdAFYDLh5izX:0\"\n                }\n            },\n            \"metadata\": {\n                \"type\": \"INPUT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"ADD_DELEGATOR\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"1000000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"STAKE\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"node_id\": \"NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S\",\n\t    \"start\": {{startTimestamp}},\n        \"end\": {{endTimestamp}}\n    }\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/preprocess",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"preprocess"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/metadata",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Metadata, response.metadata);",
+													"Utils.set(pm.environment, EnvVar.SuggestedFee, response.suggested_fee[0]);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('options', Utils.get(pm.environment, EnvVar.Options));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"options\": {{options}},\n    \"public_keys\": [\n        {\n            \"hex_bytes\": \"{{PublicKey}}\",\n            \"curve_type\": \"secp256k1\"\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/metadata",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"metadata"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/payloads",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.UnsignedTx, response.unsigned_transaction);",
+													"Utils.set(pm.environment, EnvVar.SigningPayloads, response.payloads);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
+													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.Metadata));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/payloads",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"payloads"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (unsigned)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed\": false,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "test signing utility - /sign",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Signatures, response.signatures);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SigningPayloads));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"payloads\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{SignerEndpoint}}/sign",
+											"host": [
+												"{{SignerEndpoint}}"
+											],
+											"path": [
+												"sign"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/combine",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.SignedTx, response.signed_transaction);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));",
+													"pm.variables.set('signatures', Utils.get(pm.environment, EnvVar.Signatures));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"unsigned_transaction\": {{transaction}},\n    \"signatures\": {{signatures}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/combine",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"combine"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (signed)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestType = pm.environment.get('requestType')",
+													"",
+													"const response = pm.response.json();",
+													"const options = response.options;",
+													"",
+													"pm.environment.set(`${requestType}-metadata-options`, JSON.stringify(options, null, 2));",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed\": true,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/hash",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/hash",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"hash"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/submit",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/submit",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"submit"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
+											"pm.environment.set('requestType', 'p-chain-add-delegator')",
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											""
+										]
+									}
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "C Chain Atomic Tx",
+					"item": [
+						{
+							"name": "Export",
+							"item": [
+								{
+									"name": "/construction/preprocess",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
+													"",
+													"const response = pm.response.json();",
+													"Utils.set(pm.environment, EnvVar.Options, response.options);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"EXPORT\",\n            \"account\": {\n                \"address\": \"{{CChainEVMAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"-1001280750\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"INPUT\"\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"EXPORT\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"1001000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            },\n            \"metadata\": {\n                \"type\": \"EXPORT\"\n            }\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/preprocess",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"preprocess"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/metadata",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Metadata, response.metadata);",
+													"Utils.set(pm.environment, EnvVar.SuggestedFee, response.suggested_fee[0]);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('options', Utils.get(pm.environment, EnvVar.Options));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"options\": {{options}},\n    \"public_keys\": [\n        {\n            \"hex_bytes\": \"{{PublicKey}}\",\n            \"curve_type\": \"secp256k1\"\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/metadata?",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"metadata"
+											],
+											"query": [
+												{
+													"key": "",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/payloads",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.UnsignedTx, response.unsigned_transaction);",
+													"Utils.set(pm.environment, EnvVar.SigningPayloads, response.payloads);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
+													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.Metadata));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/payloads",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"payloads"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (unsigned)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"signed\": false,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "test signing utility - /sign",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Signatures, response.signatures);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SigningPayloads));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"payloads\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{SignerEndpoint}}/sign",
+											"host": [
+												"{{SignerEndpoint}}"
+											],
+											"path": [
+												"sign"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/combine",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.SignedTx, response.signed_transaction);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));",
+													"pm.variables.set('signatures', Utils.get(pm.environment, EnvVar.Signatures));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"unsigned_transaction\": {{transaction}},\n    \"signatures\": {{signatures}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/combine",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"combine"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (signed)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestType = pm.environment.get('requestType')",
+													"",
+													"const response = pm.response.json();",
+													"const options = response.options;",
+													"",
+													"pm.environment.set(`${requestType}-metadata-options`, JSON.stringify(options, null, 2));",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"signed\": true,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/hash",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/hash",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"hash"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/submit",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/submit",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"submit"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
+											"pm.environment.set('requestType', 'c-chain-export')",
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											""
+										]
+									}
+								}
+							]
+						},
+						{
+							"name": "Import",
+							"item": [
+								{
+									"name": "/construction/preprocess",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestBody = JSON.parse(pm.request.body.raw);",
+													"Utils.set(pm.environment, EnvVar.Operations, requestBody.operations);",
+													"",
+													"const response = pm.response.json();",
+													"Utils.set(pm.environment, EnvVar.Options, response.options);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"operations\": [\n        {\n            \"operation_identifier\": {\n                \"index\": 0\n            },\n            \"type\": \"IMPORT\",\n            \"account\": {\n                \"address\": \"{{PChainAddress}}\"\n            },\n            \"coin_change\": {\n                \"coin_identifier\": {\n                    \"identifier\": \"XcmVCgMbsA7jhNc2njE1LZ8tY8EVXv5T2NNXKsMqQYWKg7cro:0\"\n                },\n                \"coin_action\": \"coin_spent\"\n            },\n            \"amount\": {\n                \"value\": \"-8000000\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            }\n        },\n        {\n            \"operation_identifier\": {\n                \"index\": 1\n            },\n            \"type\": \"IMPORT\",\n            \"account\": {\n                \"address\": \"{{CChainEVMAddress}}\"\n            },\n            \"amount\": {\n                \"value\": \"7719250\",\n                \"currency\": {\n                    \"symbol\": \"AVAX\",\n                    \"decimals\": 9\n                }\n            }\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/preprocess",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"preprocess"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/metadata",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Metadata, response.metadata);",
+													"Utils.set(pm.environment, EnvVar.SuggestedFee, response.suggested_fee[0]);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('options', Utils.get(pm.environment, EnvVar.Options));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"options\": {{options}},\n    \"public_keys\": [\n        {\n            \"hex_bytes\": \"{{PublicKey}}\",\n            \"curve_type\": \"secp256k1\"\n        }\n    ]\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/metadata?",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"metadata"
+											],
+											"query": [
+												{
+													"key": "",
+													"value": null
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/payloads",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.UnsignedTx, response.unsigned_transaction);",
+													"Utils.set(pm.environment, EnvVar.SigningPayloads, response.payloads);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('operations', Utils.get(pm.environment, EnvVar.Operations));",
+													"pm.variables.set('metadata', Utils.get(pm.environment, EnvVar.Metadata));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"operations\": {{operations}},\n    \"metadata\": {{metadata}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/payloads",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"payloads"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (unsigned)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"signed\": false,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "test signing utility - /sign",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.Signatures, response.signatures);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SigningPayloads));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"payloads\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{SignerEndpoint}}/sign",
+											"host": [
+												"{{SignerEndpoint}}"
+											],
+											"path": [
+												"sign"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/combine",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const response = pm.response.json();",
+													"",
+													"Utils.set(pm.environment, EnvVar.SignedTx, response.signed_transaction);",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.UnsignedTx));",
+													"pm.variables.set('signatures', Utils.get(pm.environment, EnvVar.Signatures));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"unsigned_transaction\": {{transaction}},\n    \"signatures\": {{signatures}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/combine",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"combine"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/parse (signed)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"const requestType = pm.environment.get('requestType')",
+													"",
+													"const response = pm.response.json();",
+													"const options = response.options;",
+													"",
+													"pm.environment.set(`${requestType}-metadata-options`, JSON.stringify(options, null, 2));",
+													"",
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"signed\": true,\n    \"transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/parse",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"parse"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/hash",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/hash",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"hash"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "/construction/submit",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('success', pm.response.to.have.status(200))"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"pm.variables.set('transaction', Utils.get(pm.environment, EnvVar.SignedTx));"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"signed_transaction\": {{transaction}}\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{Endpoint}}/construction/submit",
+											"host": [
+												"{{Endpoint}}"
+											],
+											"path": [
+												"construction",
+												"submit"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"// This is used to namespace environment variables used for passing data around, not used in any Rosetta requests.",
+											"pm.environment.set('requestType', 'c-chain-import')",
+											""
+										]
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											""
+										]
+									}
+								}
+							]
+						}
+					]
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"debug = false",
+							"",
+							"Utils = {};",
+							"Utils.set = (env, name, value) => {",
+							"    const requestType = env.get('requestType');",
+							"",
+							"    const fullName = `${requestType}-${name}`;",
+							"    const strValue = JSON.stringify(value, null, 2);",
+							"    env.set(fullName, strValue);",
+							"    debug && console.log(`Set ${fullName} to:`, strValue);",
+							"}",
+							"",
+							"Utils.get = (env, name) => {",
+							"    const requestType = env.get('requestType');",
+							"",
+							"    const fullName = `${requestType}-${name}`;",
+							"    const value = env.get(fullName);",
+							"    debug && console.log(`Received ${fullName}:`, value);",
+							"    return value;",
+							"}",
+							"",
+							"",
+							"EnvVar = {",
+							"    Operations: 'operations',",
+							"    RequestParams: 'request-params',",
+							"    PreprocessMetadata: 'preprocess-metadata',",
+							"    Options: 'options',",
+							"    Metadata: 'metadata',",
+							"    SuggestedFee: 'suggested-fee',",
+							"    UnsignedTx: 'unsigned-tx',",
+							"    SigningPayloads: 'signing-payloads',",
+							"    SignedTx: 'signed-tx',",
+							"}",
+							"",
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Block",
+			"item": [
+				{
+					"name": "P Chain",
+					"item": [
+						{
+							"name": "/block by hash",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"block_identifier\": {\n        \"hash\": \"iT4PgDmwhvyxZCrUzLTFfAwdR7Z6E4YyfRDdX1MvgmTTebSFT\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/block",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"block"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/block by index",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"block_identifier\": {\n        \"index\": 76543\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/block",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"block"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/block/transaction",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"block_identifier\": {\n        \"hash\": \"iT4PgDmwhvyxZCrUzLTFfAwdR7Z6E4YyfRDdX1MvgmTTebSFT\"\n    },\n    \"transaction_identifier\": {\n        \"hash\": \"3jnHJZ2TWrZHiFN2FTg1ASxTuGwfqL9JMexKAkRuEcYNFE59K\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/block/transaction",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"block",
+										"transaction"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "C Chain",
+					"item": [
+						{
+							"name": "/block by hash",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"block_identifier\": {\n        \"hash\": \"0x5d4143e2d5282056412fec2b4a5899f34abd411c52b2860a975f7e0f21d4cbce\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/block",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"block"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/block by index",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"block_identifier\": {\n        \"index\": 12121212\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/block",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"block"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/block/transaction",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"block_identifier\": {\n        \"hash\": \"0x5d4143e2d5282056412fec2b4a5899f34abd411c52b2860a975f7e0f21d4cbce\"\n    },\n    \"transaction_identifier\": {\n        \"hash\": \"0xbfdd4353dafbfacc43df18945fdefbfc374b6e224f96b7711749b306b316ce19\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/block/transaction",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"block",
+										"transaction"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Account",
+			"item": [
+				{
+					"name": "P Chain",
+					"item": [
+						{
+							"name": "/account/balance",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"account_identifier\": {\n        \"address\": \"{{PChainAddress}}\"\n    },\n    \"include_mempool\": true,\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 9\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/account/balance",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"account",
+										"balance"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/account/coins",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"account_identifier\": {\n        \"address\": \"{{PChainAddress}}\"\n    },\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 9\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/account/coins",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"account",
+										"coins"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "C Chain",
+					"item": [
+						{
+							"name": "/account/balance",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"account_identifier\": {\n        \"address\": \"{{CChainEVMAddress}}\"\n    },\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 18\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/account/balance",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"account",
+										"balance"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/account/coins",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"account_identifier\": {\n        \"address\": \"{{CChainEVMAddress}}\"\n    },\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 18\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/account/coins",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"account",
+										"coins"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "C Chain Atomic Tx",
+					"item": [
+						{
+							"name": "/account/balance",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\",\n        \"sub_network_identifier\": {\n            \"network\": \"P\"\n        }\n    },\n    \"account_identifier\": {\n        \"address\": \"{{CChainBech32Address}}\"\n    },\n    \"include_mempool\": true,\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 9\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/account/balance",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"account",
+										"balance"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/account/coins",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"network_identifier\": {\n        \"blockchain\": \"Avalanche\",\n        \"network\": \"{{Network}}\"\n    },\n    \"account_identifier\": {\n        \"address\": \"{{CChainBech32Address}}\"\n    },\n    \"currencies\": [\n        {\n            \"symbol\": \"AVAX\",\n            \"decimals\": 9\n        }\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{Endpoint}}/account/coins",
+									"host": [
+										"{{Endpoint}}"
+									],
+									"path": [
+										"account",
+										"coins"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Endpoint",
+			"value": "http://localhost:8080",
+			"type": "default"
+		},
+		{
+			"key": "Network",
+			"value": "Fuji",
+			"type": "default"
+		},
+		{
+			"key": "SignerEndpoint",
+			"value": "http://localhost:9898",
+			"type": "default"
+		},
+		{
+			"key": "PublicKey",
+			"value": "038722f82a94ec3f730ea1e8863a4b63f4898442e6f93723fbdd7589d8b700fff9",
+			"type": "string"
+		},
+		{
+			"key": "CChainEVMAddress",
+			"value": "0x3158e80abD5A1e1aa716003C9Db096792C379621",
+			"type": "string"
+		},
+		{
+			"key": "CChainBech32Address",
+			"value": "C-fuji1wmd9dfrqpud6daq0cde47u0r7pkrr46ep60399",
+			"type": "string"
+		},
+		{
+			"key": "PChainAddress",
+			"value": "P-fuji1wmd9dfrqpud6daq0cde47u0r7pkrr46ep60399",
+			"type": "string"
+		}
+	]
+}

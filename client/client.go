@@ -5,10 +5,13 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
+	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"
-	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/ava-labs/avalanchego/ids"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
+	"github.com/ava-labs/coreth/plugin/evm"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
@@ -16,7 +19,9 @@ import (
 var _ Client = &client{}
 
 type Client interface {
-	IsBootstrapped(context.Context, string, ...rpc.Option) (bool, error)
+	// info.Client methods
+	InfoClient
+
 	ChainID(context.Context) (*big.Int, error)
 	BlockByHash(context.Context, ethcommon.Hash) (*ethtypes.Block, error)
 	BlockByNumber(context.Context, *big.Int) (*ethtypes.Block, error)
@@ -32,14 +37,18 @@ type Client interface {
 	SuggestGasPrice(context.Context) (*big.Int, error)
 	EstimateGas(context.Context, interfaces.CallMsg) (uint64, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
-	GetNetworkName(context.Context, ...rpc.Option) (string, error)
-	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)
 	GetContractInfo(ethcommon.Address, bool) (string, uint8, error)
 	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
+	IssueTx(ctx context.Context, txBytes []byte) (ids.ID, error)
+	GetAtomicUTXOs(ctx context.Context, addrs []string, sourceChain string, limit uint32, startAddress, startUTXOID string) ([][]byte, api.Index, error)
+	EstimateBaseFee(ctx context.Context) (*big.Int, error)
 }
+
+type EvmClient evm.Client
 
 type client struct {
 	info.Client
+	EvmClient
 	*EthClient
 	*ContractClient
 }
@@ -53,8 +62,9 @@ func NewClient(ctx context.Context, endpoint string) (Client, error) {
 		return nil, err
 	}
 
-	return client{
+	return &client{
 		Client:         info.NewClient(endpoint),
+		EvmClient:      evm.NewClient(endpoint, constants.CChain.String()),
 		EthClient:      eth,
 		ContractClient: NewContractClient(eth.Client),
 	}, nil

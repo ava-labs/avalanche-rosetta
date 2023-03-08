@@ -1,19 +1,12 @@
 package mapper
 
 import (
-	"github.com/ava-labs/coreth/params"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 const (
-	MainnetChainID = 43114
-	MainnetAssetID = "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
-
-	FujiChainID = 43113
-	FujiAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
-
 	ContractAddressMetadata  = "contractAddress"
 	IndexTransferredMetadata = "indexTransferred"
 
@@ -39,12 +32,15 @@ const (
 
 	StatusSuccess = "SUCCESS"
 	StatusFailure = "FAILURE"
+
+	MetadataTxFee           = "tx_fee"
+	MetadataImportedInputs  = "imported_inputs"
+	MetadataExportedOutputs = "exported_outputs"
+	MetadataAddressFormat   = "address_format"
+	AddressFormatBech32     = "bech32"
 )
 
 var (
-	MainnetAP5Activation = params.AvalancheMainnetChainConfig.ApricotPhase5BlockTimestamp
-	FujiAP5Activation    = params.AvalancheFujiChainConfig.ApricotPhase5BlockTimestamp
-
 	StageBootstrap = &types.SyncStatus{
 		Synced: types.Bool(false),
 		Stage:  types.String("BOOTSTRAP"),
@@ -58,6 +54,11 @@ var (
 	AvaxCurrency = &types.Currency{
 		Symbol:   "AVAX",
 		Decimals: 18,
+	}
+
+	AtomicAvaxCurrency = &types.Currency{
+		Symbol:   "AVAX",
+		Decimals: 9,
 	}
 
 	OperationStatuses = []*types.OperationStatus{

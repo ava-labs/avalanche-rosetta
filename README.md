@@ -33,7 +33,7 @@ Before you start running the server you need to create a configuration file:
 
 ```json
 {
-  "rpc_endpoint": "https://api.avax-test.network",
+  "rpc_base_url": "https://api.avax-test.network",
   "mode": "online",
   "listen_addr": "0.0.0.0:8080",
   "genesis_block_hash" :"0x31ced5b9beb7f8782b014660da0cb18cc409f121f408186886e1ca3e8eeca96b",
@@ -45,6 +45,7 @@ Start the server by running the following command:
 ```bash
 ./rosetta-server -config=./config.json
 ```
+
 ## Configuration
 
 Full configuration example:
@@ -52,7 +53,7 @@ Full configuration example:
 ```json
 {
   "mode": "online",
-  "rpc_endpoint": "http://localhost:9650",
+  "rpc_base_url": "http://localhost:9650",
   "listen_addr": "0.0.0.0:8080",
   "network_name": "Fuji",
   "chain_id": 43113,
@@ -71,7 +72,7 @@ Where:
 | Name          | Type    | Default | Description
 |---------------|---------|---------|-------------------------------------------
 | mode          | string  | `online` | Mode of operations. One of: `online`, `offline`
-| rpc_endpoint  | string  | `http://localhost:9650` | Avalanche RPC endpoint
+| rpc_base_url  | string  | `http://localhost:9650` | Avalanche RPC base url
 | listen_addr   | string  | `http://localhost:8080` | Rosetta server listen address (host/port)
 | network_name  | string  | -       | Avalanche network name
 | chain_id      | integer | -       | Avalanche C-Chain ID
@@ -156,7 +157,7 @@ Run the construction check for ERC-20s:
 make check-testnet-construction-erc20
 ```
 
-## Rebuild the ContractInfoToken.go autogen file.
+## Rebuild the ContractInfoToken.go autogen file
 
 ```bash
 abigen --abi contractInfo.abi --pkg main --type ContractInfoToken --out client/contractInfoToken.go

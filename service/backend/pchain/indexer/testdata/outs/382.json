@@ -1,0 +1,65 @@
+{
+  "id": "2BZD8LSEnArSNwiE74usRGKihA6yDnLwZdGXe1yEfMxwpBFdZB",
+  "type": "*blocks.ApricotProposalBlock",
+  "parent": "BrPKVKyqobPfk7hZDFeMy4dpi7KFCFonTjgYN1LT5DA7AFaTN",
+  "timestamp": 1599696000000,
+  "height": 383,
+  "transactions": [
+    {
+      "unsignedTx": {
+        "networkID": 1,
+        "blockchainID": "11111111111111111111111111111111LpoYY",
+        "outputs": [],
+        "inputs": [
+          {
+            "txID": "2JSCbhgKWP7wa6imjfiH2r22djBYbJPy3xvr3qdfDMsRD1CQyy",
+            "outputIndex": 0,
+            "assetID": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z",
+            "fxID": "spdxUxVJQbX85MGxMHbKw1sHxMnSqJ3QBzDyDYEP3h6TLuxqQ",
+            "input": {
+              "amount": 189998000000,
+              "signatureIndices": [
+                0
+              ]
+            }
+          }
+        ],
+        "memo": "0x00000000",
+        "validator": {
+          "nodeID": "NodeID-A6onFGyJjA37EZ7kYHANMR1PFRT8NmXrF",
+          "start": 1600744921,
+          "end": 1607469481,
+          "weight": 189998000000
+        },
+        "stake": [
+          {
+            "assetID": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z",
+            "fxID": "spdxUxVJQbX85MGxMHbKw1sHxMnSqJ3QBzDyDYEP3h6TLuxqQ",
+            "output": {
+              "addresses": [
+                "P-avax1hjlhzxzszs8nxhz0flnra38jxtvmf38td3qxa6"
+              ],
+              "amount": 189998000000,
+              "locktime": 0,
+              "threshold": 1
+            }
+          }
+        ],
+        "rewardsOwner": {
+          "addresses": [
+            "P-avax1hjlhzxzszs8nxhz0flnra38jxtvmf38td3qxa6"
+          ],
+          "locktime": 0,
+          "threshold": 1
+        }
+      },
+      "credentials": [
+        {
+          "signatures": [
+            "0x9be8a18e6ffda94d2bc80b82e4e8afa62240883b306aa658075474cd8d4bdc0e2baee95806bd079dad268db14c43ed57f3d3e6680054f403f5238d314e275cae01"
+          ]
+        }
+      ]
+    }
+  ]
+}
