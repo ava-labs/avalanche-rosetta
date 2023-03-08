@@ -53,11 +53,6 @@ COPY --from=avalanche \
   /go/src/github.com/ava-labs/avalanchego/build/avalanchego \
   /app/avalanchego
 
-# Install evm plugin
-COPY --from=avalanche \
-  /go/src/github.com/ava-labs/avalanchego/build/plugins/evm \
-  /app/plugins/evm
-
 # Install rosetta server
 COPY --from=rosetta \
   /go/src/github.com/ava-labs/avalanche-rosetta/rosetta-server \
