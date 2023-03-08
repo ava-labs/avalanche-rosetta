@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Build avalanche
 # ------------------------------------------------------------------------------
-FROM golang:1.19.1 AS avalanche
+FROM golang:1.19.6 AS avalanche
 
 ARG AVALANCHE_VERSION
 
@@ -16,7 +16,7 @@ RUN git checkout $AVALANCHE_VERSION && \
 # ------------------------------------------------------------------------------
 # Build avalanche rosetta
 # ------------------------------------------------------------------------------
-FROM golang:1.19.1 AS rosetta
+FROM golang:1.19.6 AS rosetta
 
 ARG ROSETTA_VERSION
 
@@ -52,11 +52,6 @@ WORKDIR /app
 COPY --from=avalanche \
   /go/src/github.com/ava-labs/avalanchego/build/avalanchego \
   /app/avalanchego
-
-# Install evm plugin
-COPY --from=avalanche \
-  /go/src/github.com/ava-labs/avalanchego/build/plugins/evm \
-  /app/plugins/evm
 
 # Install rosetta server
 COPY --from=rosetta \
