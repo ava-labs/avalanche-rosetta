@@ -129,14 +129,13 @@ func (gh *gHandler) buildGenesisAllocationTx() (*txs.Tx, error) {
 
 	// TODO: this is probably not the right way to build this tx
 	// Some fields are missing that we populate in tx Builder
+	// We also do not sign/initialize the transaction since genesis outputs are referred to empty id as tx id.
 	allocationTx := &txs.ImportTx{}
 	allocationTx.Outs = outs
 	tx := &txs.Tx{
 		Unsigned: allocationTx,
 	}
-	if err := tx.Sign(gh.genesisCodec, nil); err != nil {
-		return nil, err
-	}
+
 	gh.allocationTx = tx
 	return gh.allocationTx, nil
 }
