@@ -80,7 +80,7 @@ type pchainClient struct {
 }
 
 // NewPChainClient returns a new client for Avalanche APIs related to P-chain
-func NewPChainClient(ctx context.Context, rpcBaseURL, indexerBaseURL string) PChainClient {
+func NewPChainClient(_ context.Context, rpcBaseURL, indexerBaseURL string) PChainClient {
 	rpcBaseURL = strings.TrimSuffix(rpcBaseURL, "/")
 
 	return pchainClient{

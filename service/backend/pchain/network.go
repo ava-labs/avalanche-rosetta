@@ -18,7 +18,7 @@ func (b *Backend) NetworkIdentifier() *types.NetworkIdentifier {
 }
 
 // NetworkStatus implements /network/status endpoint for P-chain
-func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
+func (b *Backend) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
 	// Fetch peers
 	infoPeers, err := b.pClient.Peers(ctx)
 	if err != nil {
@@ -62,7 +62,7 @@ func (b *Backend) NetworkStatus(ctx context.Context, req *types.NetworkRequest) 
 }
 
 // NetworkOptions implements /network/options endpoint for P-chain
-func (b *Backend) NetworkOptions(ctx context.Context, request *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
+func (b *Backend) NetworkOptions(_ context.Context, _ *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
 			RosettaVersion:    types.RosettaAPIVersion,

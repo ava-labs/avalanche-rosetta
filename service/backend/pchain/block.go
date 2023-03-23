@@ -3,9 +3,7 @@ package pchain
 import (
 	"context"
 
-	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -50,7 +48,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
-		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, blocks.GenesisCodec, genesisTxs, nil)
+		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, genesisTxs, nil)
 		if err != nil {
 			return nil, service.WrapError(service.ErrClientError, err)
 		}
@@ -80,7 +78,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
 
-		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, blocks.Codec, block.Txs, blkDeps)
+		rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, block.Txs, blkDeps)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -115,7 +113,6 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	var (
 		targetTxs     []*txs.Tx
 		dependencyTxs pmapper.BlockTxDependencies
-		targetCodec   codec.Manager
 	)
 
 	isGenesisReq, err := b.isGenesisBlockRequest(request.BlockIdentifier.Index, request.BlockIdentifier.Hash)
@@ -132,7 +129,6 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 
 		targetTxs = genesisTxs
 		dependencyTxs = nil
-		targetCodec = blocks.GenesisCodec
 
 	default:
 		block, err := b.indexerParser.ParseNonGenesisBlock(ctx, request.BlockIdentifier.Hash, uint64(request.BlockIdentifier.Index))
@@ -146,10 +142,9 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 
 		targetTxs = block.Txs
 		dependencyTxs = deps
-		targetCodec = blocks.Codec
 	}
 
-	rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, targetCodec, targetTxs, dependencyTxs)
+	rosettaTxs, err := pmapper.ParseRosettaTxs(b.txParserCfg, targetTxs, dependencyTxs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}

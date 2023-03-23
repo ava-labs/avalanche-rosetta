@@ -56,8 +56,8 @@ func NewNetworkService(
 
 // NetworkList implements the /network/list endpoint
 func (s *NetworkService) NetworkList(
-	ctx context.Context,
-	request *types.MetadataRequest,
+	_ context.Context,
+	_ *types.MetadataRequest,
 ) (*types.NetworkListResponse, *types.Error) {
 	return &types.NetworkListResponse{
 		NetworkIdentifiers: []*types.NetworkIdentifier{
