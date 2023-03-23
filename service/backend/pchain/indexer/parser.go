@@ -94,7 +94,7 @@ func (p *parser) GetPlatformHeight(ctx context.Context) (uint64, error) {
 // GetGenesisBlock is called to initialize P-chain genesis information upon startup.
 // GetGenesisBlock should not call the indexer, to ensure backward compatibility with
 // previous installations which do no host a block indexer.
-func (p *parser) GetGenesisBlock(ctx context.Context) (*ParsedGenesisBlock, error) {
+func (p *parser) GetGenesisBlock(_ context.Context) (*ParsedGenesisBlock, error) {
 	bytes, _, err := genesis.FromConfig(genesis.GetConfig(p.networkID))
 	if err != nil {
 		return nil, err

@@ -1,14 +1,12 @@
 package pchain
 
 import (
-	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 func ParseRosettaTxs(
 	parserCfg TxParserConfig,
-	c codec.Manager,
 	txs []*txs.Tx,
 	dependencyTxs BlockTxDependencies,
 ) ([]*types.Transaction, error) {
