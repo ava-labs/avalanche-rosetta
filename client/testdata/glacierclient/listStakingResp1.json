@@ -1,0 +1,76 @@
+{
+  "transactions": [
+    {
+      "txHash": "txHash1",
+      "txType": "AddValidatorTx",
+      "blockTimestamp": 6789,
+      "blockNumber": "12345",
+      "blockHash": "blockHash1",
+      "value": [
+        {
+          "amount": "21000000000000",
+          "assetId": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
+        }
+      ],
+      "amountBurned": [
+        {
+          "amount": "0",
+          "assetId": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
+        }
+      ],
+      "startTimestamp": 1600000000,
+      "endTimestamp": 1610000000,
+      "amountStaked": [
+        {
+          "amount": "20000000000000",
+          "assetId": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z"
+        }
+      ],
+      "delegationFeePercent": "4",
+      "nodeId": "NodeID-someNodeId",
+      "subnetId": "11111111111111111111111111111111LpoYY",
+      "estimatedReward": "1000000",
+      "memo": "0x",
+      "sourceChain": "11111111111111111111111111111111LpoYY",
+      "destinationChain": "11111111111111111111111111111111LpoYY",
+      "consumedUtxos": [
+        {
+          "fromTx": "someTxHash",
+          "addresses": [
+            "avax139ckvuc264jkfczumqr5p6p8s97xq2h0qv9hnz"
+          ],
+          "amount": "21000000000000",
+          "assetId": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z",
+          "utxoId": "someUtxoId",
+          "createdOnChainId": "11111111111111111111111111111111LpoYY",
+          "consumedOnChainId": "11111111111111111111111111111111LpoYY"
+        }
+      ],
+      "emittedUtxos": [
+        {
+          "addresses": [
+            "avax139ckvuc264jkfczumqr5p6p8s97xq2h0qv9hnz"
+          ],
+          "amount": "1000000000000",
+          "assetId": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z",
+          "utxoId": "someOtherUtxoId",
+          "staked": false,
+          "createdOnChainId": "11111111111111111111111111111111LpoYY",
+          "consumedOnChainId": "11111111111111111111111111111111LpoYY"
+        },
+        {
+          "addresses": [
+            "avax139ckvuc264jkfczumqr5p6p8s97xq2h0qv9hnz"
+          ],
+          "amount": "20000000000000",
+          "assetId": "FvwEAhmxKfeiG8SnEvq42hc6whRyY3EFYAvebMqDNDGCgxN5Z",
+          "utxoId": "stakedUtxoId",
+          "staked": true,
+          "createdOnChainId": "11111111111111111111111111111111LpoYY",
+          "consumedOnChainId": "11111111111111111111111111111111LpoYY"
+        }
+      ]
+    }
+  ],
+  "nextPageToken": "Mzg5OTA0N3x3d0hXOWF4dDREcXVQZ0ZyTnZNdk5ZejlCVlduOGtiemVBR3FXakJHTFJ3Z1BTMWhp\n"
+}

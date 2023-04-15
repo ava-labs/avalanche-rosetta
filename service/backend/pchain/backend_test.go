@@ -8,11 +8,12 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ava-labs/avalanchego/ids"
+
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
 	"github.com/ava-labs/avalanche-rosetta/service"
-	"github.com/ava-labs/avalanchego/ids"
 )
 
 func TestShouldHandleRequest(t *testing.T) {
@@ -39,6 +40,7 @@ func TestShouldHandleRequest(t *testing.T) {
 		service.ModeOnline,
 		clientMock,
 		parserMock,
+		nil,
 		avaxAssetID,
 		pChainNetworkIdentifier,
 		avalancheNetworkID,

@@ -3,6 +3,7 @@ package pchain
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -65,8 +66,17 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 
 	fetchImportable := balanceType == pmapper.SubAccountTypeSharedMemory
 	fetchStaked := balanceType == pmapper.SubAccountTypeStaked || balanceType == ""
+	fetchStakedFromGlacier := req.AccountIdentifier.Metadata != nil &&
+		req.AccountIdentifier.Metadata[pmapper.MetadataAccountBalanceV2] != nil
 
-	height, balance, typedErr := b.fetchBalance(ctx, req.AccountIdentifier.Address, fetchStaked, fetchImportable, currencyAssetIDs)
+	height, balance, typedErr := b.fetchBalance(
+		ctx,
+		req.AccountIdentifier.Address,
+		fetchStaked,
+		fetchStakedFromGlacier,
+		fetchImportable,
+		currencyAssetIDs,
+	)
 	if typedErr != nil {
 		return nil, typedErr
 	}
@@ -256,18 +266,26 @@ func (b *Backend) getPendingRewardsBalance(ctx context.Context, req *types.Accou
 	}, nil
 }
 
-func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchStaked bool, fetchImportable bool, assetIds set.Set[ids.ID]) (uint64, *AccountBalance, *types.Error) {
+func (b *Backend) fetchBalance(
+	ctx context.Context,
+	addrString string,
+	fetchStaked bool,
+	fetchStakedFromGlacier bool,
+	fetchImportable bool,
+	assetIds set.Set[ids.ID],
+) (uint64, *AccountBalance, *types.Error) {
 	addr, err := address.ParseToID(addrString)
 	if err != nil {
 		return 0, nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
 	}
 
+	fetchStakedUTXOs := fetchStaked && !fetchStakedFromGlacier
 	// utxos from fetchUTXOsAndStakedOutputs are guaranteed to:
 	// 1. be unique (no duplicates)
 	// 2. contain only assetIDs
 	// 3. have not multisign utxos
 	// by parseAndFilterUTXOs call in fetchUTXOsAndStakedOutputs
-	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, fetchStaked, fetchImportable, assetIds)
+	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, fetchStakedUTXOs, fetchImportable, assetIds)
 	if typedErr != nil {
 		return 0, nil, typedErr
 	}
@@ -278,8 +296,13 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchStak
 	}
 
 	if fetchStaked {
-		// parse staked UTXO bytes to UTXO structs
-		stakedAmount, err := b.calculateStakedAmount(stakedUTXOBytes)
+		var stakedAmount uint64
+		if fetchStakedFromGlacier {
+			stakedAmount, err = b.fetchStakedBalance(ctx, addrString)
+		} else {
+			// parse staked UTXO bytes to UTXO structs
+			stakedAmount, err = b.calculateStakedAmount(stakedUTXOBytes)
+		}
 		if err != nil {
 			return 0, nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -289,6 +312,52 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchStak
 	}
 
 	return height, balance, nil
+}
+
+func (b *Backend) fetchStakedBalance(ctx context.Context, addressString string) (uint64, error) {
+	txs, err := b.glacierClient.TransactionsListStaking(ctx, addressString)
+	if err != nil {
+		return 0, err
+	}
+
+	totalStaked := big.NewInt(0)
+	for _, tx := range txs {
+		for _, utxo := range tx.EmittedUTXOs {
+			// Exclude change output
+			if !utxo.Staked {
+				continue
+			}
+
+			// Exclude multisig outputs
+			if len(utxo.Addresses) > 1 {
+				continue
+			}
+
+			// Exclude staked outputs to other addresses
+			// Glacier returns addresses without P- prefix, so we check if source address ends with utxo address
+			if !strings.HasSuffix(addressString, utxo.Addresses[0]) {
+				continue
+			}
+
+			// Skip non-AVAX assets
+			assetID, err := ids.FromString(utxo.AssetID)
+			if err != nil {
+				return 0, err
+			}
+			if assetID != b.avaxAssetID {
+				continue
+			}
+
+			amountBigInt, ok := new(big.Int).SetString(utxo.Amount, 10)
+			if !ok {
+				return 0, fmt.Errorf("unable to compute amount for tx %s", tx.TxHash)
+			}
+
+			totalStaked.Add(totalStaked, amountBigInt)
+		}
+	}
+
+	return totalStaked.Uint64(), err
 }
 
 // Copy of the platformvm service's GetBalance implementation.

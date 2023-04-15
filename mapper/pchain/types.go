@@ -39,6 +39,8 @@ const (
 	MetadataDelegationRewards    = "delegation_rewards"
 	MetadataDelegationFeeRewards = "delegation_fee_rewards"
 
+	MetadataAccountBalanceV2 = "account_balance_v2"
+
 	SubAccountTypeSharedMemory       = "shared_memory"
 	SubAccountTypeUnlocked           = "unlocked"
 	SubAccountTypeLockedStakeable    = "locked_stakeable"

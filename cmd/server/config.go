@@ -7,10 +7,11 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
+	"github.com/ava-labs/avalanchego/utils/constants"
+
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
-	"github.com/ava-labs/avalanchego/utils/constants"
 )
 
 var (
@@ -26,6 +27,7 @@ type config struct {
 	Mode             string `json:"mode"`
 	RPCBaseURL       string `json:"rpc_base_url"`
 	IndexerBaseURL   string `json:"indexer_base_url"`
+	GlacierBaseURL   string `json:"glacier_base_url"`
 	ListenAddr       string `json:"listen_addr"`
 	NetworkName      string `json:"network_name"`
 	ChainID          int64  `json:"chain_id"`
@@ -67,6 +69,10 @@ func (c *config) applyDefaults() {
 
 	if c.IndexerBaseURL == "" {
 		c.IndexerBaseURL = c.RPCBaseURL
+	}
+
+	if c.GlacierBaseURL == "" {
+		c.GlacierBaseURL = "https://glacier-api.avax.network"
 	}
 
 	if c.ListenAddr == "" {

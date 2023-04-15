@@ -31,6 +31,7 @@ type Backend struct {
 	avalancheNetworkID uint32
 	pClient            client.PChainClient
 	indexerParser      indexer.Parser
+	glacierClient      client.GlacierClient
 	getUTXOsPageSize   uint32
 	codec              codec.Manager
 	codecVersion       uint16
@@ -43,6 +44,7 @@ func NewBackend(
 	nodeMode string,
 	pClient client.PChainClient,
 	indexerParser indexer.Parser,
+	glacierClient client.GlacierClient,
 	assetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
 	avalancheNetworkID uint32,
@@ -63,6 +65,7 @@ func NewBackend(
 		indexerParser:      indexerParser,
 		avaxAssetID:        assetID,
 		avalancheNetworkID: avalancheNetworkID,
+		glacierClient:      glacierClient,
 	}
 
 	if nodeMode == service.ModeOnline {

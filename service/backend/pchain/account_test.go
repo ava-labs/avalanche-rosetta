@@ -13,6 +13,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
@@ -51,12 +52,14 @@ func TestAccountBalance(t *testing.T) {
 	ctx := context.Background()
 	pChainMock := &mocks.PChainClient{}
 	parserMock := &idxmocks.Parser{}
+	glacierMock := mocks.NewGlacierClient(t)
 	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
 	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
 	backend, err := NewBackend(
 		service.ModeOnline,
 		pChainMock,
 		parserMock,
+		glacierMock,
 		avaxAssetID,
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
@@ -261,6 +264,97 @@ func TestAccountBalance(t *testing.T) {
 		pChainMock.AssertExpectations(t)
 		parserMock.AssertExpectations(t)
 	})
+
+	t.Run("Account Balance should use glacier client if account balance v2 metadata is given", func(t *testing.T) {
+		addr, _ := address.ParseToID(pChainAddr)
+		pageSize := uint32(2)
+		backend.getUTXOsPageSize = pageSize
+
+		pChainMock.Mock.On("GetAssetDescription", ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
+		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Once()
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{addr}, "", pageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{}, addr, ids.Empty, nil).Once()
+		pChainAddrWithoutPrefix := "avax1yp8v6x7kf7ar2q5g0cs0a9jk4cmt0sgam72zfz"
+		glacierMock.On("TransactionsListStaking", ctx, pChainAddr).Return([]client.PChainTransaction{
+			{
+				EmittedUTXOs: []client.PChainEmittedUtxo{
+					{
+						Addresses: []string{pChainAddrWithoutPrefix},
+						Amount:    "2000000000",
+						AssetID:   avaxAssetID.String(),
+						Staked:    true,
+					},
+					{
+						// change output to skip
+						Addresses: []string{pChainAddrWithoutPrefix},
+						Amount:    "4000000000",
+						AssetID:   avaxAssetID.String(),
+						Staked:    false,
+					},
+					{
+						// change output to other address
+						Addresses: []string{"P-avaxother"},
+						Amount:    "4000000000",
+						AssetID:   avaxAssetID.String(),
+						Staked:    false,
+					},
+					{
+						// non-avax to skip
+						Addresses: []string{pChainAddrWithoutPrefix},
+						Amount:    "6000000000",
+						AssetID:   "kPSRA6RCKmKax3qUHCxDLTZkpQd1QyBa7FdK4Gr2PT46f2xac",
+						Staked:    true,
+					},
+					{
+						// multisig to skip
+						Addresses: []string{pChainAddrWithoutPrefix, "P-avaxother"},
+						Amount:    "8000000000",
+						AssetID:   avaxAssetID.String(),
+						Staked:    false,
+					},
+				},
+			},
+		}, nil)
+		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Once()
+
+		resp, err := backend.AccountBalance(
+			ctx,
+			&types.AccountBalanceRequest{
+				NetworkIdentifier: &types.NetworkIdentifier{
+					Network: constants.FujiNetwork,
+					SubNetworkIdentifier: &types.SubNetworkIdentifier{
+						Network: constants.PChain.String(),
+					},
+				},
+				AccountIdentifier: &types.AccountIdentifier{
+					Address: pChainAddr,
+					Metadata: map[string]interface{}{
+						"account_balance_v2": "true",
+					},
+				},
+				Currencies: []*types.Currency{
+					mapper.AtomicAvaxCurrency,
+				},
+			},
+		)
+
+		expected := &types.AccountBalanceResponse{
+			BlockIdentifier: &types.BlockIdentifier{
+				Index: int64(blockHeight),
+				Hash:  parsedBlock.BlockID.String(),
+			},
+			Balances: []*types.Amount{{
+				Value:    "2000000000",
+				Currency: mapper.AtomicAvaxCurrency,
+			}},
+		}
+
+		assert.Nil(t, err)
+		assert.Equal(t, expected, resp)
+		pChainMock.AssertExpectations(t)
+		parserMock.AssertExpectations(t)
+		glacierMock.AssertExpectations(t)
+	})
 }
 
 func TestAccountPendingRewardsBalance(t *testing.T) {
@@ -310,6 +404,7 @@ func TestAccountPendingRewardsBalance(t *testing.T) {
 		service.ModeOnline,
 		pChainMock,
 		parserMock,
+		nil,
 		avaxAssetID,
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
@@ -419,6 +514,7 @@ func TestAccountCoins(t *testing.T) {
 		service.ModeOnline,
 		pChainMock,
 		parserMock,
+		nil,
 		avaxAssetID,
 		pChainNetworkIdentifier,
 		avalancheNetworkID,

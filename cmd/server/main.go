@@ -130,10 +130,13 @@ func main() {
 		log.Fatal("unable to initialize p-chain indexer parser:", err)
 	}
 
+	glacierClient := client.NewGlacierClient(cfg.GlacierBaseURL, cfg.NetworkName)
+
 	pChainBackend, err := pchain.NewBackend(
 		cfg.Mode,
 		pChainClient,
 		pIndexerParser,
+		glacierClient,
 		avaxAssetID,
 		networkP,
 		cfg.avalancheNetworkID(),
