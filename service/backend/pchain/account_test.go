@@ -83,7 +83,7 @@ func TestAccountBalance(t *testing.T) {
 			Return([][]byte{utxo0Bytes, utxo1Bytes}, addr, utxo1Id, nil).Once()
 		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{addr}, "", pageSize, addr, utxo1Id).
 			Return([][]byte{utxo1Bytes}, addr, utxo1Id, nil).Once()
-		pChainMock.Mock.On("GetStake", ctx, []ids.ShortID{addr}).Return(map[ids.ID]uint64{}, [][]byte{stakeUtxoBytes}, nil).Once()
+		pChainMock.Mock.On("GetStake", ctx, []ids.ShortID{addr}, true).Return(map[ids.ID]uint64{}, [][]byte{stakeUtxoBytes}, nil).Once()
 
 		resp, err := backend.AccountBalance(
 			ctx,
@@ -178,7 +178,7 @@ func TestAccountBalance(t *testing.T) {
 		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Once()
 		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{addr}, "", pageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{}, addr, ids.Empty, nil).Once()
-		pChainMock.Mock.On("GetStake", ctx, []ids.ShortID{addr}).Return(map[ids.ID]uint64{}, [][]byte{}, nil)
+		pChainMock.Mock.On("GetStake", ctx, []ids.ShortID{addr}, true).Return(map[ids.ID]uint64{}, [][]byte{}, nil)
 		// return blockHeight + 1 to indicate a new block arrival
 		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight+1, nil).Once()
 

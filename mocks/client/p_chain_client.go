@@ -419,41 +419,41 @@ func (_m *PChainClient) GetRewardUTXOs(_a0 context.Context, _a1 *api.GetTxArgs, 
 	return r0, r1
 }
 
-// GetStake provides a mock function with given fields: ctx, addrs, options
-func (_m *PChainClient) GetStake(ctx context.Context, addrs []ids.ShortID, options ...rpc.Option) (map[ids.ID]uint64, [][]byte, error) {
+// GetStake provides a mock function with given fields: ctx, addrs, validatorsOnly, options
+func (_m *PChainClient) GetStake(ctx context.Context, addrs []ids.ShortID, validatorsOnly bool, options ...rpc.Option) (map[ids.ID]uint64, [][]byte, error) {
 	_va := make([]interface{}, len(options))
 	for _i := range options {
 		_va[_i] = options[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, addrs)
+	_ca = append(_ca, ctx, addrs, validatorsOnly)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
 	var r0 map[ids.ID]uint64
 	var r1 [][]byte
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, []ids.ShortID, ...rpc.Option) (map[ids.ID]uint64, [][]byte, error)); ok {
-		return rf(ctx, addrs, options...)
+	if rf, ok := ret.Get(0).(func(context.Context, []ids.ShortID, bool, ...rpc.Option) (map[ids.ID]uint64, [][]byte, error)); ok {
+		return rf(ctx, addrs, validatorsOnly, options...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []ids.ShortID, ...rpc.Option) map[ids.ID]uint64); ok {
-		r0 = rf(ctx, addrs, options...)
+	if rf, ok := ret.Get(0).(func(context.Context, []ids.ShortID, bool, ...rpc.Option) map[ids.ID]uint64); ok {
+		r0 = rf(ctx, addrs, validatorsOnly, options...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(map[ids.ID]uint64)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []ids.ShortID, ...rpc.Option) [][]byte); ok {
-		r1 = rf(ctx, addrs, options...)
+	if rf, ok := ret.Get(1).(func(context.Context, []ids.ShortID, bool, ...rpc.Option) [][]byte); ok {
+		r1 = rf(ctx, addrs, validatorsOnly, options...)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).([][]byte)
 		}
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, []ids.ShortID, ...rpc.Option) error); ok {
-		r2 = rf(ctx, addrs, options...)
+	if rf, ok := ret.Get(2).(func(context.Context, []ids.ShortID, bool, ...rpc.Option) error); ok {
+		r2 = rf(ctx, addrs, validatorsOnly, options...)
 	} else {
 		r2 = ret.Error(2)
 	}

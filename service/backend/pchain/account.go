@@ -416,8 +416,11 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.Short
 
 	var stakedUTXOBytes [][]byte
 	if fetchStaked {
-		// fetch staked outputs for addr
-		_, stakedUTXOBytes, err = b.pClient.GetStake(ctx, []ids.ShortID{addr})
+		// Fetch staked outputs for addr. We are setting validatorsOnly parameter to true in order to speed up the
+		// staked UTXO lookup.
+		// The tradeoff for using this parameter is that we only fetch UTXOs for validator staking and not for delegation.
+		// Effectively, we are assuming the balance lookups for staked amounts refer to validator staking only.
+		_, stakedUTXOBytes, err = b.pClient.GetStake(ctx, []ids.ShortID{addr}, true)
 		if err != nil {
 			return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get stake")
 		}
