@@ -3,8 +3,8 @@ module github.com/ava-labs/avalanche-rosetta
 go 1.19
 
 require (
-	github.com/ava-labs/avalanchego v1.10.0
-	github.com/ava-labs/coreth v0.12.0-rc.2
+	github.com/ava-labs/avalanchego v1.10.2
+	github.com/ava-labs/coreth v0.12.2-rc.0
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/stretchr/testify v1.8.1
@@ -92,8 +92,8 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/term v0.5.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	gonum.org/v1/gonum v0.11.0 // indirect
