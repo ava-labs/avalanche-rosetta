@@ -3,13 +3,14 @@ package pchain
 import (
 	"fmt"
 
-	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
+
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 type BlockTxDependencies map[ids.ID]*SingleTxDependency
