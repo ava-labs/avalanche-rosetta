@@ -11,6 +11,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"golang.org/x/crypto/sha3"
 
+	"github.com/ava-labs/coreth/core"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -376,11 +377,11 @@ func (s ConstructionService) ConstructionParse(
 		tx.ChainID = s.config.ChainID
 		tx.Currency = wrappedTx.Currency
 
-		msg, err := t.AsMessage(s.config.Signer(), nil)
+		msg, err := core.TransactionToMessage(&t, s.config.Signer(), nil)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err)
 		}
-		tx.From = msg.From().Hex()
+		tx.From = msg.From.Hex()
 	}
 
 	metadata := &parseMetadata{

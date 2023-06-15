@@ -11,6 +11,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/ava-labs/coreth/core"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -35,7 +36,7 @@ var (
 func Transaction(
 	header *ethtypes.Header,
 	tx *ethtypes.Transaction,
-	msg *ethtypes.Message,
+	msg *core.Message,
 	receipt *ethtypes.Receipt,
 	trace *clientTypes.Call,
 	flattenedTrace []*clientTypes.FlatCall,
@@ -45,11 +46,11 @@ func Transaction(
 	includeUnknownTokens bool,
 ) (*types.Transaction, error) {
 	ops := []*types.Operation{}
-	sender := msg.From()
+	sender := msg.From
 	feeReceiver := &header.Coinbase
 
 	txFee := new(big.Int).SetUint64(receipt.GasUsed)
-	txFee = txFee.Mul(txFee, msg.GasPrice())
+	txFee = txFee.Mul(txFee, msg.GasPrice)
 
 	feeOps := []*types.Operation{
 		{
