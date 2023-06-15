@@ -417,7 +417,7 @@ func (b *Backend) fetchUTXOsAndStakedOutputs(ctx context.Context, addr ids.Short
 	var stakedUTXOBytes [][]byte
 	if fetchStaked {
 		// fetch staked outputs for addr
-		_, stakedUTXOBytes, err = b.pClient.GetStake(ctx, []ids.ShortID{addr})
+		_, stakedUTXOBytes, err = b.pClient.GetStake(ctx, []ids.ShortID{addr}, false)
 		if err != nil {
 			return 0, nil, nil, service.WrapError(service.ErrInvalidInput, "unable to get stake")
 		}

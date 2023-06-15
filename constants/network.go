@@ -16,6 +16,6 @@ const (
 )
 
 var (
-	MainnetAP5Activation = params.AvalancheMainnetChainConfig.ApricotPhase5BlockTimestamp
-	FujiAP5Activation    = params.AvalancheFujiChainConfig.ApricotPhase5BlockTimestamp
+	MainnetAP5Activation = *params.AvalancheMainnetChainConfig.ApricotPhase5BlockTimestamp
+	FujiAP5Activation    = *params.AvalancheFujiChainConfig.ApricotPhase5BlockTimestamp
 )

@@ -18,6 +18,7 @@ cat <<EOF > /app/avalanchego-config.json
   "db-dir": "/data",
   "chain-config-dir": "/app/configs/chains",
   "index-enabled": true,
+  "http-allowed-hosts": ["*"],
   "network-require-validator-to-connect": true
 }
 EOF

@@ -10,6 +10,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
 
+	"github.com/ava-labs/coreth/core"
 	corethTypes "github.com/ava-labs/coreth/core/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
@@ -217,7 +218,7 @@ func (s *BlockService) fetchTransaction(
 	trace *client.Call,
 	flattened []*client.FlatCall,
 ) (*types.Transaction, *types.Error) {
-	msg, err := tx.AsMessage(s.config.Signer(), header.BaseFee)
+	msg, err := core.TransactionToMessage(tx, s.config.Signer(), header.BaseFee)
 	if err != nil {
 		return nil, WrapError(ErrClientError, err)
 	}
@@ -227,7 +228,7 @@ func (s *BlockService) fetchTransaction(
 		return nil, WrapError(ErrClientError, err)
 	}
 
-	transaction, err := mapper.Transaction(header, tx, &msg, receipt, trace, flattened, s.client, s.config.IsAnalyticsMode(), s.config.TokenWhiteList, s.config.IndexUnknownTokens)
+	transaction, err := mapper.Transaction(header, tx, msg, receipt, trace, flattened, s.client, s.config.IsAnalyticsMode(), s.config.TokenWhiteList, s.config.IndexUnknownTokens)
 	if err != nil {
 		return nil, WrapError(ErrInternalError, err)
 	}

@@ -6,6 +6,7 @@
   "height": 3,
   "transactions": [
     {
+      "id": "2gZCB2pSLarX8YRsYkxScLZr18PNNVnoJCj1jDh2MUTBCYUP4x",
       "unsignedTx": {
         "networkID": 1,
         "blockchainID": "11111111111111111111111111111111LpoYY",
