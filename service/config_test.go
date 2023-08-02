@@ -1,10 +1,10 @@
 package service
 
 import (
-	"math/big"
 	"testing"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/params"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +13,7 @@ func TestConfig(t *testing.T) {
 	t.Run("online", func(t *testing.T) {
 		cfg := Config{
 			Mode:      "online",
-			ChainID:   big.NewInt(1),
+			ChainID:   params.AvalancheMainnetChainID,
 			NetworkID: &types.NetworkIdentifier{},
 		}
 
@@ -24,7 +24,7 @@ func TestConfig(t *testing.T) {
 	t.Run("offline", func(t *testing.T) {
 		cfg := Config{
 			Mode:      "offline",
-			ChainID:   big.NewInt(1),
+			ChainID:   params.AvalancheMainnetChainID,
 			NetworkID: &types.NetworkIdentifier{},
 		}
 
@@ -34,8 +34,8 @@ func TestConfig(t *testing.T) {
 
 	t.Run("signer", func(t *testing.T) {
 		cfg := Config{
-			ChainID: big.NewInt(1),
+			ChainID: params.AvalancheMainnetChainID,
 		}
-		assert.IsType(t, ethtypes.NewLondonSigner(big.NewInt(1)), cfg.Signer())
+		assert.IsType(t, ethtypes.NewLondonSigner(params.AvalancheMainnetChainID), cfg.Signer())
 	})
 }

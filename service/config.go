@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
+	"github.com/ava-labs/coreth/params"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
@@ -57,5 +58,16 @@ func (c Config) IsTokenListEmpty() bool {
 
 // Signer returns an eth signer object for a given chain
 func (c Config) Signer() ethtypes.Signer {
+	if c.ChainID != nil {
+		if c.ChainID.Cmp(params.AvalancheMainnetChainID) == 0 {
+			return ethtypes.LatestSigner(params.AvalancheMainnetChainConfig)
+		}
+		if c.ChainID.Cmp(params.AvalancheFujiChainID) == 0 {
+			return ethtypes.LatestSigner(params.AvalancheFujiChainConfig)
+		}
+		if c.ChainID.Cmp(params.AvalancheLocalChainID) == 0 {
+			return ethtypes.LatestSigner(params.AvalancheLocalChainConfig)
+		}
+	}
 	return ethtypes.LatestSignerForChainID(c.ChainID)
 }
