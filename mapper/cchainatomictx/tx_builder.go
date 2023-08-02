@@ -147,8 +147,7 @@ func buildOuts(matches []*parser.Match, avaxAssetID ids.ID) []evm.EVMOutput {
 			AssetID: avaxAssetID,
 		})
 	}
-
-	evm.SortEVMOutputs(outs)
+	utils.Sort(outs)
 
 	return outs
 }
