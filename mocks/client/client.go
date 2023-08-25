@@ -5,10 +5,7 @@ package client
 import (
 	big "math/big"
 
-	api "github.com/ava-labs/avalanchego/api"
-
 	client "github.com/ava-labs/avalanche-rosetta/client"
-
 	common "github.com/ethereum/go-ethereum/common"
 
 	context "context"
@@ -211,37 +208,55 @@ func (_m *Client) EstimateGas(_a0 context.Context, _a1 interfaces.CallMsg) (uint
 	return r0, r1
 }
 
-// GetAtomicUTXOs provides a mock function with given fields: ctx, addrs, sourceChain, limit, startAddress, startUTXOID
-func (_m *Client) GetAtomicUTXOs(ctx context.Context, addrs []string, sourceChain string, limit uint32, startAddress string, startUTXOID string) ([][]byte, api.Index, error) {
-	ret := _m.Called(ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+// GetAtomicUTXOs provides a mock function with given fields: ctx, addrs, sourceChain, limit, startAddress, startUTXOID, options
+func (_m *Client) GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, sourceChain string, limit uint32, startAddress ids.ShortID, startUTXOID ids.ID, options ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error) {
+	_va := make([]interface{}, len(options))
+	for _i := range options {
+		_va[_i] = options[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 [][]byte
-	var r1 api.Index
-	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, []string, string, uint32, string, string) ([][]byte, api.Index, error)); ok {
-		return rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+	var r1 ids.ShortID
+	var r2 ids.ID
+	var r3 error
+	if rf, ok := ret.Get(0).(func(context.Context, []ids.ShortID, string, uint32, ids.ShortID, ids.ID, ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error)); ok {
+		return rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID, options...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []string, string, uint32, string, string) [][]byte); ok {
-		r0 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+	if rf, ok := ret.Get(0).(func(context.Context, []ids.ShortID, string, uint32, ids.ShortID, ids.ID, ...rpc.Option) [][]byte); ok {
+		r0 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID, options...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([][]byte)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []string, string, uint32, string, string) api.Index); ok {
-		r1 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+	if rf, ok := ret.Get(1).(func(context.Context, []ids.ShortID, string, uint32, ids.ShortID, ids.ID, ...rpc.Option) ids.ShortID); ok {
+		r1 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID, options...)
 	} else {
-		r1 = ret.Get(1).(api.Index)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(ids.ShortID)
+		}
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, []string, string, uint32, string, string) error); ok {
-		r2 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID)
+	if rf, ok := ret.Get(2).(func(context.Context, []ids.ShortID, string, uint32, ids.ShortID, ids.ID, ...rpc.Option) ids.ID); ok {
+		r2 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID, options...)
 	} else {
-		r2 = ret.Error(2)
+		if ret.Get(2) != nil {
+			r2 = ret.Get(2).(ids.ID)
+		}
 	}
 
-	return r0, r1, r2
+	if rf, ok := ret.Get(3).(func(context.Context, []ids.ShortID, string, uint32, ids.ShortID, ids.ID, ...rpc.Option) error); ok {
+		r3 = rf(ctx, addrs, sourceChain, limit, startAddress, startUTXOID, options...)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
 }
 
 // GetBlockchainID provides a mock function with given fields: _a0, _a1, _a2
@@ -391,25 +406,32 @@ func (_m *Client) IsBootstrapped(_a0 context.Context, _a1 string, _a2 ...rpc.Opt
 	return r0, r1
 }
 
-// IssueTx provides a mock function with given fields: ctx, txBytes
-func (_m *Client) IssueTx(ctx context.Context, txBytes []byte) (ids.ID, error) {
-	ret := _m.Called(ctx, txBytes)
+// IssueTx provides a mock function with given fields: ctx, txBytes, options
+func (_m *Client) IssueTx(ctx context.Context, txBytes []byte, options ...rpc.Option) (ids.ID, error) {
+	_va := make([]interface{}, len(options))
+	for _i := range options {
+		_va[_i] = options[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, txBytes)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 ids.ID
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []byte) (ids.ID, error)); ok {
-		return rf(ctx, txBytes)
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, ...rpc.Option) (ids.ID, error)); ok {
+		return rf(ctx, txBytes, options...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []byte) ids.ID); ok {
-		r0 = rf(ctx, txBytes)
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, ...rpc.Option) ids.ID); ok {
+		r0 = rf(ctx, txBytes, options...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(ids.ID)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []byte) error); ok {
-		r1 = rf(ctx, txBytes)
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, ...rpc.Option) error); ok {
+		r1 = rf(ctx, txBytes, options...)
 	} else {
 		r1 = ret.Error(1)
 	}

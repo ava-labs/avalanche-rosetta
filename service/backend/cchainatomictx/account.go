@@ -3,9 +3,11 @@ package cchainatomictx
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 
-	"github.com/ava-labs/avalanchego/api"
+	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -111,15 +113,34 @@ func (b *Backend) getAccountCoins(ctx context.Context, address string) (*types.B
 	return blockIdentifier, coins, nil
 }
 
-func (b *Backend) fetchCoinsFromChain(ctx context.Context, address string, sourceChain constants.ChainIDAlias) ([]*types.Coin, *types.Error) {
-	var coins []*types.Coin
+func (b *Backend) fetchCoinsFromChain(ctx context.Context, prefixAddress string, sourceChain constants.ChainIDAlias) ([]*types.Coin, *types.Error) {
+	var (
+		coins []*types.Coin
 
-	// Used for pagination
-	var lastUtxoIndex api.Index
+		// Used for pagination
+		lastUtxoAddress ids.ShortID
+		lastUtxoID      ids.ID
+	)
 
+	// Parse [prefixAddress]
+	chainIDAlias, _, addressBytes, err := address.Parse(prefixAddress)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+	if chainIDAlias != constants.CChain.String() {
+		return nil, service.WrapError(
+			service.ErrInternalError,
+			fmt.Errorf("invalid ChainID alias wanted=%s have=%s", constants.CChain.String(), chainIDAlias),
+		)
+	}
+	addr, err := ids.ToShortID(addressBytes)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+
+	// GetUTXOs controlled by [addr]
 	for {
-		// GetUTXOs controlled by addr
-		utxos, newUtxoIndex, err := b.cClient.GetAtomicUTXOs(ctx, []string{address}, sourceChain.String(), b.getUTXOsPageSize, lastUtxoIndex.Address, lastUtxoIndex.UTXO)
+		utxos, newUtxoAddress, newUtxoID, err := b.cClient.GetAtomicUTXOs(ctx, []ids.ShortID{addr}, sourceChain.String(), b.getUTXOsPageSize, lastUtxoAddress, lastUtxoID)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, "unable to get UTXOs")
 		}
@@ -137,7 +158,8 @@ func (b *Backend) fetchCoinsFromChain(ctx context.Context, address string, sourc
 			break
 		}
 
-		lastUtxoIndex = newUtxoIndex
+		lastUtxoAddress = newUtxoAddress
+		lastUtxoID = newUtxoID
 	}
 
 	return coins, nil

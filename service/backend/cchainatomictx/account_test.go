@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	ethtypes "github.com/ava-labs/coreth/core/types"
@@ -25,6 +25,14 @@ type utxo struct {
 	amount uint64
 }
 
+func (u *utxo) InputID() ids.ID {
+	uid, err := avax.UTXOIDFromString(u.id)
+	if err != nil {
+		panic(err)
+	}
+	return uid.InputID()
+}
+
 var utxos = []utxo{
 	{"23CLURk1Czf1aLui1VdcuWSiDeFskfp3Sn8TQG7t6NKfeQRYDj:2", 1_000_000},
 	{"2QmMXKS6rKQMnEh2XYZ4ZWCJmy8RpD3LyVZWxBG25t4N1JJqxY:1", 1_500_000},
@@ -40,6 +48,10 @@ func TestAccountBalance(t *testing.T) {
 	evmMock := &mocks.Client{}
 	backend := NewBackend(evmMock, ids.Empty, avalancheNetworkID)
 	accountAddress := "C-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl"
+	_, _, addressBytes, err := address.Parse(accountAddress)
+	assert.Nil(t, err)
+	addr, err := ids.ToShortID(addressBytes)
+	assert.Nil(t, err)
 
 	t.Run("C-chain atomic tx balance is sum of UTXOs", func(t *testing.T) {
 		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
@@ -50,11 +62,11 @@ func TestAccountBalance(t *testing.T) {
 		var nilBigInt *big.Int
 		evmMock.On("HeaderByNumber", mock.Anything, nilBigInt).Return(blockHeader, nil).Twice()
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.PChain.String(), backend.getUTXOsPageSize, "", "").
-			Return(utxos, api.Index{}, nil)
+			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
+			Return(utxos, ids.ShortEmpty, ids.Empty, nil)
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.XChain.String(), backend.getUTXOsPageSize, "", "").
-			Return([][]byte{}, api.Index{}, nil)
+			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
+			Return(nil, ids.ShortEmpty, ids.Empty, nil)
 
 		resp, apiErr := backend.AccountBalance(context.Background(), &types.AccountBalanceRequest{
 			NetworkIdentifier: &types.NetworkIdentifier{},
@@ -78,6 +90,10 @@ func TestAccountCoins(t *testing.T) {
 	// changing page size to 2 to test pagination as well
 	backend.getUTXOsPageSize = 2
 	accountAddress := "C-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl"
+	_, _, addressBytes, err := address.Parse(accountAddress)
+	assert.Nil(t, err)
+	addr, err := ids.ToShortID(addressBytes)
+	assert.Nil(t, err)
 
 	t.Run("C-chain atomic tx coins returns UTXOs", func(t *testing.T) {
 		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
@@ -88,17 +104,18 @@ func TestAccountCoins(t *testing.T) {
 		var nilBigInt *big.Int
 		evmMock.On("HeaderByNumber", mock.Anything, nilBigInt).Return(blockHeader, nil).Twice()
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.PChain.String(), backend.getUTXOsPageSize, "", "").
-			Return([][]byte{utxo0Bytes, utxo1Bytes}, api.Index{Address: accountAddress, UTXO: utxos[1].id}, nil)
+			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{utxo0Bytes, utxo1Bytes}, addr, utxos[1].InputID(), nil)
+		assert.Nil(t, err)
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.PChain.String(), backend.getUTXOsPageSize, accountAddress, utxos[1].id).
-			Return([][]byte{utxo2Bytes, utxo3Bytes}, api.Index{Address: accountAddress, UTXO: utxos[3].id}, nil)
+			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, addr, utxos[1].InputID()).
+			Return([][]byte{utxo2Bytes, utxo3Bytes}, addr, utxos[3].InputID(), nil)
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.PChain.String(), backend.getUTXOsPageSize, accountAddress, utxos[3].id).
-			Return([][]byte{utxo3Bytes}, api.Index{Address: accountAddress, UTXO: utxos[3].id}, nil)
+			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, addr, utxos[3].InputID()).
+			Return([][]byte{utxo3Bytes}, addr, utxos[3].InputID(), nil)
 		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []string{accountAddress}, constants.XChain.String(), backend.getUTXOsPageSize, "", "").
-			Return([][]byte{}, api.Index{}, nil)
+			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
+			Return(nil, ids.ShortEmpty, ids.Empty, nil)
 
 		resp, apiErr := backend.AccountCoins(context.Background(), &types.AccountCoinsRequest{
 			NetworkIdentifier: &types.NetworkIdentifier{},

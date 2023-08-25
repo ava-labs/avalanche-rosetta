@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
-	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/rpc"
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/interfaces"
 	"github.com/ava-labs/coreth/plugin/evm"
@@ -39,8 +39,8 @@ type Client interface {
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	GetContractInfo(ethcommon.Address, bool) (string, uint8, error)
 	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
-	IssueTx(ctx context.Context, txBytes []byte) (ids.ID, error)
-	GetAtomicUTXOs(ctx context.Context, addrs []string, sourceChain string, limit uint32, startAddress, startUTXOID string) ([][]byte, api.Index, error)
+	IssueTx(ctx context.Context, txBytes []byte, options ...rpc.Option) (ids.ID, error)
+	GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, sourceChain string, limit uint32, startAddress ids.ShortID, startUTXOID ids.ID, options ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error)
 	EstimateBaseFee(ctx context.Context) (*big.Int, error)
 }
 

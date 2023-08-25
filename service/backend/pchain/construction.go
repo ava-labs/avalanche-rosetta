@@ -8,6 +8,7 @@ import (
 	"math/big"
 
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -308,8 +309,8 @@ func (b *Backend) ConstructionSubmit(
 }
 
 // IssueTx broadcasts given transaction on P-chain
-func (b *Backend) IssueTx(ctx context.Context, txByte []byte) (ids.ID, error) {
-	return b.pClient.IssueTx(ctx, txByte)
+func (b *Backend) IssueTx(ctx context.Context, txByte []byte, options ...rpc.Option) (ids.ID, error) {
+	return b.pClient.IssueTx(ctx, txByte, options...)
 }
 
 func (b *Backend) parsePayloadTxFromString(transaction string) (*common.RosettaTx, error) {
