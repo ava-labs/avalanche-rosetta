@@ -128,10 +128,10 @@ func (b *Backend) fetchCoinsFromChain(ctx context.Context, prefixAddress string,
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
-		if chainIDAlias != sourceChain.String() {
+		if chainIDAlias != constants.CChain.String() {
 			return nil, service.WrapError(
 				service.ErrInternalError,
-				fmt.Errorf("invalid ChainID alias wanted=%s have=%s", sourceChain.String(), chainIDAlias),
+				fmt.Errorf("invalid ChainID alias wanted=%s have=%s", constants.CChain.String(), chainIDAlias),
 			)
 		}
 		addr, err := ids.ToShortID(addressBytes)
