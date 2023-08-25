@@ -122,22 +122,24 @@ func (b *Backend) fetchCoinsFromChain(ctx context.Context, prefixAddress string,
 		lastUtxoID      ids.ID
 	)
 
+	// Parse [prefixAddress]
+	chainIDAlias, _, addressBytes, err := address.Parse(prefixAddress)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+	if chainIDAlias != constants.CChain.String() {
+		return nil, service.WrapError(
+			service.ErrInternalError,
+			fmt.Errorf("invalid ChainID alias wanted=%s have=%s", constants.CChain.String(), chainIDAlias),
+		)
+	}
+	addr, err := ids.ToShortID(addressBytes)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+
+	// GetUTXOs controlled by [addr]
 	for {
-		// GetUTXOs controlled by addr
-		chainIDAlias, _, addressBytes, err := address.Parse(prefixAddress)
-		if err != nil {
-			return nil, service.WrapError(service.ErrInternalError, err)
-		}
-		if chainIDAlias != constants.CChain.String() {
-			return nil, service.WrapError(
-				service.ErrInternalError,
-				fmt.Errorf("invalid ChainID alias wanted=%s have=%s", constants.CChain.String(), chainIDAlias),
-			)
-		}
-		addr, err := ids.ToShortID(addressBytes)
-		if err != nil {
-			return nil, service.WrapError(service.ErrInternalError, err)
-		}
 		utxos, newUtxoAddress, newUtxoID, err := b.cClient.GetAtomicUTXOs(ctx, []ids.ShortID{addr}, sourceChain.String(), b.getUTXOsPageSize, lastUtxoAddress, lastUtxoID)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, "unable to get UTXOs")
