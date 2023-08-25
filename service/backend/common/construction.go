@@ -8,6 +8,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
+	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
@@ -328,7 +329,7 @@ func HashTx(rosettaTx *RosettaTx) (*types.TransactionIdentifierResponse, *types.
 
 // TransactionIssuer implements chain specific transaction submission logic
 type TransactionIssuer interface {
-	IssueTx(ctx context.Context, txByte []byte) (ids.ID, error)
+	IssueTx(ctx context.Context, txByte []byte, options ...rpc.Option) (ids.ID, error)
 }
 
 // SubmitTx broadcasts given Rosetta tx on chain and returns the transaction id.
