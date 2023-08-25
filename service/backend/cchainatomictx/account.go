@@ -3,6 +3,7 @@ package cchainatomictx
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -112,7 +113,7 @@ func (b *Backend) getAccountCoins(ctx context.Context, address string) (*types.B
 	return blockIdentifier, coins, nil
 }
 
-func (b *Backend) fetchCoinsFromChain(ctx context.Context, saddress string, sourceChain constants.ChainIDAlias) ([]*types.Coin, *types.Error) {
+func (b *Backend) fetchCoinsFromChain(ctx context.Context, prefixAddress string, sourceChain constants.ChainIDAlias) ([]*types.Coin, *types.Error) {
 	var (
 		coins []*types.Coin
 
@@ -123,11 +124,17 @@ func (b *Backend) fetchCoinsFromChain(ctx context.Context, saddress string, sour
 
 	for {
 		// GetUTXOs controlled by addr
-		_, _, baddr, err := address.Parse(saddress)
+		chainIDAlias, _, addressBytes, err := address.Parse(prefixAddress)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
-		addr, err := ids.ToShortID(baddr)
+		if chainIDAlias != sourceChain.String() {
+			return nil, service.WrapError(
+				service.ErrInternalError,
+				fmt.Errorf("invalid ChainID alias wanted=%s have=%s", sourceChain.String(), chainIDAlias),
+			)
+		}
+		addr, err := ids.ToShortID(addressBytes)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
