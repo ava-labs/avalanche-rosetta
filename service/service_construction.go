@@ -166,12 +166,12 @@ func (s ConstructionService) ConstructionMetadata(
 				}
 
 				gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
-			} else if input.MethodArgs != nil {
+			} else if len(input.ContractAddress) > 0 {
 				contractData, err := hexutil.Decode(input.ContractData)
 				if err != nil {
 					return nil, WrapError(ErrClientError, err)
 				}
-				gasLimit, err = s.getContractCallGasLimit(ctx, input.ContractAddress, input.From, contractData)
+				gasLimit, err = s.getGenericContractCallGasLimit(ctx, input.ContractAddress, input.From, contractData)
 			} else {
 				gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
 			}
@@ -1182,6 +1182,24 @@ func (s ConstructionService) getBridgeUnwrapTransferGasLimit(
 	chainID := big.NewInt(defaultUnwrapChainID)
 	data := generateBridgeUnwrapTransferData(value, chainID)
 
+	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+		From: ethcommon.HexToAddress(fromAddress),
+		To:   &contractAddress,
+		Data: data,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return gasLimit, nil
+}
+
+func (s ConstructionService) getGenericContractCallGasLimit(
+	ctx context.Context,
+	toAddress string,
+	fromAddress string,
+	data []byte,
+) (uint64, error) {
+	contractAddress := ethcommon.HexToAddress(toAddress)
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
 		From: ethcommon.HexToAddress(fromAddress),
 		To:   &contractAddress,
