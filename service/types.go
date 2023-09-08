@@ -22,6 +22,10 @@ type options struct {
 	Nonce                  *big.Int         `json:"nonce,omitempty"`
 	Currency               *types.Currency  `json:"currency,omitempty"`
 	Metadata               *metadataOptions `json:"metadata,omitempty"`
+	ContractAddress        string           `json:"contract_address,omitempty"`
+	MethodSignature        string           `json:"method_signature,omitempty"`
+	MethodArgs             interface{}      `json:"method_args,omitempty"`
+	ContractData           string           `json:"data,omitempty"`
 }
 
 type optionsWire struct {
@@ -111,10 +115,13 @@ func (o *options) UnmarshalJSON(data []byte) error {
 }
 
 type metadata struct {
-	Nonce          uint64   `json:"nonce"`
-	GasPrice       *big.Int `json:"gas_price"`
-	GasLimit       uint64   `json:"gas_limit"`
-	UnwrapBridgeTx bool     `json:"bridge_unwrap"`
+	Nonce           uint64      `json:"nonce"`
+	GasPrice        *big.Int    `json:"gas_price"`
+	GasLimit        uint64      `json:"gas_limit"`
+	UnwrapBridgeTx  bool        `json:"bridge_unwrap"`
+	ContractData    string      `json:"data,omitempty"`
+	MethodSignature string      `json:"method_signature,omitempty"`
+	MethodArgs      interface{} `json:"method_args,omitempty"`
 }
 
 type metadataWire struct {

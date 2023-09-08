@@ -165,6 +165,12 @@ func (s ConstructionService) ConstructionMetadata(
 				}
 
 				gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
+			} else if input.MethodArgs != nil {
+				contractData, err := hexutil.Decode(input.ContractData)
+				if err != nil {
+					return nil, WrapError(ErrClientError, err)
+				}
+				gasLimit, err = s.getContractCallGasLimit(ctx, input.ContractAddress, input.From, contractData)
 			} else {
 				gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
 			}
@@ -177,9 +183,12 @@ func (s ConstructionService) ConstructionMetadata(
 	}
 
 	metadata := &metadata{
-		Nonce:    nonce,
-		GasPrice: gasPrice,
-		GasLimit: gasLimit,
+		Nonce:           nonce,
+		GasPrice:        gasPrice,
+		GasLimit:        gasLimit,
+		ContractData:    input.ContractData,
+		MethodSignature: input.MethodSignature,
+		MethodArgs:      input.MethodArgs,
 	}
 
 	if input.Metadata != nil {
@@ -577,6 +586,8 @@ func (s ConstructionService) ConstructionPayloads(
 
 	if isUnwrapRequest(req.Metadata) {
 		tx, unsignedTx, checkFrom, wrappedErr = s.createUnwrapPayload(req)
+	} else if isGenericContractCall(req.Metadata) {
+		tx, unsignedTx, checkFrom, wrappedErr = s.createGenericContractCallPayload(req)
 	} else {
 		tx, unsignedTx, checkFrom, wrappedErr = s.createTransferPayload(req)
 	}
@@ -814,6 +825,15 @@ func (s ConstructionService) ConstructionPreprocess(
 			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
 		preprocessOptions, typesError = s.createUnwrapPreprocessOptions(operationDescriptions, req)
+		if typesError != nil {
+			return nil, typesError
+		}
+	} else if isGenericContractCall(req.Metadata) {
+		operationDescriptions, err = s.CreateContractCallOperationDescription(req.Operations)
+		if err != nil {
+			return nil, WrapError(ErrInvalidInput, err.Error())
+		}
+		preprocessOptions, typesError = s.createContractCallPreprocessOptions(operationDescriptions, req)
 		if typesError != nil {
 			return nil, typesError
 		}
@@ -1172,6 +1192,17 @@ func (s ConstructionService) getBridgeUnwrapTransferGasLimit(
 	return gasLimit, nil
 }
 
+func (s ConstructionService) createGenericContractCallPayload(req *types.ConstructionPayloadsRequest) (*ethtypes.Transaction, *transaction, *string, *types.Error) {
+
+}
+
+func (s ConstructionService) createContractCallPreprocessOptions(descriptions []*parser.OperationDescription, req *types.ConstructionPreprocessRequest) (*options, *types.Error) {
+	//data, err := constructContractCallDataGeneric(methodSigStringObj, req.Metadata["method_args"])
+	//if err != nil {
+	//	return err
+	//}
+}
+
 func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	to := ethcommon.HexToAddress(toAddress)
 	methodID := getMethodID(transferFnSignature)
@@ -1234,6 +1265,10 @@ func isUnwrapRequest(metadata map[string]interface{}) bool {
 	if isUnwrap, ok := metadata["bridge_unwrap"]; ok {
 		return isUnwrap.(bool)
 	}
+	return false
+}
+
+func isGenericContractCall(metadata map[string]interface{}) bool {
 	return false
 }
 
