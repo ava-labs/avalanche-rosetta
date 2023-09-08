@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"reflect"
 
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
@@ -829,11 +830,11 @@ func (s ConstructionService) ConstructionPreprocess(
 			return nil, typesError
 		}
 	} else if isGenericContractCall(req.Metadata) {
-		operationDescriptions, err = s.CreateContractCallOperationDescription(req.Operations)
+		operationDescriptions, err = s.CreateGenericContractCallOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
-		preprocessOptions, typesError = s.createContractCallPreprocessOptions(operationDescriptions, req)
+		preprocessOptions, typesError = s.createGenericContractCallPreprocessOptions(operationDescriptions, req)
 		if typesError != nil {
 			return nil, typesError
 		}
@@ -1196,11 +1197,111 @@ func (s ConstructionService) createGenericContractCallPayload(req *types.Constru
 
 }
 
-func (s ConstructionService) createContractCallPreprocessOptions(descriptions []*parser.OperationDescription, req *types.ConstructionPreprocessRequest) (*options, *types.Error) {
-	//data, err := constructContractCallDataGeneric(methodSigStringObj, req.Metadata["method_args"])
-	//if err != nil {
-	//	return err
-	//}
+func (s ConstructionService) createGenericContractCallPreprocessOptions(
+	operationDescriptions []*parser.OperationDescription,
+	req *types.ConstructionPreprocessRequest,
+) (*options, *types.Error) {
+	descriptions := &parser.Descriptions{
+		OperationDescriptions: operationDescriptions,
+		ErrUnmatched:          true,
+	}
+
+	matches, err := parser.MatchOperations(descriptions, req.Operations)
+	if err != nil {
+		return nil, WrapError(ErrInvalidInput, "unclear intent")
+	}
+
+	fromOp, _ := matches[0].First()
+	fromAddress := fromOp.Account.Address
+	toOp, amount := matches[1].First()
+	toAddress := toOp.Account.Address
+
+	fromCurrency := fromOp.Amount.Currency
+
+	checkFrom, ok := ChecksumAddress(fromAddress)
+	if !ok {
+		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", fromAddress))
+	}
+	checkTo, ok := ChecksumAddress(toAddress)
+	if !ok {
+		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
+	}
+
+	v, _ := req.Metadata["method_signature"]
+	methodSigStringObj, ok := v.(string)
+	if !ok {
+		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid method signature string", v))
+	}
+
+	data, err := constructContractCallDataGeneric(methodSigStringObj, req.Metadata["method_args"])
+	if err != nil {
+		return nil, WrapError(ErrInvalidInput, err.Error())
+	}
+
+	return &options{
+		From:                   checkFrom,
+		To:                     checkTo,
+		Value:                  amount,
+		SuggestedFeeMultiplier: req.SuggestedFeeMultiplier,
+		Currency:               fromCurrency,
+		ContractAddress:        checkTo,
+		ContractData:           hexutil.Encode(data),
+		MethodSignature:        methodSigStringObj,
+		MethodArgs:             req.Metadata["method_args"],
+	}, nil
+}
+
+func (s ConstructionService) CreateGenericContractCallOperationDescription(operations []*types.Operation) ([]*parser.OperationDescription, error) {
+	if len(operations) != 2 {
+		return nil, fmt.Errorf("invalid number of operations")
+	}
+
+	firstCurrency := operations[0].Amount.Currency
+	secondCurrency := operations[1].Amount.Currency
+	if firstCurrency == nil || secondCurrency == nil {
+		return nil, fmt.Errorf("invalid currency on operation")
+	}
+	if !reflect.DeepEqual(firstCurrency, secondCurrency) {
+		return nil, fmt.Errorf("from and to currencies are not equal")
+	}
+
+	const base = 10
+	i := new(big.Int)
+	i.SetString(operations[0].Amount.Value, base)
+	j := new(big.Int)
+	j.SetString(operations[1].Amount.Value, base)
+	if i.Cmp(big.NewInt(0)) == 0 {
+		if j.Cmp(big.NewInt(0)) != 0 {
+			return nil, fmt.Errorf("for generic call both values should be zero")
+		}
+	}
+
+	return s.createOperationDescriptionContractCall(), nil
+}
+
+func (s ConstructionService) createOperationDescriptionContractCall() []*parser.OperationDescription {
+	return []*parser.OperationDescription{
+		{
+			Type: mapper.OpCall,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists: true,
+				Sign:   parser.AnyAmountSign,
+			},
+		},
+		{
+			Type: mapper.OpCall,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists: true,
+				Sign:   parser.AnyAmountSign,
+			},
+		},
+	}
 }
 
 func generateErc20TransferData(toAddress string, value *big.Int) []byte {
@@ -1269,6 +1370,11 @@ func isUnwrapRequest(metadata map[string]interface{}) bool {
 }
 
 func isGenericContractCall(metadata map[string]interface{}) bool {
+	// TODO: how to diff generic contract call from erc20 contract call ?
+	_, ok := metadata["method_signature"]
+	if ok {
+		return true
+	}
 	return false
 }
 
