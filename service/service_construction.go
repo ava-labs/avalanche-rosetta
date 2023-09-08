@@ -798,6 +798,85 @@ func (s ConstructionService) createUnwrapPayload(
 	return tx, unsignedTx, &checkFrom, nil
 }
 
+func (s ConstructionService) createGenericContractCallPayload(req *types.ConstructionPayloadsRequest) (*ethtypes.Transaction, *transaction, *string, *types.Error) {
+	operationDescriptions, err := s.CreateGenericContractCallOperationDescription(req.Operations)
+	if err != nil {
+		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
+	}
+
+	descriptions := &parser.Descriptions{
+		OperationDescriptions: operationDescriptions,
+		ErrUnmatched:          true,
+	}
+
+	matches, err := parser.MatchOperations(descriptions, req.Operations)
+	if err != nil {
+		return nil, nil, nil, WrapError(ErrInvalidInput, "unclear intent")
+	}
+
+	fromOp, amount := matches[0].First()
+	fromAddress := fromOp.Account.Address
+	fromCurrency := fromOp.Amount.Currency
+	toOp, amount := matches[1].First()
+	toAddress := toOp.Account.Address
+
+	// op match will return a negative amount since it's from a balance losing funds
+	amount = new(big.Int).Neg(amount)
+
+	checkFrom, ok := ChecksumAddress(fromAddress)
+	if !ok {
+		return nil, nil, nil, WrapError(
+			ErrInvalidInput,
+			fmt.Errorf("%s is not a valid address", fromAddress),
+		)
+	}
+	checkTo, ok := ChecksumAddress(toAddress)
+	if !ok {
+		return nil, nil, nil, WrapError(
+			ErrInvalidInput,
+			fmt.Errorf("%s is not a valid address", checkTo),
+		)
+	}
+
+	var metadata metadata
+	if err := mapper.UnmarshalJSONMap(req.Metadata, &metadata); err != nil {
+		return nil, nil, nil, WrapError(ErrInvalidInput, err)
+	}
+
+	sendToAddress := ethcommon.HexToAddress(checkTo)
+	transferData, err := hexutil.Decode(metadata.ContractData)
+	if err != nil {
+		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
+	}
+
+	nonce := metadata.Nonce
+	gasPrice := metadata.GasPrice
+	gasLimit := metadata.GasLimit
+	chainID := s.config.ChainID
+
+	tx := ethtypes.NewTransaction(
+		nonce,
+		sendToAddress,
+		amount,
+		gasLimit,
+		gasPrice,
+		transferData,
+	)
+
+	unsignedTx := &transaction{
+		From:     checkFrom,
+		To:       sendToAddress.Hex(),
+		Value:    amount,
+		Data:     tx.Data(),
+		Nonce:    tx.Nonce(),
+		GasPrice: gasPrice,
+		GasLimit: tx.Gas(),
+		ChainID:  chainID,
+		Currency: fromCurrency,
+	}
+	return tx, unsignedTx, &checkFrom, nil
+}
+
 // ConstructionPreprocess implements /construction/preprocess endpoint.
 //
 // Preprocess is called prior to /construction/payloads to construct a request for
@@ -1209,10 +1288,6 @@ func (s ConstructionService) getGenericContractCallGasLimit(
 		return 0, err
 	}
 	return gasLimit, nil
-}
-
-func (s ConstructionService) createGenericContractCallPayload(req *types.ConstructionPayloadsRequest) (*ethtypes.Transaction, *transaction, *string, *types.Error) {
-
 }
 
 func (s ConstructionService) createGenericContractCallPreprocessOptions(
