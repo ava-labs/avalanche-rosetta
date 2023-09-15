@@ -1093,6 +1093,42 @@ func TestPreprocessMetadata(t *testing.T) {
 			},
 		}, metadataResponse)
 	})
+
+	t.Run("arbitrary contract call flow", func(t *testing.T) {
+		contractCallIntent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"0","currency":{"symbol":"TEST","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"0","currency":{"symbol":"TEST","decimals":18}}}]`
+		service := ConstructionService{
+			config:                &Config{Mode: ModeOnline},
+			client:                client,
+			pChainBackend:         skippedBackend,
+			cChainAtomicTxBackend: skippedBackend,
+		}
+
+		var ops []*types.Operation
+		assert.NoError(t, json.Unmarshal([]byte(contractCallIntent), &ops))
+
+		requestMetadata := map[string]interface{}{
+			"bridge_unwrap":    false,
+			"method_signature": `deploy(bytes32,address,address,address,address)`,
+			"method_args":      []string{"0x3100000000000000000000000000000000000000000000000000000000000000", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6"},
+		}
+
+		preprocessResponse, err := service.ConstructionPreprocess(
+			ctx,
+			&types.ConstructionPreprocessRequest{
+				NetworkIdentifier: networkIdentifier,
+				Operations:        ops,
+				Metadata:          requestMetadata,
+			},
+		)
+		assert.Nil(t, err)
+
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x0", "currency":{"symbol":"TEST","decimals":18}, "contract_address": "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d", "method_signature": "deploy(bytes32,address,address,address,address)", "contract_data": "0xb0d78b753100000000000000000000000000000000000000000000000000000000000000000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6"}`
+		var opt options
+		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		assert.Equal(t, &types.ConstructionPreprocessResponse{
+			Options: forceMarshalMap(t, &opt),
+		}, preprocessResponse)
+	})
 }
 
 func TestBackendDelegations(t *testing.T) {

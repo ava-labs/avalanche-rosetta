@@ -1463,10 +1463,10 @@ func isUnwrapRequest(metadata map[string]interface{}) bool {
 }
 
 func isGenericContractCall(metadata map[string]interface{}) bool {
-	// TODO: how to diff generic contract call from erc20 contract call ?
-	_, ok := metadata["method_signature"]
-	if ok {
-		return true
+	if signature, ok := metadata["method_signature"]; ok {
+		if strSignature, ok := signature.(string); ok {
+			return len(strSignature) > 0
+		}
 	}
 	return false
 }
