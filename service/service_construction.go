@@ -417,10 +417,7 @@ func (s ConstructionService) ConstructionParse(
 		case unwrapMethodID:
 			ops, checkFrom, wrappedErr = createUnwrapOps(tx)
 		default:
-			wrappedErr = WrapError(
-				ErrInvalidInput,
-				fmt.Errorf("method %x is not supported", tx.Data[:4]),
-			)
+			ops, checkFrom, wrappedErr = createGenericContractCallOps(tx)
 		}
 	} else {
 		ops, checkFrom, wrappedErr = createTransferOps(tx)
@@ -548,6 +545,55 @@ func createUnwrapOps(tx transaction) ([]*types.Operation, *string, *types.Error)
 			},
 			Amount: &types.Amount{
 				Value:    new(big.Int).Neg(amount).String(),
+				Currency: tx.Currency,
+			},
+		},
+	}
+	return ops, &checkFrom, nil
+}
+
+func createGenericContractCallOps(tx transaction) ([]*types.Operation, *string, *types.Error) {
+	value := tx.Value
+
+	// Ensure valid from address
+	checkFrom, ok := ChecksumAddress(tx.From)
+	if !ok {
+		return nil, nil, WrapError(
+			ErrInvalidInput,
+			fmt.Errorf("%s is not a valid address", tx.From),
+		)
+	}
+
+	// Ensure valid to address
+	checkTo, ok := ChecksumAddress(tx.To)
+	if !ok {
+		return nil, nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", tx.To))
+	}
+
+	ops := []*types.Operation{
+		{
+			Type: mapper.OpCall,
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 0,
+			},
+			Account: &types.AccountIdentifier{
+				Address: checkFrom,
+			},
+			Amount: &types.Amount{
+				Value:    new(big.Int).Neg(value).String(),
+				Currency: tx.Currency,
+			},
+		},
+		{
+			Type: mapper.OpCall,
+			OperationIdentifier: &types.OperationIdentifier{
+				Index: 1,
+			},
+			Account: &types.AccountIdentifier{
+				Address: checkTo,
+			},
+			Amount: &types.Amount{
+				Value:    value.String(),
 				Currency: tx.Currency,
 			},
 		},

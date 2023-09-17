@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"math/big"
 	"testing"
 
@@ -1128,6 +1129,66 @@ func TestPreprocessMetadata(t *testing.T) {
 		assert.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
+
+		// call metadata API
+		metadata := &metadata{
+			GasPrice:        big.NewInt(1000000000),
+			GasLimit:        21_001,
+			Nonce:           0,
+			UnwrapBridgeTx:  false,
+			ContractData:    "0xb0d78b753100000000000000000000000000000000000000000000000000000000000000000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6",
+			MethodSignature: "deploy(bytes32,address,address,address,address)",
+			MethodArgs:      []string{"0x3100000000000000000000000000000000000000000000000000000000000000", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6"},
+		}
+
+		client.On(
+			"SuggestGasPrice",
+			ctx,
+		).Return(
+			big.NewInt(1000000000),
+			nil,
+		).Once()
+		contractAddress := common.HexToAddress(defaultToAddress)
+		data, _ := hexutil.Decode("0xb0d78b753100000000000000000000000000000000000000000000000000000000000000000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6")
+		client.On(
+			"EstimateGas",
+			ctx,
+			interfaces.CallMsg{
+				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+				To:   &contractAddress,
+				Data: data,
+			},
+		).Return(
+			uint64(21001),
+			nil,
+		).Once()
+		client.On(
+			"NonceAt",
+			ctx,
+			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+			(*big.Int)(nil),
+		).Return(
+			uint64(0),
+			nil,
+		).Once()
+
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
+		assert.Nil(t, err)
+		assert.Equal(t, &types.ConstructionMetadataResponse{
+			Metadata: forceMarshalMap(t, metadata),
+			SuggestedFee: []*types.Amount{
+				{
+					Value:    "21001000000000",
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+		}, metadataResponse)
 	})
 }
 
