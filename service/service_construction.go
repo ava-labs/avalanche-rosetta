@@ -1509,6 +1509,12 @@ func isUnwrapRequest(metadata map[string]interface{}) bool {
 }
 
 func isGenericContractCall(metadata map[string]interface{}) bool {
+	if isUnwrap, ok := metadata["bridge_unwrap"]; ok {
+		if isUnwrap.(bool) {
+			return false
+		}
+	}
+
 	if signature, ok := metadata["method_signature"]; ok {
 		if strSignature, ok := signature.(string); ok {
 			return len(strSignature) > 0
