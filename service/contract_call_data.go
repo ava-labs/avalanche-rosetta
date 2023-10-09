@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
 	"log"
 	"math/big"
 	"strconv"
@@ -12,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"golang.org/x/crypto/sha3"
 )
 
 // constructContractCallDataGeneric constructs the data field of a transaction.
@@ -155,6 +155,8 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 				}
 				argData = value
 			}
+		default:
+			return nil, errors.New(fmt.Sprintf("invalid argument type:%s", v))
 		}
 		argumentsData = append(argumentsData, argData)
 	}
@@ -171,11 +173,5 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 // contractCallMethodID calculates the first 4 bytes of the method
 // signature for function call on contract
 func contractCallMethodID(methodSig string) ([]byte, error) {
-	fnSignature := []byte(methodSig)
-	hash := sha3.NewLegacyKeccak256()
-	if _, err := hash.Write(fnSignature); err != nil {
-		return nil, err
-	}
-
-	return hash.Sum(nil)[:4], nil
+	return crypto.Keccak256([]byte(methodSig))[:4], nil
 }

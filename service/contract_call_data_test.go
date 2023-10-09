@@ -47,6 +47,11 @@ func TestConstruction_ContractCallData(t *testing.T) {
 			methodArgs:    []interface{}{"bool abc", "0x0000000000000000000000000000000000000000", true},
 			expectedError: errors.New("invalid method_args type at index 2: bool (must be a string)"),
 		},
+		"error: bad argument type": {
+			methodSig:     "attest(bytes32,foo)",
+			methodArgs:    []string{"0x0000000000000000000000000000000000000000000000000000000000000000", "bar"},
+			expectedError: errors.New(fmt.Sprintf("invalid argument type:%s", "foo")),
+		},
 	}
 
 	for name, test := range tests {
