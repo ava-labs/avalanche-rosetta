@@ -860,6 +860,10 @@ func (s ConstructionService) createGenericContractCallPayload(req *types.Constru
 		return nil, nil, nil, WrapError(ErrInvalidInput, "unclear intent")
 	}
 
+	if len(matches) != 2 {
+		return nil, nil, nil, WrapError(ErrInvalidInput, "Must have only two operations")
+	}
+
 	fromOp, amount := matches[0].First()
 	fromAddress := fromOp.Account.Address
 	fromCurrency := fromOp.Amount.Currency
