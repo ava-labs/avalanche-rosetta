@@ -93,6 +93,7 @@ func (o *options) UnmarshalJSON(data []byte) error {
 	o.ContractAddress = ow.ContractAddress
 	o.MethodSignature = ow.MethodSignature
 	o.MethodArgs = ow.MethodArgs
+	o.ContractData = ow.ContractData
 
 	if len(ow.Value) > 0 {
 		value, err := hexutil.DecodeBig(ow.Value)
@@ -124,9 +125,6 @@ func (o *options) UnmarshalJSON(data []byte) error {
 			return err
 		}
 		o.Nonce = nonce
-	}
-	if len(ow.ContractData) > 0 {
-		o.ContractData = ow.ContractData
 	}
 
 	return nil
