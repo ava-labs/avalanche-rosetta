@@ -138,6 +138,7 @@ make docker-build
 ```bash
 make docker-build-arm64
 ```
+
 Next, start the Testnet service by running:
 
 ```bash

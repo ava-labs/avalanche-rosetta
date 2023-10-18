@@ -15,6 +15,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+const split = 2
+
 // constructContractCallDataGeneric constructs the data field of a transaction.
 // The methodArgs can be already in ABI encoded format in case of a single string
 // It can also be passed in as a slice of args, which requires further encoding.
@@ -76,7 +78,6 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 	var data []byte
 	data = append(data, methodID...)
 
-	const split = 2
 	splitSigByLeadingParenthesis := strings.Split(methodSig, "(")
 	if len(splitSigByLeadingParenthesis) < split {
 		return data, nil
@@ -86,7 +87,6 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 		return data, nil
 	}
 	splitSigByComma := strings.Split(splitSigByTrailingParenthesis[0], ",")
-
 	if len(splitSigByComma) != len(methodArgs) {
 		return nil, errors.New("invalid method arguments")
 	}
@@ -133,15 +133,11 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 			}
 		case strings.HasPrefix(v, "bytes"):
 			{
-				// No fixed size set as it would make it an "array" instead
-				// of a "slice" when encoding. We want it to be a slice.
-				value := []byte{}
 				bytes, err := hexutil.Decode(methodArgs[i])
 				if err != nil {
 					log.Fatal(err)
 				}
-				copy(value[:], bytes) // nolint:gocritic
-				argData = value
+				argData = bytes
 			}
 		case strings.HasPrefix(v, "string"):
 			{
@@ -173,5 +169,8 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 // contractCallMethodID calculates the first 4 bytes of the method
 // signature for function call on contract
 func contractCallMethodID(methodSig string) ([]byte, error) {
+	if len(methodSig) == 0 {
+		return nil, fmt.Errorf("method signature is empty")
+	}
 	return crypto.Keccak256([]byte(methodSig))[:4], nil
 }

@@ -22,10 +22,11 @@ type options struct {
 	Nonce                  *big.Int         `json:"nonce,omitempty"`
 	Currency               *types.Currency  `json:"currency,omitempty"`
 	Metadata               *metadataOptions `json:"metadata,omitempty"`
-	ContractAddress        string           `json:"contract_address,omitempty"`
-	MethodSignature        string           `json:"method_signature,omitempty"`
-	MethodArgs             interface{}      `json:"method_args,omitempty"`
-	ContractData           string           `json:"data,omitempty"`
+
+	ContractAddress string      `json:"contract_address,omitempty"`
+	MethodSignature string      `json:"method_signature,omitempty"`
+	MethodArgs      interface{} `json:"method_args,omitempty"`
+	ContractData    string      `json:"data,omitempty"`
 }
 
 type optionsWire struct {
@@ -38,10 +39,11 @@ type optionsWire struct {
 	Nonce                  string           `json:"nonce,omitempty"`
 	Currency               *types.Currency  `json:"currency,omitempty"`
 	Metadata               *metadataOptions `json:"metadata,omitempty"`
-	ContractAddress        string           `json:"contract_address,omitempty"`
-	MethodSignature        string           `json:"method_signature,omitempty"`
-	MethodArgs             interface{}      `json:"method_args,omitempty"`
-	ContractData           string           `json:"data,omitempty"`
+
+	ContractAddress string      `json:"contract_address,omitempty"`
+	MethodSignature string      `json:"method_signature,omitempty"`
+	MethodArgs      interface{} `json:"method_args,omitempty"`
+	ContractData    string      `json:"data,omitempty"`
 }
 
 type metadataOptions struct {
@@ -131,20 +133,24 @@ func (o *options) UnmarshalJSON(data []byte) error {
 }
 
 type metadata struct {
-	Nonce           uint64      `json:"nonce"`
-	GasPrice        *big.Int    `json:"gas_price"`
-	GasLimit        uint64      `json:"gas_limit"`
-	UnwrapBridgeTx  bool        `json:"bridge_unwrap"`
+	Nonce    uint64   `json:"nonce"`
+	GasPrice *big.Int `json:"gas_price"`
+	GasLimit uint64   `json:"gas_limit"`
+
+	UnwrapBridgeTx bool `json:"bridge_unwrap"`
+
 	ContractData    string      `json:"data,omitempty"`
 	MethodSignature string      `json:"method_signature,omitempty"`
 	MethodArgs      interface{} `json:"method_args,omitempty"`
 }
 
 type metadataWire struct {
-	Nonce           string      `json:"nonce"`
-	GasPrice        string      `json:"gas_price"`
-	GasLimit        string      `json:"gas_limit"`
-	UnwrapBridgeTx  bool        `json:"bridge_unwrap"`
+	Nonce    string `json:"nonce"`
+	GasPrice string `json:"gas_price"`
+	GasLimit string `json:"gas_limit"`
+
+	UnwrapBridgeTx bool `json:"bridge_unwrap"`
+
 	ContractData    string      `json:"data,omitempty"`
 	MethodSignature string      `json:"method_signature,omitempty"`
 	MethodArgs      interface{} `json:"method_args,omitempty"`
@@ -158,10 +164,7 @@ func (m *metadata) MarshalJSON() ([]byte, error) {
 		UnwrapBridgeTx:  m.UnwrapBridgeTx,
 		MethodSignature: m.MethodSignature,
 		MethodArgs:      m.MethodArgs,
-	}
-
-	if len(m.ContractData) > 0 {
-		mw.ContractData = m.ContractData
+		ContractData:    m.ContractData,
 	}
 
 	return json.Marshal(mw)
@@ -176,6 +179,7 @@ func (m *metadata) UnmarshalJSON(data []byte) error {
 	m.UnwrapBridgeTx = mw.UnwrapBridgeTx
 	m.MethodSignature = mw.MethodSignature
 	m.MethodArgs = mw.MethodArgs
+	m.ContractData = mw.ContractData
 
 	gasPrice, err := hexutil.DecodeBig(mw.GasPrice)
 	if err != nil {
@@ -194,10 +198,6 @@ func (m *metadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	m.Nonce = nonce
-
-	if len(mw.ContractData) > 0 {
-		m.ContractData = mw.ContractData
-	}
 
 	return nil
 }
