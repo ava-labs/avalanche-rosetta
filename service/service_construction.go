@@ -1515,7 +1515,11 @@ func isUnwrapRequest(metadata map[string]interface{}) bool {
 func isGenericContractCall(metadata map[string]interface{}) bool {
 	if isUnwrap, ok := metadata["bridge_unwrap"]; ok {
 		if unwrapCall, isBool := isUnwrap.(bool); isBool {
-			return !unwrapCall
+			if unwrapCall {
+				// If bridge_unwrap flag is true, we can return false right away, otherwise we should
+				// continue to check the method signature length.
+				return false
+			}
 		} else {
 			panic(fmt.Sprintf("bridge_unwrap value in the metadata must be boolean, got:%s", isUnwrap))
 		}
