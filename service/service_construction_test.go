@@ -7,16 +7,15 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
-
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/coreth/interfaces"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	backendMocks "github.com/ava-labs/avalanche-rosetta/mocks/service"
 )
@@ -1060,6 +1059,102 @@ func TestPreprocessMetadata(t *testing.T) {
 				Data: common.Hex2Bytes(
 					"6e286671000000000000000000000000000000000000000000000000009864aac3510d020000000000000000000000000000000000000000000000000000000000000000",
 				),
+			},
+		).Return(
+			uint64(21001),
+			nil,
+		).Once()
+		client.On(
+			"NonceAt",
+			ctx,
+			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+			(*big.Int)(nil),
+		).Return(
+			uint64(0),
+			nil,
+		).Once()
+
+		metadataResponse, err := service.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: networkIdentifier,
+				Options:           forceMarshalMap(t, &opt),
+			},
+		)
+		assert.Nil(t, err)
+		assert.Equal(t, &types.ConstructionMetadataResponse{
+			Metadata: forceMarshalMap(t, metadata),
+			SuggestedFee: []*types.Amount{
+				{
+					Value:    "21001000000000",
+					Currency: mapper.AvaxCurrency,
+				},
+			},
+		}, metadataResponse)
+	})
+
+	t.Run("arbitrary contract call flow", func(t *testing.T) {
+		contractCallIntent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"0","currency":{"symbol":"TEST","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"0","currency":{"symbol":"TEST","decimals":18}}}]`
+		service := ConstructionService{
+			config:                &Config{Mode: ModeOnline},
+			client:                client,
+			pChainBackend:         skippedBackend,
+			cChainAtomicTxBackend: skippedBackend,
+		}
+
+		var ops []*types.Operation
+		assert.NoError(t, json.Unmarshal([]byte(contractCallIntent), &ops))
+
+		requestMetadata := map[string]interface{}{
+			"bridge_unwrap":    false,
+			"method_signature": `deploy(bytes32,address,address,address,address)`,
+			"method_args":      []string{"0x3100000000000000000000000000000000000000000000000000000000000000", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6"},
+		}
+
+		preprocessResponse, err := service.ConstructionPreprocess(
+			ctx,
+			&types.ConstructionPreprocessRequest{
+				NetworkIdentifier: networkIdentifier,
+				Operations:        ops,
+				Metadata:          requestMetadata,
+			},
+		)
+		assert.Nil(t, err)
+
+		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x0", "currency":{"symbol":"TEST","decimals":18}, "contract_address": "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d", "method_signature": "deploy(bytes32,address,address,address,address)", "data": "0xb0d78b753100000000000000000000000000000000000000000000000000000000000000000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6", "method_args":["0x3100000000000000000000000000000000000000000000000000000000000000","0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5","0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6","0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5","0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6"] }`
+		var opt options
+		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		assert.Equal(t, &types.ConstructionPreprocessResponse{
+			Options: forceMarshalMap(t, &opt),
+		}, preprocessResponse)
+
+		// call metadata API
+		metadata := &metadata{
+			GasPrice:        big.NewInt(1000000000),
+			GasLimit:        21_001,
+			Nonce:           0,
+			UnwrapBridgeTx:  false,
+			ContractData:    "0xb0d78b753100000000000000000000000000000000000000000000000000000000000000000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6",
+			MethodSignature: "deploy(bytes32,address,address,address,address)",
+			MethodArgs:      []string{"0x3100000000000000000000000000000000000000000000000000000000000000", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6"},
+		}
+
+		client.On(
+			"SuggestGasPrice",
+			ctx,
+		).Return(
+			big.NewInt(1000000000),
+			nil,
+		).Once()
+		contractAddress := common.HexToAddress(defaultToAddress)
+		data, _ := hexutil.Decode("0xb0d78b753100000000000000000000000000000000000000000000000000000000000000000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6")
+		client.On(
+			"EstimateGas",
+			ctx,
+			interfaces.CallMsg{
+				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
+				To:   &contractAddress,
+				Data: data,
 			},
 		).Return(
 			uint64(21001),

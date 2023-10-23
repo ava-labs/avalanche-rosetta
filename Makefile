@@ -31,6 +31,14 @@ docker-build:
 		-f Dockerfile \
 		.
 
+docker-build-arm64:
+	docker build \
+		--build-arg AVALANCHE_VERSION=${AVALANCHE_VERSION} \
+		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
+		-t ${DOCKER_TAG} \
+		-f Dockerfile.arm64 \
+		.
+
 # Start the Testnet in ONLINE mode
 run-testnet:
 	docker run \

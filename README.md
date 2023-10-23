@@ -133,6 +133,12 @@ Before we can start the service, we need to build the docker image:
 make docker-build
 ```
 
+**Note:** If you're running arm64 machine(e.g, Mac M1), you may run
+
+```bash
+make docker-build-arm64
+```
+
 Next, start the Testnet service by running:
 
 ```bash
