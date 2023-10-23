@@ -137,7 +137,7 @@ func makeImportTx(t *testing.T, networkID uint32) (*txs.Tx, error) {
 		SourceChain:    cChainID,
 		ImportedInputs: []*avax.TransferableInput{},
 	}
-	signedImportTx, err := txs.NewSigned(importTx, blocks.Codec, nil)
+	signedImportTx, err := txs.NewSigned(importTx, block.Codec, nil)
 	require.Nil(t, err)
 	signedImportTx.Creds = []verify.Verifiable{}
 	return signedImportTx, err
