@@ -960,6 +960,8 @@ func (s ConstructionService) ConstructionPreprocess(
 			return nil, typesError
 		}
 	case isGenericContractCall(req.Metadata):
+		// To ensure we don't conflict with ERC-20 transfer handling (which are also contract calls), we populate
+		// the "method_signature" key in metadata (what is used in this check).
 		operationDescriptions, err = s.CreateGenericContractCallOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())

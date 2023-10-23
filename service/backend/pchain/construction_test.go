@@ -398,7 +398,7 @@ func TestImportTxConstruction(t *testing.T) {
 	signedImportTxSignature, _ := hex.DecodeString("7403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01")
 	signedImportTxHash := "byyEVU6RL7PQNSVT8qEnybWGV5BbBfJwFV6bEDV5mkymXRz62"
 
-	wrappedSignedImportTx := `{"tx":"` + signedImportTx + `","signers":` + importSigners + `}` //nolint:goconst
+	wrappedSignedImportTx := `{"tx":"` + signedImportTx + `","signers":` + importSigners + `}`
 
 	signatures := []*types.Signature{{
 		SigningPayload: &types.SigningPayload{
