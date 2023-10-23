@@ -171,8 +171,8 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 // contractCallMethodID calculates the first 4 bytes of the method
 // signature for function call on contract
 func contractCallMethodID(methodSig string) ([]byte, error) {
-	if len(methodSig) == 0 {
-		return nil, fmt.Errorf("method signature is empty")
+	if len(methodSig) < 4 {
+		return nil, fmt.Errorf("method signature is empty or too small")
 	}
 	return crypto.Keccak256([]byte(methodSig))[:4], nil
 }
