@@ -10,7 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	avaTypes "github.com/ava-labs/avalanchego/vms/types"
@@ -137,7 +137,7 @@ func makeImportTx(t *testing.T, networkID uint32) (*txs.Tx, error) {
 		SourceChain:    cChainID,
 		ImportedInputs: []*avax.TransferableInput{},
 	}
-	signedImportTx, err := txs.NewSigned(importTx, blocks.Codec, nil)
+	signedImportTx, err := txs.NewSigned(importTx, block.Codec, nil)
 	require.Nil(t, err)
 	signedImportTx.Creds = []verify.Verifiable{}
 	return signedImportTx, err

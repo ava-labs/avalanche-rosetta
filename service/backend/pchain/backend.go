@@ -4,7 +4,7 @@ import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -58,8 +58,8 @@ func NewBackend(
 		networkID:          networkIdentifier,
 		pClient:            pClient,
 		getUTXOsPageSize:   1024,
-		codec:              blocks.Codec,
-		codecVersion:       blocks.Version,
+		codec:              block.Codec,
+		codecVersion:       block.Version,
 		indexerParser:      indexerParser,
 		avaxAssetID:        assetID,
 		avalancheNetworkID: avalancheNetworkID,

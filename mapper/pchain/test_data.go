@@ -4,7 +4,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
@@ -84,7 +84,7 @@ func buildImport() (*txs.Tx, *txs.ImportTx, map[string]*types.AccountIdentifier)
 		}},
 	}
 
-	signedTx, _ := txs.NewSigned(importTx, blocks.Codec, nil)
+	signedTx, _ := txs.NewSigned(importTx, block.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[importTx.ImportedInputs[0].String()] = &types.AccountIdentifier{Address: importAddr.String()}
@@ -142,7 +142,7 @@ func buildExport() (*txs.Tx, *txs.ExportTx, map[string]*types.AccountIdentifier)
 		}},
 	}
 
-	signedTx, _ := txs.NewSigned(exportTx, blocks.Codec, nil)
+	signedTx, _ := txs.NewSigned(exportTx, block.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[exportTx.Ins[0].String()] = &types.AccountIdentifier{Address: outAddr.String()}
@@ -211,7 +211,7 @@ func buildAddDelegator() (*txs.Tx, *txs.AddDelegatorTx, map[string]*types.Accoun
 		},
 	}
 
-	signedTx, _ := txs.NewSigned(addDelegator, blocks.Codec, nil)
+	signedTx, _ := txs.NewSigned(addDelegator, block.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[addDelegator.Ins[0].String()] = &types.AccountIdentifier{Address: stakeAddr.String()}
@@ -284,7 +284,7 @@ func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.Account
 		DelegationShares: 20000,
 	}
 
-	signedTx, _ := txs.NewSigned(addValidator, blocks.Codec, nil)
+	signedTx, _ := txs.NewSigned(addValidator, block.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{
 		addValidator.Ins[0].String(): {Address: stakeAddr.String()},

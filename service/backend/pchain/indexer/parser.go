@@ -13,7 +13,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
 
-	pBlocks "github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	pBlocks "github.com/ava-labs/avalanchego/vms/platformvm/block"
 	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	proposerBlk "github.com/ava-labs/avalanchego/vms/proposervm/block"

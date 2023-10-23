@@ -1,6 +1,6 @@
 {
   "id": "2Mbfba1sSJw9yrp1ZGpEs4aa7AFkBEofmrXty1CPL2hrnqGeVT",
-  "type": "*blocks.ApricotProposalBlock",
+  "type": "*block.ApricotProposalBlock",
   "parent": "d7WYmb8VeZNHsny3EJCwMm6QA37s1EHwMxw1Y71V3FqPZ5EFG",
   "timestamp": 1638504095000,
   "height": 1000002,
