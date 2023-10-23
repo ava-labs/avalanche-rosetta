@@ -15,7 +15,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-const split = 2
+const (
+	split  = 2
+	base10 = 10
+)
 
 // constructContractCallDataGeneric constructs the data field of a transaction.
 // The methodArgs can be already in ABI encoded format in case of a single string
@@ -101,7 +104,6 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 
 		arguments = append(arguments, argument...)
 		var argData interface{}
-		const base = 10
 		switch {
 		case v == "address":
 			{
@@ -109,7 +111,7 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 			}
 		case v == "uint32":
 			{
-				u64, err := strconv.ParseUint(methodArgs[i], 10, 32)
+				u64, err := strconv.ParseUint(methodArgs[i], base10, 32)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -118,7 +120,7 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 		case strings.HasPrefix(v, "uint") || strings.HasPrefix(v, "int"):
 			{
 				value := new(big.Int)
-				value.SetString(methodArgs[i], base)
+				value.SetString(methodArgs[i], base10)
 				argData = value
 			}
 		case v == "bytes32":
