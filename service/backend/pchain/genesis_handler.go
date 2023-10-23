@@ -33,7 +33,7 @@ func newGenesisHandler(indexerParser indexer.Parser) (genesisHandler, error) {
 		// Note: since genesis block and transactions can be considerably larger
 		// than any other block generated during the blockchain lifetime
 		// a special codec is used to parse genesis-related objects
-		genesisCodec: blocks.GenesisCodec,
+		genesisCodec: block.GenesisCodec,
 	}
 
 	// initializing genesis block. No network calls are involved.
