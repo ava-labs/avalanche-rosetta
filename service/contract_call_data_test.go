@@ -50,7 +50,7 @@ func TestConstruction_ContractCallData(t *testing.T) {
 		"error: bad argument type": {
 			methodSig:     "attest(bytes32,foo)",
 			methodArgs:    []string{"0x0000000000000000000000000000000000000000000000000000000000000000", "bar"},
-			expectedError: errors.New(fmt.Sprintf("invalid argument type:%s", "foo")),
+			expectedError: fmt.Errorf("invalid argument type: %s", "foo"),
 		},
 	}
 

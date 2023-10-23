@@ -75,9 +75,6 @@ func constructContractCallDataGeneric(methodSig string, methodArgs interface{}) 
 // It attempts to first convert the string arg to it's corresponding type in the method signature,
 // and then performs abi encoding to the converted args list and construct the data.
 func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []string) ([]byte, error) {
-	arguments := abi.Arguments{}
-	var argumentsData []interface{}
-
 	var data []byte
 	data = append(data, methodID...)
 
@@ -94,6 +91,8 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 		return nil, errors.New("invalid method arguments")
 	}
 
+	arguments := abi.Arguments{}
+	argumentsData := make([]interface{}, 0, len(splitSigByComma))
 	for i, v := range splitSigByComma {
 		typed, _ := abi.NewType(v, v, nil)
 		argument := abi.Arguments{
@@ -154,7 +153,7 @@ func encodeMethodArgsStrings(methodID []byte, methodSig string, methodArgs []str
 				argData = value
 			}
 		default:
-			return nil, errors.New(fmt.Sprintf("invalid argument type:%s", v))
+			return nil, fmt.Errorf("invalid argument type: %s", v)
 		}
 		argumentsData = append(argumentsData, argData)
 	}

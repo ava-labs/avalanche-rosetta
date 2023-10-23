@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"reflect"
 
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
@@ -161,19 +160,21 @@ func (s ConstructionService) ConstructionMetadata(
 				return nil, WrapError(ErrClientError, err)
 			}
 		} else {
-			if input.Metadata != nil {
+			switch {
+			case input.Metadata != nil:
 				if !input.Metadata.UnwrapBridgeTx {
 					return nil, WrapError(ErrInvalidInput, "UnwrapBridgeTx must be populated if input.Metadata is provided")
 				}
 
 				gasLimit, err = s.getBridgeUnwrapTransferGasLimit(ctx, input.From, input.Value, input.Currency)
-			} else if len(input.ContractAddress) > 0 {
-				contractData, err := hexutil.Decode(input.ContractData)
+			case len(input.ContractAddress) > 0:
+				var contractData []byte
+				contractData, err = hexutil.Decode(input.ContractData)
 				if err != nil {
 					return nil, WrapError(ErrClientError, err)
 				}
 				gasLimit, err = s.getGenericContractCallGasLimit(ctx, input.ContractAddress, input.From, contractData)
-			} else {
+			default:
 				gasLimit, err = s.getErc20TransferGasLimit(ctx, input.To, input.From, input.Value, input.Currency)
 			}
 			if err != nil {
@@ -632,11 +633,12 @@ func (s ConstructionService) ConstructionPayloads(
 		wrappedErr *types.Error
 	)
 
-	if isUnwrapRequest(req.Metadata) {
+	switch {
+	case isUnwrapRequest(req.Metadata):
 		tx, unsignedTx, checkFrom, wrappedErr = s.createUnwrapPayload(req)
-	} else if isGenericContractCall(req.Metadata) {
+	case isGenericContractCall(req.Metadata):
 		tx, unsignedTx, checkFrom, wrappedErr = s.createGenericContractCallPayload(req)
-	} else {
+	default:
 		tx, unsignedTx, checkFrom, wrappedErr = s.createTransferPayload(req)
 	}
 	if wrappedErr != nil {
@@ -865,14 +867,11 @@ func (s ConstructionService) createGenericContractCallPayload(req *types.Constru
 		return nil, nil, nil, WrapError(ErrInvalidInput, "Must have only two operations")
 	}
 
-	fromOp, amount := matches[0].First()
+	fromOp, amount := matches[0].First() // we check about that [amount] is 0
 	fromAddress := fromOp.Account.Address
 	fromCurrency := fromOp.Amount.Currency
-	toOp, amount := matches[1].First()
+	toOp, _ := matches[1].First()
 	toAddress := toOp.Account.Address
-
-	// op match will return a negative amount since it's from a balance losing funds
-	amount = new(big.Int).Neg(amount)
 
 	checkFrom, ok := ChecksumAddress(fromAddress)
 	if !ok {
@@ -950,7 +949,8 @@ func (s ConstructionService) ConstructionPreprocess(
 		typesError            *types.Error
 	)
 
-	if isUnwrapRequest(req.Metadata) {
+	switch {
+	case isUnwrapRequest(req.Metadata):
 		operationDescriptions, err = s.CreateUnwrapOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
@@ -959,7 +959,7 @@ func (s ConstructionService) ConstructionPreprocess(
 		if typesError != nil {
 			return nil, typesError
 		}
-	} else if isGenericContractCall(req.Metadata) {
+	case isGenericContractCall(req.Metadata):
 		operationDescriptions, err = s.CreateGenericContractCallOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
@@ -968,7 +968,7 @@ func (s ConstructionService) ConstructionPreprocess(
 		if typesError != nil {
 			return nil, typesError
 		}
-	} else {
+	default:
 		operationDescriptions, err = s.CreateTransferOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
@@ -1404,10 +1404,11 @@ func (s ConstructionService) CreateGenericContractCallOperationDescription(opera
 
 	firstCurrency := operations[0].Amount.Currency
 	secondCurrency := operations[1].Amount.Currency
+	bigZero := big.NewInt(0)
 	if firstCurrency == nil || secondCurrency == nil {
 		return nil, fmt.Errorf("invalid currency on operation")
 	}
-	if !reflect.DeepEqual(firstCurrency, secondCurrency) {
+	if types.Hash(firstCurrency) != types.Hash(secondCurrency) {
 		return nil, fmt.Errorf("from and to currencies are not equal")
 	}
 
@@ -1415,14 +1416,14 @@ func (s ConstructionService) CreateGenericContractCallOperationDescription(opera
 	if !ok {
 		return nil, errors.New("operation 0 does not have a valid amount")
 	}
-	if i.Cmp(big.NewInt(0)) != 0 {
+	if i.Cmp(bigZero) != 0 {
 		return nil, fmt.Errorf("for generic call both values should be zero")
 	}
 	j, ok := new(big.Int).SetString(operations[1].Amount.Value, base10)
 	if !ok {
 		return nil, errors.New("operation 1 does not have a valid amount")
 	}
-	if j.Cmp(big.NewInt(0)) != 0 {
+	if j.Cmp(bigZero) != 0 {
 		return nil, fmt.Errorf("for generic call both values should be zero")
 	}
 
