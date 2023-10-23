@@ -15,6 +15,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+// The following implementations are derived from rosetta-geth-sdk:
+//
+// https://github.com/coinbase/rosetta-geth-sdk/blob/master/services/construction/contract_call_data.go
+
 const (
 	split  = 2
 	base10 = 10
