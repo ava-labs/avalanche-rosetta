@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"reflect"
@@ -894,7 +895,7 @@ func (s ConstructionService) createGenericContractCallPayload(req *types.Constru
 	}
 
 	sendToAddress := ethcommon.HexToAddress(checkTo)
-	transferData, err := hexutil.Decode(metadata.ContractData)
+	contractData, err := hexutil.Decode(metadata.ContractData)
 	if err != nil {
 		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
 	}
@@ -910,7 +911,7 @@ func (s ConstructionService) createGenericContractCallPayload(req *types.Constru
 		amount,
 		gasLimit,
 		gasPrice,
-		transferData,
+		contractData,
 	)
 
 	unsignedTx := &transaction{
@@ -1370,12 +1371,14 @@ func (s ConstructionService) createGenericContractCallPreprocessOptions(
 		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid address", toAddress))
 	}
 
-	v, _ := req.Metadata["method_signature"]
+	v, ok := req.Metadata["method_signature"]
+	if !ok {
+		return nil, WrapError(ErrInvalidInput, errors.New("method_signature is not in metadata"))
+	}
 	methodSigStringObj, ok := v.(string)
 	if !ok {
 		return nil, WrapError(ErrInvalidInput, fmt.Errorf("%s is not a valid method signature string", v))
 	}
-
 	data, err := constructContractCallDataGeneric(methodSigStringObj, req.Metadata["method_args"])
 	if err != nil {
 		return nil, WrapError(ErrInvalidInput, err.Error())
@@ -1408,15 +1411,19 @@ func (s ConstructionService) CreateGenericContractCallOperationDescription(opera
 		return nil, fmt.Errorf("from and to currencies are not equal")
 	}
 
-	const base = 10
-	i := new(big.Int)
-	i.SetString(operations[0].Amount.Value, base)
-	j := new(big.Int)
-	j.SetString(operations[1].Amount.Value, base)
-	if i.Cmp(big.NewInt(0)) == 0 {
-		if j.Cmp(big.NewInt(0)) != 0 {
-			return nil, fmt.Errorf("for generic call both values should be zero")
-		}
+	i, ok := new(big.Int).SetString(operations[0].Amount.Value, base10)
+	if !ok {
+		return nil, errors.New("operation 0 does not have a valid amount")
+	}
+	if i.Cmp(big.NewInt(0)) != 0 {
+		return nil, fmt.Errorf("for generic call both values should be zero")
+	}
+	j, ok := new(big.Int).SetString(operations[1].Amount.Value, base10)
+	if !ok {
+		return nil, errors.New("operation 1 does not have a valid amount")
+	}
+	if j.Cmp(big.NewInt(0)) != 0 {
+		return nil, fmt.Errorf("for generic call both values should be zero")
 	}
 
 	return s.createOperationDescriptionContractCall(), nil
