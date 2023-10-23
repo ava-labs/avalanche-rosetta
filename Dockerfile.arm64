@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Build avalanche
 # ------------------------------------------------------------------------------
-FROM arm64v8/golang:1.20.10 AS avalanche
+FROM arm64v8/golang:1.20.10-bullseye AS avalanche
 
 ARG AVALANCHE_VERSION
 
@@ -16,7 +16,7 @@ RUN git checkout $AVALANCHE_VERSION && \
 # ------------------------------------------------------------------------------
 # Build avalanche rosetta
 # ------------------------------------------------------------------------------
-FROM arm64v8/golang:1.20.8-bullseye AS rosetta
+FROM arm64v8/golang:1.20.10-bullseye AS rosetta
 
 ARG ROSETTA_VERSION
 
@@ -36,7 +36,7 @@ RUN \
 # ------------------------------------------------------------------------------
 # Target container for running the node and rosetta server
 # ------------------------------------------------------------------------------
-FROM  arm64v8/ubuntu:20.04
+FROM arm64v8/ubuntu:20.04
 
 # Install dependencies
 RUN apt-get update -y && \
