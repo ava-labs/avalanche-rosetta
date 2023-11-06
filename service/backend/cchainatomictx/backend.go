@@ -3,7 +3,6 @@ package cchainatomictx
 import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -19,7 +18,6 @@ var (
 )
 
 type Backend struct {
-	fac                *secp256k1.Factory
 	avalancheNetworkID uint32
 	cClient            client.Client
 	getUTXOsPageSize   uint32
@@ -31,7 +29,6 @@ type Backend struct {
 // NewBackend creates a C-chain atomic transaction service backend
 func NewBackend(cClient client.Client, avaxAssetID ids.ID, avalancheNetworkID uint32) *Backend {
 	return &Backend{
-		fac:                &secp256k1.Factory{},
 		avalancheNetworkID: avalancheNetworkID,
 		cClient:            cClient,
 		getUTXOsPageSize:   1024,

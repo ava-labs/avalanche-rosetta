@@ -27,7 +27,7 @@ var (
 
 // ConstructionDerive implements /construction/derive endpoint for P-chain
 func (b *Backend) ConstructionDerive(_ context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
-	return common.DeriveBech32Address(b.fac, constants.PChain, req)
+	return common.DeriveBech32Address(constants.PChain, req)
 }
 
 // ConstructionPreprocess implements /construction/preprocess endpoint for P-chain
