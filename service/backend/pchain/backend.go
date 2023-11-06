@@ -3,7 +3,6 @@ package pchain
 import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -25,7 +24,6 @@ var (
 
 type Backend struct {
 	genesisHandler
-	fac                *secp256k1.Factory
 	networkID          *types.NetworkIdentifier
 	networkHRP         string
 	avalancheNetworkID uint32
@@ -54,7 +52,6 @@ func NewBackend(
 
 	b := &Backend{
 		genesisHandler:     genHandler,
-		fac:                &secp256k1.Factory{},
 		networkID:          networkIdentifier,
 		pClient:            pClient,
 		getUTXOsPageSize:   1024,

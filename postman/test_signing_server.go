@@ -103,8 +103,7 @@ func parsePrivateKeyString(keyStr string) (*secp256k1.PrivateKey, *secp256k1.Pub
 	if err != nil {
 		return nil, nil, err
 	}
-	factory := secp256k1.Factory{}
-	key, err := factory.ToPrivateKey(pkBytes)
+	key, err := secp256k1.ToPrivateKey(pkBytes)
 	if err != nil {
 		return nil, nil, err
 	}

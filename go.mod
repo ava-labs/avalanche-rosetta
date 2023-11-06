@@ -3,13 +3,13 @@ module github.com/ava-labs/avalanche-rosetta
 go 1.20
 
 require (
-	github.com/ava-labs/avalanchego v1.10.13
-	github.com/ava-labs/coreth v0.12.6-rc.2
+	github.com/ava-labs/avalanchego v1.10.15
+	github.com/ava-labs/coreth v0.12.8-rc.1
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/crypto v0.14.0
-	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 	golang.org/x/sync v0.3.0
 )
 
@@ -78,7 +78,7 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.39.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect

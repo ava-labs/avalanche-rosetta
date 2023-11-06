@@ -30,8 +30,8 @@ var (
 )
 
 // DeriveBech32Address derives Bech32 addresses for the given chain using public key and hrp provided in the request
-func DeriveBech32Address(fac *secp256k1.Factory, chainIDAlias constants.ChainIDAlias, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
-	pub, err := fac.ToPublicKey(req.PublicKey.Bytes)
+func DeriveBech32Address(chainIDAlias constants.ChainIDAlias, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
+	pub, err := secp256k1.ToPublicKey(req.PublicKey.Bytes)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
