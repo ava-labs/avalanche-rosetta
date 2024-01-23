@@ -56,7 +56,7 @@ func NewBackend(
 		pClient:            pClient,
 		getUTXOsPageSize:   1024,
 		codec:              block.Codec,
-		codecVersion:       block.Version,
+		codecVersion:       block.CodecVersion,
 		indexerParser:      indexerParser,
 		avaxAssetID:        assetID,
 		avalancheNetworkID: avalancheNetworkID,

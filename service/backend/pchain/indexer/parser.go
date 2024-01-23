@@ -73,7 +73,7 @@ func NewParser(pChainClient client.PChainClient, avalancheNetworkID uint32) (Par
 	return &parser{
 		pChainClient: pChainClient,
 		codec:        pBlocks.Codec,
-		codecVersion: pBlocks.Version,
+		codecVersion: pBlocks.CodecVersion,
 		networkID:    avalancheNetworkID,
 		aliaser:      aliaser,
 	}, nil
@@ -202,7 +202,7 @@ func (p *parser) parseProposerBlock(blkBytes []byte) (*ParsedBlock, error) {
 	pChainBlkBytes := blkBytes
 	proposerTime := noProposerTime
 
-	proBlk, err := proposerBlk.Parse(blkBytes)
+	proBlk, err := proposerBlk.Parse(blkBytes, time.Time{})
 	if err == nil {
 		// inner proposerVM bytes, to be parsed as P-chain block
 		pChainBlkBytes = proBlk.Block()
