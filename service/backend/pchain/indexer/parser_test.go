@@ -63,8 +63,7 @@ func readFixture(path string, sprintfArgs ...interface{}) []byte {
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
-	ctrl := &gomock.Controller{}
-	pchainClient := client.NewMockPChainClient(ctrl)
+	pchainClient := client.NewMockPChainClient(gomock.NewController(nil))
 
 	for _, idx := range idxs {
 		ret := readFixture("ins/%v.json", idx)
