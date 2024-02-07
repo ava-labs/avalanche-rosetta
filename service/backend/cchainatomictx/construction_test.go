@@ -14,6 +14,7 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -154,7 +155,8 @@ func TestExportTxConstruction(t *testing.T) {
 	wrappedSignedExportTx := fmt.Sprintf(wrappedTxFormat, signedExportTx, exportSigners, constants.PChain.String(), pChainID.String())
 
 	ctx := context.Background()
-	clientMock := &mocks.Client{}
+	ctrl := gomock.NewController(t)
+	clientMock := mocks.NewMockClient(ctrl)
 	backend := NewBackend(clientMock, avaxAssetID, avalancheNetworkID)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -167,8 +169,6 @@ func TestExportTxConstruction(t *testing.T) {
 
 		assert.Nil(t, apiErr)
 		assert.Equal(t, metadataOptions, resp.Options)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
@@ -177,20 +177,18 @@ func TestExportTxConstruction(t *testing.T) {
 			Options:           metadataOptions,
 		}
 
-		clientMock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
-		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
-		clientMock.
-			On("NonceAt", ctx, ethcommon.HexToAddress(cAccountIdentifier.Address), (*big.Int)(nil)).
+		clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(cChainID, nil)
+		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
+		clientMock.EXPECT().
+			NonceAt(ctx, ethcommon.HexToAddress(cAccountIdentifier.Address), (*big.Int)(nil)).
 			Return(nonce, nil)
-		clientMock.On("EstimateBaseFee", ctx).Return(big.NewInt(25_000_000_000), nil)
+		clientMock.EXPECT().EstimateBaseFee(ctx).Return(big.NewInt(25_000_000_000), nil)
 
 		resp, apiErr := backend.ConstructionMetadata(ctx, req)
 
 		assert.Nil(t, apiErr)
 		assert.Equal(t, payloadsMetadata, resp.Metadata)
 		assert.Equal(t, suggestedFeeValue, resp.SuggestedFee[0].Value)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("payloads endpoint", func(t *testing.T) {
@@ -205,8 +203,6 @@ func TestExportTxConstruction(t *testing.T) {
 		assert.Nil(t, apiErr)
 		assert.Equal(t, wrappedUnsignedExportTx, resp.UnsignedTransaction)
 		assert.Equal(t, signingPayloads, resp.Payloads)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("parse endpoint (unsigned)", func(t *testing.T) {
@@ -221,8 +217,6 @@ func TestExportTxConstruction(t *testing.T) {
 		assert.Nil(t, apiErr)
 		assert.Nil(t, resp.AccountIdentifierSigners)
 		assert.Equal(t, exportOperations, resp.Operations)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("combine endpoint", func(t *testing.T) {
@@ -236,8 +230,6 @@ func TestExportTxConstruction(t *testing.T) {
 
 		assert.Nil(t, apiErr)
 		assert.Equal(t, wrappedSignedExportTx, resp.SignedTransaction)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("parse (signed) endpoint", func(t *testing.T) {
@@ -252,8 +244,6 @@ func TestExportTxConstruction(t *testing.T) {
 		assert.Nil(t, apiErr)
 		assert.Equal(t, signers, resp.AccountIdentifierSigners)
 		assert.Equal(t, exportOperations, resp.Operations)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("hash endpoint", func(t *testing.T) {
@@ -263,15 +253,13 @@ func TestExportTxConstruction(t *testing.T) {
 		})
 		assert.Nil(t, err)
 		assert.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
 		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedExportTx)
 		txID, _ := ids.FromString(signedExportTxHash)
 
-		clientMock.On("IssueTx", ctx, signedTxBytes).Return(txID, nil)
+		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
 		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
 			NetworkIdentifier: networkIdentifier,
@@ -280,8 +268,6 @@ func TestExportTxConstruction(t *testing.T) {
 
 		assert.Nil(t, apiErr)
 		assert.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
-
-		clientMock.AssertExpectations(t)
 	})
 }
 
@@ -384,7 +370,8 @@ func TestImportTxConstruction(t *testing.T) {
 	signatures := []*types.Signature{signature, signature}
 
 	ctx := context.Background()
-	clientMock := &mocks.Client{}
+	ctrl := gomock.NewController(t)
+	clientMock := mocks.NewMockClient(ctrl)
 	backend := NewBackend(clientMock, avaxAssetID, avalancheNetworkID)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -398,8 +385,6 @@ func TestImportTxConstruction(t *testing.T) {
 
 		assert.Nil(t, apiErr)
 		assert.Equal(t, metadataOptions, resp.Options)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
@@ -408,17 +393,15 @@ func TestImportTxConstruction(t *testing.T) {
 			Options:           metadataOptions,
 		}
 
-		clientMock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(cChainID, nil)
-		clientMock.On("GetBlockchainID", ctx, constants.PChain.String()).Return(pChainID, nil)
-		clientMock.On("EstimateBaseFee", ctx).Return(big.NewInt(25_000_000_000), nil)
+		clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(cChainID, nil)
+		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
+		clientMock.EXPECT().EstimateBaseFee(ctx).Return(big.NewInt(25_000_000_000), nil)
 
 		resp, apiErr := backend.ConstructionMetadata(ctx, req)
 
 		assert.Nil(t, apiErr)
 		assert.Equal(t, payloadsMetadata, resp.Metadata)
 		assert.Equal(t, suggestedFeeValue, resp.SuggestedFee[0].Value)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("payloads endpoint", func(t *testing.T) {
@@ -433,8 +416,6 @@ func TestImportTxConstruction(t *testing.T) {
 		assert.Nil(t, apiErr)
 		assert.Equal(t, wrappedUnsignedImportTx, resp.UnsignedTransaction)
 		assert.Equal(t, signingPayloads, resp.Payloads)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("parse endpoint (unsigned)", func(t *testing.T) {
@@ -462,8 +443,6 @@ func TestImportTxConstruction(t *testing.T) {
 
 		assert.Nil(t, apiErr)
 		assert.Equal(t, wrappedSignedImportTx, resp.SignedTransaction)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("parse (signed) endpoint", func(t *testing.T) {
@@ -478,8 +457,6 @@ func TestImportTxConstruction(t *testing.T) {
 		assert.Nil(t, apiErr)
 		assert.Equal(t, signers, resp.AccountIdentifierSigners)
 		assert.Equal(t, importOperations, resp.Operations)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("hash endpoint", func(t *testing.T) {
@@ -489,15 +466,13 @@ func TestImportTxConstruction(t *testing.T) {
 		})
 		assert.Nil(t, err)
 		assert.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
-
-		clientMock.AssertExpectations(t)
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
 		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedImportTx)
 		txID, _ := ids.FromString(signedImportTxHash)
 
-		clientMock.On("IssueTx", ctx, signedTxBytes).Return(txID, nil)
+		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
 		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
 			NetworkIdentifier: networkIdentifier,
@@ -506,7 +481,5 @@ func TestImportTxConstruction(t *testing.T) {
 
 		assert.Nil(t, apiErr)
 		assert.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
-
-		clientMock.AssertExpectations(t)
 	})
 }

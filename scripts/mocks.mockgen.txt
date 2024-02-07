@@ -1,0 +1,1 @@
+github.com/ava-labs/avalanche-rosetta/client=Client=mocks/client/client.go

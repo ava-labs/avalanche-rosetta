@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.uber.org/mock/gomock"
 
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
 	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
@@ -21,15 +22,16 @@ import (
 )
 
 const (
-	defaultSymbol          = "TEST"
-	defaultDecimals        = 18
-	defaultContractAddress = "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"
-	defaultFromAddress     = "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"
-	defaultToAddress       = "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"
+	defaultSymbol                = "TEST"
+	defaultDecimals        uint8 = 18
+	defaultContractAddress       = "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"
+	defaultFromAddress           = "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"
+	defaultToAddress             = "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"
 )
 
 func TestConstructionMetadata(t *testing.T) {
-	client := &mocks.Client{}
+	ctrl := gomock.NewController(t)
+	client := mocks.NewMockClient(ctrl)
 	ctx := context.Background()
 	skippedBackend := &backendMocks.ConstructionBackend{}
 	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
@@ -68,24 +70,21 @@ func TestConstructionMetadata(t *testing.T) {
 
 	t.Run("basic native transfer", func(t *testing.T) {
 		to := common.HexToAddress(defaultToAddress)
-		client.On(
-			"NonceAt",
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
-		client.On(
-			"SuggestGasPrice",
+		)
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
-		client.On(
-			"EstimateGas",
+		)
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
@@ -95,7 +94,7 @@ func TestConstructionMetadata(t *testing.T) {
 		).Return(
 			uint64(21001),
 			nil,
-		).Once()
+		)
 		input := map[string]interface{}{
 			"from":  "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309",
 			"to":    "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d",
@@ -125,24 +124,21 @@ func TestConstructionMetadata(t *testing.T) {
 	})
 	t.Run("basic unwrap transfer", func(t *testing.T) {
 		contractAddress := common.HexToAddress(defaultContractAddress)
-		client.On(
-			"NonceAt",
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress(defaultFromAddress),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
-		client.On(
-			"SuggestGasPrice",
+		)
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
-		client.On(
-			"EstimateGas",
+		)
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From: common.HexToAddress(defaultFromAddress),
@@ -154,7 +150,7 @@ func TestConstructionMetadata(t *testing.T) {
 		).Return(
 			uint64(21001),
 			nil,
-		).Once()
+		)
 		currencyMetadata := map[string]interface{}{
 			"contractAddress": defaultContractAddress,
 		}
@@ -198,24 +194,21 @@ func TestConstructionMetadata(t *testing.T) {
 	})
 	t.Run("basic erc20 transfer", func(t *testing.T) {
 		contractAddress := common.HexToAddress(defaultContractAddress)
-		client.On(
-			"NonceAt",
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress(defaultFromAddress),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
-		client.On(
-			"SuggestGasPrice",
+		)
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
-		client.On(
-			"EstimateGas",
+		)
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From: common.HexToAddress(defaultFromAddress),
@@ -227,7 +220,7 @@ func TestConstructionMetadata(t *testing.T) {
 		).Return(
 			uint64(21001),
 			nil,
-		).Once()
+		)
 		currencyMetadata := map[string]interface{}{
 			"contractAddress": defaultContractAddress,
 		}
@@ -402,7 +395,8 @@ func forceMarshalMap(t *testing.T, i interface{}) map[string]interface{} {
 
 func TestPreprocessMetadata(t *testing.T) {
 	ctx := context.Background()
-	client := &mocks.Client{}
+	ctrl := gomock.NewController(t)
+	client := mocks.NewMockClient(ctrl)
 	networkIdentifier := &types.NetworkIdentifier{
 		Network:    rosConst.FujiNetwork,
 		Blockchain: "Avalanche",
@@ -455,16 +449,14 @@ func TestPreprocessMetadata(t *testing.T) {
 			Nonce:    0,
 		}
 
-		client.On(
-			"SuggestGasPrice",
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
+		)
 		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
-		client.On(
-			"EstimateGas",
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
@@ -474,16 +466,15 @@ func TestPreprocessMetadata(t *testing.T) {
 		).Return(
 			uint64(21001),
 			nil,
-		).Once()
-		client.On(
-			"NonceAt",
+		)
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
+		)
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -517,22 +508,20 @@ func TestPreprocessMetadata(t *testing.T) {
 			Nonce:    0,
 		}
 
-		client.On(
-			"SuggestGasPrice",
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
-		client.On(
-			"NonceAt",
+		)
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
+		)
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -580,8 +569,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		}
 
 		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
-		client.On(
-			"EstimateGas",
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
@@ -591,16 +579,15 @@ func TestPreprocessMetadata(t *testing.T) {
 		).Return(
 			uint64(21000),
 			nil,
-		).Once()
-		client.On(
-			"NonceAt",
+		)
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
+		)
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -650,8 +637,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		}
 
 		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
-		client.On(
-			"EstimateGas",
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
@@ -661,16 +647,15 @@ func TestPreprocessMetadata(t *testing.T) {
 		).Return(
 			uint64(21000),
 			nil,
-		).Once()
-		client.On(
-			"NonceAt",
+		)
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
+		)
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -717,8 +702,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		}
 
 		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
-		client.On(
-			"EstimateGas",
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
@@ -728,23 +712,21 @@ func TestPreprocessMetadata(t *testing.T) {
 		).Return(
 			uint64(21000),
 			nil,
-		).Once()
-		client.On(
-			"SuggestGasPrice",
+		)
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
-		client.On(
-			"NonceAt",
+		)
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
+		)
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -794,8 +776,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		}
 
 		to := common.HexToAddress("0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d")
-		client.On(
-			"EstimateGas",
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From:  common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
@@ -805,14 +786,13 @@ func TestPreprocessMetadata(t *testing.T) {
 		).Return(
 			uint64(21000),
 			nil,
-		).Once()
-		client.On(
-			"SuggestGasPrice",
+		)
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
+		)
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -861,22 +841,20 @@ func TestPreprocessMetadata(t *testing.T) {
 			Nonce:    0,
 		}
 
-		client.On(
-			"SuggestGasPrice",
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
-		client.On(
-			"NonceAt",
+		)
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
+		)
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
 			&types.ConstructionMetadataRequest{
@@ -906,15 +884,6 @@ func TestPreprocessMetadata(t *testing.T) {
 			pChainBackend:         skippedBackend,
 			cChainAtomicTxBackend: skippedBackend,
 		}
-		currency := &types.Currency{Symbol: defaultSymbol, Decimals: defaultDecimals}
-		client.On(
-			"ContractInfo",
-			common.HexToAddress(defaultContractAddress),
-			true,
-		).Return(
-			currency,
-			nil,
-		).Once()
 		var ops []*types.Operation
 		assert.NoError(t, json.Unmarshal([]byte(erc20Intent), &ops))
 		preprocessResponse, err := service.ConstructionPreprocess(
@@ -938,16 +907,14 @@ func TestPreprocessMetadata(t *testing.T) {
 			Nonce:    0,
 		}
 
-		client.On(
-			"SuggestGasPrice",
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
+		)
 		contractAddress := common.HexToAddress(defaultContractAddress)
-		client.On(
-			"EstimateGas",
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
@@ -959,16 +926,15 @@ func TestPreprocessMetadata(t *testing.T) {
 		).Return(
 			uint64(21001),
 			nil,
-		).Once()
-		client.On(
-			"NonceAt",
+		)
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
+		)
 
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
@@ -1004,15 +970,6 @@ func TestPreprocessMetadata(t *testing.T) {
 			pChainBackend:         skippedBackend,
 			cChainAtomicTxBackend: skippedBackend,
 		}
-		currency := &types.Currency{Symbol: defaultSymbol, Decimals: defaultDecimals}
-		client.On(
-			"ContractInfo",
-			common.HexToAddress(defaultContractAddress),
-			true,
-		).Return(
-			currency,
-			nil,
-		).Once()
 		var ops []*types.Operation
 		assert.NoError(t, json.Unmarshal([]byte(unwrapIntent), &ops))
 
@@ -1042,16 +999,14 @@ func TestPreprocessMetadata(t *testing.T) {
 			UnwrapBridgeTx: true,
 		}
 
-		client.On(
-			"SuggestGasPrice",
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
+		)
 		contractAddress := common.HexToAddress(defaultContractAddress)
-		client.On(
-			"EstimateGas",
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
@@ -1063,16 +1018,15 @@ func TestPreprocessMetadata(t *testing.T) {
 		).Return(
 			uint64(21001),
 			nil,
-		).Once()
-		client.On(
-			"NonceAt",
+		)
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
+		)
 
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
@@ -1139,17 +1093,15 @@ func TestPreprocessMetadata(t *testing.T) {
 			MethodArgs:      []string{"0x3100000000000000000000000000000000000000000000000000000000000000", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6", "0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5", "0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6"},
 		}
 
-		client.On(
-			"SuggestGasPrice",
+		client.EXPECT().SuggestGasPrice(
 			ctx,
 		).Return(
 			big.NewInt(1000000000),
 			nil,
-		).Once()
+		)
 		contractAddress := common.HexToAddress(defaultToAddress)
 		data, _ := hexutil.Decode("0xb0d78b753100000000000000000000000000000000000000000000000000000000000000000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6")
-		client.On(
-			"EstimateGas",
+		client.EXPECT().EstimateGas(
 			ctx,
 			interfaces.CallMsg{
 				From: common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
@@ -1159,16 +1111,15 @@ func TestPreprocessMetadata(t *testing.T) {
 		).Return(
 			uint64(21001),
 			nil,
-		).Once()
-		client.On(
-			"NonceAt",
+		)
+		client.EXPECT().NonceAt(
 			ctx,
 			common.HexToAddress("0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"),
 			(*big.Int)(nil),
 		).Return(
 			uint64(0),
 			nil,
-		).Once()
+		)
 
 		metadataResponse, err := service.ConstructionMetadata(
 			ctx,
