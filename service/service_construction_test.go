@@ -32,7 +32,7 @@ func TestConstructionMetadata(t *testing.T) {
 	client := client.NewMockClient(ctrl)
 	ctx := context.Background()
 	skippedBackend := NewMockConstructionBackend(ctrl)
-	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).Times(8)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).AnyTimes()
 
 	service := ConstructionService{
 		config:                &Config{Mode: ModeOnline},
@@ -260,7 +260,7 @@ func TestConstructionMetadata(t *testing.T) {
 func TestContructionHash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	skippedBackend := NewMockConstructionBackend(ctrl)
-	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).Times(8)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).AnyTimes()
 
 	service := ConstructionService{
 		pChainBackend:         skippedBackend,
@@ -331,7 +331,7 @@ func TestContructionHash(t *testing.T) {
 func TestConstructionDerive(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	skippedBackend := NewMockConstructionBackend(ctrl)
-	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).AnyTimes()
 	service := ConstructionService{
 		pChainBackend:         skippedBackend,
 		cChainAtomicTxBackend: skippedBackend,
@@ -402,7 +402,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		Blockchain: "Avalanche",
 	}
 	skippedBackend := NewMockConstructionBackend(ctrl)
-	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).AnyTimes()
 	service := ConstructionService{
 		config:                &Config{Mode: ModeOnline},
 		client:                client,
@@ -959,7 +959,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		unwrapIntent := `[{"operation_identifier":{"index":0},"type":"ERC20_BURN","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}}]`
 		bridgeTokenList := []string{defaultContractAddress}
 		skippedBackend := NewMockConstructionBackend(ctrl)
-		skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
+		skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).AnyTimes()
 
 		service := ConstructionService{
 			config: &Config{
@@ -1155,11 +1155,11 @@ func TestBackendDelegations(t *testing.T) {
 			backends[i] = NewMockConstructionBackend(ctrl)
 
 			if i == currentBackend {
-				backends[i].EXPECT().ShouldHandleRequest(gomock.Any()).Return(true)
+				backends[i].EXPECT().ShouldHandleRequest(gomock.Any()).Return(true).Times(8)
 				break
 			}
 
-			backends[i].EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
+			backends[i].EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).Times(8)
 		}
 		return backends
 	}
