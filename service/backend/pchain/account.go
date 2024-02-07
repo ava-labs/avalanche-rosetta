@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -11,7 +12,6 @@ import (
 	avaConst "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	"golang.org/x/exp/slices"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
