@@ -32,7 +32,7 @@ func TestConstructionMetadata(t *testing.T) {
 	client := client.NewMockClient(ctrl)
 	ctx := context.Background()
 	skippedBackend := NewMockConstructionBackend(ctrl)
-	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).Times(8)
 
 	service := ConstructionService{
 		config:                &Config{Mode: ModeOnline},
@@ -260,7 +260,7 @@ func TestConstructionMetadata(t *testing.T) {
 func TestContructionHash(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	skippedBackend := NewMockConstructionBackend(ctrl)
-	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false).Times(8)
 
 	service := ConstructionService{
 		pChainBackend:         skippedBackend,

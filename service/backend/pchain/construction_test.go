@@ -74,8 +74,6 @@ func TestConstructionDerive(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	pChainMock := client.NewMockPChainClient(ctrl)
-	pChainMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(cChainID, nil)
-	pChainMock.EXPECT().GetBlockchainID(ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := indexer.NewMockParser(ctrl)
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(

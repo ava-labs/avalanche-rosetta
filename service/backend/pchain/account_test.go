@@ -213,7 +213,7 @@ func TestAccountPendingRewardsBalance(t *testing.T) {
 	parserMock := indexer.NewMockParser(ctrl)
 
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
-	parserMock.EXPECT().ParseNonGenesisBlock(ctx, "", blockHeight).Return(parsedBlock, nil)
+	parserMock.EXPECT().ParseNonGenesisBlock(ctx, "", blockHeight).Return(parsedBlock, nil).Times(2)
 
 	validator1NodeID, _ := ids.NodeIDFromString("NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S")
 	validator1Reward := uint64(100000)
