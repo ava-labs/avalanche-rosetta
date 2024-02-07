@@ -1,1 +1,3 @@
-github.com/ava-labs/avalanche-rosetta/client=Client=mocks/client/client.go
+github.com/ava-labs/avalanche-rosetta/client=Client,InfoClient,PChainClient=client/mock_client.go
+github.com/ava-labs/avalanche-rosetta/service=AccountBackend,ConstructionBackend=service/mock_service.go
+github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer=Parser=service/backend/pchain/indexer/mock_parser.go

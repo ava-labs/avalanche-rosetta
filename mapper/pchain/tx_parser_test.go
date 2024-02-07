@@ -12,7 +12,6 @@ import (
 
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 )
 
 var (
@@ -22,8 +21,6 @@ var (
 		ids.Empty: rosConst.PChain,
 		cChainID:  rosConst.CChain,
 	}
-
-	pchainClient = &mocks.PChainClient{}
 )
 
 func TestMapInOperation(t *testing.T) {
@@ -37,7 +34,6 @@ func TestMapInOperation(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
-		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	inOps := newTxOps(false)
@@ -87,8 +83,7 @@ func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
 
 		// passing empty as AVAX id, so that
 		// actual avax id in import transaction will not match with AVAX transaction
-		AvaxAssetID:  ids.Empty,
-		PChainClient: pchainClient,
+		AvaxAssetID: ids.Empty,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	inOps := newTxOps(true)
@@ -109,7 +104,6 @@ func TestMapOutOperation(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
-		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	outOps := newTxOps(false)
@@ -142,7 +136,6 @@ func TestMapAddValidatorTx(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
-		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -171,7 +164,6 @@ func TestMapAddDelegatorTx(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
-		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -218,7 +210,6 @@ func TestMapImportTx(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
-		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -250,7 +241,6 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
-		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -304,7 +294,6 @@ func TestMapExportTx(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
-		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -333,7 +322,6 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
-		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -363,7 +351,6 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
-		PChainClient:   pchainClient,
 	}
 	parser, _ = NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransactionWithExportOperations, err := parser.Parse(signedTx)

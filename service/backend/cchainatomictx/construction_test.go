@@ -16,9 +16,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 )
@@ -156,7 +156,7 @@ func TestExportTxConstruction(t *testing.T) {
 
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
-	clientMock := mocks.NewMockClient(ctrl)
+	clientMock := client.NewMockClient(ctrl)
 	backend := NewBackend(clientMock, avaxAssetID, avalancheNetworkID)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
@@ -371,7 +371,7 @@ func TestImportTxConstruction(t *testing.T) {
 
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
-	clientMock := mocks.NewMockClient(ctrl)
+	clientMock := client.NewMockClient(ctrl)
 	backend := NewBackend(clientMock, avaxAssetID, avalancheNetworkID)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {

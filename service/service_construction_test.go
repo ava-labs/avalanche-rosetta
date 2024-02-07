@@ -7,18 +7,16 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/coreth/interfaces"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"go.uber.org/mock/gomock"
 
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
-	backendMocks "github.com/ava-labs/avalanche-rosetta/mocks/service"
 )
 
 const (
@@ -31,10 +29,10 @@ const (
 
 func TestConstructionMetadata(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	client := mocks.NewMockClient(ctrl)
+	client := client.NewMockClient(ctrl)
 	ctx := context.Background()
-	skippedBackend := &backendMocks.ConstructionBackend{}
-	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
+	skippedBackend := NewMockConstructionBackend(ctrl)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
 
 	service := ConstructionService{
 		config:                &Config{Mode: ModeOnline},
@@ -260,8 +258,9 @@ func TestConstructionMetadata(t *testing.T) {
 }
 
 func TestContructionHash(t *testing.T) {
-	skippedBackend := &backendMocks.ConstructionBackend{}
-	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
+	ctrl := gomock.NewController(t)
+	skippedBackend := NewMockConstructionBackend(ctrl)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
 
 	service := ConstructionService{
 		pChainBackend:         skippedBackend,
@@ -330,8 +329,9 @@ func TestContructionHash(t *testing.T) {
 }
 
 func TestConstructionDerive(t *testing.T) {
-	skippedBackend := &backendMocks.ConstructionBackend{}
-	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
+	ctrl := gomock.NewController(t)
+	skippedBackend := NewMockConstructionBackend(ctrl)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
 	service := ConstructionService{
 		pChainBackend:         skippedBackend,
 		cChainAtomicTxBackend: skippedBackend,
@@ -396,13 +396,13 @@ func forceMarshalMap(t *testing.T, i interface{}) map[string]interface{} {
 func TestPreprocessMetadata(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
-	client := mocks.NewMockClient(ctrl)
+	client := client.NewMockClient(ctrl)
 	networkIdentifier := &types.NetworkIdentifier{
 		Network:    rosConst.FujiNetwork,
 		Blockchain: "Avalanche",
 	}
-	skippedBackend := &backendMocks.ConstructionBackend{}
-	skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
+	skippedBackend := NewMockConstructionBackend(ctrl)
+	skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
 	service := ConstructionService{
 		config:                &Config{Mode: ModeOnline},
 		client:                client,
@@ -958,8 +958,8 @@ func TestPreprocessMetadata(t *testing.T) {
 	t.Run("basic unwrap flow", func(t *testing.T) {
 		unwrapIntent := `[{"operation_identifier":{"index":0},"type":"ERC20_BURN","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}}]`
 		bridgeTokenList := []string{defaultContractAddress}
-		skippedBackend := &backendMocks.ConstructionBackend{}
-		skippedBackend.On("ShouldHandleRequest", mock.Anything).Return(false)
+		skippedBackend := NewMockConstructionBackend(ctrl)
+		skippedBackend.EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
 
 		service := ConstructionService{
 			config: &Config{
@@ -1142,32 +1142,26 @@ func TestPreprocessMetadata(t *testing.T) {
 }
 
 func TestBackendDelegations(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
 	testCases := []string{
 		"p-chain",
 		"c-chain-atomic-tx",
 	}
 
-	makeBackends := func(currentBackend int) []*backendMocks.ConstructionBackend {
-		backends := make([]*backendMocks.ConstructionBackend, len(testCases))
+	makeBackends := func(currentBackend int) []*MockConstructionBackend {
+		backends := make([]*MockConstructionBackend, len(testCases))
 		for i := range backends {
-			backends[i] = &backendMocks.ConstructionBackend{}
+			backends[i] = NewMockConstructionBackend(ctrl)
 
 			if i == currentBackend {
-				backends[i].On("ShouldHandleRequest", mock.Anything).Return(true)
+				backends[i].EXPECT().ShouldHandleRequest(gomock.Any()).Return(true)
 				break
 			}
 
-			backends[i].On("ShouldHandleRequest", mock.Anything).Return(false)
+			backends[i].EXPECT().ShouldHandleRequest(gomock.Any()).Return(false)
 		}
 		return backends
-	}
-
-	assertBackendCalls := func(backends []*backendMocks.ConstructionBackend) {
-		for _, b := range backends {
-			if b != nil {
-				b.AssertExpectations(t)
-			}
-		}
 	}
 
 	for idx, backendName := range testCases {
@@ -1196,12 +1190,11 @@ func TestBackendDelegations(t *testing.T) {
 				},
 			}
 
-			backends[idx].On("ConstructionDerive", mock.Anything, req).Return(expectedResp, nil).Once()
+			backends[idx].EXPECT().ConstructionDerive(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionDerive(context.Background(), req)
 
 			assert.Nil(t, err)
 			assert.Equal(t, expectedResp, resp)
-			assertBackendCalls(backends)
 		})
 
 		t.Run("Preprocess request is delegated to "+backendName, func(t *testing.T) {
@@ -1211,12 +1204,11 @@ func TestBackendDelegations(t *testing.T) {
 				Options: map[string]interface{}{"key": "value"},
 			}
 
-			backends[idx].On("ConstructionPreprocess", mock.Anything, req).Return(expectedResp, nil).Once()
+			backends[idx].EXPECT().ConstructionPreprocess(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionPreprocess(context.Background(), req)
 
 			assert.Nil(t, err)
 			assert.Equal(t, expectedResp, resp)
-			assertBackendCalls(backends)
 		})
 
 		t.Run("Metadata request is delegated to "+backendName, func(t *testing.T) {
@@ -1226,12 +1218,11 @@ func TestBackendDelegations(t *testing.T) {
 				Metadata: map[string]interface{}{"key": "value"},
 			}
 
-			backends[idx].On("ConstructionMetadata", mock.Anything, req).Return(expectedResp, nil).Once()
+			backends[idx].EXPECT().ConstructionMetadata(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := onlineService.ConstructionMetadata(context.Background(), req)
 
 			assert.Nil(t, err)
 			assert.Equal(t, expectedResp, resp)
-			assertBackendCalls(backends)
 		})
 
 		t.Run("Payloads request is delegated to "+backendName, func(t *testing.T) {
@@ -1239,12 +1230,11 @@ func TestBackendDelegations(t *testing.T) {
 
 			expectedResp := &types.ConstructionPayloadsResponse{UnsignedTransaction: "unsignedtxn"}
 
-			backends[idx].On("ConstructionPayloads", mock.Anything, req).Return(expectedResp, nil).Once()
+			backends[idx].EXPECT().ConstructionPayloads(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionPayloads(context.Background(), req)
 
 			assert.Nil(t, err)
 			assert.Equal(t, expectedResp, resp)
-			assertBackendCalls(backends)
 		})
 
 		t.Run("Combine request is delegated to "+backendName, func(t *testing.T) {
@@ -1255,24 +1245,22 @@ func TestBackendDelegations(t *testing.T) {
 
 			expectedResp := &types.ConstructionCombineResponse{SignedTransaction: "unsignedtxn"}
 
-			backends[idx].On("ConstructionCombine", mock.Anything, req).Return(expectedResp, nil).Once()
+			backends[idx].EXPECT().ConstructionCombine(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionCombine(context.Background(), req)
 
 			assert.Nil(t, err)
 			assert.Equal(t, expectedResp, resp)
-			assertBackendCalls(backends)
 		})
 
 		t.Run("Parse request is delegated to "+backendName, func(t *testing.T) {
 			req := &types.ConstructionParseRequest{}
 			expectedResp := &types.ConstructionParseResponse{}
 
-			backends[idx].On("ConstructionParse", mock.Anything, req).Return(expectedResp, nil).Once()
+			backends[idx].EXPECT().ConstructionParse(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionParse(context.Background(), req)
 
 			assert.Nil(t, err)
 			assert.Equal(t, expectedResp, resp)
-			assertBackendCalls(backends)
 		})
 
 		t.Run("Hash request is delegated to "+backendName, func(t *testing.T) {
@@ -1281,12 +1269,11 @@ func TestBackendDelegations(t *testing.T) {
 				TransactionIdentifier: &types.TransactionIdentifier{Hash: "txn hash"},
 			}
 
-			backends[idx].On("ConstructionHash", mock.Anything, req).Return(expectedResp, nil).Once()
+			backends[idx].EXPECT().ConstructionHash(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionHash(context.Background(), req)
 
 			assert.Nil(t, err)
 			assert.Equal(t, expectedResp, resp)
-			assertBackendCalls(backends)
 		})
 
 		t.Run("Submit request is delegated to "+backendName, func(t *testing.T) {
@@ -1295,12 +1282,11 @@ func TestBackendDelegations(t *testing.T) {
 				TransactionIdentifier: &types.TransactionIdentifier{Hash: "txn hash"},
 			}
 
-			backends[idx].On("ConstructionSubmit", mock.Anything, req).Return(expectedResp, nil).Once()
+			backends[idx].EXPECT().ConstructionSubmit(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := onlineService.ConstructionSubmit(context.Background(), req)
 
 			assert.Nil(t, err)
 			assert.Equal(t, expectedResp, resp)
-			assertBackendCalls(backends)
 		})
 	}
 }

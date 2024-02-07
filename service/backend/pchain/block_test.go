@@ -15,12 +15,11 @@ import (
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	avaTypes "github.com/ava-labs/avalanchego/vms/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
-	indexerMocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
@@ -28,8 +27,9 @@ import (
 func TestFetchBlkDependencies(t *testing.T) {
 	dummyGenesis = &indexer.ParsedGenesisBlock{}
 
-	mockPClient := mocks.NewPChainClient(t)
-	mockIndexerParser := indexerMocks.NewParser(t)
+	ctrl := gomock.NewController(t)
+	mockPClient := client.NewMockPChainClient(ctrl)
+	mockIndexerParser := indexer.NewMockParser(ctrl)
 
 	ctx := context.Background()
 
@@ -90,10 +90,10 @@ func TestFetchBlkDependencies(t *testing.T) {
 		},
 	}
 
-	mockIndexerParser.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	mockPClient.Mock.On("GetTx", mock.Anything, nonGenesisTxID).Return(signedImportTx.Bytes(), nil)
+	mockIndexerParser.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	mockPClient.EXPECT().GetTx(gomock.Any(), nonGenesisTxID).Return(signedImportTx.Bytes(), nil)
 
-	mockPClient.Mock.On("GetRewardUTXOs", mock.Anything, &api.GetTxArgs{
+	mockPClient.EXPECT().GetRewardUTXOs(gomock.Any(), &api.GetTxArgs{
 		TxID:     nonGenesisTxID,
 		Encoding: formatting.Hex,
 	}).Return(nil, nil)
@@ -103,9 +103,6 @@ func TestFetchBlkDependencies(t *testing.T) {
 
 	deps, err := backend.fetchBlkDependencies(ctx, []*txs.Tx{tx})
 	require.Nil(t, err)
-
-	mockPClient.AssertExpectations(t)
-	mockIndexerParser.AssertExpectations(t)
 
 	require.Equal(t, 2, len(deps))
 	require.Equal(t, ids.Empty, deps[genesisTxID].Tx.ID())

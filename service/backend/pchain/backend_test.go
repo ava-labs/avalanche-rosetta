@@ -7,11 +7,12 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
-	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
 	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 	"github.com/ava-labs/avalanchego/ids"
 )
 
@@ -30,11 +31,12 @@ func TestShouldHandleRequest(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	clientMock := &mocks.PChainClient{}
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.CChain.String()).Return(ids.ID{'C'}, nil)
-	clientMock.Mock.On("GetBlockchainID", ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
-	parserMock := &idxmocks.Parser{}
-	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
+	ctrl := gomock.NewController(t)
+	clientMock := client.NewMockPChainClient(ctrl)
+	clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(ids.ID{'C'}, nil)
+	clientMock.EXPECT().GetBlockchainID(ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
+	parserMock := indexer.NewMockParser(ctrl)
+	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(
 		service.ModeOnline,
 		clientMock,

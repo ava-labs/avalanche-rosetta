@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 )
 
 type utxo struct {
@@ -46,7 +46,7 @@ var blockHeader = &ethtypes.Header{
 
 func TestAccountBalance(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	evmMock := mocks.NewMockClient(ctrl)
+	evmMock := client.NewMockClient(ctrl)
 	backend := NewBackend(evmMock, ids.Empty, avalancheNetworkID)
 	accountAddress := "C-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl"
 	_, _, addressBytes, err := address.Parse(accountAddress)
@@ -85,7 +85,7 @@ func TestAccountBalance(t *testing.T) {
 
 func TestAccountCoins(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	evmMock := mocks.NewMockClient(ctrl)
+	evmMock := client.NewMockClient(ctrl)
 	backend := NewBackend(evmMock, ids.Empty, avalancheNetworkID)
 	// changing page size to 2 to test pagination as well
 	backend.getUTXOsPageSize = 2
