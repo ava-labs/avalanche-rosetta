@@ -9,7 +9,9 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
@@ -29,11 +31,14 @@ func TestMapInOperation(t *testing.T) {
 	assert.Equal(t, 2, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	inOps := newTxOps(false)
@@ -76,6 +81,8 @@ func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
 
 	avaxIn := importTx.ImportedInputs[0]
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
@@ -83,7 +90,8 @@ func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
 
 		// passing empty as AVAX id, so that
 		// actual avax id in import transaction will not match with AVAX transaction
-		AvaxAssetID: ids.Empty,
+		AvaxAssetID:  ids.Empty,
+		PChainClient: pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	inOps := newTxOps(true)
@@ -99,11 +107,14 @@ func TestMapOutOperation(t *testing.T) {
 
 	avaxOut := addDelegatorTx.Outs[0]
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	outOps := newTxOps(false)
@@ -131,11 +142,14 @@ func TestMapAddValidatorTx(t *testing.T) {
 	assert.Equal(t, 2, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -159,11 +173,14 @@ func TestMapAddDelegatorTx(t *testing.T) {
 	assert.Equal(t, 1, len(addDelegatorTx.Outs))
 	assert.Equal(t, 1, len(addDelegatorTx.StakeOuts))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -205,11 +222,14 @@ func TestMapImportTx(t *testing.T) {
 	assert.Equal(t, 3, len(importTx.Outs))
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -236,11 +256,14 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	assert.Equal(t, 3, len(importTx.Outs))
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -289,11 +312,14 @@ func TestMapExportTx(t *testing.T) {
 	assert.Equal(t, 1, len(exportTx.Outs))
 	assert.Equal(t, 1, len(exportTx.ExportedOutputs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -317,11 +343,14 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	assert.Equal(t, 1, len(exportTx.Outs))
 	assert.Equal(t, 1, len(exportTx.ExportedOutputs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
 	}
 	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransaction, err := parser.Parse(signedTx)
@@ -351,6 +380,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 		Hrp:            constants.FujiHRP,
 		ChainIDs:       chainIDs,
 		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
 	}
 	parser, _ = NewTxParser(parserCfg, inputAccounts, nil)
 	rosettaTransactionWithExportOperations, err := parser.Parse(signedTx)
