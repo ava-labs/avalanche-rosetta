@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	defaultSymbol                = "TEST"
-	defaultDecimals        uint8 = 18
-	defaultContractAddress       = "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"
-	defaultFromAddress           = "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"
-	defaultToAddress             = "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"
+	defaultSymbol          = "TEST"
+	defaultDecimals        = 18
+	defaultContractAddress = "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"
+	defaultFromAddress     = "0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"
+	defaultToAddress       = "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"
 )
 
 func TestConstructionMetadata(t *testing.T) {
