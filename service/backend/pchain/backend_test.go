@@ -13,7 +13,6 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
-	"github.com/ava-labs/avalanchego/ids"
 )
 
 func TestShouldHandleRequest(t *testing.T) {
@@ -33,8 +32,6 @@ func TestShouldHandleRequest(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	clientMock := client.NewMockPChainClient(ctrl)
-	clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(ids.ID{'C'}, nil)
-	clientMock.EXPECT().GetBlockchainID(ctx, constants.XChain.String()).Return(ids.ID{'X'}, nil)
 	parserMock := indexer.NewMockParser(ctrl)
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(
