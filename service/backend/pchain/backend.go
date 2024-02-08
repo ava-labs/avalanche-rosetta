@@ -84,38 +84,38 @@ func NewBackend(
 func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 	switch r := req.(type) {
 	case *types.AccountBalanceRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.AccountCoinsRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.BlockRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.BlockTransactionRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.ConstructionDeriveRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.ConstructionMetadataRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.ConstructionPreprocessRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.ConstructionPayloadsRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.ConstructionParseRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.ConstructionCombineRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.ConstructionHashRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.ConstructionSubmitRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	case *types.NetworkRequest:
-		return b.isPChain(r.NetworkIdentifier)
+		return isPChain(r.NetworkIdentifier)
 	}
 
 	return false
 }
 
 // isPChain checks network identifier to make sure sub-network identifier set to "P"
-func (*Backend) isPChain(reqNetworkID *types.NetworkIdentifier) bool {
+func isPChain(reqNetworkID *types.NetworkIdentifier) bool {
 	return reqNetworkID != nil &&
 		reqNetworkID.SubNetworkIdentifier != nil &&
 		reqNetworkID.SubNetworkIdentifier.Network == constants.PChain.String()
