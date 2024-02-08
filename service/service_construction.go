@@ -1428,10 +1428,6 @@ func (s ConstructionService) CreateGenericContractCallOperationDescription(opera
 		return nil, errors.New("for generic call both values should be zero")
 	}
 
-	return s.createOperationDescriptionContractCall(), nil
-}
-
-func (ConstructionService) createOperationDescriptionContractCall() []*parser.OperationDescription {
 	return []*parser.OperationDescription{
 		{
 			Type: mapper.OpCall,
@@ -1453,7 +1449,7 @@ func (ConstructionService) createOperationDescriptionContractCall() []*parser.Op
 				Sign:   parser.AnyAmountSign,
 			},
 		},
-	}
+	}, nil
 }
 
 func generateErc20TransferData(toAddress string, value *big.Int) []byte {
