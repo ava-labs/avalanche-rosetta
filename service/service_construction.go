@@ -7,21 +7,20 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ava-labs/coreth/core"
+	"github.com/ava-labs/coreth/interfaces"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"golang.org/x/crypto/sha3"
-
-	"github.com/ava-labs/coreth/core"
-	ethtypes "github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/interfaces"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
 )
 
 const (
@@ -127,7 +126,7 @@ func (s ConstructionService) ConstructionMetadata(
 	var nonce uint64
 	var err error
 	if input.Nonce == nil {
-		nonce, err = s.client.NonceAt(ctx, ethcommon.HexToAddress(input.From), nil)
+		nonce, err = s.client.NonceAt(ctx, common.HexToAddress(input.From), nil)
 		if err != nil {
 			return nil, WrapError(ErrClientError, err)
 		}
@@ -281,7 +280,7 @@ func (s ConstructionService) ConstructionCombine(
 
 	ethTransaction := ethtypes.NewTransaction(
 		unsignedTx.Nonce,
-		ethcommon.HexToAddress(unsignedTx.To),
+		common.HexToAddress(unsignedTx.To),
 		unsignedTx.Value,
 		unsignedTx.GasLimit,
 		unsignedTx.GasPrice,
@@ -334,14 +333,14 @@ func (s ConstructionService) ConstructionDerive(
 		return s.cChainAtomicTxBackend.ConstructionDerive(ctx, req)
 	}
 
-	key, err := ethcrypto.DecompressPubkey(req.PublicKey.Bytes)
+	key, err := crypto.DecompressPubkey(req.PublicKey.Bytes)
 	if err != nil {
 		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	return &types.ConstructionDeriveResponse{
 		AccountIdentifier: &types.AccountIdentifier{
-			Address: ethcrypto.PubkeyToAddress(*key).Hex(),
+			Address: crypto.PubkeyToAddress(*key).Hex(),
 		},
 	}, nil
 }
@@ -706,10 +705,10 @@ func (s ConstructionService) createTransferPayload(
 		)
 	}
 	var transferData []byte
-	var sendToAddress ethcommon.Address
+	var sendToAddress common.Address
 	if types.Hash(fromCurrency) == types.Hash(mapper.AvaxCurrency) {
 		transferData = []byte{}
-		sendToAddress = ethcommon.HexToAddress(checkTo)
+		sendToAddress = common.HexToAddress(checkTo)
 	} else {
 		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 		if !ok {
@@ -718,7 +717,7 @@ func (s ConstructionService) createTransferPayload(
 		}
 
 		transferData = generateErc20TransferData(toAddress, amount)
-		sendToAddress = ethcommon.HexToAddress(contract)
+		sendToAddress = common.HexToAddress(contract)
 		amount = big.NewInt(0)
 	}
 
@@ -810,7 +809,7 @@ func (s ConstructionService) createUnwrapPayload(
 	}
 
 	unwrapData := generateBridgeUnwrapTransferData(amount, big.NewInt(defaultUnwrapChainID))
-	sendToAddress := ethcommon.HexToAddress(contract)
+	sendToAddress := common.HexToAddress(contract)
 
 	var metadata metadata
 	if err := mapper.UnmarshalJSONMap(req.Metadata, &metadata); err != nil {
@@ -893,7 +892,7 @@ func (s ConstructionService) createGenericContractCallPayload(req *types.Constru
 		return nil, nil, nil, WrapError(ErrInvalidInput, err)
 	}
 
-	sendToAddress := ethcommon.HexToAddress(checkTo)
+	sendToAddress := common.HexToAddress(checkTo)
 	contractData, err := hexutil.Decode(metadata.ContractData)
 	if err != nil {
 		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
@@ -1265,9 +1264,9 @@ func (s ConstructionService) getNativeTransferGasLimit(
 		// a previous version of avalanche-rosetta.
 		return nativeTransferGasLimit, nil
 	}
-	to := ethcommon.HexToAddress(toAddress)
+	to := common.HexToAddress(toAddress)
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From:  ethcommon.HexToAddress(fromAddress),
+		From:  common.HexToAddress(fromAddress),
 		To:    &to,
 		Value: value,
 	})
@@ -1286,10 +1285,10 @@ func (s ConstructionService) getErc20TransferGasLimit(
 		return erc20TransferGasLimit, nil
 	}
 	// ToAddress for erc20 transfers is the contract address
-	contractAddress := ethcommon.HexToAddress(contract.(string))
+	contractAddress := common.HexToAddress(contract.(string))
 	data := generateErc20TransferData(toAddress, value)
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From: ethcommon.HexToAddress(fromAddress),
+		From: common.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,
 	})
@@ -1310,12 +1309,12 @@ func (s ConstructionService) getBridgeUnwrapTransferGasLimit(
 		return unwrapGasLimit, nil
 	}
 	// ToAddress for bridge unwrap is the contract address
-	contractAddress := ethcommon.HexToAddress(contract.(string))
+	contractAddress := common.HexToAddress(contract.(string))
 	chainID := big.NewInt(defaultUnwrapChainID)
 	data := generateBridgeUnwrapTransferData(value, chainID)
 
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From: ethcommon.HexToAddress(fromAddress),
+		From: common.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,
 	})
@@ -1331,9 +1330,9 @@ func (s ConstructionService) getGenericContractCallGasLimit(
 	fromAddress string,
 	data []byte,
 ) (uint64, error) {
-	contractAddress := ethcommon.HexToAddress(toAddress)
+	contractAddress := common.HexToAddress(toAddress)
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From: ethcommon.HexToAddress(fromAddress),
+		From: common.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,
 	})
@@ -1458,11 +1457,11 @@ func (ConstructionService) createOperationDescriptionContractCall() []*parser.Op
 }
 
 func generateErc20TransferData(toAddress string, value *big.Int) []byte {
-	to := ethcommon.HexToAddress(toAddress)
+	to := common.HexToAddress(toAddress)
 	methodID := getMethodID(transferFnSignature)
 
-	paddedAddress := ethcommon.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
-	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
+	paddedAddress := common.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
+	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
 
 	var data []byte
 	data = append(data, methodID...)
@@ -1474,8 +1473,8 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 func generateBridgeUnwrapTransferData(value *big.Int, chainID *big.Int) []byte {
 	methodID := getMethodID(unwrapFnSignature)
 
-	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
-	paddedChainID := ethcommon.LeftPadBytes(chainID.Bytes(), requiredPaddingBytes)
+	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
+	paddedChainID := common.LeftPadBytes(chainID.Bytes(), requiredPaddingBytes)
 
 	var data []byte
 	data = append(data, methodID...)
@@ -1484,7 +1483,7 @@ func generateBridgeUnwrapTransferData(value *big.Int, chainID *big.Int) []byte {
 	return data
 }
 
-func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
+func parseErc20TransferData(data []byte) (*common.Address, *big.Int, error) {
 	if len(data) != genericTransferBytesLength {
 		return nil, nil, errors.New("incorrect length for data array")
 	}
@@ -1492,7 +1491,7 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 		return nil, nil, errors.New("incorrect methodID signature")
 	}
 
-	address := ethcommon.BytesToAddress(data[5:36])
+	address := common.BytesToAddress(data[5:36])
 	amount := new(big.Int).SetBytes(data[37:])
 	return &address, amount, nil
 }

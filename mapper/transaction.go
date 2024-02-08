@@ -12,13 +12,14 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/coreth/core"
-	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	clientTypes "github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
 )
 
 const (
@@ -38,9 +39,9 @@ func Transaction(
 	tx *ethtypes.Transaction,
 	msg *core.Message,
 	receipt *ethtypes.Receipt,
-	trace *clientTypes.Call,
-	flattenedTrace []*clientTypes.FlatCall,
-	client clientTypes.Client,
+	trace *client.Call,
+	flattenedTrace []*client.FlatCall,
+	rpcClient client.Client,
 	isAnalyticsMode bool,
 	standardModeWhiteList []string,
 	includeUnknownTokens bool,
@@ -95,24 +96,24 @@ func Transaction(
 
 		switch len(log.Topics) {
 		case topicsInErc721Transfer:
-			symbol, _, err := client.GetContractInfo(log.Address, false)
+			symbol, _, err := rpcClient.GetContractInfo(log.Address, false)
 			if err != nil {
 				return nil, err
 			}
 
-			if symbol == clientTypes.UnknownERC721Symbol && !includeUnknownTokens {
+			if symbol == client.UnknownERC721Symbol && !includeUnknownTokens {
 				continue
 			}
 
 			erc721Ops := erc721Ops(log, int64(len(ops)))
 			ops = append(ops, erc721Ops...)
 		case topicsInErc20Transfer:
-			symbol, decimals, err := client.GetContractInfo(log.Address, true)
+			symbol, decimals, err := rpcClient.GetContractInfo(log.Address, true)
 			if err != nil {
 				return nil, err
 			}
 
-			if symbol == clientTypes.UnknownERC20Symbol && !includeUnknownTokens {
+			if symbol == client.UnknownERC20Symbol && !includeUnknownTokens {
 				continue
 			}
 
@@ -363,7 +364,7 @@ func CrossChainTransactions(
 }
 
 // MempoolTransactionsIDs returns a list of transction IDs in the mempool
-func MempoolTransactionsIDs(accountMap clientTypes.TxAccountMap) []*types.TransactionIdentifier {
+func MempoolTransactionsIDs(accountMap client.TxAccountMap) []*types.TransactionIdentifier {
 	result := []*types.TransactionIdentifier{}
 
 	for _, txNonceMap := range accountMap {
@@ -380,7 +381,7 @@ func MempoolTransactionsIDs(accountMap clientTypes.TxAccountMap) []*types.Transa
 	return result
 }
 
-func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation {
+func traceOps(trace []*client.FlatCall, startIndex int) []*types.Operation {
 	ops := []*types.Operation{}
 	if len(trace) == 0 {
 		return ops

@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/coinbase/rosetta-sdk-go/types"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 

@@ -9,8 +9,9 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
+
+	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 )
 
 func TestShouldHandleRequest(t *testing.T) {

@@ -8,13 +8,14 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
 )
 
 var WAVAX = &types.Currency{
@@ -26,19 +27,19 @@ var WAVAX = &types.Currency{
 }
 
 func TestZeroAddress(t *testing.T) {
-	require.Equal(t, ethcommon.HexToAddress("0x0000000000000000000000000000000000000000"), zeroAddress)
+	require.Equal(t, common.HexToAddress("0x0000000000000000000000000000000000000000"), zeroAddress)
 }
 
 func TestERC20Ops(t *testing.T) {
 	t.Run("transfer op", func(t *testing.T) {
 		log := &ethtypes.Log{
-			Address: ethcommon.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
-			Topics: []ethcommon.Hash{
-				ethcommon.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
-				ethcommon.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
-				ethcommon.HexToHash("0x0000000000000000000000005d95ae932d42e53bb9da4de65e9b7263a4fa8564"),
+			Address: common.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
+			Topics: []common.Hash{
+				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
+				common.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
+				common.HexToHash("0x0000000000000000000000005d95ae932d42e53bb9da4de65e9b7263a4fa8564"),
 			},
-			Data: ethcommon.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
+			Data: common.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
 		}
 
 		require.Equal(t, []*types.Operation{
@@ -80,13 +81,13 @@ func TestERC20Ops(t *testing.T) {
 
 	t.Run("burn op", func(t *testing.T) {
 		log := &ethtypes.Log{
-			Address: ethcommon.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
-			Topics: []ethcommon.Hash{
-				ethcommon.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
-				ethcommon.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
-				ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+			Address: common.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
+			Topics: []common.Hash{
+				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
+				common.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
+				common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
 			},
-			Data: ethcommon.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
+			Data: common.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
 		}
 
 		require.Equal(t, []*types.Operation{
@@ -109,13 +110,13 @@ func TestERC20Ops(t *testing.T) {
 
 	t.Run("mint op", func(t *testing.T) {
 		log := &ethtypes.Log{
-			Address: ethcommon.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
-			Topics: []ethcommon.Hash{
-				ethcommon.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
-				ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
-				ethcommon.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
+			Address: common.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
+			Topics: []common.Hash{
+				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
+				common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+				common.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
 			},
-			Data: ethcommon.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
+			Data: common.FromHex("0x0000000000000000000000000000000000000000000009513ea9de0243800000"),
 		}
 
 		require.Equal(t, []*types.Operation{
@@ -140,12 +141,12 @@ func TestERC20Ops(t *testing.T) {
 func TestERC721Ops(t *testing.T) {
 	t.Run("transfer op", func(t *testing.T) {
 		log := &ethtypes.Log{
-			Address: ethcommon.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
-			Topics: []ethcommon.Hash{
-				ethcommon.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
-				ethcommon.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
-				ethcommon.HexToHash("0x0000000000000000000000005d95ae932d42e53bb9da4de65e9b7263a4fa8564"),
-				ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000051"),
+			Address: common.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
+			Topics: []common.Hash{
+				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
+				common.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
+				common.HexToHash("0x0000000000000000000000005d95ae932d42e53bb9da4de65e9b7263a4fa8564"),
+				common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000051"),
 			},
 		}
 
@@ -188,12 +189,12 @@ func TestERC721Ops(t *testing.T) {
 
 	t.Run("burn op", func(t *testing.T) {
 		log := &ethtypes.Log{
-			Address: ethcommon.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
-			Topics: []ethcommon.Hash{
-				ethcommon.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
-				ethcommon.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
-				ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
-				ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000051"),
+			Address: common.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
+			Topics: []common.Hash{
+				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
+				common.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
+				common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+				common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000051"),
 			},
 		}
 
@@ -217,12 +218,12 @@ func TestERC721Ops(t *testing.T) {
 
 	t.Run("mint op", func(t *testing.T) {
 		log := &ethtypes.Log{
-			Address: ethcommon.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
-			Topics: []ethcommon.Hash{
-				ethcommon.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
-				ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
-				ethcommon.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
-				ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000051"),
+			Address: common.HexToAddress("0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
+			Topics: []common.Hash{
+				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"),
+				common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+				common.HexToHash("0x000000000000000000000000f1b77573a8525acfa116a785092d1ba90d96bf37"),
+				common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000051"),
 			},
 		}
 

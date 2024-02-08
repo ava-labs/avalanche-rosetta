@@ -6,14 +6,12 @@ import (
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/ids"
-	avaConst "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
 	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	avaTypes "github.com/ava-labs/avalanchego/vms/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -22,6 +20,9 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
+
+	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
+	avatypes "github.com/ava-labs/avalanchego/vms/types"
 )
 
 func TestFetchBlkDependencies(t *testing.T) {
@@ -33,7 +34,7 @@ func TestFetchBlkDependencies(t *testing.T) {
 
 	ctx := context.Background()
 
-	networkID := avaConst.MainnetID
+	networkID := avaconstants.MainnetID
 	networkIdentifier := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
 		Network:    constants.MainnetNetwork,
@@ -127,7 +128,7 @@ func makeImportTx(t *testing.T, networkID uint32) (*txs.Tx, error) {
 					},
 				},
 				Ins:  []*avax.TransferableInput{},
-				Memo: avaTypes.JSONByteSlice{},
+				Memo: avatypes.JSONByteSlice{},
 			},
 			SyntacticallyVerified: false,
 		},

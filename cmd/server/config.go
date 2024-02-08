@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/ava-labs/avalanchego/utils/constants"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -97,7 +97,7 @@ func (c *config) validate() error {
 
 	if len(c.TokenWhiteList) != 0 {
 		for _, token := range c.TokenWhiteList {
-			if !ethcommon.IsHexAddress(token) {
+			if !common.IsHexAddress(token) {
 				return errInvalidTokenAddress
 			}
 		}
@@ -105,7 +105,7 @@ func (c *config) validate() error {
 
 	if len(c.BridgeTokenList) != 0 {
 		for _, token := range c.BridgeTokenList {
-			if !ethcommon.IsHexAddress(token) {
+			if !common.IsHexAddress(token) {
 				return errInvalidTokenAddress
 			}
 
@@ -128,7 +128,7 @@ func (c *config) validate() error {
 
 func (c *config) validateWhitelistOnlyValidErc20s(cli client.Client) error {
 	for _, token := range c.TokenWhiteList {
-		ethAddress := ethcommon.HexToAddress(token)
+		ethAddress := common.HexToAddress(token)
 		symbol, decimals, err := cli.GetContractInfo(ethAddress, true)
 		if err != nil {
 			return err

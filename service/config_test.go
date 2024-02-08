@@ -3,10 +3,11 @@ package service
 import (
 	"testing"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/params"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
 )
 
 func TestConfig(t *testing.T) {

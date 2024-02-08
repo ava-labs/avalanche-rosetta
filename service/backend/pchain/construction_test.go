@@ -10,9 +10,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
-	avaConst "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting"
-	ajson "github.com/ava-labs/avalanchego/utils/json"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -23,6 +21,9 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
+
+	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
+	avajson "github.com/ava-labs/avalanchego/utils/json"
 )
 
 var (
@@ -43,7 +44,7 @@ var (
 
 	nodeID = "NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S"
 
-	avalancheNetworkID = avaConst.FujiID
+	avalancheNetworkID = avaconstants.FujiID
 
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 
@@ -223,7 +224,7 @@ func TestExportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
-		clientMock.EXPECT().GetTxFee(ctx).Return(&info.GetTxFeeResponse{TxFee: ajson.Uint64(txFee)}, nil)
+		clientMock.EXPECT().GetTxFee(ctx).Return(&info.GetTxFeeResponse{TxFee: avajson.Uint64(txFee)}, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(cChainID, nil)
 
@@ -436,7 +437,7 @@ func TestImportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
-		clientMock.EXPECT().GetTxFee(ctx).Return(&info.GetTxFeeResponse{TxFee: ajson.Uint64(txFee)}, nil)
+		clientMock.EXPECT().GetTxFee(ctx).Return(&info.GetTxFeeResponse{TxFee: avajson.Uint64(txFee)}, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(cChainID, nil)
 

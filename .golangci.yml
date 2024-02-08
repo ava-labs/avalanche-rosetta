@@ -47,12 +47,12 @@ linters:
     - errorlint
     - exportloopref
     - forbidigo
+    - gci
     - goconst
     - gocritic
     # - goerr113
     - gofmt
     - gofumpt
-    - goimports
     # - gomnd
     - goprintffuncname
     - gosec
@@ -105,8 +105,16 @@ linters-settings:
       - '^(t|b|tb|f)\.(Fatal|Fatalf|Error|Errorf)$(# the require library should be used instead)?'
     # Exclude godoc examples from forbidigo checks.
     exclude_godoc_examples: false
-  goimports:
-    local-prefixes: github.com/ava-labs/avalanche-rosetta
+  gci:
+    sections:
+      - standard
+      - default
+      - blank
+      - dot
+      - prefix(github.com/ava-labs/avalanche-rosetta)
+      - alias
+    skip-generated: true
+    custom-order: true
   gosec:
     excludes:
       - G107 # Url provided to HTTP request as taint input https://securego.io/docs/rules/g107
@@ -117,8 +125,16 @@ linters-settings:
     no-extra-aliases: false
     # List of aliases
     alias:
-      - pkg: github.com/ava-labs/avalanchego/utils/math
-        alias: safemath
+      - pkg: github.com/ava-labs/coreth/core/types
+        alias: ethtypes
+      - pkg: github.com/ethereum/go-ethereum/common
+        alias: ethcommon
+      - pkg: github.com/ava-labs/avalanche-rosetta/mapper/pchain
+        alias: pmapper
+      - pkg: github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx
+        alias: cmapper
+      - pkg: github.com/ava-labs/avalanchego/utils/constants
+        alias: avaconstants
   revive:
     rules:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#bool-literal-in-expr

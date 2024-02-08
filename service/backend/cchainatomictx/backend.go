@@ -8,8 +8,9 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
+
+	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 )
 
 var (

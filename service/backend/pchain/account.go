@@ -9,23 +9,22 @@ import (
 	"strings"
 	"time"
 
-	avaConst "github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-
-	"github.com/ava-labs/avalanche-rosetta/constants"
-	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
-
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/utils/set"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
+
+	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
+	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
 )
 
 var (
@@ -186,7 +185,7 @@ func (b *Backend) getPendingRewardsBalance(ctx context.Context, req *types.Accou
 	var nodeIDs []ids.NodeID
 	nodeIDs = append(nodeIDs, validatorNodeID)
 
-	validators, err := b.pClient.GetCurrentValidators(ctx, avaConst.PrimaryNetworkID, nodeIDs)
+	validators, err := b.pClient.GetCurrentValidators(ctx, avaconstants.PrimaryNetworkID, nodeIDs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, "unable to fetch validators")
 	}

@@ -2,25 +2,25 @@ package indexer
 
 import (
 	"context"
-	stdjson "encoding/json"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/stretchr/testify/require"
-	gomock "go.uber.org/mock/gomock"
-
-	"github.com/ava-labs/avalanche-rosetta/client"
-	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
-
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/indexer"
+	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/utils/formatting"
+	"github.com/ava-labs/avalanchego/vms/platformvm/genesis"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
+	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/constants"
+
+	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
 )
 
 var (
@@ -53,7 +53,7 @@ var idxs = []uint64{
 
 func readFixture(path string, sprintfArgs ...interface{}) []byte {
 	relpath := fmt.Sprintf(path, sprintfArgs...)
-	ret, err := os.ReadFile(fmt.Sprintf("testdata/%s", relpath))
+	ret, err := os.ReadFile("testdata/" + relpath)
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +69,7 @@ func TestMain(m *testing.M) {
 		ret := readFixture("ins/%v.json", idx)
 
 		var container indexer.Container
-		err := stdjson.Unmarshal(ret, &container)
+		err := json.Unmarshal(ret, &container)
 		if err != nil {
 			panic(err)
 		}
@@ -90,7 +90,7 @@ func TestMain(m *testing.M) {
 
 	pchainClient.EXPECT().GetHeight(ctx, gomock.Any()).Return(uint64(1000000), nil)
 
-	p, err = NewParser(pchainClient, constants.MainnetID)
+	p, err = NewParser(pchainClient, avaconstants.MainnetID)
 	if err != nil {
 		panic(err)
 	}
@@ -112,9 +112,9 @@ func TestGenesisBlockCreateChainTxs(t *testing.T) {
 		castTx.GenesisData = []byte{}
 	}
 
-	g.UTXOs = []*pGenesis.UTXO{}
+	g.UTXOs = []*genesis.UTXO{}
 
-	j, err := stdjson.Marshal(g)
+	j, err := json.Marshal(g)
 	require.NoError(err)
 
 	ret := readFixture("outs/genesis.json")
@@ -126,15 +126,15 @@ func TestGenesisBlockParseTxs(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	pchainClient := client.NewMockPChainClient(ctrl)
 
-	p, err := NewParser(pchainClient, constants.FujiID)
+	p, err := NewParser(pchainClient, avaconstants.FujiID)
 	require.NoError(err)
 
 	ctx := context.Background()
 	g, err := p.GetGenesisBlock(ctx)
 	require.NoError(err)
 
-	initializeTxCtx(g.Txs, constants.FujiID)
-	j, err := stdjson.MarshalIndent(g, "", "  ")
+	initializeTxCtx(g.Txs, avaconstants.FujiID)
+	j, err := json.MarshalIndent(g, "", "  ")
 	require.NoError(err)
 
 	ret := readFixture("outs/genesis_fuji_txs.json")
@@ -152,8 +152,8 @@ func TestFixtures(t *testing.T) {
 		block, err := p.ParseNonGenesisBlock(ctx, "", idx+1)
 		require.NoError(err)
 
-		initializeTxCtx(block.Txs, constants.MainnetID)
-		j, err := stdjson.Marshal(block)
+		initializeTxCtx(block.Txs, avaconstants.MainnetID)
+		j, err := json.Marshal(block)
 		require.NoError(err)
 
 		ret := readFixture("outs/%v.json", idx)
@@ -163,7 +163,7 @@ func TestFixtures(t *testing.T) {
 
 func initializeTxCtx(txs []*txs.Tx, networkID uint32) {
 	aliaser := ids.NewAliaser()
-	_ = aliaser.Alias(constants.PlatformChainID, rosConst.PChain.String())
+	_ = aliaser.Alias(avaconstants.PlatformChainID, constants.PChain.String())
 	ctx := &snow.Context{
 		BCLookup:  aliaser,
 		NetworkID: networkID,

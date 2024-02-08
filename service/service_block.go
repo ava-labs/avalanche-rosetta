@@ -6,17 +6,17 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/coreth/core"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
 
-	"github.com/ava-labs/coreth/core"
-	corethTypes "github.com/ava-labs/coreth/core/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 // BlockBackend represents a backend that implements /block family of apis for a subset of requests
@@ -86,7 +86,7 @@ func (s *BlockService) Block(
 	var (
 		blockIdentifier       *types.BlockIdentifier
 		parentBlockIdentifier *types.BlockIdentifier
-		block                 *corethTypes.Block
+		block                 *ethtypes.Block
 		err                   error
 	)
 
@@ -190,7 +190,7 @@ func (s *BlockService) BlockTransaction(
 
 func (s *BlockService) fetchTransactions(
 	ctx context.Context,
-	block *corethTypes.Block,
+	block *ethtypes.Block,
 ) ([]*types.Transaction, *types.Error) {
 	transactions := []*types.Transaction{}
 
@@ -213,8 +213,8 @@ func (s *BlockService) fetchTransactions(
 
 func (s *BlockService) fetchTransaction(
 	ctx context.Context,
-	tx *corethTypes.Transaction,
-	header *corethTypes.Header,
+	tx *ethtypes.Transaction,
+	header *ethtypes.Header,
 	trace *client.Call,
 	flattened []*client.FlatCall,
 ) (*types.Transaction, *types.Error) {
@@ -238,7 +238,7 @@ func (s *BlockService) fetchTransaction(
 
 func (s *BlockService) parseCrossChainTransactions(
 	networkIdentifier *types.NetworkIdentifier,
-	block *corethTypes.Block,
+	block *ethtypes.Block,
 ) ([]*types.Transaction, *types.Error) {
 	result := []*types.Transaction{}
 
