@@ -69,9 +69,11 @@ linters:
     - prealloc
     - predeclared
     - revive
+    - spancheck
     - staticcheck
     - stylecheck
     - tagalign
+    - testifylint
     - typecheck
     - unconvert
     - unparam
@@ -177,9 +179,32 @@ linters-settings:
       # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#useless-break
       - name: useless-break
         disabled: false
+  spancheck:
+    # https://github.com/jjti/go-spancheck#checks
+    checks:
+      - end
+      # - record-error # check that `span.RecordError(err)` is called when an error is returned
+      # - set-status   # check that `span.SetStatus(codes.Error, msg)` is called when an error is returned
   staticcheck:
     # https://staticcheck.io/docs/options#checks
     checks:
       - "all"
       - "-SA6002" # Storing non-pointer values in sync.Pool allocates memory
       - "-SA1019" # Using a deprecated function, variable, constant or field
+  tagalign:
+    align: true
+    sort: true
+    strict: true
+    order:
+      - serialize
+  testifylint:
+    # Enable all checkers (https://github.com/Antonboom/testifylint#checkers).
+    # Default: false
+    enable-all: true
+    # Disable checkers by name
+    # (in addition to default
+    #   suite-thelper
+    # ).
+    disable:
+      - go-require
+      - float-compare

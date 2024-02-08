@@ -381,8 +381,8 @@ func TestAccountCoins(t *testing.T) {
 		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
 		utxo1ID, err := mapper.DecodeUTXOID(utxos[1].id)
 		require.NoError(err)
-		pChainAddrID, errp := address.ParseToID(pChainAddr)
-		require.Nil(errp)
+		pChainAddrID, err := address.ParseToID(pChainAddr)
+		require.NoError(err)
 
 		// once before other calls, once after
 		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil).Times(2)

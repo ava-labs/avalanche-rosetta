@@ -30,8 +30,9 @@ var (
 	cmdName    = "avalanche-rosetta"
 	cmdVersion = service.MiddlewareVersion
 
-	defaultReadTimeout  = 10 * time.Second
-	defaultWriteTimeout = 10 * time.Second
+	// This is set moderately high to account for debug_trace calls.
+	defaultReadTimeout  = 3 * time.Minute
+	defaultWriteTimeout = 3 * time.Minute
 )
 
 var opts struct {
