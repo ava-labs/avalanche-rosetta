@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/ava-labs/avalanchego/utils/cb58"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
@@ -50,7 +51,7 @@ func (s *signingServer) SignBytes(address string, bytes []byte) (*types.Signatur
 
 func (s *signingServer) signHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "POST":
+	case http.MethodPost:
 		d := json.NewDecoder(r.Body)
 		signPayload := signRequest{}
 		err := d.Decode(&signPayload)
@@ -65,7 +66,7 @@ func (s *signingServer) signHandler(w http.ResponseWriter, r *http.Request) {
 		for _, payload := range signPayload.Payloads {
 			signature, err := s.SignBytes(payload.AccountIdentifier.Address, payload.Bytes)
 			if err != nil {
-				http.Error(w, "unable to sign payload", 500)
+				http.Error(w, "unable to sign payload", http.StatusInternalServerError)
 				return
 			}
 
@@ -75,7 +76,7 @@ func (s *signingServer) signHandler(w http.ResponseWriter, r *http.Request) {
 		resp := signResponse{Signatures: signatures}
 		bytes, err := json.Marshal(resp)
 		if err != nil {
-			http.Error(w, "unable to marshal response", 500)
+			http.Error(w, "unable to marshal response", http.StatusInternalServerError)
 			return
 		}
 
@@ -91,8 +92,12 @@ func (s *signingServer) run() {
 	addr := fmt.Sprintf("localhost:%d", s.port)
 	log.Printf("Listening on %s\n", addr)
 
-	err := http.ListenAndServe(addr, nil)
-	if err != nil {
+	server := &http.Server{
+		Addr:              addr,
+		ReadHeaderTimeout: 30 * time.Second,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }

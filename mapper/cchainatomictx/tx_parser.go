@@ -2,7 +2,6 @@ package cchainatomictx
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"strconv"
 
@@ -45,7 +44,7 @@ func (t *TxParser) Parse(tx evm.Tx) ([]*types.Operation, error) {
 	case *evm.UnsignedImportTx:
 		return t.parseImportTx(unsignedTx)
 	default:
-		return nil, fmt.Errorf("unsupported tx type")
+		return nil, errors.New("unsupported tx type")
 	}
 }
 
@@ -83,7 +82,7 @@ func (t *TxParser) parseImportTx(importTx *evm.UnsignedImportTx) ([]*types.Opera
 	return operations, nil
 }
 
-func (t *TxParser) insToOperations(startIdx int64, opType string, ins []evm.EVMInput) []*types.Operation {
+func (*TxParser) insToOperations(startIdx int64, opType string, ins []evm.EVMInput) []*types.Operation {
 	idx := startIdx
 	operations := []*types.Operation{}
 	for _, in := range ins {
@@ -132,7 +131,7 @@ func (t *TxParser) importedInToOperations(startIdx int64, opType string, ins []*
 	return operations, nil
 }
 
-func (t *TxParser) outsToOperations(startIdx int, opType string, outs []evm.EVMOutput) []*types.Operation {
+func (*TxParser) outsToOperations(startIdx int, opType string, outs []evm.EVMOutput) []*types.Operation {
 	idx := startIdx
 	operations := []*types.Operation{}
 	for _, out := range outs {

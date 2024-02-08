@@ -115,7 +115,7 @@ func (b *Backend) ShouldHandleRequest(req interface{}) bool {
 }
 
 // isPChain checks network identifier to make sure sub-network identifier set to "P"
-func (b *Backend) isPChain(reqNetworkID *types.NetworkIdentifier) bool {
+func (*Backend) isPChain(reqNetworkID *types.NetworkIdentifier) bool {
 	return reqNetworkID != nil &&
 		reqNetworkID.SubNetworkIdentifier != nil &&
 		reqNetworkID.SubNetworkIdentifier.Network == constants.PChain.String()

@@ -62,7 +62,7 @@ func (b *Backend) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*
 }
 
 // NetworkOptions implements /network/options endpoint for P-chain
-func (b *Backend) NetworkOptions(_ context.Context, _ *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
+func (*Backend) NetworkOptions(_ context.Context, _ *types.NetworkRequest) (*types.NetworkOptionsResponse, *types.Error) {
 	return &types.NetworkOptionsResponse{
 		Version: &types.Version{
 			RosettaVersion:    types.RosettaAPIVersion,

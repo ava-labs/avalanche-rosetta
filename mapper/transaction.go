@@ -447,7 +447,7 @@ func traceOps(trace []*clientTypes.FlatCall, startIndex int) []*types.Operation 
 		if call.Type == OpSelfDestruct {
 			destroyedAccounts[from] = new(big.Int)
 
-			// If destination of of SELFDESTRUCT is self,
+			// If destination of SELFDESTRUCT is self,
 			// we should skip. In the EVM, the balance is reset
 			// after the balance is increased on the destination
 			// so this is a no-op.

@@ -56,11 +56,11 @@ func WrapError(err *types.Error, message interface{}) *types.Error {
 		newErr.Details[k] = v
 	}
 
-	switch t := message.(type) {
+	switch castMsg := message.(type) {
 	case error:
-		newErr.Details["error"] = t.Error()
+		newErr.Details["error"] = castMsg.Error()
 	default:
-		newErr.Details["error"] = t
+		newErr.Details["error"] = castMsg
 	}
 
 	return newErr

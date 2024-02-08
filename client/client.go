@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/rpc"
@@ -13,6 +12,8 @@ import (
 	"github.com/ava-labs/coreth/interfaces"
 	"github.com/ava-labs/coreth/plugin/evm"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+
+	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 // Interface compliance

@@ -1079,18 +1079,18 @@ func (s ConstructionService) CreateTransferOperationDescription(
 	operations []*types.Operation,
 ) ([]*parser.OperationDescription, error) {
 	if len(operations) != 2 {
-		return nil, fmt.Errorf("invalid number of operations")
+		return nil, errors.New("invalid number of operations")
 	}
 
 	firstCurrency := operations[0].Amount.Currency
 	secondCurrency := operations[1].Amount.Currency
 
 	if firstCurrency == nil || secondCurrency == nil {
-		return nil, fmt.Errorf("invalid currency on operation")
+		return nil, errors.New("invalid currency on operation")
 	}
 
 	if types.Hash(firstCurrency) != types.Hash(secondCurrency) {
-		return nil, fmt.Errorf("currency info doesn't match between the operations")
+		return nil, errors.New("currency info doesn't match between the operations")
 	}
 
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
@@ -1099,7 +1099,7 @@ func (s ConstructionService) CreateTransferOperationDescription(
 
 	// Not Native Avax, we require contractInfo in metadata.
 	if _, ok := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string); !ok {
-		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
+		return nil, errors.New("non-native currency must have contractAddress in metadata")
 	}
 
 	return s.createOperationDescriptionTransfer(firstCurrency, mapper.OpErc20Transfer), nil
@@ -1109,29 +1109,29 @@ func (s ConstructionService) CreateUnwrapOperationDescription(
 	operations []*types.Operation,
 ) ([]*parser.OperationDescription, error) {
 	if len(operations) != 1 {
-		return nil, fmt.Errorf("invalid number of operations")
+		return nil, errors.New("invalid number of operations")
 	}
 
 	firstCurrency := operations[0].Amount.Currency
 
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
-		return nil, fmt.Errorf("cannot unwrap native avax")
+		return nil, errors.New("cannot unwrap native avax")
 	}
 	tokenAddress, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 
 	// Not Native Avax, we require contractInfo in metadata
 	if !firstOk {
-		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
+		return nil, errors.New("non-native currency must have contractAddress in metadata")
 	}
 
 	if !mapper.EqualFoldContains(s.config.BridgeTokenList, tokenAddress) {
-		return nil, fmt.Errorf("only configured bridge tokens may use try to use unwrap function")
+		return nil, errors.New("only configured bridge tokens may use try to use unwrap function")
 	}
 
 	return s.createOperationDescriptionBridgeUnwrap(firstCurrency), nil
 }
 
-func (s ConstructionService) createTransferPreprocessOptions(
+func (ConstructionService) createTransferPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
 	req *types.ConstructionPreprocessRequest,
 ) (*options, *types.Error) {
@@ -1169,7 +1169,7 @@ func (s ConstructionService) createTransferPreprocessOptions(
 	}, nil
 }
 
-func (s ConstructionService) createUnwrapPreprocessOptions(
+func (ConstructionService) createUnwrapPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
 	req *types.ConstructionPreprocessRequest,
 ) (*options, *types.Error) {
@@ -1208,7 +1208,7 @@ func (s ConstructionService) createUnwrapPreprocessOptions(
 	}, nil
 }
 
-func (s ConstructionService) createOperationDescriptionTransfer(
+func (ConstructionService) createOperationDescriptionTransfer(
 	currency *types.Currency,
 	opCode string,
 ) []*parser.OperationDescription {
@@ -1238,7 +1238,7 @@ func (s ConstructionService) createOperationDescriptionTransfer(
 	}
 }
 
-func (s ConstructionService) createOperationDescriptionBridgeUnwrap(
+func (ConstructionService) createOperationDescriptionBridgeUnwrap(
 	currency *types.Currency,
 ) []*parser.OperationDescription {
 	return []*parser.OperationDescription{
@@ -1343,7 +1343,7 @@ func (s ConstructionService) getGenericContractCallGasLimit(
 	return gasLimit, nil
 }
 
-func (s ConstructionService) createGenericContractCallPreprocessOptions(
+func (ConstructionService) createGenericContractCallPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
 	req *types.ConstructionPreprocessRequest,
 ) (*options, *types.Error) {
@@ -1401,17 +1401,17 @@ func (s ConstructionService) createGenericContractCallPreprocessOptions(
 
 func (s ConstructionService) CreateGenericContractCallOperationDescription(operations []*types.Operation) ([]*parser.OperationDescription, error) {
 	if len(operations) != 2 {
-		return nil, fmt.Errorf("invalid number of operations")
+		return nil, errors.New("invalid number of operations")
 	}
 
 	firstCurrency := operations[0].Amount.Currency
 	secondCurrency := operations[1].Amount.Currency
 	bigZero := big.NewInt(0)
 	if firstCurrency == nil || secondCurrency == nil {
-		return nil, fmt.Errorf("invalid currency on operation")
+		return nil, errors.New("invalid currency on operation")
 	}
 	if types.Hash(firstCurrency) != types.Hash(secondCurrency) {
-		return nil, fmt.Errorf("from and to currencies are not equal")
+		return nil, errors.New("from and to currencies are not equal")
 	}
 
 	i, ok := new(big.Int).SetString(operations[0].Amount.Value, base10)
@@ -1419,20 +1419,20 @@ func (s ConstructionService) CreateGenericContractCallOperationDescription(opera
 		return nil, errors.New("operation 0 does not have a valid amount")
 	}
 	if i.Cmp(bigZero) != 0 {
-		return nil, fmt.Errorf("for generic call both values should be zero")
+		return nil, errors.New("for generic call both values should be zero")
 	}
 	j, ok := new(big.Int).SetString(operations[1].Amount.Value, base10)
 	if !ok {
 		return nil, errors.New("operation 1 does not have a valid amount")
 	}
 	if j.Cmp(bigZero) != 0 {
-		return nil, fmt.Errorf("for generic call both values should be zero")
+		return nil, errors.New("for generic call both values should be zero")
 	}
 
 	return s.createOperationDescriptionContractCall(), nil
 }
 
-func (s ConstructionService) createOperationDescriptionContractCall() []*parser.OperationDescription {
+func (ConstructionService) createOperationDescriptionContractCall() []*parser.OperationDescription {
 	return []*parser.OperationDescription{
 		{
 			Type: mapper.OpCall,
@@ -1486,10 +1486,10 @@ func generateBridgeUnwrapTransferData(value *big.Int, chainID *big.Int) []byte {
 
 func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 	if len(data) != genericTransferBytesLength {
-		return nil, nil, fmt.Errorf("incorrect length for data array")
+		return nil, nil, errors.New("incorrect length for data array")
 	}
 	if hexutil.Encode(data[:4]) != transferMethodID {
-		return nil, nil, fmt.Errorf("incorrect methodID signature")
+		return nil, nil, errors.New("incorrect methodID signature")
 	}
 
 	address := ethcommon.BytesToAddress(data[5:36])
@@ -1499,17 +1499,17 @@ func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
 
 func parseUnwrapData(data []byte) (*big.Int, *big.Int, error) {
 	if len(data) != genericUnwrapBytesLength {
-		return nil, nil, fmt.Errorf("incorrect length for data array")
+		return nil, nil, errors.New("incorrect length for data array")
 	}
 	if hexutil.Encode(data[:4]) != unwrapMethodID {
-		return nil, nil, fmt.Errorf("incorrect methodID signature")
+		return nil, nil, errors.New("incorrect methodID signature")
 	}
 
 	amount := new(big.Int).SetBytes(data[5:36])
 	chainID := new(big.Int).SetBytes(data[37:])
 
 	if chainID.Uint64() != 0 {
-		return nil, nil, fmt.Errorf("incorrect chainId value")
+		return nil, nil, errors.New("incorrect chainId value")
 	}
 
 	return amount, chainID, nil
@@ -1524,14 +1524,15 @@ func isUnwrapRequest(metadata map[string]interface{}) bool {
 
 func isGenericContractCall(metadata map[string]interface{}) bool {
 	if isUnwrap, ok := metadata["bridge_unwrap"]; ok {
-		if unwrapCall, isBool := isUnwrap.(bool); isBool {
-			if unwrapCall {
-				// If bridge_unwrap flag is true, we can return false right away, otherwise we should
-				// continue to check the method signature length.
-				return false
-			}
-		} else {
+		unwrapCall, isBool := isUnwrap.(bool)
+		if !isBool {
 			panic(fmt.Sprintf("bridge_unwrap value in the metadata must be boolean, got:%s", isUnwrap))
+		}
+
+		if unwrapCall {
+			// If bridge_unwrap flag is true, we can return false right away, otherwise we should
+			// continue to check the method signature length.
+			return false
 		}
 	}
 

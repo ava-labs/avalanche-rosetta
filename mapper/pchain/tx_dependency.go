@@ -18,7 +18,7 @@ type BlockTxDependencies map[ids.ID]*SingleTxDependency
 // GetTxDependenciesIDs generates the list of transaction ids used in the inputs to given unsigned transaction
 // this list is then used to fetch the dependency transactions in order to extract source addresses
 // as this information is not part of the transaction objects on chain.
-func (bd BlockTxDependencies) GetTxDependenciesIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
+func (BlockTxDependencies) GetTxDependenciesIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 	// collect tx inputs
 	var ins []*avax.TransferableInput
 	switch unsignedTx := tx.(type) {

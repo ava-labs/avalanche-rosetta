@@ -72,7 +72,7 @@ func MarshalJSONMap(i interface{}) (map[string]interface{}, error) {
 func DecodeUTXOID(s string) (*avax.UTXOID, error) {
 	split := strings.Split(s, ":")
 	if len(split) != 2 {
-		return nil, fmt.Errorf("invalid utxo ID format")
+		return nil, errors.New("invalid utxo ID format")
 	}
 
 	txID, err := ids.FromString(split[0])

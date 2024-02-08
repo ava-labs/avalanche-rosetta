@@ -5,9 +5,10 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
 
 const BalanceOfMethodPrefix = "0x70a08231000000000000000000000000"

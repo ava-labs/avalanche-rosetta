@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -42,7 +42,7 @@ func TestShouldHandleRequest(t *testing.T) {
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	testData := []struct {
 		name              string
@@ -72,7 +72,7 @@ func TestShouldHandleRequest(t *testing.T) {
 				&types.NetworkRequest{NetworkIdentifier: tc.networkIdentifier},
 			}
 			for _, r := range requests {
-				assert.Equal(t, tc.expected, backend.ShouldHandleRequest(r))
+				require.Equal(t, tc.expected, backend.ShouldHandleRequest(r))
 			}
 		})
 	}

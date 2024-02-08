@@ -5,12 +5,12 @@ import (
 	"errors"
 	"os"
 
+	"github.com/ava-labs/avalanchego/utils/constants"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
-	"github.com/ava-labs/avalanchego/utils/constants"
 )
 
 var (

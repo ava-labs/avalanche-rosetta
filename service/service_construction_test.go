@@ -7,14 +7,15 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ava-labs/avalanche-rosetta/client"
-	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/coreth/interfaces"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	"github.com/ava-labs/avalanche-rosetta/client"
+	"github.com/ava-labs/avalanche-rosetta/mapper"
 
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
 )
@@ -52,8 +53,8 @@ func TestConstructionMetadata(t *testing.T) {
 			context.Background(),
 			&types.ConstructionMetadataRequest{},
 		)
-		assert.Nil(t, resp)
-		assert.Equal(t, ErrUnavailableOffline.Code, err.Code)
+		require.Nil(t, resp)
+		require.Equal(t, ErrUnavailableOffline.Code, err.Code)
 	})
 
 	t.Run("requires from address", func(t *testing.T) {
@@ -61,9 +62,9 @@ func TestConstructionMetadata(t *testing.T) {
 			context.Background(),
 			&types.ConstructionMetadataRequest{},
 		)
-		assert.Nil(t, resp)
-		assert.Equal(t, ErrInvalidInput.Code, err.Code)
-		assert.Equal(t, "from address is not provided", err.Details["error"])
+		require.Nil(t, resp)
+		require.Equal(t, ErrInvalidInput.Code, err.Code)
+		require.Equal(t, "from address is not provided", err.Details["error"])
 	})
 
 	t.Run("basic native transfer", func(t *testing.T) {
@@ -104,13 +105,13 @@ func TestConstructionMetadata(t *testing.T) {
 				Options: input,
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		metadata := &metadata{
 			GasPrice: big.NewInt(1000000000),
 			GasLimit: 21_001,
 			Nonce:    0,
 		}
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -173,14 +174,14 @@ func TestConstructionMetadata(t *testing.T) {
 				Options: input,
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		metadata := &metadata{
 			GasPrice:       big.NewInt(1000000000),
 			GasLimit:       21_001,
 			Nonce:          0,
 			UnwrapBridgeTx: true,
 		}
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -239,13 +240,13 @@ func TestConstructionMetadata(t *testing.T) {
 				Options: input,
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		metadata := &metadata{
 			GasPrice: big.NewInt(1000000000),
 			GasLimit: 21_001,
 			Nonce:    0,
 		}
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -272,17 +273,17 @@ func TestContructionHash(t *testing.T) {
 			context.Background(),
 			&types.ConstructionHashRequest{},
 		)
-		assert.Nil(t, resp)
-		assert.Equal(t, ErrInvalidInput.Code, err.Code)
-		assert.Equal(t, "signed transaction value is not provided", err.Details["error"])
+		require.Nil(t, resp)
+		require.Equal(t, ErrInvalidInput.Code, err.Code)
+		require.Equal(t, "signed transaction value is not provided", err.Details["error"])
 	})
 
 	t.Run("invalid transaction", func(t *testing.T) {
 		resp, err := service.ConstructionHash(context.Background(), &types.ConstructionHashRequest{
 			SignedTransaction: "{}",
 		})
-		assert.Nil(t, resp)
-		assert.Equal(t, ErrInvalidInput.Code, err.Code)
+		require.Nil(t, resp)
+		require.Equal(t, ErrInvalidInput.Code, err.Code)
 	})
 
 	t.Run("valid transaction", func(t *testing.T) {
@@ -290,13 +291,13 @@ func TestContructionHash(t *testing.T) {
 		request := signedTransactionWrapper{SignedTransaction: []byte(signed), Currency: nil}
 
 		json, marshalErr := json.Marshal(request)
-		assert.Nil(t, marshalErr)
+		require.Nil(t, marshalErr)
 
 		resp, err := service.ConstructionHash(context.Background(), &types.ConstructionHashRequest{
 			SignedTransaction: string(json),
 		})
-		assert.Nil(t, err)
-		assert.Equal(
+		require.Nil(t, err)
+		require.Equal(
 			t,
 			"0x92ea9280c1653aa9042c7a4d3a608c2149db45064609c18b270c7c73738e2a46",
 			resp.TransactionIdentifier.Hash,
@@ -309,8 +310,8 @@ func TestContructionHash(t *testing.T) {
 		resp, err := service.ConstructionHash(context.Background(), &types.ConstructionHashRequest{
 			SignedTransaction: signed,
 		})
-		assert.Nil(t, err)
-		assert.Equal(
+		require.Nil(t, err)
+		require.Equal(
 			t,
 			"0x92ea9280c1653aa9042c7a4d3a608c2149db45064609c18b270c7c73738e2a46",
 			resp.TransactionIdentifier.Hash,
@@ -323,8 +324,8 @@ func TestContructionHash(t *testing.T) {
 		resp, err := service.ConstructionHash(context.Background(), &types.ConstructionHashRequest{
 			SignedTransaction: signed,
 		})
-		assert.Contains(t, err.Details["error"].(string), "nonce")
-		assert.Nil(t, resp)
+		require.Contains(t, err.Details["error"].(string), "nonce")
+		require.Nil(t, resp)
 	})
 }
 
@@ -342,9 +343,9 @@ func TestConstructionDerive(t *testing.T) {
 			context.Background(),
 			&types.ConstructionDeriveRequest{},
 		)
-		assert.Nil(t, resp)
-		assert.Equal(t, ErrInvalidInput.Code, err.Code)
-		assert.Equal(t, "public key is not provided", err.Details["error"])
+		require.Nil(t, resp)
+		require.Equal(t, ErrInvalidInput.Code, err.Code)
+		require.Equal(t, "public key is not provided", err.Details["error"])
 	})
 
 	t.Run("invalid public key", func(t *testing.T) {
@@ -357,9 +358,9 @@ func TestConstructionDerive(t *testing.T) {
 				},
 			},
 		)
-		assert.Nil(t, resp)
-		assert.Equal(t, ErrInvalidInput.Code, err.Code)
-		assert.Equal(t, "invalid public key", err.Details["error"])
+		require.Nil(t, resp)
+		require.Equal(t, ErrInvalidInput.Code, err.Code)
+		require.Equal(t, "invalid public key", err.Details["error"])
 	})
 
 	t.Run("valid public key", func(t *testing.T) {
@@ -375,8 +376,8 @@ func TestConstructionDerive(t *testing.T) {
 				},
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(
+		require.Nil(t, err)
+		require.Equal(
 			t,
 			"0x156daFC6e9A1304fD5C9AB686acB4B3c802FE3f7",
 			resp.AccountIdentifier.Address,
@@ -386,10 +387,7 @@ func TestConstructionDerive(t *testing.T) {
 
 func forceMarshalMap(t *testing.T, i interface{}) map[string]interface{} {
 	m, err := mapper.MarshalJSONMap(i)
-	if err != nil {
-		t.Fatalf("could not marshal map %s", types.PrintStruct(i))
-	}
-
+	require.NoError(t, err)
 	return m
 }
 
@@ -414,7 +412,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		unclearIntent := `[{"operation_identifier":{"index":0},"type":"CALL","account":{"address":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"},"amount":{"value":"-42894881044106498","currency":{"symbol":"AVAX","decimals":18}}},{"operation_identifier":{"index":1},"type":"CALL","account":{"address":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d"},"amount":{"value":"42894881044106498","currency":{"symbol":"NOAX","decimals":18}}}]`
 
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(unclearIntent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(unclearIntent), &ops))
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -422,12 +420,12 @@ func TestPreprocessMetadata(t *testing.T) {
 				Operations:        ops,
 			},
 		)
-		assert.Nil(t, preprocessResponse)
-		assert.Equal(t, "currency info doesn't match between the operations", err.Details["error"])
+		require.Nil(t, preprocessResponse)
+		require.Equal(t, "currency info doesn't match between the operations", err.Details["error"])
 	})
 	t.Run("basic flow", func(t *testing.T) {
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(intent), &ops))
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -435,11 +433,11 @@ func TestPreprocessMetadata(t *testing.T) {
 				Operations:        ops,
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02", "currency":{"symbol":"AVAX","decimals":18}}`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
-		assert.Equal(t, &types.ConstructionPreprocessResponse{
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
 
@@ -482,8 +480,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -496,11 +494,11 @@ func TestPreprocessMetadata(t *testing.T) {
 
 	t.Run("basic flow (backwards compatible)", func(t *testing.T) {
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(intent), &ops))
 
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309"}`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
 
 		metadata := &metadata{
 			GasPrice: big.NewInt(1000000000),
@@ -529,8 +527,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -543,7 +541,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 	t.Run("custom gas price flow", func(t *testing.T) {
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(intent), &ops))
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -554,11 +552,11 @@ func TestPreprocessMetadata(t *testing.T) {
 				},
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","gas_price":"0x4190ab00", "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
-		assert.Equal(t, &types.ConstructionPreprocessResponse{
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
 
@@ -595,8 +593,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -609,7 +607,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 	t.Run("custom gas price flow (ignore multiplier)", func(t *testing.T) {
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(intent), &ops))
 		multiplier := float64(1.1)
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
@@ -622,11 +620,11 @@ func TestPreprocessMetadata(t *testing.T) {
 				},
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","gas_price":"0x4190ab00","suggested_fee_multiplier":1.1, "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
-		assert.Equal(t, &types.ConstructionPreprocessResponse{
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
 
@@ -663,8 +661,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -677,7 +675,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 	t.Run("fee multiplier", func(t *testing.T) {
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(intent), &ops))
 		multiplier := float64(1.1)
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
@@ -687,11 +685,11 @@ func TestPreprocessMetadata(t *testing.T) {
 				SuggestedFeeMultiplier: &multiplier,
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1, "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
-		assert.Equal(t, &types.ConstructionPreprocessResponse{
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
 
@@ -734,8 +732,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -748,7 +746,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 	t.Run("custom nonce", func(t *testing.T) {
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(intent), &ops))
 		multiplier := float64(1.1)
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
@@ -761,11 +759,11 @@ func TestPreprocessMetadata(t *testing.T) {
 				},
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1, "nonce":"0x1", "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
-		assert.Equal(t, &types.ConstructionPreprocessResponse{
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
 
@@ -800,8 +798,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -814,7 +812,7 @@ func TestPreprocessMetadata(t *testing.T) {
 
 	t.Run("custom gas limit", func(t *testing.T) {
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(intent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(intent), &ops))
 		multiplier := float64(1.1)
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
@@ -827,11 +825,11 @@ func TestPreprocessMetadata(t *testing.T) {
 				},
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02","suggested_fee_multiplier":1.1,"gas_limit":"0x9c40", "currency":{"decimals":18, "symbol":"AVAX"}}`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
-		assert.Equal(t, &types.ConstructionPreprocessResponse{
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
 
@@ -862,8 +860,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -885,7 +883,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			cChainAtomicTxBackend: skippedBackend,
 		}
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(erc20Intent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(erc20Intent), &ops))
 		preprocessResponse, err := service.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -893,11 +891,11 @@ func TestPreprocessMetadata(t *testing.T) {
 				Operations:        ops,
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x9864aac3510d02", "currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
-		assert.Equal(t, &types.ConstructionPreprocessResponse{
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
 
@@ -943,8 +941,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -971,7 +969,7 @@ func TestPreprocessMetadata(t *testing.T) {
 			cChainAtomicTxBackend: skippedBackend,
 		}
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(unwrapIntent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(unwrapIntent), &ops))
 
 		requestMetadata := map[string]interface{}{
 			"bridge_unwrap": true,
@@ -984,11 +982,11 @@ func TestPreprocessMetadata(t *testing.T) {
 				Metadata:          requestMetadata,
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		optionsRaw := `{"metadata": {"bridge_unwrap":true}, "from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","value":"0x9864aac3510d02", "currency":{"symbol":"TEST","decimals":18, "metadata": {"contractAddress": "0x30e5449b6712Adf4156c8c474250F6eA4400eB82"}}}`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
-		assert.Equal(t, &types.ConstructionPreprocessResponse{
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
 
@@ -1035,8 +1033,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -1057,7 +1055,7 @@ func TestPreprocessMetadata(t *testing.T) {
 		}
 
 		var ops []*types.Operation
-		assert.NoError(t, json.Unmarshal([]byte(contractCallIntent), &ops))
+		require.NoError(t, json.Unmarshal([]byte(contractCallIntent), &ops))
 
 		requestMetadata := map[string]interface{}{
 			"bridge_unwrap":    false,
@@ -1073,12 +1071,12 @@ func TestPreprocessMetadata(t *testing.T) {
 				Metadata:          requestMetadata,
 			},
 		)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 
 		optionsRaw := `{"from":"0xe3a5B4d7f79d64088C8d4ef153A7DDe2B2d47309","to":"0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d","value":"0x0", "currency":{"symbol":"TEST","decimals":18}, "contract_address": "0x57B414a0332B5CaB885a451c2a28a07d1e9b8a8d", "method_signature": "deploy(bytes32,address,address,address,address)", "data": "0xb0d78b753100000000000000000000000000000000000000000000000000000000000000000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6000000000000000000000000323e3ab04a3795ad79cc92378fcdb0a0aec51ba500000000000000000000000014e37c2e9cd255404bd35b4542fd9ccaa070aed6", "method_args":["0x3100000000000000000000000000000000000000000000000000000000000000","0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5","0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6","0x323e3ab04a3795ad79cc92378fcdb0a0aec51ba5","0x14e37c2e9cd255404bd35b4542fd9ccaa070aed6"] }`
 		var opt options
-		assert.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
-		assert.Equal(t, &types.ConstructionPreprocessResponse{
+		require.NoError(t, json.Unmarshal([]byte(optionsRaw), &opt))
+		require.Equal(t, &types.ConstructionPreprocessResponse{
 			Options: forceMarshalMap(t, &opt),
 		}, preprocessResponse)
 
@@ -1128,8 +1126,8 @@ func TestPreprocessMetadata(t *testing.T) {
 				Options:           forceMarshalMap(t, &opt),
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, &types.ConstructionMetadataResponse{
+		require.Nil(t, err)
+		require.Equal(t, &types.ConstructionMetadataResponse{
 			Metadata: forceMarshalMap(t, metadata),
 			SuggestedFee: []*types.Amount{
 				{
@@ -1193,8 +1191,8 @@ func TestBackendDelegations(t *testing.T) {
 			backends[idx].EXPECT().ConstructionDerive(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionDerive(context.Background(), req)
 
-			assert.Nil(t, err)
-			assert.Equal(t, expectedResp, resp)
+			require.Nil(t, err)
+			require.Equal(t, expectedResp, resp)
 		})
 
 		t.Run("Preprocess request is delegated to "+backendName, func(t *testing.T) {
@@ -1207,8 +1205,8 @@ func TestBackendDelegations(t *testing.T) {
 			backends[idx].EXPECT().ConstructionPreprocess(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionPreprocess(context.Background(), req)
 
-			assert.Nil(t, err)
-			assert.Equal(t, expectedResp, resp)
+			require.Nil(t, err)
+			require.Equal(t, expectedResp, resp)
 		})
 
 		t.Run("Metadata request is delegated to "+backendName, func(t *testing.T) {
@@ -1221,8 +1219,8 @@ func TestBackendDelegations(t *testing.T) {
 			backends[idx].EXPECT().ConstructionMetadata(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := onlineService.ConstructionMetadata(context.Background(), req)
 
-			assert.Nil(t, err)
-			assert.Equal(t, expectedResp, resp)
+			require.Nil(t, err)
+			require.Equal(t, expectedResp, resp)
 		})
 
 		t.Run("Payloads request is delegated to "+backendName, func(t *testing.T) {
@@ -1233,8 +1231,8 @@ func TestBackendDelegations(t *testing.T) {
 			backends[idx].EXPECT().ConstructionPayloads(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionPayloads(context.Background(), req)
 
-			assert.Nil(t, err)
-			assert.Equal(t, expectedResp, resp)
+			require.Nil(t, err)
+			require.Equal(t, expectedResp, resp)
 		})
 
 		t.Run("Combine request is delegated to "+backendName, func(t *testing.T) {
@@ -1248,8 +1246,8 @@ func TestBackendDelegations(t *testing.T) {
 			backends[idx].EXPECT().ConstructionCombine(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionCombine(context.Background(), req)
 
-			assert.Nil(t, err)
-			assert.Equal(t, expectedResp, resp)
+			require.Nil(t, err)
+			require.Equal(t, expectedResp, resp)
 		})
 
 		t.Run("Parse request is delegated to "+backendName, func(t *testing.T) {
@@ -1259,8 +1257,8 @@ func TestBackendDelegations(t *testing.T) {
 			backends[idx].EXPECT().ConstructionParse(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionParse(context.Background(), req)
 
-			assert.Nil(t, err)
-			assert.Equal(t, expectedResp, resp)
+			require.Nil(t, err)
+			require.Equal(t, expectedResp, resp)
 		})
 
 		t.Run("Hash request is delegated to "+backendName, func(t *testing.T) {
@@ -1272,8 +1270,8 @@ func TestBackendDelegations(t *testing.T) {
 			backends[idx].EXPECT().ConstructionHash(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := offlineService.ConstructionHash(context.Background(), req)
 
-			assert.Nil(t, err)
-			assert.Equal(t, expectedResp, resp)
+			require.Nil(t, err)
+			require.Equal(t, expectedResp, resp)
 		})
 
 		t.Run("Submit request is delegated to "+backendName, func(t *testing.T) {
@@ -1285,8 +1283,8 @@ func TestBackendDelegations(t *testing.T) {
 			backends[idx].EXPECT().ConstructionSubmit(gomock.Any(), req).Return(expectedResp, nil)
 			resp, err := onlineService.ConstructionSubmit(context.Background(), req)
 
-			assert.Nil(t, err)
-			assert.Equal(t, expectedResp, resp)
+			require.Nil(t, err)
+			require.Equal(t, expectedResp, resp)
 		})
 	}
 }

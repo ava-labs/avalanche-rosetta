@@ -14,7 +14,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	ajson "github.com/ava-labs/avalanchego/utils/json"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -84,7 +84,7 @@ func TestConstructionDerive(t *testing.T) {
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("p-chain address", func(t *testing.T) {
 		src := "02e0d4392cfa224d4be19db416b3cf62e90fb2b7015e7b62a95c8cb490514943f6"
@@ -100,8 +100,8 @@ func TestConstructionDerive(t *testing.T) {
 				},
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(
+		require.Nil(t, err)
+		require.Equal(
 			t,
 			"P-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl",
 			resp.AccountIdentifier.Address,
@@ -203,7 +203,7 @@ func TestExportTxConstruction(t *testing.T) {
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
 		resp, err := backend.ConstructionPreprocess(
@@ -214,8 +214,8 @@ func TestExportTxConstruction(t *testing.T) {
 				Metadata:          preprocessMetadata,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, metadataOptions, resp.Options)
+		require.Nil(t, err)
+		require.Equal(t, metadataOptions, resp.Options)
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
@@ -230,8 +230,8 @@ func TestExportTxConstruction(t *testing.T) {
 				Options:           metadataOptions,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, payloadsMetadata, resp.Metadata)
+		require.Nil(t, err)
+		require.Equal(t, payloadsMetadata, resp.Metadata)
 	})
 
 	t.Run("payloads endpoint", func(t *testing.T) {
@@ -243,9 +243,9 @@ func TestExportTxConstruction(t *testing.T) {
 				Metadata:          payloadsMetadata,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, wrappedUnsignedExportTx, resp.UnsignedTransaction)
-		assert.Equal(t, signingPayloads, resp.Payloads,
+		require.Nil(t, err)
+		require.Equal(t, wrappedUnsignedExportTx, resp.UnsignedTransaction)
+		require.Equal(t, signingPayloads, resp.Payloads,
 			"signing payloads mismatch: %s %s",
 			marshalSigningPayloads(signingPayloads),
 			marshalSigningPayloads(resp.Payloads))
@@ -260,9 +260,9 @@ func TestExportTxConstruction(t *testing.T) {
 				Signed:            false,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Nil(t, resp.AccountIdentifierSigners)
-		assert.Equal(t, exportOperations, resp.Operations)
+		require.Nil(t, err)
+		require.Nil(t, resp.AccountIdentifierSigners)
+		require.Equal(t, exportOperations, resp.Operations)
 	})
 
 	t.Run("combine endpoint", func(t *testing.T) {
@@ -275,8 +275,8 @@ func TestExportTxConstruction(t *testing.T) {
 			},
 		)
 
-		assert.Nil(t, err)
-		assert.Equal(t, wrappedSignedExportTx, resp.SignedTransaction)
+		require.Nil(t, err)
+		require.Equal(t, wrappedSignedExportTx, resp.SignedTransaction)
 	})
 
 	t.Run("parse endpoint (signed)", func(t *testing.T) {
@@ -288,9 +288,9 @@ func TestExportTxConstruction(t *testing.T) {
 				Signed:            true,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, signers, resp.AccountIdentifierSigners)
-		assert.Equal(t, exportOperations, resp.Operations)
+		require.Nil(t, err)
+		require.Equal(t, signers, resp.AccountIdentifierSigners)
+		require.Equal(t, exportOperations, resp.Operations)
 	})
 
 	t.Run("hash endpoint", func(t *testing.T) {
@@ -298,8 +298,8 @@ func TestExportTxConstruction(t *testing.T) {
 			NetworkIdentifier: pChainNetworkIdentifier,
 			SignedTransaction: wrappedSignedExportTx,
 		})
-		assert.Nil(t, err)
-		assert.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(t, err)
+		require.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
@@ -313,8 +313,8 @@ func TestExportTxConstruction(t *testing.T) {
 			SignedTransaction: wrappedSignedExportTx,
 		})
 
-		assert.Nil(t, apiErr)
-		assert.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(t, apiErr)
+		require.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
 
@@ -410,7 +410,7 @@ func TestImportTxConstruction(t *testing.T) {
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
 		resp, err := backend.ConstructionPreprocess(
@@ -421,8 +421,8 @@ func TestImportTxConstruction(t *testing.T) {
 				Metadata:          preprocessMetadata,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, metadataOptions, resp.Options)
+		require.Nil(t, err)
+		require.Equal(t, metadataOptions, resp.Options)
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
@@ -437,8 +437,8 @@ func TestImportTxConstruction(t *testing.T) {
 				Options:           metadataOptions,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, payloadsMetadata, resp.Metadata)
+		require.Nil(t, err)
+		require.Equal(t, payloadsMetadata, resp.Metadata)
 	})
 
 	t.Run("payloads endpoint", func(t *testing.T) {
@@ -450,9 +450,9 @@ func TestImportTxConstruction(t *testing.T) {
 				Metadata:          payloadsMetadata,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, wrappedUnsignedImportTx, resp.UnsignedTransaction)
-		assert.Equal(t, signingPayloads, resp.Payloads,
+		require.Nil(t, err)
+		require.Equal(t, wrappedUnsignedImportTx, resp.UnsignedTransaction)
+		require.Equal(t, signingPayloads, resp.Payloads,
 			"signing payloads mismatch: %s %s",
 			marshalSigningPayloads(signingPayloads),
 			marshalSigningPayloads(resp.Payloads))
@@ -467,9 +467,9 @@ func TestImportTxConstruction(t *testing.T) {
 				Signed:            false,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Nil(t, resp.AccountIdentifierSigners)
-		assert.Equal(t, importOperations, resp.Operations)
+		require.Nil(t, err)
+		require.Nil(t, resp.AccountIdentifierSigners)
+		require.Equal(t, importOperations, resp.Operations)
 	})
 
 	t.Run("combine endpoint", func(t *testing.T) {
@@ -482,8 +482,8 @@ func TestImportTxConstruction(t *testing.T) {
 			},
 		)
 
-		assert.Nil(t, err)
-		assert.Equal(t, wrappedSignedImportTx, resp.SignedTransaction)
+		require.Nil(t, err)
+		require.Equal(t, wrappedSignedImportTx, resp.SignedTransaction)
 	})
 
 	t.Run("parse endpoint (signed)", func(t *testing.T) {
@@ -495,9 +495,9 @@ func TestImportTxConstruction(t *testing.T) {
 				Signed:            true,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, signers, resp.AccountIdentifierSigners)
-		assert.Equal(t, importOperations, resp.Operations)
+		require.Nil(t, err)
+		require.Equal(t, signers, resp.AccountIdentifierSigners)
+		require.Equal(t, importOperations, resp.Operations)
 	})
 
 	t.Run("hash endpoint", func(t *testing.T) {
@@ -505,8 +505,8 @@ func TestImportTxConstruction(t *testing.T) {
 			NetworkIdentifier: pChainNetworkIdentifier,
 			SignedTransaction: wrappedSignedImportTx,
 		})
-		assert.Nil(t, err)
-		assert.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(t, err)
+		require.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
@@ -520,8 +520,8 @@ func TestImportTxConstruction(t *testing.T) {
 			SignedTransaction: wrappedSignedImportTx,
 		})
 
-		assert.Nil(t, apiErr)
-		assert.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(t, apiErr)
+		require.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
 
@@ -640,7 +640,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
 		resp, err := backend.ConstructionPreprocess(
@@ -651,8 +651,8 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 				Metadata:          preprocessMetadata,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, metadataOptions, resp.Options)
+		require.Nil(t, err)
+		require.Equal(t, metadataOptions, resp.Options)
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
@@ -665,8 +665,8 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 				Options:           metadataOptions,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, payloadsMetadata, resp.Metadata)
+		require.Nil(t, err)
+		require.Equal(t, payloadsMetadata, resp.Metadata)
 	})
 
 	t.Run("payloads endpoint", func(t *testing.T) {
@@ -678,9 +678,9 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 				Metadata:          payloadsMetadata,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, wrappedUnsignedTx, resp.UnsignedTransaction)
-		assert.Equal(t, signingPayloads, resp.Payloads,
+		require.Nil(t, err)
+		require.Equal(t, wrappedUnsignedTx, resp.UnsignedTransaction)
+		require.Equal(t, signingPayloads, resp.Payloads,
 			"signing payloads mismatch: %s %s",
 			marshalSigningPayloads(signingPayloads),
 			marshalSigningPayloads(resp.Payloads))
@@ -695,9 +695,9 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 				Signed:            false,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Nil(t, resp.AccountIdentifierSigners)
-		assert.Equal(t, operations, resp.Operations)
+		require.Nil(t, err)
+		require.Nil(t, resp.AccountIdentifierSigners)
+		require.Equal(t, operations, resp.Operations)
 	})
 
 	t.Run("combine endpoint", func(t *testing.T) {
@@ -710,8 +710,8 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 			},
 		)
 
-		assert.Nil(t, err)
-		assert.Equal(t, wrappedSignedTx, resp.SignedTransaction)
+		require.Nil(t, err)
+		require.Equal(t, wrappedSignedTx, resp.SignedTransaction)
 	})
 
 	t.Run("parse endpoint (signed)", func(t *testing.T) {
@@ -723,9 +723,9 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 				Signed:            true,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, signers, resp.AccountIdentifierSigners)
-		assert.Equal(t, operations, resp.Operations)
+		require.Nil(t, err)
+		require.Equal(t, signers, resp.AccountIdentifierSigners)
+		require.Equal(t, operations, resp.Operations)
 	})
 
 	t.Run("hash endpoint", func(t *testing.T) {
@@ -733,8 +733,8 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 			NetworkIdentifier: pChainNetworkIdentifier,
 			SignedTransaction: wrappedSignedTx,
 		})
-		assert.Nil(t, err)
-		assert.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(t, err)
+		require.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
@@ -748,8 +748,8 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 			SignedTransaction: wrappedSignedTx,
 		})
 
-		assert.Nil(t, apiErr)
-		assert.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(t, apiErr)
+		require.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
 
@@ -865,7 +865,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
 		resp, err := backend.ConstructionPreprocess(
@@ -876,8 +876,8 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 				Metadata:          preprocessMetadata,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, metadataOptions, resp.Options)
+		require.Nil(t, err)
+		require.Equal(t, metadataOptions, resp.Options)
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
@@ -890,8 +890,8 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 				Options:           metadataOptions,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, payloadsMetadata, resp.Metadata)
+		require.Nil(t, err)
+		require.Equal(t, payloadsMetadata, resp.Metadata)
 	})
 
 	t.Run("payloads endpoint", func(t *testing.T) {
@@ -903,9 +903,9 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 				Metadata:          payloadsMetadata,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, wrappedUnsignedTx, resp.UnsignedTransaction)
-		assert.Equal(t, signingPayloads, resp.Payloads,
+		require.Nil(t, err)
+		require.Equal(t, wrappedUnsignedTx, resp.UnsignedTransaction)
+		require.Equal(t, signingPayloads, resp.Payloads,
 			"signing payloads mismatch: %s %s",
 			marshalSigningPayloads(signingPayloads),
 			marshalSigningPayloads(resp.Payloads))
@@ -920,9 +920,9 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 				Signed:            false,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Nil(t, resp.AccountIdentifierSigners)
-		assert.Equal(t, operations, resp.Operations)
+		require.Nil(t, err)
+		require.Nil(t, resp.AccountIdentifierSigners)
+		require.Equal(t, operations, resp.Operations)
 	})
 
 	t.Run("combine endpoint", func(t *testing.T) {
@@ -935,8 +935,8 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 			},
 		)
 
-		assert.Nil(t, err)
-		assert.Equal(t, wrappedSignedTx, resp.SignedTransaction)
+		require.Nil(t, err)
+		require.Equal(t, wrappedSignedTx, resp.SignedTransaction)
 	})
 
 	t.Run("parse endpoint (signed)", func(t *testing.T) {
@@ -948,9 +948,9 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 				Signed:            true,
 			},
 		)
-		assert.Nil(t, err)
-		assert.Equal(t, signers, resp.AccountIdentifierSigners)
-		assert.Equal(t, operations, resp.Operations)
+		require.Nil(t, err)
+		require.Equal(t, signers, resp.AccountIdentifierSigners)
+		require.Equal(t, operations, resp.Operations)
 	})
 
 	t.Run("hash endpoint", func(t *testing.T) {
@@ -958,8 +958,8 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 			NetworkIdentifier: pChainNetworkIdentifier,
 			SignedTransaction: wrappedSignedTx,
 		})
-		assert.Nil(t, err)
-		assert.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(t, err)
+		require.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
@@ -973,8 +973,8 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 			SignedTransaction: wrappedSignedTx,
 		})
 
-		assert.Nil(t, apiErr)
-		assert.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(t, apiErr)
+		require.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
 

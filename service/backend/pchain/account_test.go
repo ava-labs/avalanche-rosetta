@@ -11,7 +11,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -62,7 +62,7 @@ func TestAccountBalance(t *testing.T) {
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	backend.getUTXOsPageSize = 2
 
 	t.Run("Account Balance Test", func(t *testing.T) {
@@ -113,8 +113,8 @@ func TestAccountBalance(t *testing.T) {
 			},
 		}
 
-		assert.Nil(t, err)
-		assert.Equal(t, expected.Balances, resp.Balances)
+		require.Nil(t, err)
+		require.Equal(t, expected.Balances, resp.Balances)
 	})
 
 	t.Run("Account Balance should return total of shared memory balance", func(t *testing.T) {
@@ -123,7 +123,7 @@ func TestAccountBalance(t *testing.T) {
 		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
 		utxo1Id, _ := ids.FromString(utxos[1].id)
 		pChainAddrID, errp := address.ParseToID(pChainAddr)
-		assert.Nil(t, errp)
+		require.Nil(t, errp)
 
 		// once before other calls, once after
 		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil).Times(2)
@@ -163,8 +163,8 @@ func TestAccountBalance(t *testing.T) {
 			}},
 		}
 
-		assert.Nil(t, err)
-		assert.Equal(t, expected, resp)
+		require.Nil(t, err)
+		require.Equal(t, expected, resp)
 	})
 
 	t.Run("Account Balance should error if new block was added while fetching UTXOs", func(t *testing.T) {
@@ -197,9 +197,9 @@ func TestAccountBalance(t *testing.T) {
 			},
 		)
 
-		assert.Nil(t, resp)
-		assert.Equal(t, "Internal server error", err.Message)
-		assert.Equal(t, "new block added while fetching utxos", err.Details["error"])
+		require.Nil(t, resp)
+		require.Equal(t, "Internal server error", err.Message)
+		require.Equal(t, "new block added while fetching utxos", err.Details["error"])
 	})
 }
 
@@ -255,7 +255,7 @@ func TestAccountPendingRewardsBalance(t *testing.T) {
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("Pending Rewards Validator By NodeID", func(t *testing.T) {
 		pChainMock.EXPECT().GetCurrentValidators(ctx, ids.Empty, []ids.NodeID{validator1NodeID}).Return(validators, nil)
@@ -297,8 +297,8 @@ func TestAccountPendingRewardsBalance(t *testing.T) {
 			},
 		}
 
-		assert.Nil(t, err)
-		assert.Equal(t, expected, resp)
+		require.Nil(t, err)
+		require.Equal(t, expected, resp)
 	})
 
 	t.Run("Pending Rewards Delegate by NodeID", func(t *testing.T) {
@@ -341,8 +341,8 @@ func TestAccountPendingRewardsBalance(t *testing.T) {
 			},
 		}
 
-		assert.Nil(t, err)
-		assert.Equal(t, expected, resp)
+		require.Nil(t, err)
+		require.Equal(t, expected, resp)
 	})
 }
 
@@ -361,7 +361,7 @@ func TestAccountCoins(t *testing.T) {
 		pChainNetworkIdentifier,
 		avalancheNetworkID,
 	)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("Account Coins Test regular coins", func(t *testing.T) {
 		// Mock on GetAssetDescription
@@ -372,7 +372,7 @@ func TestAccountCoins(t *testing.T) {
 		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
 		utxo1Id, _ := ids.FromString(utxos[1].id)
 		pChainAddrID, errp := address.ParseToID(pChainAddr)
-		assert.Nil(t, errp)
+		require.Nil(t, errp)
 
 		// once before other calls, once after
 		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil).Times(2)
@@ -428,8 +428,8 @@ func TestAccountCoins(t *testing.T) {
 			},
 		}
 
-		assert.Nil(t, err)
-		assert.Equal(t, expected, resp)
+		require.Nil(t, err)
+		require.Equal(t, expected, resp)
 	})
 
 	t.Run("Account Coins Test shared memory coins", func(t *testing.T) {
@@ -442,7 +442,7 @@ func TestAccountCoins(t *testing.T) {
 		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
 		utxo1Id, _ := ids.FromString(utxos[1].id)
 		pChainAddrID, errp := address.ParseToID(pChainAddr)
-		assert.Nil(t, errp)
+		require.Nil(t, errp)
 
 		// once before other calls, once after
 		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil).Times(2)
@@ -498,8 +498,8 @@ func TestAccountCoins(t *testing.T) {
 			},
 		}
 
-		assert.Nil(t, err)
-		assert.Equal(t, expected, resp)
+		require.Nil(t, err)
+		require.Equal(t, expected, resp)
 	})
 }
 

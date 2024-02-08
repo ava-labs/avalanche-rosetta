@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConstruction_ContractCallData(t *testing.T) {
@@ -59,9 +59,9 @@ func TestConstruction_ContractCallData(t *testing.T) {
 			bytes, err := constructContractCallDataGeneric(test.methodSig, test.methodArgs)
 			if err != nil {
 				fmt.Println(err)
-				assert.EqualError(t, err, test.expectedError.Error())
+				require.EqualError(t, err, test.expectedError.Error())
 			} else {
-				assert.Equal(t, test.expectedResponse, hexutil.Encode(bytes))
+				require.Equal(t, test.expectedResponse, hexutil.Encode(bytes))
 			}
 		})
 	}

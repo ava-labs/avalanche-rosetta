@@ -43,7 +43,7 @@ func TestFetchBlkDependencies(t *testing.T) {
 	}
 
 	signedImportTx, err := makeImportTx(t, networkID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	genesisTxID := ids.Empty
 	nonGenesisTxID := signedImportTx.ID()
@@ -99,10 +99,10 @@ func TestFetchBlkDependencies(t *testing.T) {
 	}).Return(nil, nil)
 
 	backend, err := NewBackend(service.ModeOnline, mockPClient, mockIndexerParser, avaxAssetID, networkIdentifier, networkID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	deps, err := backend.fetchBlkDependencies(ctx, []*txs.Tx{tx})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	require.Equal(t, 2, len(deps))
 	require.Equal(t, ids.Empty, deps[genesisTxID].Tx.ID())
@@ -135,7 +135,7 @@ func makeImportTx(t *testing.T, networkID uint32) (*txs.Tx, error) {
 		ImportedInputs: []*avax.TransferableInput{},
 	}
 	signedImportTx, err := txs.NewSigned(importTx, block.Codec, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	signedImportTx.Creds = []verify.Verifiable{}
 	return signedImportTx, err
 }

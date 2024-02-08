@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"flag"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/big"
 	"net/http"
+	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
@@ -91,14 +92,14 @@ func main() {
 	}
 
 	var assetID string
-	var AP5Activation uint64
+	var ap5Activation uint64
 	switch cfg.ChainID {
 	case constants.MainnetChainID:
 		assetID = constants.MainnetAssetID
-		AP5Activation = constants.MainnetAP5Activation
+		ap5Activation = constants.MainnetAP5Activation
 	case constants.FujiChainID:
 		assetID = constants.FujiAssetID
-		AP5Activation = constants.FujiAP5Activation
+		ap5Activation = constants.FujiAP5Activation
 	default:
 		log.Fatal("invalid ChainID:", cfg.ChainID)
 	}
@@ -150,7 +151,7 @@ func main() {
 		NetworkID:          networkC,
 		GenesisBlockHash:   cfg.GenesisBlockHash,
 		AvaxAssetID:        assetID,
-		AP5Activation:      AP5Activation,
+		AP5Activation:      ap5Activation,
 		IndexUnknownTokens: cfg.IndexUnknownTokens,
 		IngestionMode:      cfg.IngestionMode,
 		TokenWhiteList:     cfg.TokenWhiteList,
@@ -192,7 +193,13 @@ func main() {
 	)
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
-	log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))
+	server := &http.Server{
+		Addr:              cfg.ListenAddr,
+		Handler:           router,
+		ReadHeaderTimeout: 30 * time.Second,
+	}
+
+	log.Fatal(server.ListenAndServe())
 }
 
 func configureRouter(
@@ -222,12 +229,12 @@ func configureRouter(
 // Inspect middlware used to inspect the body of requets
 func inspectMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			panic(err)
 		}
 		body = bytes.TrimSpace(body)
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 		log.Printf("[DEBUG] %s %s: %s\n", r.Method, r.URL.Path, body)
 		next.ServeHTTP(w, r)
