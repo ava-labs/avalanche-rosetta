@@ -667,7 +667,7 @@ func (s ConstructionService) ConstructionPayloads(
 func (s ConstructionService) createTransferPayload(
 	req *types.ConstructionPayloadsRequest,
 ) (*ethtypes.Transaction, *transaction, *string, *types.Error) {
-	operationDescriptions, err := s.CreateTransferOperationDescription(req.Operations)
+	operationDescriptions, err := createTransferOperationDescription(req.Operations)
 	if err != nil {
 		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
 	}
@@ -970,7 +970,7 @@ func (s ConstructionService) ConstructionPreprocess(
 			return nil, terr
 		}
 	default:
-		operationDescriptions, err = s.CreateTransferOperationDescription(req.Operations)
+		operationDescriptions, err = createTransferOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
@@ -1074,7 +1074,7 @@ func (s ConstructionService) ConstructionSubmit(
 	}, nil
 }
 
-func (s ConstructionService) CreateTransferOperationDescription(
+func createTransferOperationDescription(
 	operations []*types.Operation,
 ) ([]*parser.OperationDescription, error) {
 	if len(operations) != 2 {

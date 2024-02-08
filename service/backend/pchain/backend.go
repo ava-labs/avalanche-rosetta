@@ -81,7 +81,7 @@ func NewBackend(
 }
 
 // ShouldHandleRequest returns whether a given request should be handled by this backend
-func (b *Backend) ShouldHandleRequest(req interface{}) bool {
+func (*Backend) ShouldHandleRequest(req interface{}) bool {
 	switch r := req.(type) {
 	case *types.AccountBalanceRequest:
 		return isPChain(r.NetworkIdentifier)
