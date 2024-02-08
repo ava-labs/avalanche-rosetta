@@ -104,7 +104,7 @@ func TestFetchBlkDependencies(t *testing.T) {
 	deps, err := backend.fetchBlkDependencies(ctx, []*txs.Tx{tx})
 	require.NoError(t, err)
 
-	require.Equal(t, 2, len(deps))
+	require.Len(t, deps, 2)
 	require.Equal(t, ids.Empty, deps[genesisTxID].Tx.ID())
 	require.NotEqual(t, ids.Empty, deps[nonGenesisTxID].Tx.ID())
 	require.Equal(t, signedImportTx, deps[nonGenesisTxID].Tx)

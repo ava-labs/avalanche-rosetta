@@ -123,7 +123,8 @@ func TestMapOutOperation(t *testing.T) {
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
 	}
-	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
+	parser, err := NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
 	outOps := newTxOps(false)
 	require.NoError(parser.outsToOperations(outOps, OpAddDelegator, ids.Empty, []*avax.TransferableOutput{avaxOut}, OpTypeOutput, rosConst.PChain))
 
@@ -244,7 +245,8 @@ func TestMapImportTx(t *testing.T) {
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
 	}
-	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
+	parser, err := NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
 	rosettaTransaction, err := parser.Parse(signedTx)
 	require.NoError(err)
 
@@ -263,11 +265,13 @@ func TestMapImportTx(t *testing.T) {
 }
 
 func TestMapNonConstructionImportTx(t *testing.T) {
+	require := require.New(t)
+
 	signedTx, importTx, inputAccounts := buildImport()
 
-	require.Equal(t, 0, len(importTx.Ins))
-	require.Equal(t, 3, len(importTx.Outs))
-	require.Equal(t, 1, len(importTx.ImportedInputs))
+	require.Empty(importTx.Ins)
+	require.Len(importTx.Outs, 3)
+	require.Len(importTx.ImportedInputs, 1)
 
 	ctrl := gomock.NewController(t)
 	pchainClient := client.NewMockPChainClient(ctrl)
@@ -278,25 +282,26 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
 	}
-	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
+	parser, err := NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
 	rosettaTransaction, err := parser.Parse(signedTx)
-	require.NoError(t, err)
+	require.NoError(err)
 
 	total := len(importTx.Ins) + len(importTx.Outs) + len(importTx.ImportedInputs) - 3 // - 1 for the multisig output
-	require.Equal(t, total, len(rosettaTransaction.Operations))
+	require.Len(rosettaTransaction.Operations, total)
 
 	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpImportAvax, OpTypeImport)
 
-	require.Equal(t, 1, cntTxType)
-	require.Equal(t, 0, cntInputMeta)
-	require.Equal(t, 1, cntOutputMeta)
-	require.Equal(t, 0, cntMetaType)
+	require.Equal(1, cntTxType)
+	require.Zero(cntInputMeta)
+	require.Equal(1, cntOutputMeta)
+	require.Zero(cntMetaType)
 
-	require.Equal(t, types.CoinCreated, rosettaTransaction.Operations[0].CoinChange.CoinAction)
+	require.Equal(types.CoinCreated, rosettaTransaction.Operations[0].CoinChange.CoinAction)
 
 	// Verify that export output are properly generated
 	importInputs, ok := rosettaTransaction.Metadata[mapper.MetadataImportedInputs].([]*types.Operation)
-	require.True(t, ok)
+	require.True(ok)
 
 	importedInput := importTx.ImportedInputs[0]
 	expectedImportedInputs := []*types.Operation{{
@@ -315,15 +320,16 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 		},
 	}}
 
-	require.Equal(t, expectedImportedInputs, importInputs)
+	require.Equal(expectedImportedInputs, importInputs)
 }
 
 func TestMapExportTx(t *testing.T) {
+	require := require.New(t)
 	signedTx, exportTx, inputAccounts := buildExport()
 
-	require.Equal(t, 1, len(exportTx.Ins))
-	require.Equal(t, 1, len(exportTx.Outs))
-	require.Equal(t, 1, len(exportTx.ExportedOutputs))
+	require.Len(exportTx.Ins, 1)
+	require.Len(exportTx.Outs, 1)
+	require.Len(exportTx.ExportedOutputs, 1)
 
 	ctrl := gomock.NewController(t)
 	pchainClient := client.NewMockPChainClient(ctrl)
@@ -334,27 +340,30 @@ func TestMapExportTx(t *testing.T) {
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
 	}
-	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
+	parser, err := NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
 	rosettaTransaction, err := parser.Parse(signedTx)
-	require.NoError(t, err)
+	require.NoError(err)
 
 	total := len(exportTx.Ins) + len(exportTx.Outs) + len(exportTx.ExportedOutputs)
-	require.Equal(t, total, len(rosettaTransaction.Operations))
+	require.Len(rosettaTransaction.Operations, total)
 
 	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpExportAvax, OpTypeExport)
 
-	require.Equal(t, 3, cntTxType)
-	require.Equal(t, 1, cntInputMeta)
-	require.Equal(t, 1, cntOutputMeta)
-	require.Equal(t, 1, cntMetaType)
+	require.Equal(3, cntTxType)
+	require.Equal(1, cntInputMeta)
+	require.Equal(1, cntOutputMeta)
+	require.Equal(1, cntMetaType)
 }
 
 func TestMapNonConstructionExportTx(t *testing.T) {
+	require := require.New(t)
+
 	signedTx, exportTx, inputAccounts := buildExport()
 
-	require.Equal(t, 1, len(exportTx.Ins))
-	require.Equal(t, 1, len(exportTx.Outs))
-	require.Equal(t, 1, len(exportTx.ExportedOutputs))
+	require.Len(exportTx.Ins, 1)
+	require.Len(exportTx.Outs, 1)
+	require.Len(exportTx.ExportedOutputs, 1)
 
 	ctrl := gomock.NewController(t)
 	pchainClient := client.NewMockPChainClient(ctrl)
@@ -365,27 +374,28 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
 	}
-	parser, _ := NewTxParser(parserCfg, inputAccounts, nil)
+	parser, err := NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
 	rosettaTransaction, err := parser.Parse(signedTx)
-	require.NoError(t, err)
+	require.NoError(err)
 
 	total := len(exportTx.Ins) + len(exportTx.Outs)
-	require.Equal(t, total, len(rosettaTransaction.Operations))
+	require.Len(rosettaTransaction.Operations, total)
 
 	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpExportAvax, OpTypeExport)
 
-	require.Equal(t, 2, cntTxType)
-	require.Equal(t, 1, cntInputMeta)
-	require.Equal(t, 1, cntOutputMeta)
-	require.Equal(t, 0, cntMetaType)
+	require.Equal(2, cntTxType)
+	require.Equal(1, cntInputMeta)
+	require.Equal(1, cntOutputMeta)
+	require.Equal(0, cntMetaType)
 
 	txType, ok := rosettaTransaction.Metadata[MetadataTxType].(string)
-	require.True(t, ok)
-	require.Equal(t, OpExportAvax, txType)
+	require.True(ok)
+	require.Equal(OpExportAvax, txType)
 
 	// Verify that export output are properly generated
 	exportOutputs, ok := rosettaTransaction.Metadata[mapper.MetadataExportedOutputs].([]*types.Operation)
-	require.True(t, ok)
+	require.True(ok)
 
 	// setting isConstruction to true in order to include exported output in the operations
 	parserCfg = TxParserConfig{
@@ -395,14 +405,15 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 		AvaxAssetID:    avaxAssetID,
 		PChainClient:   pchainClient,
 	}
-	parser, _ = NewTxParser(parserCfg, inputAccounts, nil)
+	parser, err = NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
 	rosettaTransactionWithExportOperations, err := parser.Parse(signedTx)
-	require.NoError(t, err)
+	require.NoError(err)
 
 	out := rosettaTransactionWithExportOperations.Operations[2]
 	out.Status = types.String(mapper.StatusSuccess)
 	out.CoinChange = exportOutputs[0].CoinChange
-	require.Equal(t, []*types.Operation{out}, exportOutputs)
+	require.Equal([]*types.Operation{out}, exportOutputs)
 }
 
 func verifyRosettaTransaction(operations []*types.Operation, txType string, metaType string) (int, int, int, int) {

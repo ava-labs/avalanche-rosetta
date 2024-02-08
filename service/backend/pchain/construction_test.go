@@ -87,10 +87,13 @@ func TestConstructionDerive(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("p-chain address", func(t *testing.T) {
-		src := "02e0d4392cfa224d4be19db416b3cf62e90fb2b7015e7b62a95c8cb490514943f6"
-		b, _ := hex.DecodeString(src)
+		require := require.New(t)
 
-		resp, err := backend.ConstructionDerive(
+		src := "02e0d4392cfa224d4be19db416b3cf62e90fb2b7015e7b62a95c8cb490514943f6"
+		b, err := hex.DecodeString(src)
+		require.NoError(err)
+
+		resp, terr := backend.ConstructionDerive(
 			context.Background(),
 			&types.ConstructionDeriveRequest{
 				NetworkIdentifier: pChainNetworkIdentifier,
@@ -100,9 +103,8 @@ func TestConstructionDerive(t *testing.T) {
 				},
 			},
 		)
-		require.Nil(t, err)
+		require.Nil(terr)
 		require.Equal(
-			t,
 			"P-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl",
 			resp.AccountIdentifier.Address,
 		)
@@ -162,7 +164,8 @@ func TestExportTxConstruction(t *testing.T) {
 	exportSigners := buildRosettaSignerJSON([]string{coinID1}, signers)
 
 	unsignedExportTx := "0x0000000000120000000500000000000000000000000000000000000000000000000000000000000000000000000000000001f52a5a6dd8f1b3fe05204bdab4f6bcb5a7059f88d0443c636f6c158f838dd1a8000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000005000000003b9aca000000000100000000000000007fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d5000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000007000000003b8b87c0000000000000000000000001000000015445cd01d75b4a06b6b41939193c0b1c5544490d0000000065e8045f"
-	unsignedExportTxHash, _ := hex.DecodeString("44d579f5cb3c83f4137223a0368721734b622ec392007760eed97f3f1a40c595")
+	unsignedExportTxHash, err := hex.DecodeString("44d579f5cb3c83f4137223a0368721734b622ec392007760eed97f3f1a40c595")
+	require.NoError(t, err)
 
 	signingPayloads := []*types.SigningPayload{
 		{
@@ -173,7 +176,8 @@ func TestExportTxConstruction(t *testing.T) {
 	}
 
 	signedExportTx := "0x0000000000120000000500000000000000000000000000000000000000000000000000000000000000000000000000000001f52a5a6dd8f1b3fe05204bdab4f6bcb5a7059f88d0443c636f6c158f838dd1a8000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000005000000003b9aca000000000100000000000000007fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d5000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000007000000003b8b87c0000000000000000000000001000000015445cd01d75b4a06b6b41939193c0b1c5544490d0000000100000009000000017403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b0137dc0dc4"
-	signedExportTxSignature, _ := hex.DecodeString("7403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01")
+	signedExportTxSignature, err := hex.DecodeString("7403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01")
+	require.NoError(t, err)
 	signedExportTxHash := "bG7jzw16x495XSFdhEavHWR836Ya5teoB1YxRC1inN3HEtqbs"
 
 	wrappedTxFormat := `{"tx":"%s","signers":%s,"destination_chain":"%s","destination_chain_id":"%s"}`
@@ -303,8 +307,12 @@ func TestExportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
-		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedExportTx)
-		txID, _ := ids.FromString(signedExportTxHash)
+		require := require.New(t)
+
+		signedTxBytes, err := formatting.Decode(formatting.Hex, signedExportTx)
+		require.NoError(err)
+		txID, err := ids.FromString(signedExportTxHash)
+		require.NoError(err)
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
@@ -313,8 +321,8 @@ func TestExportTxConstruction(t *testing.T) {
 			SignedTransaction: wrappedSignedExportTx,
 		})
 
-		require.Nil(t, apiErr)
-		require.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(apiErr)
+		require.Equal(signedExportTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
 
@@ -370,7 +378,8 @@ func TestImportTxConstruction(t *testing.T) {
 	importSigners := buildRosettaSignerJSON([]string{coinID1}, signers)
 
 	unsignedImportTx := "0x000000000011000000050000000000000000000000000000000000000000000000000000000000000000000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000007000000003b8b87c0000000000000000000000001000000015445cd01d75b4a06b6b41939193c0b1c5544490d00000000000000007fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d500000001f52a5a6dd8f1b3fe05204bdab4f6bcb5a7059f88d0443c636f6c158f838dd1a8000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000005000000003b9aca000000000100000000000000004ce8b27d"
-	unsignedImportTxHash, _ := hex.DecodeString("e9114ae12065d1f8631bc40729c806a3a4793de714001bfee66482f520dc1865")
+	unsignedImportTxHash, err := hex.DecodeString("e9114ae12065d1f8631bc40729c806a3a4793de714001bfee66482f520dc1865")
+	require.NoError(t, err)
 	wrappedUnsignedImportTx := `{"tx":"` + unsignedImportTx + `","signers":` + importSigners + `}` //nolint:goconst
 
 	signingPayloads := []*types.SigningPayload{
@@ -382,7 +391,8 @@ func TestImportTxConstruction(t *testing.T) {
 	}
 
 	signedImportTx := "0x000000000011000000050000000000000000000000000000000000000000000000000000000000000000000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000007000000003b8b87c0000000000000000000000001000000015445cd01d75b4a06b6b41939193c0b1c5544490d00000000000000007fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d500000001f52a5a6dd8f1b3fe05204bdab4f6bcb5a7059f88d0443c636f6c158f838dd1a8000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000005000000003b9aca0000000001000000000000000100000009000000017403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b018ac25b4e"
-	signedImportTxSignature, _ := hex.DecodeString("7403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01")
+	signedImportTxSignature, err := hex.DecodeString("7403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01")
+	require.NoError(t, err)
 	signedImportTxHash := "byyEVU6RL7PQNSVT8qEnybWGV5BbBfJwFV6bEDV5mkymXRz62"
 
 	wrappedSignedImportTx := `{"tx":"` + signedImportTx + `","signers":` + importSigners + `}`
@@ -510,8 +520,13 @@ func TestImportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
-		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedImportTx)
-		txID, _ := ids.FromString(signedImportTxHash)
+		require := require.New(t)
+
+		signedTxBytes, err := formatting.Decode(formatting.Hex, signedImportTx)
+		require.NoError(err)
+
+		txID, err := ids.FromString(signedImportTxHash)
+		require.NoError(err)
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
@@ -520,8 +535,8 @@ func TestImportTxConstruction(t *testing.T) {
 			SignedTransaction: wrappedSignedImportTx,
 		})
 
-		require.Nil(t, apiErr)
-		require.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(apiErr)
+		require.Equal(signedImportTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
 
@@ -600,7 +615,8 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	stakeSigners := buildRosettaSignerJSON([]string{coinID1}, signers)
 
 	unsignedTx := "0x00000000000c0000000500000000000000000000000000000000000000000000000000000000000000000000000000000001f52a5a6dd8f1b3fe05204bdab4f6bcb5a7059f88d0443c636f6c158f838dd1a8000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000005000001d1a94a200000000001000000000000000077e1d5c6c289c49976f744749d54369d2129d7500000000062eb5de30000000062fdd2e3000001d1a94a2000000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000007000001d1a94a2000000000000000000000000001000000015445cd01d75b4a06b6b41939193c0b1c5544490d0000000b00000000000000000000000100000001cf7cd358e2e882449d68c1c8889889eaf247b72000030d4000000000482f5298"
-	unsignedTxHash, _ := hex.DecodeString("00c9e13de9f32b5808e54c024b15bdeee5925cbb918d90a272def046cedae800")
+	unsignedTxHash, err := hex.DecodeString("00c9e13de9f32b5808e54c024b15bdeee5925cbb918d90a272def046cedae800")
+	require.NoError(t, err)
 	wrappedUnsignedTx := `{"tx":"` + unsignedTx + `","signers":` + stakeSigners + `}`
 
 	signingPayloads := []*types.SigningPayload{
@@ -612,7 +628,8 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	}
 
 	signedTx := "0x00000000000c0000000500000000000000000000000000000000000000000000000000000000000000000000000000000001f52a5a6dd8f1b3fe05204bdab4f6bcb5a7059f88d0443c636f6c158f838dd1a8000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000005000001d1a94a200000000001000000000000000077e1d5c6c289c49976f744749d54369d2129d7500000000062eb5de30000000062fdd2e3000001d1a94a2000000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa00000007000001d1a94a2000000000000000000000000001000000015445cd01d75b4a06b6b41939193c0b1c5544490d0000000b00000000000000000000000100000001cf7cd358e2e882449d68c1c8889889eaf247b72000030d400000000100000009000000017403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01e228f820"
-	signedTxSignature, _ := hex.DecodeString("7403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01")
+	signedTxSignature, err := hex.DecodeString("7403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01")
+	require.NoError(t, err)
 	signedTxHash := "2Exfhp6qjdNz8HvECFH2sQxvUxJsaygZjWriY8xh3BvBXWh7Nb"
 
 	wrappedSignedTx := `{"tx":"` + signedTx + `","signers":` + stakeSigners + `}`
@@ -738,8 +755,12 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
-		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedTx)
-		txID, _ := ids.FromString(signedTxHash)
+		require := require.New(t)
+
+		signedTxBytes, err := formatting.Decode(formatting.Hex, signedTx)
+		require.NoError(err)
+		txID, err := ids.FromString(signedTxHash)
+		require.NoError(err)
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
@@ -748,8 +769,8 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 			SignedTransaction: wrappedSignedTx,
 		})
 
-		require.Nil(t, apiErr)
-		require.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(apiErr)
+		require.Equal(signedTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
 
@@ -825,7 +846,8 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	stakeSigners := buildRosettaSignerJSON([]string{coinID1}, signers)
 
 	unsignedTx := "0x00000000000e0000000500000000000000000000000000000000000000000000000000000000000000000000000000000001f52a5a6dd8f1b3fe05204bdab4f6bcb5a7059f88d0443c636f6c158f838dd1a8000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000500000005d21dba0000000001000000000000000077e1d5c6c289c49976f744749d54369d2129d7500000000062eb5de30000000062fdd2e300000005d21dba00000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000700000005d21dba00000000000000000000000001000000015445cd01d75b4a06b6b41939193c0b1c5544490d0000000b00000000000000000000000100000001cf7cd358e2e882449d68c1c8889889eaf247b72000000000eece5b91"
-	unsignedTxHash, _ := hex.DecodeString("832a55223ef63d8e39d85025df08c9ae82d0f185d4a0f60b14dec360d721b9f4")
+	unsignedTxHash, err := hex.DecodeString("832a55223ef63d8e39d85025df08c9ae82d0f185d4a0f60b14dec360d721b9f4")
+	require.NoError(t, err)
 	wrappedUnsignedTx := `{"tx":"` + unsignedTx + `","signers":` + stakeSigners + `}`
 
 	signingPayloads := []*types.SigningPayload{
@@ -837,7 +859,8 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	}
 
 	signedTx := "0x00000000000e0000000500000000000000000000000000000000000000000000000000000000000000000000000000000001f52a5a6dd8f1b3fe05204bdab4f6bcb5a7059f88d0443c636f6c158f838dd1a8000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000500000005d21dba0000000001000000000000000077e1d5c6c289c49976f744749d54369d2129d7500000000062eb5de30000000062fdd2e300000005d21dba00000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000700000005d21dba00000000000000000000000001000000015445cd01d75b4a06b6b41939193c0b1c5544490d0000000b00000000000000000000000100000001cf7cd358e2e882449d68c1c8889889eaf247b7200000000100000009000000017403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b0143d545c4"
-	signedTxSignature, _ := hex.DecodeString("7403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01")
+	signedTxSignature, err := hex.DecodeString("7403e32bb967e71902a988b7da635b4bca2475eedbfd23176610a88162f3a92f20b61f2185825b04b7f8ee8c76427c8dc80eb6091f9e594ef259a59856e5401b01")
+	require.NoError(t, err)
 	signedTxHash := "2eppnnog3TwkBTyQKMh44wz5bUy4geDETEeZVCz7m7uMnjGeCP"
 
 	wrappedSignedTx := `{"tx":"` + signedTx + `","signers":` + stakeSigners + `}`
@@ -963,8 +986,12 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
-		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedTx)
-		txID, _ := ids.FromString(signedTxHash)
+		require := require.New(t)
+
+		signedTxBytes, err := formatting.Decode(formatting.Hex, signedTx)
+		require.NoError(err)
+		txID, err := ids.FromString(signedTxHash)
+		require.NoError(err)
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
@@ -973,8 +1000,8 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 			SignedTransaction: wrappedSignedTx,
 		})
 
-		require.Nil(t, apiErr)
-		require.Equal(t, signedTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(apiErr)
+		require.Equal(signedTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
 

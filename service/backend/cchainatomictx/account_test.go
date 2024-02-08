@@ -55,6 +55,8 @@ func TestAccountBalance(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("C-chain atomic tx balance is sum of UTXOs", func(t *testing.T) {
+		require := require.New(t)
+
 		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
 		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
 
@@ -75,11 +77,11 @@ func TestAccountBalance(t *testing.T) {
 				Address: accountAddress,
 			},
 		})
-		require.Nil(t, apiErr)
+		require.Nil(apiErr)
 
-		require.Equal(t, 1, len(resp.Balances))
-		require.Equal(t, mapper.AtomicAvaxCurrency, resp.Balances[0].Currency)
-		require.Equal(t, "2500000", resp.Balances[0].Value)
+		require.Len(resp.Balances, 1)
+		require.Equal(mapper.AtomicAvaxCurrency, resp.Balances[0].Currency)
+		require.Equal("2500000", resp.Balances[0].Value)
 	})
 }
 
@@ -96,6 +98,8 @@ func TestAccountCoins(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("C-chain atomic tx coins returns UTXOs", func(t *testing.T) {
+		require := require.New(t)
+
 		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
 		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
 		utxo2Bytes := makeUtxoBytes(t, backend, utxos[2].id, utxos[2].amount)
@@ -122,21 +126,21 @@ func TestAccountCoins(t *testing.T) {
 				Address: accountAddress,
 			},
 		})
-		require.Nil(t, apiErr)
+		require.Nil(apiErr)
 
-		require.Equal(t, 3, len(resp.Coins))
+		require.Len(resp.Coins, 3)
 
-		require.Equal(t, utxos[0].id, resp.Coins[0].CoinIdentifier.Identifier)
-		require.Equal(t, mapper.AtomicAvaxCurrency, resp.Coins[0].Amount.Currency)
-		require.Equal(t, strconv.FormatUint(utxos[0].amount, 10), resp.Coins[0].Amount.Value)
+		require.Equal(utxos[0].id, resp.Coins[0].CoinIdentifier.Identifier)
+		require.Equal(mapper.AtomicAvaxCurrency, resp.Coins[0].Amount.Currency)
+		require.Equal(strconv.FormatUint(utxos[0].amount, 10), resp.Coins[0].Amount.Value)
 
-		require.Equal(t, utxos[3].id, resp.Coins[1].CoinIdentifier.Identifier)
-		require.Equal(t, mapper.AtomicAvaxCurrency, resp.Coins[1].Amount.Currency)
-		require.Equal(t, strconv.FormatUint(utxos[3].amount, 10), resp.Coins[1].Amount.Value)
+		require.Equal(utxos[3].id, resp.Coins[1].CoinIdentifier.Identifier)
+		require.Equal(mapper.AtomicAvaxCurrency, resp.Coins[1].Amount.Currency)
+		require.Equal(strconv.FormatUint(utxos[3].amount, 10), resp.Coins[1].Amount.Value)
 
-		require.Equal(t, utxos[1].id, resp.Coins[2].CoinIdentifier.Identifier)
-		require.Equal(t, mapper.AtomicAvaxCurrency, resp.Coins[2].Amount.Currency)
-		require.Equal(t, strconv.FormatUint(utxos[1].amount, 10), resp.Coins[2].Amount.Value)
+		require.Equal(utxos[1].id, resp.Coins[2].CoinIdentifier.Identifier)
+		require.Equal(mapper.AtomicAvaxCurrency, resp.Coins[2].Amount.Currency)
+		require.Equal(strconv.FormatUint(utxos[1].amount, 10), resp.Coins[2].Amount.Value)
 	})
 }
 

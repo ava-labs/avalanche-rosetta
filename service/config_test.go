@@ -17,8 +17,8 @@ func TestConfig(t *testing.T) {
 			NetworkID: &types.NetworkIdentifier{},
 		}
 
-		require.Equal(t, false, cfg.IsOfflineMode())
-		require.Equal(t, true, cfg.IsOnlineMode())
+		require.False(t, cfg.IsOfflineMode())
+		require.True(t, cfg.IsOnlineMode())
 	})
 
 	t.Run("offline", func(t *testing.T) {
@@ -28,8 +28,8 @@ func TestConfig(t *testing.T) {
 			NetworkID: &types.NetworkIdentifier{},
 		}
 
-		require.Equal(t, true, cfg.IsOfflineMode())
-		require.Equal(t, false, cfg.IsOnlineMode())
+		require.True(t, cfg.IsOfflineMode())
+		require.False(t, cfg.IsOnlineMode())
 	})
 
 	t.Run("signer", func(t *testing.T) {
