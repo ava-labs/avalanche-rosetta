@@ -847,7 +847,7 @@ func (s ConstructionService) createUnwrapPayload(
 }
 
 func (s ConstructionService) createGenericContractCallPayload(req *types.ConstructionPayloadsRequest) (*ethtypes.Transaction, *transaction, *string, *types.Error) {
-	operationDescriptions, err := s.CreateGenericContractCallOperationDescription(req.Operations)
+	operationDescriptions, err := createGenericContractCallOperationDescription(req.Operations)
 	if err != nil {
 		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
 	}
@@ -945,7 +945,7 @@ func (s ConstructionService) ConstructionPreprocess(
 		operationDescriptions []*parser.OperationDescription
 		preprocessOptions     *options
 		err                   error
-		typesError            *types.Error
+		terr                  *types.Error
 	)
 
 	switch {
@@ -954,29 +954,29 @@ func (s ConstructionService) ConstructionPreprocess(
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
-		preprocessOptions, typesError = s.createUnwrapPreprocessOptions(operationDescriptions, req)
-		if typesError != nil {
-			return nil, typesError
+		preprocessOptions, terr = createUnwrapPreprocessOptions(operationDescriptions, req)
+		if terr != nil {
+			return nil, terr
 		}
 	case isGenericContractCall(req.Metadata):
 		// To ensure we don't conflict with ERC-20 transfer handling (which are also contract calls), we populate
 		// the "method_signature" key in metadata (what is used in this check).
-		operationDescriptions, err = s.CreateGenericContractCallOperationDescription(req.Operations)
+		operationDescriptions, err = createGenericContractCallOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
-		preprocessOptions, typesError = s.createGenericContractCallPreprocessOptions(operationDescriptions, req)
-		if typesError != nil {
-			return nil, typesError
+		preprocessOptions, terr = createGenericContractCallPreprocessOptions(operationDescriptions, req)
+		if terr != nil {
+			return nil, terr
 		}
 	default:
 		operationDescriptions, err = s.CreateTransferOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
-		preprocessOptions, typesError = s.createTransferPreprocessOptions(operationDescriptions, req)
-		if typesError != nil {
-			return nil, typesError
+		preprocessOptions, terr = createTransferPreprocessOptions(operationDescriptions, req)
+		if terr != nil {
+			return nil, terr
 		}
 	}
 
@@ -1093,7 +1093,7 @@ func (s ConstructionService) CreateTransferOperationDescription(
 	}
 
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
-		return s.createOperationDescriptionTransfer(mapper.AvaxCurrency, mapper.OpCall), nil
+		return createOperationDescriptionTransfer(mapper.AvaxCurrency, mapper.OpCall), nil
 	}
 
 	// Not Native Avax, we require contractInfo in metadata.
@@ -1101,7 +1101,7 @@ func (s ConstructionService) CreateTransferOperationDescription(
 		return nil, errors.New("non-native currency must have contractAddress in metadata")
 	}
 
-	return s.createOperationDescriptionTransfer(firstCurrency, mapper.OpErc20Transfer), nil
+	return createOperationDescriptionTransfer(firstCurrency, mapper.OpErc20Transfer), nil
 }
 
 func (s ConstructionService) CreateUnwrapOperationDescription(
@@ -1127,10 +1127,22 @@ func (s ConstructionService) CreateUnwrapOperationDescription(
 		return nil, errors.New("only configured bridge tokens may use try to use unwrap function")
 	}
 
-	return s.createOperationDescriptionBridgeUnwrap(firstCurrency), nil
+	return []*parser.OperationDescription{
+		{
+			Type: mapper.OpErc20Burn,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.NegativeAmountSign,
+				Currency: firstCurrency,
+			},
+		},
+	}, nil
 }
 
-func (ConstructionService) createTransferPreprocessOptions(
+func createTransferPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
 	req *types.ConstructionPreprocessRequest,
 ) (*options, *types.Error) {
@@ -1168,7 +1180,7 @@ func (ConstructionService) createTransferPreprocessOptions(
 	}, nil
 }
 
-func (ConstructionService) createUnwrapPreprocessOptions(
+func createUnwrapPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
 	req *types.ConstructionPreprocessRequest,
 ) (*options, *types.Error) {
@@ -1207,7 +1219,7 @@ func (ConstructionService) createUnwrapPreprocessOptions(
 	}, nil
 }
 
-func (ConstructionService) createOperationDescriptionTransfer(
+func createOperationDescriptionTransfer(
 	currency *types.Currency,
 	opCode string,
 ) []*parser.OperationDescription {
@@ -1231,24 +1243,6 @@ func (ConstructionService) createOperationDescriptionTransfer(
 			Amount: &parser.AmountDescription{
 				Exists:   true,
 				Sign:     parser.PositiveAmountSign,
-				Currency: currency,
-			},
-		},
-	}
-}
-
-func (ConstructionService) createOperationDescriptionBridgeUnwrap(
-	currency *types.Currency,
-) []*parser.OperationDescription {
-	return []*parser.OperationDescription{
-		{
-			Type: mapper.OpErc20Burn,
-			Account: &parser.AccountDescription{
-				Exists: true,
-			},
-			Amount: &parser.AmountDescription{
-				Exists:   true,
-				Sign:     parser.NegativeAmountSign,
 				Currency: currency,
 			},
 		},
@@ -1342,7 +1336,7 @@ func (s ConstructionService) getGenericContractCallGasLimit(
 	return gasLimit, nil
 }
 
-func (ConstructionService) createGenericContractCallPreprocessOptions(
+func createGenericContractCallPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
 	req *types.ConstructionPreprocessRequest,
 ) (*options, *types.Error) {
@@ -1398,7 +1392,7 @@ func (ConstructionService) createGenericContractCallPreprocessOptions(
 	}, nil
 }
 
-func (s ConstructionService) CreateGenericContractCallOperationDescription(operations []*types.Operation) ([]*parser.OperationDescription, error) {
+func createGenericContractCallOperationDescription(operations []*types.Operation) ([]*parser.OperationDescription, error) {
 	if len(operations) != 2 {
 		return nil, errors.New("invalid number of operations")
 	}
