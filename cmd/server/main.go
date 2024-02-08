@@ -29,6 +29,9 @@ import (
 var (
 	cmdName    = "avalanche-rosetta"
 	cmdVersion = service.MiddlewareVersion
+
+	defaultReadTimeout  = 10 * time.Second
+	defaultWriteTimeout = 10 * time.Second
 )
 
 var opts struct {
@@ -194,9 +197,10 @@ func main() {
 	log.Printf("starting rosetta server at %s\n", cfg.ListenAddr)
 
 	server := &http.Server{
-		Addr:              cfg.ListenAddr,
-		Handler:           router,
-		ReadHeaderTimeout: 30 * time.Second,
+		Addr:         cfg.ListenAddr,
+		Handler:      router,
+		ReadTimeout:  defaultReadTimeout,
+		WriteTimeout: defaultWriteTimeout,
 	}
 
 	log.Fatal(server.ListenAndServe())
