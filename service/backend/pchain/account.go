@@ -9,23 +9,22 @@ import (
 	"strings"
 	"time"
 
-	avaConst "github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-
-	"github.com/ava-labs/avalanche-rosetta/constants"
-	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
-	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
-
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/math"
 	"github.com/ava-labs/avalanchego/utils/set"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
+	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
+
+	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
+	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
 )
 
 var (
@@ -186,7 +185,7 @@ func (b *Backend) getPendingRewardsBalance(ctx context.Context, req *types.Accou
 	var nodeIDs []ids.NodeID
 	nodeIDs = append(nodeIDs, validatorNodeID)
 
-	validators, err := b.pClient.GetCurrentValidators(ctx, avaConst.PrimaryNetworkID, nodeIDs)
+	validators, err := b.pClient.GetCurrentValidators(ctx, avaconstants.PrimaryNetworkID, nodeIDs)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, "unable to fetch validators")
 	}
@@ -271,7 +270,7 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImpo
 		return 0, nil, typedErr
 	}
 
-	balance, err := b.getBalancesWithoutMultisig(utxos)
+	balance, err := getBalancesWithoutMultisig(utxos)
 	if err != nil {
 		return 0, nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -291,7 +290,7 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImpo
 // Copy of the platformvm service's GetBalance implementation.
 // This is needed as multisig UTXOs are cleaned in parseUTXOs and its output must be used for the calculations. Ref:
 // https://github.com/ava-labs/avalanchego/blob/0950acab667e0c16a55e9a9bb72bcbe25c3b88cf/vms/platformvm/service.go#L184
-func (b *Backend) getBalancesWithoutMultisig(utxos []avax.UTXO) (*AccountBalance, error) {
+func getBalancesWithoutMultisig(utxos []avax.UTXO) (*AccountBalance, error) {
 	currentTime := uint64(time.Now().Unix())
 
 	accountBalance := &AccountBalance{

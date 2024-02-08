@@ -3,16 +3,15 @@ package pchain
 import (
 	"context"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/coinbase/rosetta-sdk-go/types"
-
-	"github.com/ava-labs/avalanche-rosetta/service"
-
 	"github.com/ava-labs/avalanchego/api"
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/coinbase/rosetta-sdk-go/types"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/ava-labs/avalanche-rosetta/service"
 
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
@@ -163,7 +162,7 @@ func (b *Backend) fetchBlkDependencies(ctx context.Context, txs []*txs.Tx) (pmap
 	blockDeps := make(pmapper.BlockTxDependencies)
 	depsTxIDs := []ids.ID{}
 	for _, tx := range txs {
-		inputTxsIds, err := blockDeps.GetTxDependenciesIDs(tx.Unsigned)
+		inputTxsIds, err := pmapper.GetTxDependenciesIDs(tx.Unsigned)
 		if err != nil {
 			return nil, err
 		}

@@ -15,9 +15,10 @@ import (
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
+
+	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
 
 var (
@@ -26,12 +27,12 @@ var (
 )
 
 // ConstructionDerive implements /construction/derive endpoint for P-chain
-func (b *Backend) ConstructionDerive(_ context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
+func (*Backend) ConstructionDerive(_ context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	return common.DeriveBech32Address(constants.PChain, req)
 }
 
 // ConstructionPreprocess implements /construction/preprocess endpoint for P-chain
-func (b *Backend) ConstructionPreprocess(
+func (*Backend) ConstructionPreprocess(
 	_ context.Context,
 	req *types.ConstructionPreprocessRequest,
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
@@ -69,7 +70,7 @@ func (b *Backend) ConstructionMetadata(
 	case pmapper.OpExportAvax:
 		metadata, suggestedFee, err = b.buildExportMetadata(ctx, req.Options)
 	case pmapper.OpAddValidator, pmapper.OpAddDelegator:
-		metadata, suggestedFee, err = b.buildStakingMetadata(req.Options)
+		metadata, suggestedFee, err = buildStakingMetadata(req.Options)
 		metadata.Threshold = opMetadata.Threshold
 		metadata.Locktime = opMetadata.Locktime
 
@@ -149,7 +150,7 @@ func (b *Backend) buildExportMetadata(ctx context.Context, options map[string]in
 	return &pmapper.Metadata{ExportMetadata: exportMetadata}, suggestedFee, nil
 }
 
-func (b *Backend) buildStakingMetadata(options map[string]interface{}) (*pmapper.Metadata, *types.Amount, error) {
+func buildStakingMetadata(options map[string]interface{}) (*pmapper.Metadata, *types.Amount, error) {
 	var preprocessOptions pmapper.StakingOptions
 	if err := mapper.UnmarshalJSONMap(options, &preprocessOptions); err != nil {
 		return nil, nil, err
@@ -225,7 +226,7 @@ func (b *Backend) ConstructionCombine(_ context.Context, req *types.Construction
 }
 
 // CombineTx implements P-chain specific logic for combining unsigned transactions and signatures
-func (b *Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (common.AvaxTx, *types.Error) {
+func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (common.AvaxTx, *types.Error) {
 	pTx, ok := tx.(*pTx)
 	if !ok {
 		return nil, service.WrapError(service.ErrInvalidInput, "invalid transaction")

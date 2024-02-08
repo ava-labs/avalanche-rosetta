@@ -10,16 +10,16 @@ import (
 	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
-
-	pBlocks "github.com/ava-labs/avalanchego/vms/platformvm/block"
-	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	proposerBlk "github.com/ava-labs/avalanchego/vms/proposervm/block"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
-	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
+	"github.com/ava-labs/avalanche-rosetta/constants"
+
+	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
+	platformvmgenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
+	proposervmblock "github.com/ava-labs/avalanchego/vms/proposervm/block"
 )
 
 var (
@@ -65,15 +65,15 @@ type parser struct {
 // cannot assume client is ready to serve requests immediately
 func NewParser(pChainClient client.PChainClient, avalancheNetworkID uint32) (Parser, error) {
 	aliaser := ids.NewAliaser()
-	err := aliaser.Alias(constants.PlatformChainID, rosConst.PChain.String())
+	err := aliaser.Alias(avaconstants.PlatformChainID, constants.PChain.String())
 	if err != nil {
 		return nil, err
 	}
 
 	return &parser{
 		pChainClient: pChainClient,
-		codec:        pBlocks.Codec,
-		codecVersion: pBlocks.CodecVersion,
+		codec:        block.Codec,
+		codecVersion: block.CodecVersion,
 		networkID:    avalancheNetworkID,
 		aliaser:      aliaser,
 	}, nil
@@ -100,7 +100,7 @@ func (p *parser) GetGenesisBlock(_ context.Context) (*ParsedGenesisBlock, error)
 		return nil, err
 	}
 
-	genesisState, err := pGenesis.Parse(bytes)
+	genesisState, err := platformvmgenesis.Parse(bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (p *parser) GetGenesisBlock(_ context.Context) (*ParsedGenesisBlock, error)
 	// Build genesis ID and ParentID as it's done in platformVM'State,
 	// without polling indexer (for backward compatibility).
 	genesisParentID := hashing.ComputeHash256Array(bytes)
-	genesisBlock, err := pBlocks.NewApricotCommitBlock(genesisParentID, 0)
+	genesisBlock, err := block.NewApricotCommitBlock(genesisParentID, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -202,13 +202,13 @@ func (p *parser) parseProposerBlock(blkBytes []byte) (*ParsedBlock, error) {
 	pChainBlkBytes := blkBytes
 	proposerTime := noProposerTime
 
-	proBlk, err := proposerBlk.Parse(blkBytes, time.Time{})
+	proBlk, err := proposervmblock.Parse(blkBytes, time.Time{})
 	if err == nil {
 		// inner proposerVM bytes, to be parsed as P-chain block
 		pChainBlkBytes = proBlk.Block()
 
 		// retrieve relevant proposer data
-		if b, ok := proBlk.(proposerBlk.SignedBlock); ok {
+		if b, ok := proBlk.(proposervmblock.SignedBlock); ok {
 			proposerTime = b.Timestamp()
 		}
 	}
@@ -217,7 +217,7 @@ func (p *parser) parseProposerBlock(blkBytes []byte) (*ParsedBlock, error) {
 }
 
 func (p *parser) parsePChainBlock(pChainBlkBytes []byte, proposerTime time.Time) (*ParsedBlock, error) {
-	blk, err := pBlocks.Parse(p.codec, pChainBlkBytes)
+	blk, err := block.Parse(p.codec, pChainBlkBytes)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling block bytes errored with %w", err)
 	}
@@ -245,29 +245,29 @@ func (p *parser) parsePChainBlock(pChainBlkBytes []byte, proposerTime time.Time)
 	}, nil
 }
 
-func retrieveTime(pchainBlk pBlocks.Block, proposerTime time.Time) (time.Time, error) {
+func retrieveTime(pchainBlk block.Block, proposerTime time.Time) (time.Time, error) {
 	switch b := pchainBlk.(type) {
 	// Banff blocks serialize pchain time
-	case *pBlocks.BanffProposalBlock:
+	case *block.BanffProposalBlock:
 		return b.Timestamp(), nil
-	case *pBlocks.BanffStandardBlock:
+	case *block.BanffStandardBlock:
 		return b.Timestamp(), nil
-	case *pBlocks.BanffAbortBlock:
+	case *block.BanffAbortBlock:
 		return b.Timestamp(), nil
-	case *pBlocks.BanffCommitBlock:
+	case *block.BanffCommitBlock:
 		return b.Timestamp(), nil
 
 	// Apricot Proposal blocks may contain an advance time tx
 	// setting pchain time
-	case *pBlocks.ApricotProposalBlock:
+	case *block.ApricotProposalBlock:
 		if t, ok := b.Tx.Unsigned.(*txs.AdvanceTimeTx); ok {
 			return t.Timestamp(), nil
 		}
 
-	case *pBlocks.ApricotAtomicBlock,
-		*pBlocks.ApricotStandardBlock,
-		*pBlocks.ApricotAbortBlock,
-		*pBlocks.ApricotCommitBlock:
+	case *block.ApricotAtomicBlock,
+		*block.ApricotStandardBlock,
+		*block.ApricotAbortBlock,
+		*block.ApricotCommitBlock:
 		// no relevant time information in these blocks
 
 	default:

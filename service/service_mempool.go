@@ -47,7 +47,7 @@ func (s MempoolService) Mempool(
 }
 
 // MempoolTransaction implements the /mempool/transaction endpoint
-func (s MempoolService) MempoolTransaction(
+func (MempoolService) MempoolTransaction(
 	_ context.Context,
 	_ *types.MempoolTransactionRequest,
 ) (*types.MempoolTransactionResponse, *types.Error) {

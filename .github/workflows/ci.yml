@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: golangci/golangci-lint-action@v2
         with:
-          version: latest
+          version: v1.56.1
   check_mockgen:
     name: Up-to-date mocks
     runs-on: ubuntu-latest

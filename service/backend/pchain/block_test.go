@@ -6,14 +6,12 @@ import (
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/ids"
-	avaConst "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
 	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	avaTypes "github.com/ava-labs/avalanchego/vms/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -22,6 +20,9 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
+
+	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
+	avatypes "github.com/ava-labs/avalanchego/vms/types"
 )
 
 func TestFetchBlkDependencies(t *testing.T) {
@@ -33,7 +34,7 @@ func TestFetchBlkDependencies(t *testing.T) {
 
 	ctx := context.Background()
 
-	networkID := avaConst.MainnetID
+	networkID := avaconstants.MainnetID
 	networkIdentifier := &types.NetworkIdentifier{
 		Blockchain: service.BlockchainName,
 		Network:    constants.MainnetNetwork,
@@ -43,7 +44,7 @@ func TestFetchBlkDependencies(t *testing.T) {
 	}
 
 	signedImportTx, err := makeImportTx(t, networkID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	genesisTxID := ids.Empty
 	nonGenesisTxID := signedImportTx.ID()
@@ -99,12 +100,12 @@ func TestFetchBlkDependencies(t *testing.T) {
 	}).Return(nil, nil)
 
 	backend, err := NewBackend(service.ModeOnline, mockPClient, mockIndexerParser, avaxAssetID, networkIdentifier, networkID)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	deps, err := backend.fetchBlkDependencies(ctx, []*txs.Tx{tx})
-	require.Nil(t, err)
+	require.NoError(t, err)
 
-	require.Equal(t, 2, len(deps))
+	require.Len(t, deps, 2)
 	require.Equal(t, ids.Empty, deps[genesisTxID].Tx.ID())
 	require.NotEqual(t, ids.Empty, deps[nonGenesisTxID].Tx.ID())
 	require.Equal(t, signedImportTx, deps[nonGenesisTxID].Tx)
@@ -127,7 +128,7 @@ func makeImportTx(t *testing.T, networkID uint32) (*txs.Tx, error) {
 					},
 				},
 				Ins:  []*avax.TransferableInput{},
-				Memo: avaTypes.JSONByteSlice{},
+				Memo: avatypes.JSONByteSlice{},
 			},
 			SyntacticallyVerified: false,
 		},
@@ -135,7 +136,7 @@ func makeImportTx(t *testing.T, networkID uint32) (*txs.Tx, error) {
 		ImportedInputs: []*avax.TransferableInput{},
 	}
 	signedImportTx, err := txs.NewSigned(importTx, block.Codec, nil)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	signedImportTx.Creds = []verify.Verifiable{}
 	return signedImportTx, err
 }

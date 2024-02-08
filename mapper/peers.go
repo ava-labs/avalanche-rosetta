@@ -1,9 +1,8 @@
 package mapper
 
 import (
-	"github.com/coinbase/rosetta-sdk-go/types"
-
 	"github.com/ava-labs/avalanchego/api/info"
+	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 func Peers(peers []info.Peer) []*types.Peer {

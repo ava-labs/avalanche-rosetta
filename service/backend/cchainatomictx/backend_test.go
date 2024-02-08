@@ -5,12 +5,13 @@ import (
 
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
+
+	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 )
 
 func TestShouldHandleRequest(t *testing.T) {
@@ -40,101 +41,105 @@ func TestShouldHandleRequest(t *testing.T) {
 	nonAtomicTxString := "evmtxstring"
 
 	t.Run("return true for c-chain atomic tx requests", func(t *testing.T) {
-		assert.True(t, backend.ShouldHandleRequest(&types.AccountBalanceRequest{
+		require := require.New(t)
+
+		require.True(backend.ShouldHandleRequest(&types.AccountBalanceRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			AccountIdentifier: bech32AccountIdentifier,
 		}))
-		assert.True(t, backend.ShouldHandleRequest(&types.AccountCoinsRequest{
+		require.True(backend.ShouldHandleRequest(&types.AccountCoinsRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			AccountIdentifier: bech32AccountIdentifier,
 		}))
-		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionDeriveRequest{
+		require.True(backend.ShouldHandleRequest(&types.ConstructionDeriveRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			Metadata: map[string]interface{}{
 				mapper.MetadataAddressFormat: mapper.AddressFormatBech32,
 			},
 		}))
-		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionMetadataRequest{
+		require.True(backend.ShouldHandleRequest(&types.ConstructionMetadataRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			Options: map[string]interface{}{
 				cmapper.MetadataAtomicTxGas: 123,
 			},
 		}))
-		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionPreprocessRequest{
+		require.True(backend.ShouldHandleRequest(&types.ConstructionPreprocessRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			Operations:        atomicOperations,
 		}))
-		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionPayloadsRequest{
+		require.True(backend.ShouldHandleRequest(&types.ConstructionPayloadsRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			Operations:        atomicOperations,
 		}))
-		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionParseRequest{
+		require.True(backend.ShouldHandleRequest(&types.ConstructionParseRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			Transaction:       atomicTxString,
 			Signed:            true,
 		}))
-		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionCombineRequest{
+		require.True(backend.ShouldHandleRequest(&types.ConstructionCombineRequest{
 			NetworkIdentifier:   cChainNetworkIdentifier,
 			UnsignedTransaction: atomicTxString,
 		}))
-		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionHashRequest{
+		require.True(backend.ShouldHandleRequest(&types.ConstructionHashRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			SignedTransaction: atomicTxString,
 		}))
-		assert.True(t, backend.ShouldHandleRequest(&types.ConstructionSubmitRequest{
+		require.True(backend.ShouldHandleRequest(&types.ConstructionSubmitRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			SignedTransaction: atomicTxString,
 		}))
 	})
 
 	t.Run("return false for other c-chain requests", func(t *testing.T) {
-		assert.False(t, backend.ShouldHandleRequest(&types.AccountBalanceRequest{
+		require := require.New(t)
+
+		require.False(backend.ShouldHandleRequest(&types.AccountBalanceRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			AccountIdentifier: evmAccountIdentifier,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.AccountCoinsRequest{
+		require.False(backend.ShouldHandleRequest(&types.AccountCoinsRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			AccountIdentifier: evmAccountIdentifier,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.ConstructionDeriveRequest{
+		require.False(backend.ShouldHandleRequest(&types.ConstructionDeriveRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.ConstructionMetadataRequest{
+		require.False(backend.ShouldHandleRequest(&types.ConstructionMetadataRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.ConstructionPreprocessRequest{
-			NetworkIdentifier: cChainNetworkIdentifier,
-			Operations:        evmOperations,
-		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.ConstructionPayloadsRequest{
+		require.False(backend.ShouldHandleRequest(&types.ConstructionPreprocessRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			Operations:        evmOperations,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.ConstructionParseRequest{
+		require.False(backend.ShouldHandleRequest(&types.ConstructionPayloadsRequest{
+			NetworkIdentifier: cChainNetworkIdentifier,
+			Operations:        evmOperations,
+		}))
+		require.False(backend.ShouldHandleRequest(&types.ConstructionParseRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			Transaction:       nonAtomicTxString,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.ConstructionCombineRequest{
+		require.False(backend.ShouldHandleRequest(&types.ConstructionCombineRequest{
 			NetworkIdentifier:   cChainNetworkIdentifier,
 			UnsignedTransaction: nonAtomicTxString,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.ConstructionHashRequest{
+		require.False(backend.ShouldHandleRequest(&types.ConstructionHashRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			SignedTransaction: nonAtomicTxString,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.ConstructionSubmitRequest{
+		require.False(backend.ShouldHandleRequest(&types.ConstructionSubmitRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 			SignedTransaction: nonAtomicTxString,
 		}))
 
 		// Backend does not support /block and /network endpoints
-		assert.False(t, backend.ShouldHandleRequest(&types.BlockRequest{
+		require.False(backend.ShouldHandleRequest(&types.BlockRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.BlockTransactionRequest{
+		require.False(backend.ShouldHandleRequest(&types.BlockTransactionRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 		}))
-		assert.False(t, backend.ShouldHandleRequest(&types.NetworkRequest{
+		require.False(backend.ShouldHandleRequest(&types.NetworkRequest{
 			NetworkIdentifier: cChainNetworkIdentifier,
 		}))
 	})

@@ -6,17 +6,17 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/coreth/core"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
-
-	"github.com/ava-labs/coreth/core"
-	corethTypes "github.com/ava-labs/coreth/core/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
 )
 
 // BlockBackend represents a backend that implements /block family of apis for a subset of requests
@@ -86,12 +86,12 @@ func (s *BlockService) Block(
 	var (
 		blockIdentifier       *types.BlockIdentifier
 		parentBlockIdentifier *types.BlockIdentifier
-		block                 *corethTypes.Block
+		block                 *ethtypes.Block
 		err                   error
 	)
 
 	if hash := request.BlockIdentifier.Hash; hash != nil {
-		block, err = s.client.BlockByHash(ctx, ethcommon.HexToHash(*hash))
+		block, err = s.client.BlockByHash(ctx, common.HexToHash(*hash))
 	} else if index := request.BlockIdentifier.Index; block == nil && index != nil {
 		block, err = s.client.BlockByNumber(ctx, big.NewInt(*index))
 	}
@@ -159,12 +159,12 @@ func (s *BlockService) BlockTransaction(
 		return s.pChainBackend.BlockTransaction(ctx, request)
 	}
 
-	header, err := s.client.HeaderByHash(ctx, ethcommon.HexToHash(request.BlockIdentifier.Hash))
+	header, err := s.client.HeaderByHash(ctx, common.HexToHash(request.BlockIdentifier.Hash))
 	if err != nil {
 		return nil, WrapError(ErrClientError, err)
 	}
 
-	hash := ethcommon.HexToHash(request.TransactionIdentifier.Hash)
+	hash := common.HexToHash(request.TransactionIdentifier.Hash)
 	tx, pending, err := s.client.TransactionByHash(ctx, hash)
 	if err != nil {
 		return nil, WrapError(ErrClientError, err)
@@ -190,7 +190,7 @@ func (s *BlockService) BlockTransaction(
 
 func (s *BlockService) fetchTransactions(
 	ctx context.Context,
-	block *corethTypes.Block,
+	block *ethtypes.Block,
 ) ([]*types.Transaction, *types.Error) {
 	transactions := []*types.Transaction{}
 
@@ -213,8 +213,8 @@ func (s *BlockService) fetchTransactions(
 
 func (s *BlockService) fetchTransaction(
 	ctx context.Context,
-	tx *corethTypes.Transaction,
-	header *corethTypes.Header,
+	tx *ethtypes.Transaction,
+	header *ethtypes.Header,
 	trace *client.Call,
 	flattened []*client.FlatCall,
 ) (*types.Transaction, *types.Error) {
@@ -238,7 +238,7 @@ func (s *BlockService) fetchTransaction(
 
 func (s *BlockService) parseCrossChainTransactions(
 	networkIdentifier *types.NetworkIdentifier,
-	block *corethTypes.Block,
+	block *ethtypes.Block,
 ) ([]*types.Transaction, *types.Error) {
 	result := []*types.Transaction{}
 

@@ -10,14 +10,15 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
 )
 
 type utxo struct {
@@ -50,11 +51,13 @@ func TestAccountBalance(t *testing.T) {
 	backend := NewBackend(evmMock, ids.Empty, avalancheNetworkID)
 	accountAddress := "C-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl"
 	_, _, addressBytes, err := address.Parse(accountAddress)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	addr, err := ids.ToShortID(addressBytes)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("C-chain atomic tx balance is sum of UTXOs", func(t *testing.T) {
+		require := require.New(t)
+
 		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
 		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
 
@@ -69,17 +72,17 @@ func TestAccountBalance(t *testing.T) {
 			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
 			Return(nil, ids.ShortEmpty, ids.Empty, nil)
 
-		resp, apiErr := backend.AccountBalance(context.Background(), &types.AccountBalanceRequest{
+		resp, terr := backend.AccountBalance(context.Background(), &types.AccountBalanceRequest{
 			NetworkIdentifier: &types.NetworkIdentifier{},
 			AccountIdentifier: &types.AccountIdentifier{
 				Address: accountAddress,
 			},
 		})
-		assert.Nil(t, apiErr)
+		require.Nil(terr)
 
-		assert.Equal(t, 1, len(resp.Balances))
-		assert.Equal(t, mapper.AtomicAvaxCurrency, resp.Balances[0].Currency)
-		assert.Equal(t, "2500000", resp.Balances[0].Value)
+		require.Len(resp.Balances, 1)
+		require.Equal(mapper.AtomicAvaxCurrency, resp.Balances[0].Currency)
+		require.Equal("2500000", resp.Balances[0].Value)
 	})
 }
 
@@ -91,11 +94,13 @@ func TestAccountCoins(t *testing.T) {
 	backend.getUTXOsPageSize = 2
 	accountAddress := "C-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl"
 	_, _, addressBytes, err := address.Parse(accountAddress)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	addr, err := ids.ToShortID(addressBytes)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("C-chain atomic tx coins returns UTXOs", func(t *testing.T) {
+		require := require.New(t)
+
 		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
 		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
 		utxo2Bytes := makeUtxoBytes(t, backend, utxos[2].id, utxos[2].amount)
@@ -116,27 +121,27 @@ func TestAccountCoins(t *testing.T) {
 			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
 			Return(nil, ids.ShortEmpty, ids.Empty, nil)
 
-		resp, apiErr := backend.AccountCoins(context.Background(), &types.AccountCoinsRequest{
+		resp, terr := backend.AccountCoins(context.Background(), &types.AccountCoinsRequest{
 			NetworkIdentifier: &types.NetworkIdentifier{},
 			AccountIdentifier: &types.AccountIdentifier{
 				Address: accountAddress,
 			},
 		})
-		assert.Nil(t, apiErr)
+		require.Nil(terr)
 
-		assert.Equal(t, 3, len(resp.Coins))
+		require.Len(resp.Coins, 3)
 
-		assert.Equal(t, utxos[0].id, resp.Coins[0].CoinIdentifier.Identifier)
-		assert.Equal(t, mapper.AtomicAvaxCurrency, resp.Coins[0].Amount.Currency)
-		assert.Equal(t, strconv.FormatUint(utxos[0].amount, 10), resp.Coins[0].Amount.Value)
+		require.Equal(utxos[0].id, resp.Coins[0].CoinIdentifier.Identifier)
+		require.Equal(mapper.AtomicAvaxCurrency, resp.Coins[0].Amount.Currency)
+		require.Equal(strconv.FormatUint(utxos[0].amount, 10), resp.Coins[0].Amount.Value)
 
-		assert.Equal(t, utxos[3].id, resp.Coins[1].CoinIdentifier.Identifier)
-		assert.Equal(t, mapper.AtomicAvaxCurrency, resp.Coins[1].Amount.Currency)
-		assert.Equal(t, strconv.FormatUint(utxos[3].amount, 10), resp.Coins[1].Amount.Value)
+		require.Equal(utxos[3].id, resp.Coins[1].CoinIdentifier.Identifier)
+		require.Equal(mapper.AtomicAvaxCurrency, resp.Coins[1].Amount.Currency)
+		require.Equal(strconv.FormatUint(utxos[3].amount, 10), resp.Coins[1].Amount.Value)
 
-		assert.Equal(t, utxos[1].id, resp.Coins[2].CoinIdentifier.Identifier)
-		assert.Equal(t, mapper.AtomicAvaxCurrency, resp.Coins[2].Amount.Currency)
-		assert.Equal(t, strconv.FormatUint(utxos[1].amount, 10), resp.Coins[2].Amount.Value)
+		require.Equal(utxos[1].id, resp.Coins[2].CoinIdentifier.Identifier)
+		require.Equal(mapper.AtomicAvaxCurrency, resp.Coins[2].Amount.Currency)
+		require.Equal(strconv.FormatUint(utxos[1].amount, 10), resp.Coins[2].Amount.Value)
 	})
 }
 

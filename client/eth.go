@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ava-labs/coreth/eth/tracers"
 	"github.com/ava-labs/coreth/ethclient"
@@ -24,7 +23,7 @@ type EthClient struct {
 
 // NewEthClient returns a new EVM client
 func NewEthClient(ctx context.Context, endpoint string) (*EthClient, error) {
-	endpointURL := fmt.Sprintf("%s%s", endpoint, prefixEth)
+	endpointURL := endpoint + prefixEth
 
 	c, err := rpc.DialContext(ctx, endpointURL)
 	if err != nil {

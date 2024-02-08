@@ -281,7 +281,7 @@ func buildInputs(
 	err error,
 ) {
 	for _, op := range operations {
-		UTXOID, err := mapper.DecodeUTXOID(op.CoinChange.CoinIdentifier.Identifier)
+		utxoID, err := mapper.DecodeUTXOID(op.CoinChange.CoinIdentifier.Identifier)
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("failed to decode UTXO ID: %w", err)
 		}
@@ -297,7 +297,7 @@ func buildInputs(
 		}
 
 		in := &avax.TransferableInput{
-			UTXOID: *UTXOID,
+			UTXOID: *utxoID,
 			Asset:  avax.Asset{ID: avaxAssetID},
 			In: &secp256k1fx.TransferInput{
 				Amt: val.Uint64(),

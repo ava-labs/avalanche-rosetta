@@ -18,8 +18,6 @@ var USDC = &types.Currency{
 }
 
 func TestMixedCaseAddress(t *testing.T) {
-	require := require.New(t)
-
 	parsedCurrency := ToCurrency("USDC", 6, common.HexToAddress("0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"))
-	require.True(utils.Equal(USDC, parsedCurrency))
+	require.True(t, utils.Equal(USDC, parsedCurrency))
 }

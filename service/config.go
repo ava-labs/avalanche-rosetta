@@ -3,9 +3,10 @@ package service
 import (
 	"math/big"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/params"
 	"github.com/coinbase/rosetta-sdk-go/types"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
 )
 
 // Config holds the service configuration

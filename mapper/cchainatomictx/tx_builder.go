@@ -14,7 +14,7 @@ import (
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
@@ -89,7 +89,7 @@ func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([
 	signers := []*types.AccountIdentifier{}
 	for i, op := range inputMatch.Operations {
 		ins = append(ins, evm.EVMInput{
-			Address: ethcommon.HexToAddress(op.Account.Address),
+			Address: common.HexToAddress(op.Account.Address),
 			Amount:  inputMatch.Amounts[i].Uint64(),
 			AssetID: avaxAssetID,
 			Nonce:   metadata.Nonce,
@@ -142,7 +142,7 @@ func buildOuts(matches []*parser.Match, avaxAssetID ids.ID) []evm.EVMOutput {
 	outs := []evm.EVMOutput{}
 	for i, op := range outputMatch.Operations {
 		outs = append(outs, evm.EVMOutput{
-			Address: ethcommon.HexToAddress(op.Account.Address),
+			Address: common.HexToAddress(op.Account.Address),
 			Amount:  outputMatch.Amounts[i].Uint64(),
 			AssetID: avaxAssetID,
 		})

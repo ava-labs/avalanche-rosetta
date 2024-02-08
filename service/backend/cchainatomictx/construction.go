@@ -13,13 +13,14 @@ import (
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
+
+	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 var (
@@ -28,7 +29,7 @@ var (
 )
 
 // ConstructionDerive implements /construction/derive endpoint for C-chain atomic transactions
-func (b *Backend) ConstructionDerive(_ context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
+func (*Backend) ConstructionDerive(_ context.Context, req *types.ConstructionDeriveRequest) (*types.ConstructionDeriveResponse, *types.Error) {
 	return common.DeriveBech32Address(constants.CChain, req)
 }
 
@@ -264,7 +265,7 @@ func (b *Backend) ConstructionCombine(_ context.Context, req *types.Construction
 }
 
 // CombineTx implements C-chain atomic transaction specific logic for combining unsigned transactions and signatures
-func (b *Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (common.AvaxTx, *types.Error) {
+func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (common.AvaxTx, *types.Error) {
 	cTx, ok := tx.(*cAtomicTx)
 	if !ok {
 		return nil, service.WrapError(service.ErrInvalidInput, "invalid transaction")

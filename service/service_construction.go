@@ -7,21 +7,20 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ava-labs/coreth/core"
+	"github.com/ava-labs/coreth/interfaces"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"golang.org/x/crypto/sha3"
-
-	"github.com/ava-labs/coreth/core"
-	ethtypes "github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/interfaces"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
 )
 
 const (
@@ -127,7 +126,7 @@ func (s ConstructionService) ConstructionMetadata(
 	var nonce uint64
 	var err error
 	if input.Nonce == nil {
-		nonce, err = s.client.NonceAt(ctx, ethcommon.HexToAddress(input.From), nil)
+		nonce, err = s.client.NonceAt(ctx, common.HexToAddress(input.From), nil)
 		if err != nil {
 			return nil, WrapError(ErrClientError, err)
 		}
@@ -281,7 +280,7 @@ func (s ConstructionService) ConstructionCombine(
 
 	ethTransaction := ethtypes.NewTransaction(
 		unsignedTx.Nonce,
-		ethcommon.HexToAddress(unsignedTx.To),
+		common.HexToAddress(unsignedTx.To),
 		unsignedTx.Value,
 		unsignedTx.GasLimit,
 		unsignedTx.GasPrice,
@@ -334,14 +333,14 @@ func (s ConstructionService) ConstructionDerive(
 		return s.cChainAtomicTxBackend.ConstructionDerive(ctx, req)
 	}
 
-	key, err := ethcrypto.DecompressPubkey(req.PublicKey.Bytes)
+	key, err := crypto.DecompressPubkey(req.PublicKey.Bytes)
 	if err != nil {
 		return nil, WrapError(ErrInvalidInput, err)
 	}
 
 	return &types.ConstructionDeriveResponse{
 		AccountIdentifier: &types.AccountIdentifier{
-			Address: ethcrypto.PubkeyToAddress(*key).Hex(),
+			Address: crypto.PubkeyToAddress(*key).Hex(),
 		},
 	}, nil
 }
@@ -668,7 +667,7 @@ func (s ConstructionService) ConstructionPayloads(
 func (s ConstructionService) createTransferPayload(
 	req *types.ConstructionPayloadsRequest,
 ) (*ethtypes.Transaction, *transaction, *string, *types.Error) {
-	operationDescriptions, err := s.CreateTransferOperationDescription(req.Operations)
+	operationDescriptions, err := createTransferOperationDescription(req.Operations)
 	if err != nil {
 		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
 	}
@@ -706,10 +705,10 @@ func (s ConstructionService) createTransferPayload(
 		)
 	}
 	var transferData []byte
-	var sendToAddress ethcommon.Address
+	var sendToAddress common.Address
 	if types.Hash(fromCurrency) == types.Hash(mapper.AvaxCurrency) {
 		transferData = []byte{}
-		sendToAddress = ethcommon.HexToAddress(checkTo)
+		sendToAddress = common.HexToAddress(checkTo)
 	} else {
 		contract, ok := fromCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 		if !ok {
@@ -718,7 +717,7 @@ func (s ConstructionService) createTransferPayload(
 		}
 
 		transferData = generateErc20TransferData(toAddress, amount)
-		sendToAddress = ethcommon.HexToAddress(contract)
+		sendToAddress = common.HexToAddress(contract)
 		amount = big.NewInt(0)
 	}
 
@@ -810,7 +809,7 @@ func (s ConstructionService) createUnwrapPayload(
 	}
 
 	unwrapData := generateBridgeUnwrapTransferData(amount, big.NewInt(defaultUnwrapChainID))
-	sendToAddress := ethcommon.HexToAddress(contract)
+	sendToAddress := common.HexToAddress(contract)
 
 	var metadata metadata
 	if err := mapper.UnmarshalJSONMap(req.Metadata, &metadata); err != nil {
@@ -848,7 +847,7 @@ func (s ConstructionService) createUnwrapPayload(
 }
 
 func (s ConstructionService) createGenericContractCallPayload(req *types.ConstructionPayloadsRequest) (*ethtypes.Transaction, *transaction, *string, *types.Error) {
-	operationDescriptions, err := s.CreateGenericContractCallOperationDescription(req.Operations)
+	operationDescriptions, err := createGenericContractCallOperationDescription(req.Operations)
 	if err != nil {
 		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
 	}
@@ -893,7 +892,7 @@ func (s ConstructionService) createGenericContractCallPayload(req *types.Constru
 		return nil, nil, nil, WrapError(ErrInvalidInput, err)
 	}
 
-	sendToAddress := ethcommon.HexToAddress(checkTo)
+	sendToAddress := common.HexToAddress(checkTo)
 	contractData, err := hexutil.Decode(metadata.ContractData)
 	if err != nil {
 		return nil, nil, nil, WrapError(ErrInvalidInput, err.Error())
@@ -946,7 +945,7 @@ func (s ConstructionService) ConstructionPreprocess(
 		operationDescriptions []*parser.OperationDescription
 		preprocessOptions     *options
 		err                   error
-		typesError            *types.Error
+		terr                  *types.Error
 	)
 
 	switch {
@@ -955,29 +954,29 @@ func (s ConstructionService) ConstructionPreprocess(
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
-		preprocessOptions, typesError = s.createUnwrapPreprocessOptions(operationDescriptions, req)
-		if typesError != nil {
-			return nil, typesError
+		preprocessOptions, terr = createUnwrapPreprocessOptions(operationDescriptions, req)
+		if terr != nil {
+			return nil, terr
 		}
 	case isGenericContractCall(req.Metadata):
 		// To ensure we don't conflict with ERC-20 transfer handling (which are also contract calls), we populate
 		// the "method_signature" key in metadata (what is used in this check).
-		operationDescriptions, err = s.CreateGenericContractCallOperationDescription(req.Operations)
+		operationDescriptions, err = createGenericContractCallOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
-		preprocessOptions, typesError = s.createGenericContractCallPreprocessOptions(operationDescriptions, req)
-		if typesError != nil {
-			return nil, typesError
+		preprocessOptions, terr = createGenericContractCallPreprocessOptions(operationDescriptions, req)
+		if terr != nil {
+			return nil, terr
 		}
 	default:
-		operationDescriptions, err = s.CreateTransferOperationDescription(req.Operations)
+		operationDescriptions, err = createTransferOperationDescription(req.Operations)
 		if err != nil {
 			return nil, WrapError(ErrInvalidInput, err.Error())
 		}
-		preprocessOptions, typesError = s.createTransferPreprocessOptions(operationDescriptions, req)
-		if typesError != nil {
-			return nil, typesError
+		preprocessOptions, terr = createTransferPreprocessOptions(operationDescriptions, req)
+		if terr != nil {
+			return nil, terr
 		}
 	}
 
@@ -1075,63 +1074,75 @@ func (s ConstructionService) ConstructionSubmit(
 	}, nil
 }
 
-func (s ConstructionService) CreateTransferOperationDescription(
+func createTransferOperationDescription(
 	operations []*types.Operation,
 ) ([]*parser.OperationDescription, error) {
 	if len(operations) != 2 {
-		return nil, fmt.Errorf("invalid number of operations")
+		return nil, errors.New("invalid number of operations")
 	}
 
 	firstCurrency := operations[0].Amount.Currency
 	secondCurrency := operations[1].Amount.Currency
 
 	if firstCurrency == nil || secondCurrency == nil {
-		return nil, fmt.Errorf("invalid currency on operation")
+		return nil, errors.New("invalid currency on operation")
 	}
 
 	if types.Hash(firstCurrency) != types.Hash(secondCurrency) {
-		return nil, fmt.Errorf("currency info doesn't match between the operations")
+		return nil, errors.New("currency info doesn't match between the operations")
 	}
 
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
-		return s.createOperationDescriptionTransfer(mapper.AvaxCurrency, mapper.OpCall), nil
+		return createOperationDescriptionTransfer(mapper.AvaxCurrency, mapper.OpCall), nil
 	}
 
 	// Not Native Avax, we require contractInfo in metadata.
 	if _, ok := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string); !ok {
-		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
+		return nil, errors.New("non-native currency must have contractAddress in metadata")
 	}
 
-	return s.createOperationDescriptionTransfer(firstCurrency, mapper.OpErc20Transfer), nil
+	return createOperationDescriptionTransfer(firstCurrency, mapper.OpErc20Transfer), nil
 }
 
 func (s ConstructionService) CreateUnwrapOperationDescription(
 	operations []*types.Operation,
 ) ([]*parser.OperationDescription, error) {
 	if len(operations) != 1 {
-		return nil, fmt.Errorf("invalid number of operations")
+		return nil, errors.New("invalid number of operations")
 	}
 
 	firstCurrency := operations[0].Amount.Currency
 
 	if types.Hash(firstCurrency) == types.Hash(mapper.AvaxCurrency) {
-		return nil, fmt.Errorf("cannot unwrap native avax")
+		return nil, errors.New("cannot unwrap native avax")
 	}
 	tokenAddress, firstOk := firstCurrency.Metadata[mapper.ContractAddressMetadata].(string)
 
 	// Not Native Avax, we require contractInfo in metadata
 	if !firstOk {
-		return nil, fmt.Errorf("non-native currency must have contractAddress in metadata")
+		return nil, errors.New("non-native currency must have contractAddress in metadata")
 	}
 
 	if !mapper.EqualFoldContains(s.config.BridgeTokenList, tokenAddress) {
-		return nil, fmt.Errorf("only configured bridge tokens may use try to use unwrap function")
+		return nil, errors.New("only configured bridge tokens may use try to use unwrap function")
 	}
 
-	return s.createOperationDescriptionBridgeUnwrap(firstCurrency), nil
+	return []*parser.OperationDescription{
+		{
+			Type: mapper.OpErc20Burn,
+			Account: &parser.AccountDescription{
+				Exists: true,
+			},
+			Amount: &parser.AmountDescription{
+				Exists:   true,
+				Sign:     parser.NegativeAmountSign,
+				Currency: firstCurrency,
+			},
+		},
+	}, nil
 }
 
-func (s ConstructionService) createTransferPreprocessOptions(
+func createTransferPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
 	req *types.ConstructionPreprocessRequest,
 ) (*options, *types.Error) {
@@ -1169,7 +1180,7 @@ func (s ConstructionService) createTransferPreprocessOptions(
 	}, nil
 }
 
-func (s ConstructionService) createUnwrapPreprocessOptions(
+func createUnwrapPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
 	req *types.ConstructionPreprocessRequest,
 ) (*options, *types.Error) {
@@ -1208,7 +1219,7 @@ func (s ConstructionService) createUnwrapPreprocessOptions(
 	}, nil
 }
 
-func (s ConstructionService) createOperationDescriptionTransfer(
+func createOperationDescriptionTransfer(
 	currency *types.Currency,
 	opCode string,
 ) []*parser.OperationDescription {
@@ -1238,24 +1249,6 @@ func (s ConstructionService) createOperationDescriptionTransfer(
 	}
 }
 
-func (s ConstructionService) createOperationDescriptionBridgeUnwrap(
-	currency *types.Currency,
-) []*parser.OperationDescription {
-	return []*parser.OperationDescription{
-		{
-			Type: mapper.OpErc20Burn,
-			Account: &parser.AccountDescription{
-				Exists: true,
-			},
-			Amount: &parser.AmountDescription{
-				Exists:   true,
-				Sign:     parser.NegativeAmountSign,
-				Currency: currency,
-			},
-		},
-	}
-}
-
 func (s ConstructionService) getNativeTransferGasLimit(
 	ctx context.Context, toAddress string,
 	fromAddress string, value *big.Int,
@@ -1265,9 +1258,9 @@ func (s ConstructionService) getNativeTransferGasLimit(
 		// a previous version of avalanche-rosetta.
 		return nativeTransferGasLimit, nil
 	}
-	to := ethcommon.HexToAddress(toAddress)
+	to := common.HexToAddress(toAddress)
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From:  ethcommon.HexToAddress(fromAddress),
+		From:  common.HexToAddress(fromAddress),
 		To:    &to,
 		Value: value,
 	})
@@ -1286,10 +1279,10 @@ func (s ConstructionService) getErc20TransferGasLimit(
 		return erc20TransferGasLimit, nil
 	}
 	// ToAddress for erc20 transfers is the contract address
-	contractAddress := ethcommon.HexToAddress(contract.(string))
+	contractAddress := common.HexToAddress(contract.(string))
 	data := generateErc20TransferData(toAddress, value)
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From: ethcommon.HexToAddress(fromAddress),
+		From: common.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,
 	})
@@ -1310,12 +1303,12 @@ func (s ConstructionService) getBridgeUnwrapTransferGasLimit(
 		return unwrapGasLimit, nil
 	}
 	// ToAddress for bridge unwrap is the contract address
-	contractAddress := ethcommon.HexToAddress(contract.(string))
+	contractAddress := common.HexToAddress(contract.(string))
 	chainID := big.NewInt(defaultUnwrapChainID)
 	data := generateBridgeUnwrapTransferData(value, chainID)
 
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From: ethcommon.HexToAddress(fromAddress),
+		From: common.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,
 	})
@@ -1331,9 +1324,9 @@ func (s ConstructionService) getGenericContractCallGasLimit(
 	fromAddress string,
 	data []byte,
 ) (uint64, error) {
-	contractAddress := ethcommon.HexToAddress(toAddress)
+	contractAddress := common.HexToAddress(toAddress)
 	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
-		From: ethcommon.HexToAddress(fromAddress),
+		From: common.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,
 	})
@@ -1343,7 +1336,7 @@ func (s ConstructionService) getGenericContractCallGasLimit(
 	return gasLimit, nil
 }
 
-func (s ConstructionService) createGenericContractCallPreprocessOptions(
+func createGenericContractCallPreprocessOptions(
 	operationDescriptions []*parser.OperationDescription,
 	req *types.ConstructionPreprocessRequest,
 ) (*options, *types.Error) {
@@ -1399,19 +1392,19 @@ func (s ConstructionService) createGenericContractCallPreprocessOptions(
 	}, nil
 }
 
-func (s ConstructionService) CreateGenericContractCallOperationDescription(operations []*types.Operation) ([]*parser.OperationDescription, error) {
+func createGenericContractCallOperationDescription(operations []*types.Operation) ([]*parser.OperationDescription, error) {
 	if len(operations) != 2 {
-		return nil, fmt.Errorf("invalid number of operations")
+		return nil, errors.New("invalid number of operations")
 	}
 
 	firstCurrency := operations[0].Amount.Currency
 	secondCurrency := operations[1].Amount.Currency
 	bigZero := big.NewInt(0)
 	if firstCurrency == nil || secondCurrency == nil {
-		return nil, fmt.Errorf("invalid currency on operation")
+		return nil, errors.New("invalid currency on operation")
 	}
 	if types.Hash(firstCurrency) != types.Hash(secondCurrency) {
-		return nil, fmt.Errorf("from and to currencies are not equal")
+		return nil, errors.New("from and to currencies are not equal")
 	}
 
 	i, ok := new(big.Int).SetString(operations[0].Amount.Value, base10)
@@ -1419,20 +1412,16 @@ func (s ConstructionService) CreateGenericContractCallOperationDescription(opera
 		return nil, errors.New("operation 0 does not have a valid amount")
 	}
 	if i.Cmp(bigZero) != 0 {
-		return nil, fmt.Errorf("for generic call both values should be zero")
+		return nil, errors.New("for generic call both values should be zero")
 	}
 	j, ok := new(big.Int).SetString(operations[1].Amount.Value, base10)
 	if !ok {
 		return nil, errors.New("operation 1 does not have a valid amount")
 	}
 	if j.Cmp(bigZero) != 0 {
-		return nil, fmt.Errorf("for generic call both values should be zero")
+		return nil, errors.New("for generic call both values should be zero")
 	}
 
-	return s.createOperationDescriptionContractCall(), nil
-}
-
-func (s ConstructionService) createOperationDescriptionContractCall() []*parser.OperationDescription {
 	return []*parser.OperationDescription{
 		{
 			Type: mapper.OpCall,
@@ -1454,15 +1443,15 @@ func (s ConstructionService) createOperationDescriptionContractCall() []*parser.
 				Sign:   parser.AnyAmountSign,
 			},
 		},
-	}
+	}, nil
 }
 
 func generateErc20TransferData(toAddress string, value *big.Int) []byte {
-	to := ethcommon.HexToAddress(toAddress)
+	to := common.HexToAddress(toAddress)
 	methodID := getMethodID(transferFnSignature)
 
-	paddedAddress := ethcommon.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
-	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
+	paddedAddress := common.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
+	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
 
 	var data []byte
 	data = append(data, methodID...)
@@ -1474,8 +1463,8 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 func generateBridgeUnwrapTransferData(value *big.Int, chainID *big.Int) []byte {
 	methodID := getMethodID(unwrapFnSignature)
 
-	paddedAmount := ethcommon.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
-	paddedChainID := ethcommon.LeftPadBytes(chainID.Bytes(), requiredPaddingBytes)
+	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
+	paddedChainID := common.LeftPadBytes(chainID.Bytes(), requiredPaddingBytes)
 
 	var data []byte
 	data = append(data, methodID...)
@@ -1484,32 +1473,32 @@ func generateBridgeUnwrapTransferData(value *big.Int, chainID *big.Int) []byte {
 	return data
 }
 
-func parseErc20TransferData(data []byte) (*ethcommon.Address, *big.Int, error) {
+func parseErc20TransferData(data []byte) (*common.Address, *big.Int, error) {
 	if len(data) != genericTransferBytesLength {
-		return nil, nil, fmt.Errorf("incorrect length for data array")
+		return nil, nil, errors.New("incorrect length for data array")
 	}
 	if hexutil.Encode(data[:4]) != transferMethodID {
-		return nil, nil, fmt.Errorf("incorrect methodID signature")
+		return nil, nil, errors.New("incorrect methodID signature")
 	}
 
-	address := ethcommon.BytesToAddress(data[5:36])
+	address := common.BytesToAddress(data[5:36])
 	amount := new(big.Int).SetBytes(data[37:])
 	return &address, amount, nil
 }
 
 func parseUnwrapData(data []byte) (*big.Int, *big.Int, error) {
 	if len(data) != genericUnwrapBytesLength {
-		return nil, nil, fmt.Errorf("incorrect length for data array")
+		return nil, nil, errors.New("incorrect length for data array")
 	}
 	if hexutil.Encode(data[:4]) != unwrapMethodID {
-		return nil, nil, fmt.Errorf("incorrect methodID signature")
+		return nil, nil, errors.New("incorrect methodID signature")
 	}
 
 	amount := new(big.Int).SetBytes(data[5:36])
 	chainID := new(big.Int).SetBytes(data[37:])
 
 	if chainID.Uint64() != 0 {
-		return nil, nil, fmt.Errorf("incorrect chainId value")
+		return nil, nil, errors.New("incorrect chainId value")
 	}
 
 	return amount, chainID, nil
@@ -1524,14 +1513,15 @@ func isUnwrapRequest(metadata map[string]interface{}) bool {
 
 func isGenericContractCall(metadata map[string]interface{}) bool {
 	if isUnwrap, ok := metadata["bridge_unwrap"]; ok {
-		if unwrapCall, isBool := isUnwrap.(bool); isBool {
-			if unwrapCall {
-				// If bridge_unwrap flag is true, we can return false right away, otherwise we should
-				// continue to check the method signature length.
-				return false
-			}
-		} else {
+		unwrapCall, isBool := isUnwrap.(bool)
+		if !isBool {
 			panic(fmt.Sprintf("bridge_unwrap value in the metadata must be boolean, got:%s", isUnwrap))
+		}
+
+		if unwrapCall {
+			// If bridge_unwrap flag is true, we can return false right away, otherwise we should
+			// continue to check the method signature length.
+			return false
 		}
 	}
 

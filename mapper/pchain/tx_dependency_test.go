@@ -80,7 +80,7 @@ func TestTxDependencyIsCreateChain(t *testing.T) {
 
 	dep := &SingleTxDependency{Tx: tx}
 	res := dep.GetUtxos()
-	require.True(len(res) == 2)
+	require.Len(res, 2)
 
 	expectedUTXOs := []*avax.UTXO{
 		{
@@ -183,7 +183,7 @@ func TestTxDependencyIsAddValidator(t *testing.T) {
 
 	dep := &SingleTxDependency{Tx: tx}
 	res := dep.GetUtxos()
-	require.True(len(res) == 2)
+	require.Len(res, 2)
 
 	expectedUTXOs := []*avax.UTXO{
 		{

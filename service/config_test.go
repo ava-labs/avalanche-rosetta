@@ -3,10 +3,11 @@ package service
 import (
 	"testing"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/ava-labs/coreth/params"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	ethtypes "github.com/ava-labs/coreth/core/types"
 )
 
 func TestConfig(t *testing.T) {
@@ -17,8 +18,8 @@ func TestConfig(t *testing.T) {
 			NetworkID: &types.NetworkIdentifier{},
 		}
 
-		assert.Equal(t, false, cfg.IsOfflineMode())
-		assert.Equal(t, true, cfg.IsOnlineMode())
+		require.False(t, cfg.IsOfflineMode())
+		require.True(t, cfg.IsOnlineMode())
 	})
 
 	t.Run("offline", func(t *testing.T) {
@@ -28,14 +29,14 @@ func TestConfig(t *testing.T) {
 			NetworkID: &types.NetworkIdentifier{},
 		}
 
-		assert.Equal(t, true, cfg.IsOfflineMode())
-		assert.Equal(t, false, cfg.IsOnlineMode())
+		require.True(t, cfg.IsOfflineMode())
+		require.False(t, cfg.IsOnlineMode())
 	})
 
 	t.Run("signer", func(t *testing.T) {
 		cfg := Config{
 			ChainID: params.AvalancheMainnetChainID,
 		}
-		assert.IsType(t, ethtypes.NewLondonSigner(params.AvalancheMainnetChainID), cfg.Signer())
+		require.IsType(t, ethtypes.NewLondonSigner(params.AvalancheMainnetChainID), cfg.Signer())
 	})
 }
