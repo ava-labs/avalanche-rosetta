@@ -270,7 +270,7 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImpo
 		return 0, nil, typedErr
 	}
 
-	balance, err := b.getBalancesWithoutMultisig(utxos)
+	balance, err := getBalancesWithoutMultisig(utxos)
 	if err != nil {
 		return 0, nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -290,7 +290,7 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImpo
 // Copy of the platformvm service's GetBalance implementation.
 // This is needed as multisig UTXOs are cleaned in parseUTXOs and its output must be used for the calculations. Ref:
 // https://github.com/ava-labs/avalanchego/blob/0950acab667e0c16a55e9a9bb72bcbe25c3b88cf/vms/platformvm/service.go#L184
-func (*Backend) getBalancesWithoutMultisig(utxos []avax.UTXO) (*AccountBalance, error) {
+func getBalancesWithoutMultisig(utxos []avax.UTXO) (*AccountBalance, error) {
 	currentTime := uint64(time.Now().Unix())
 
 	accountBalance := &AccountBalance{

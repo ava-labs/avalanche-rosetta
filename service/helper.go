@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 const (
@@ -54,7 +54,7 @@ func blockHeaderFromInput(
 		if input.Index != nil {
 			header, err = c.HeaderByNumber(ctx, big.NewInt(*input.Index))
 		} else {
-			header, err = c.HeaderByHash(ctx, ethcommon.HexToHash(*input.Hash))
+			header, err = c.HeaderByHash(ctx, common.HexToHash(*input.Hash))
 		}
 	}
 
@@ -73,7 +73,7 @@ func ChecksumAddress(address string) (string, bool) {
 		return "", false
 	}
 
-	addr, err := ethcommon.NewMixedcaseAddressFromString(address)
+	addr, err := common.NewMixedcaseAddressFromString(address)
 	if err != nil {
 		return "", false
 	}

@@ -50,7 +50,7 @@ func (t *TxParser) Parse(tx evm.Tx) ([]*types.Operation, error) {
 
 func (t *TxParser) parseExportTx(exportTx *evm.UnsignedExportTx) ([]*types.Operation, error) {
 	operations := []*types.Operation{}
-	ins := t.insToOperations(0, mapper.OpExport, exportTx.Ins)
+	ins := insToOperations(0, mapper.OpExport, exportTx.Ins)
 
 	destinationChainID := exportTx.DestinationChain
 	chainAlias, ok := t.chainIDs[destinationChainID]
@@ -82,7 +82,7 @@ func (t *TxParser) parseImportTx(importTx *evm.UnsignedImportTx) ([]*types.Opera
 	return operations, nil
 }
 
-func (*TxParser) insToOperations(startIdx int64, opType string, ins []evm.EVMInput) []*types.Operation {
+func insToOperations(startIdx int64, opType string, ins []evm.EVMInput) []*types.Operation {
 	idx := startIdx
 	operations := []*types.Operation{}
 	for _, in := range ins {

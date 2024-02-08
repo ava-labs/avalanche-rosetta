@@ -10,13 +10,13 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 // BlockBackend represents a backend that implements /block family of apis for a subset of requests
@@ -91,7 +91,7 @@ func (s *BlockService) Block(
 	)
 
 	if hash := request.BlockIdentifier.Hash; hash != nil {
-		block, err = s.client.BlockByHash(ctx, ethcommon.HexToHash(*hash))
+		block, err = s.client.BlockByHash(ctx, common.HexToHash(*hash))
 	} else if index := request.BlockIdentifier.Index; block == nil && index != nil {
 		block, err = s.client.BlockByNumber(ctx, big.NewInt(*index))
 	}
@@ -159,12 +159,12 @@ func (s *BlockService) BlockTransaction(
 		return s.pChainBackend.BlockTransaction(ctx, request)
 	}
 
-	header, err := s.client.HeaderByHash(ctx, ethcommon.HexToHash(request.BlockIdentifier.Hash))
+	header, err := s.client.HeaderByHash(ctx, common.HexToHash(request.BlockIdentifier.Hash))
 	if err != nil {
 		return nil, WrapError(ErrClientError, err)
 	}
 
-	hash := ethcommon.HexToHash(request.TransactionIdentifier.Hash)
+	hash := common.HexToHash(request.TransactionIdentifier.Hash)
 	tx, pending, err := s.client.TransactionByHash(ctx, hash)
 	if err != nil {
 		return nil, WrapError(ErrClientError, err)

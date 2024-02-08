@@ -162,7 +162,7 @@ func (b *Backend) fetchBlkDependencies(ctx context.Context, txs []*txs.Tx) (pmap
 	blockDeps := make(pmapper.BlockTxDependencies)
 	depsTxIDs := []ids.ID{}
 	for _, tx := range txs {
-		inputTxsIds, err := blockDeps.GetTxDependenciesIDs(tx.Unsigned)
+		inputTxsIds, err := pmapper.GetTxDependenciesIDs(tx.Unsigned)
 		if err != nil {
 			return nil, err
 		}

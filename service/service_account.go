@@ -9,12 +9,11 @@ import (
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-
-	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 // AccountBackend represents a backend that implements /account family of apis for a subset of requests.
@@ -82,7 +81,7 @@ func (s AccountService) AccountBalance(
 		return nil, terr
 	}
 
-	address := ethcommon.HexToAddress(req.AccountIdentifier.Address)
+	address := common.HexToAddress(req.AccountIdentifier.Address)
 
 	nonce, err := s.client.NonceAt(ctx, address, header.Number)
 	if err != nil {
@@ -128,7 +127,7 @@ func (s AccountService) AccountBalance(
 			return nil, WrapError(ErrCallInvalidParams, fmt.Errorf("%w: marshalling balanceOf call msg data failed", err))
 		}
 
-		contractAddress := ethcommon.HexToAddress(value.(string))
+		contractAddress := common.HexToAddress(value.(string))
 		callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
 		response, err := s.client.CallContract(ctx, callMsg, header.Number)
 		if err != nil {
