@@ -12,12 +12,12 @@ import (
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
-	idxmocks "github.com/ava-labs/avalanche-rosetta/mocks/service/backend/pchain/indexer"
 	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 )
@@ -49,10 +49,11 @@ var (
 
 func TestAccountBalance(t *testing.T) {
 	ctx := context.Background()
-	pChainMock := &mocks.PChainClient{}
-	parserMock := &idxmocks.Parser{}
-	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
+	ctrl := gomock.NewController(t)
+	pChainMock := client.NewMockPChainClient(ctrl)
+	parserMock := indexer.NewMockParser(ctrl)
+	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	parserMock.EXPECT().ParseNonGenesisBlock(ctx, "", blockHeight).Return(parsedBlock, nil).AnyTimes()
 	backend, err := NewBackend(
 		service.ModeOnline,
 		pChainMock,
@@ -72,18 +73,18 @@ func TestAccountBalance(t *testing.T) {
 		stakeUtxoBytes := makeStakeUtxoBytes(t, backend, utxos[1].amount)
 
 		// Mock on GetAssetDescription
-		pChainMock.Mock.On("GetAssetDescription", ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
+		pChainMock.EXPECT().GetAssetDescription(ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil).AnyTimes()
 
 		// once before other calls, once after
-		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
+		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil).Times(2)
 		// Make sure pagination works as well
 		pageSize := uint32(2)
 		backend.getUTXOsPageSize = pageSize
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{addr}, "", pageSize, ids.ShortEmpty, ids.Empty).
-			Return([][]byte{utxo0Bytes, utxo1Bytes}, addr, utxo1Id, nil).Once()
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{addr}, "", pageSize, addr, utxo1Id).
-			Return([][]byte{utxo1Bytes}, addr, utxo1Id, nil).Once()
-		pChainMock.Mock.On("GetStake", ctx, []ids.ShortID{addr}, false).Return(map[ids.ID]uint64{}, [][]byte{stakeUtxoBytes}, nil).Once()
+		pChainMock.EXPECT().GetAtomicUTXOs(ctx, []ids.ShortID{addr}, "", pageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{utxo0Bytes, utxo1Bytes}, addr, utxo1Id, nil)
+		pChainMock.EXPECT().GetAtomicUTXOs(ctx, []ids.ShortID{addr}, "", pageSize, addr, utxo1Id).
+			Return([][]byte{utxo1Bytes}, addr, utxo1Id, nil)
+		pChainMock.EXPECT().GetStake(ctx, []ids.ShortID{addr}, false).Return(map[ids.ID]uint64{}, [][]byte{stakeUtxoBytes}, nil)
 
 		resp, err := backend.AccountBalance(
 			ctx,
@@ -114,8 +115,6 @@ func TestAccountBalance(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.Equal(t, expected.Balances, resp.Balances)
-		pChainMock.AssertExpectations(t)
-		parserMock.AssertExpectations(t)
 	})
 
 	t.Run("Account Balance should return total of shared memory balance", func(t *testing.T) {
@@ -127,13 +126,13 @@ func TestAccountBalance(t *testing.T) {
 		assert.Nil(t, errp)
 
 		// once before other calls, once after
-		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
+		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil).Times(2)
 		pageSize := uint32(1024)
 		backend.getUTXOsPageSize = pageSize
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.CChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
-			Return([][]byte{utxo0Bytes, utxo1Bytes}, pChainAddrID, utxo1Id, nil).Once()
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.XChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
-			Return([][]byte{}, pChainAddrID, ids.Empty, nil).Once()
+		pChainMock.EXPECT().GetAtomicUTXOs(ctx, []ids.ShortID{pChainAddrID}, constants.CChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{utxo0Bytes, utxo1Bytes}, pChainAddrID, utxo1Id, nil)
+		pChainMock.EXPECT().GetAtomicUTXOs(ctx, []ids.ShortID{pChainAddrID}, constants.XChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{}, pChainAddrID, ids.Empty, nil)
 
 		resp, err := backend.AccountBalance(
 			ctx,
@@ -166,8 +165,6 @@ func TestAccountBalance(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.Equal(t, expected, resp)
-		pChainMock.AssertExpectations(t)
-		parserMock.AssertExpectations(t)
 	})
 
 	t.Run("Account Balance should error if new block was added while fetching UTXOs", func(t *testing.T) {
@@ -175,12 +172,12 @@ func TestAccountBalance(t *testing.T) {
 
 		pageSize := uint32(2)
 		backend.getUTXOsPageSize = pageSize
-		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Once()
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{addr}, "", pageSize, ids.ShortEmpty, ids.Empty).
-			Return([][]byte{}, addr, ids.Empty, nil).Once()
-		pChainMock.Mock.On("GetStake", ctx, []ids.ShortID{addr}, false).Return(map[ids.ID]uint64{}, [][]byte{}, nil)
+		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil)
+		pChainMock.EXPECT().GetAtomicUTXOs(ctx, []ids.ShortID{addr}, "", pageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{}, addr, ids.Empty, nil)
+		pChainMock.EXPECT().GetStake(ctx, []ids.ShortID{addr}, false).Return(map[ids.ID]uint64{}, [][]byte{}, nil)
 		// return blockHeight + 1 to indicate a new block arrival
-		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight+1, nil).Once()
+		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight+1, nil)
 
 		resp, err := backend.AccountBalance(
 			ctx,
@@ -203,18 +200,17 @@ func TestAccountBalance(t *testing.T) {
 		assert.Nil(t, resp)
 		assert.Equal(t, "Internal server error", err.Message)
 		assert.Equal(t, "new block added while fetching utxos", err.Details["error"])
-		pChainMock.AssertExpectations(t)
-		parserMock.AssertExpectations(t)
 	})
 }
 
 func TestAccountPendingRewardsBalance(t *testing.T) {
 	ctx := context.Background()
-	pChainMock := &mocks.PChainClient{}
-	parserMock := &idxmocks.Parser{}
+	ctrl := gomock.NewController(t)
+	pChainMock := client.NewMockPChainClient(ctrl)
+	parserMock := indexer.NewMockParser(ctrl)
 
-	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
+	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	parserMock.EXPECT().ParseNonGenesisBlock(ctx, "", blockHeight).Return(parsedBlock, nil).AnyTimes()
 
 	validator1NodeID, _ := ids.NodeIDFromString("NodeID-Bvsx89JttQqhqdgwtizAPoVSNW74Xcr2S")
 	validator1Reward := uint64(100000)
@@ -262,8 +258,8 @@ func TestAccountPendingRewardsBalance(t *testing.T) {
 	assert.Nil(t, err)
 
 	t.Run("Pending Rewards Validator By NodeID", func(t *testing.T) {
-		pChainMock.Mock.On("GetCurrentValidators", ctx, ids.Empty, []ids.NodeID{validator1NodeID}).Return(validators, nil)
-		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil)
+		pChainMock.EXPECT().GetCurrentValidators(ctx, ids.Empty, []ids.NodeID{validator1NodeID}).Return(validators, nil)
+		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil)
 
 		resp, err := backend.AccountBalance(
 			ctx,
@@ -303,13 +299,11 @@ func TestAccountPendingRewardsBalance(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.Equal(t, expected, resp)
-		pChainMock.AssertExpectations(t)
-		parserMock.AssertExpectations(t)
 	})
 
 	t.Run("Pending Rewards Delegate by NodeID", func(t *testing.T) {
-		pChainMock.Mock.On("GetCurrentValidators", ctx, ids.Empty, []ids.NodeID{validator1NodeID}).Return(validators, nil)
-		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil)
+		pChainMock.EXPECT().GetCurrentValidators(ctx, ids.Empty, []ids.NodeID{validator1NodeID}).Return(validators, nil)
+		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil)
 
 		resp, err := backend.AccountBalance(
 			ctx,
@@ -349,17 +343,16 @@ func TestAccountPendingRewardsBalance(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.Equal(t, expected, resp)
-		pChainMock.AssertExpectations(t)
-		parserMock.AssertExpectations(t)
 	})
 }
 
 func TestAccountCoins(t *testing.T) {
 	ctx := context.Background()
-	pChainMock := &mocks.PChainClient{}
-	parserMock := &idxmocks.Parser{}
-	parserMock.Mock.On("GetGenesisBlock", ctx).Return(dummyGenesis, nil)
-	parserMock.Mock.On("ParseNonGenesisBlock", ctx, "", blockHeight).Return(parsedBlock, nil)
+	ctrl := gomock.NewController(t)
+	pChainMock := client.NewMockPChainClient(ctrl)
+	parserMock := indexer.NewMockParser(ctrl)
+	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	parserMock.EXPECT().ParseNonGenesisBlock(ctx, "", blockHeight).Return(parsedBlock, nil).AnyTimes()
 	backend, err := NewBackend(
 		service.ModeOnline,
 		pChainMock,
@@ -372,7 +365,7 @@ func TestAccountCoins(t *testing.T) {
 
 	t.Run("Account Coins Test regular coins", func(t *testing.T) {
 		// Mock on GetAssetDescription
-		pChainMock.Mock.On("GetAssetDescription", ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
+		pChainMock.EXPECT().GetAssetDescription(ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
 
 		// Mock on GetUTXOs
 		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
@@ -382,14 +375,14 @@ func TestAccountCoins(t *testing.T) {
 		assert.Nil(t, errp)
 
 		// once before other calls, once after
-		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
+		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil).Times(2)
 		// Make sure pagination works as well
 		pageSize := uint32(2)
 		backend.getUTXOsPageSize = pageSize
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "", pageSize, ids.ShortEmpty, ids.Empty).
-			Return([][]byte{utxo0Bytes, utxo1Bytes}, pChainAddrID, utxo1Id, nil).Once()
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, "", pageSize, pChainAddrID, utxo1Id).
-			Return([][]byte{utxo1Bytes}, pChainAddrID, utxo1Id, nil).Once()
+		pChainMock.EXPECT().GetAtomicUTXOs(ctx, []ids.ShortID{pChainAddrID}, "", pageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{utxo0Bytes, utxo1Bytes}, pChainAddrID, utxo1Id, nil)
+		pChainMock.EXPECT().GetAtomicUTXOs(ctx, []ids.ShortID{pChainAddrID}, "", pageSize, pChainAddrID, utxo1Id).
+			Return([][]byte{utxo1Bytes}, pChainAddrID, utxo1Id, nil)
 
 		resp, err := backend.AccountCoins(
 			ctx,
@@ -437,13 +430,11 @@ func TestAccountCoins(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.Equal(t, expected, resp)
-		pChainMock.AssertExpectations(t)
-		parserMock.AssertExpectations(t)
 	})
 
 	t.Run("Account Coins Test shared memory coins", func(t *testing.T) {
 		// Mock on GetAssetDescription
-		pChainMock.Mock.On("GetAssetDescription", ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
+		pChainMock.EXPECT().GetAssetDescription(ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
 
 		// Mock on GetUTXOs
 		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
@@ -454,13 +445,13 @@ func TestAccountCoins(t *testing.T) {
 		assert.Nil(t, errp)
 
 		// once before other calls, once after
-		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
+		pChainMock.EXPECT().GetHeight(ctx).Return(blockHeight, nil).Times(2)
 		pageSize := uint32(1024)
 		backend.getUTXOsPageSize = pageSize
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.CChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
-			Return([][]byte{utxo0Bytes}, pChainAddrID, utxo0Id, nil).Once()
-		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{pChainAddrID}, constants.XChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
-			Return([][]byte{utxo1Bytes}, pChainAddrID, utxo1Id, nil).Once()
+		pChainMock.EXPECT().GetAtomicUTXOs(ctx, []ids.ShortID{pChainAddrID}, constants.CChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{utxo0Bytes}, pChainAddrID, utxo0Id, nil)
+		pChainMock.EXPECT().GetAtomicUTXOs(ctx, []ids.ShortID{pChainAddrID}, constants.XChain.String(), pageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{utxo1Bytes}, pChainAddrID, utxo1Id, nil)
 
 		resp, err := backend.AccountCoins(
 			ctx,
@@ -509,8 +500,6 @@ func TestAccountCoins(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.Equal(t, expected, resp)
-		pChainMock.AssertExpectations(t)
-		parserMock.AssertExpectations(t)
 	})
 }
 

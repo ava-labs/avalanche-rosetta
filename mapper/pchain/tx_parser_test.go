@@ -9,10 +9,11 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 )
 
 var (
@@ -22,8 +23,6 @@ var (
 		ids.Empty: rosConst.PChain,
 		cChainID:  rosConst.CChain,
 	}
-
-	pchainClient = &mocks.PChainClient{}
 )
 
 func TestMapInOperation(t *testing.T) {
@@ -32,6 +31,8 @@ func TestMapInOperation(t *testing.T) {
 	assert.Equal(t, 2, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
 		Hrp:            constants.FujiHRP,
@@ -80,6 +81,8 @@ func TestMapNonAvaxTransactionInConstruction(t *testing.T) {
 
 	avaxIn := importTx.ImportedInputs[0]
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
@@ -104,6 +107,8 @@ func TestMapOutOperation(t *testing.T) {
 
 	avaxOut := addDelegatorTx.Outs[0]
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
@@ -137,6 +142,8 @@ func TestMapAddValidatorTx(t *testing.T) {
 	assert.Equal(t, 2, len(addValidatorTx.Ins))
 	assert.Equal(t, 0, len(addValidatorTx.Outs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
@@ -166,6 +173,8 @@ func TestMapAddDelegatorTx(t *testing.T) {
 	assert.Equal(t, 1, len(addDelegatorTx.Outs))
 	assert.Equal(t, 1, len(addDelegatorTx.StakeOuts))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
@@ -213,6 +222,8 @@ func TestMapImportTx(t *testing.T) {
 	assert.Equal(t, 3, len(importTx.Outs))
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
@@ -245,6 +256,8 @@ func TestMapNonConstructionImportTx(t *testing.T) {
 	assert.Equal(t, 3, len(importTx.Outs))
 	assert.Equal(t, 1, len(importTx.ImportedInputs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
 		Hrp:            constants.FujiHRP,
@@ -299,6 +312,8 @@ func TestMapExportTx(t *testing.T) {
 	assert.Equal(t, 1, len(exportTx.Outs))
 	assert.Equal(t, 1, len(exportTx.ExportedOutputs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: true,
 		Hrp:            constants.FujiHRP,
@@ -328,6 +343,8 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	assert.Equal(t, 1, len(exportTx.Outs))
 	assert.Equal(t, 1, len(exportTx.ExportedOutputs))
 
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 	parserCfg := TxParserConfig{
 		IsConstruction: false,
 		Hrp:            constants.FujiHRP,

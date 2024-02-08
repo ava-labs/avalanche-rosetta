@@ -11,17 +11,16 @@ import (
 	"github.com/ava-labs/avalanchego/utils/constants"
 	pGenesis "github.com/ava-labs/avalanchego/vms/platformvm/genesis"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	gomock "go.uber.org/mock/gomock"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	rosConst "github.com/ava-labs/avalanche-rosetta/constants"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/indexer"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/stretchr/testify/mock"
 )
 
 var (
@@ -64,7 +63,7 @@ func readFixture(path string, sprintfArgs ...interface{}) []byte {
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
-	pchainClient := &mocks.PChainClient{}
+	pchainClient := client.NewMockPChainClient(gomock.NewController(nil))
 
 	for _, idx := range idxs {
 		ret := readFixture("ins/%v.json", idx)
@@ -75,7 +74,7 @@ func TestMain(m *testing.M) {
 			panic(err)
 		}
 
-		pchainClient.On("GetContainerByIndex", ctx, idx).Return(container, nil).Once()
+		pchainClient.EXPECT().GetContainerByIndex(ctx, idx).Return(container, nil)
 	}
 
 	txID, err := ids.FromString("jWgE5KiiCejNYbYGDzhu9WAXrAdgwav9EXuycNVdB62rSU4tH")
@@ -87,9 +86,9 @@ func TestMain(m *testing.M) {
 		Encoding: formatting.Hex,
 	}
 	bytes := [][]byte{{0, 0, 96, 135, 38, 30, 158, 122, 109, 66, 126, 42, 192, 155, 20, 141, 194, 137, 85, 161, 188, 115, 215, 227, 44, 148, 7, 201, 191, 227, 25, 222, 126, 28, 0, 0, 0, 7, 33, 230, 115, 23, 203, 196, 190, 42, 235, 0, 103, 122, 214, 70, 39, 120, 168, 245, 34, 116, 185, 214, 5, 223, 37, 145, 178, 48, 39, 168, 125, 255, 0, 0, 0, 7, 0, 0, 0, 4, 238, 10, 47, 173, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 237, 104, 212, 116, 123, 119, 22, 41, 162, 163, 85, 62, 170, 126, 105, 250, 197, 149, 192, 120}} //nolint:lll
-	pchainClient.On("GetRewardUTXOs", ctx, arg).Return(bytes, nil).Once()
+	pchainClient.EXPECT().GetRewardUTXOs(ctx, arg).Return(bytes, nil)
 
-	pchainClient.On("GetHeight", ctx, mock.Anything).Return(uint64(1000000), nil)
+	pchainClient.EXPECT().GetHeight(ctx, gomock.Any()).Return(uint64(1000000), nil)
 
 	p, err = NewParser(pchainClient, constants.MainnetID)
 	if err != nil {
@@ -126,7 +125,8 @@ func TestGenesisBlockCreateChainTxs(t *testing.T) {
 
 func TestGenesisBlockParseTxs(t *testing.T) {
 	a := assert.New(t)
-	pchainClient := &mocks.PChainClient{}
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
 
 	p, err := NewParser(pchainClient, constants.FujiID)
 	if err != nil {

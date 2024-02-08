@@ -13,11 +13,11 @@ import (
 	ethtypes "github.com/ava-labs/coreth/core/types"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+	"go.uber.org/mock/gomock"
 
+	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	mocks "github.com/ava-labs/avalanche-rosetta/mocks/client"
 )
 
 type utxo struct {
@@ -45,7 +45,8 @@ var blockHeader = &ethtypes.Header{
 }
 
 func TestAccountBalance(t *testing.T) {
-	evmMock := &mocks.Client{}
+	ctrl := gomock.NewController(t)
+	evmMock := client.NewMockClient(ctrl)
 	backend := NewBackend(evmMock, ids.Empty, avalancheNetworkID)
 	accountAddress := "C-fuji15f9g0h5xkr5cp47n6u3qxj6yjtzzzrdr23a3tl"
 	_, _, addressBytes, err := address.Parse(accountAddress)
@@ -60,12 +61,12 @@ func TestAccountBalance(t *testing.T) {
 		utxos := [][]byte{utxo0Bytes, utxo1Bytes}
 
 		var nilBigInt *big.Int
-		evmMock.On("HeaderByNumber", mock.Anything, nilBigInt).Return(blockHeader, nil).Twice()
-		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
+		evmMock.EXPECT().HeaderByNumber(gomock.Any(), nilBigInt).Return(blockHeader, nil).Times(2)
+		evmMock.EXPECT().
+			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
 			Return(utxos, ids.ShortEmpty, ids.Empty, nil)
-		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
+		evmMock.EXPECT().
+			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
 			Return(nil, ids.ShortEmpty, ids.Empty, nil)
 
 		resp, apiErr := backend.AccountBalance(context.Background(), &types.AccountBalanceRequest{
@@ -76,8 +77,6 @@ func TestAccountBalance(t *testing.T) {
 		})
 		assert.Nil(t, apiErr)
 
-		evmMock.AssertExpectations(t)
-
 		assert.Equal(t, 1, len(resp.Balances))
 		assert.Equal(t, mapper.AtomicAvaxCurrency, resp.Balances[0].Currency)
 		assert.Equal(t, "2500000", resp.Balances[0].Value)
@@ -85,7 +84,8 @@ func TestAccountBalance(t *testing.T) {
 }
 
 func TestAccountCoins(t *testing.T) {
-	evmMock := &mocks.Client{}
+	ctrl := gomock.NewController(t)
+	evmMock := client.NewMockClient(ctrl)
 	backend := NewBackend(evmMock, ids.Empty, avalancheNetworkID)
 	// changing page size to 2 to test pagination as well
 	backend.getUTXOsPageSize = 2
@@ -102,19 +102,18 @@ func TestAccountCoins(t *testing.T) {
 		utxo3Bytes := makeUtxoBytes(t, backend, utxos[3].id, utxos[3].amount)
 
 		var nilBigInt *big.Int
-		evmMock.On("HeaderByNumber", mock.Anything, nilBigInt).Return(blockHeader, nil).Twice()
-		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
+		evmMock.EXPECT().HeaderByNumber(gomock.Any(), nilBigInt).Return(blockHeader, nil).Times(2)
+		evmMock.EXPECT().
+			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
 			Return([][]byte{utxo0Bytes, utxo1Bytes}, addr, utxos[1].InputID(), nil)
-		assert.Nil(t, err)
-		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, addr, utxos[1].InputID()).
+		evmMock.EXPECT().
+			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, addr, utxos[1].InputID()).
 			Return([][]byte{utxo2Bytes, utxo3Bytes}, addr, utxos[3].InputID(), nil)
-		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, addr, utxos[3].InputID()).
+		evmMock.EXPECT().
+			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, addr, utxos[3].InputID()).
 			Return([][]byte{utxo3Bytes}, addr, utxos[3].InputID(), nil)
-		evmMock.
-			On("GetAtomicUTXOs", mock.Anything, []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
+		evmMock.EXPECT().
+			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
 			Return(nil, ids.ShortEmpty, ids.Empty, nil)
 
 		resp, apiErr := backend.AccountCoins(context.Background(), &types.AccountCoinsRequest{
@@ -124,8 +123,6 @@ func TestAccountCoins(t *testing.T) {
 			},
 		})
 		assert.Nil(t, apiErr)
-
-		evmMock.AssertExpectations(t)
 
 		assert.Equal(t, 3, len(resp.Coins))
 
