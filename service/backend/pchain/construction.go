@@ -70,7 +70,7 @@ func (b *Backend) ConstructionMetadata(
 	case pmapper.OpExportAvax:
 		metadata, suggestedFee, err = b.buildExportMetadata(ctx, req.Options)
 	case pmapper.OpAddValidator, pmapper.OpAddDelegator:
-		metadata, suggestedFee, err = b.buildStakingMetadata(req.Options)
+		metadata, suggestedFee, err = buildStakingMetadata(req.Options)
 		metadata.Threshold = opMetadata.Threshold
 		metadata.Locktime = opMetadata.Locktime
 
@@ -150,7 +150,7 @@ func (b *Backend) buildExportMetadata(ctx context.Context, options map[string]in
 	return &pmapper.Metadata{ExportMetadata: exportMetadata}, suggestedFee, nil
 }
 
-func (*Backend) buildStakingMetadata(options map[string]interface{}) (*pmapper.Metadata, *types.Amount, error) {
+func buildStakingMetadata(options map[string]interface{}) (*pmapper.Metadata, *types.Amount, error) {
 	var preprocessOptions pmapper.StakingOptions
 	if err := mapper.UnmarshalJSONMap(options, &preprocessOptions); err != nil {
 		return nil, nil, err
