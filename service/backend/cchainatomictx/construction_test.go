@@ -165,9 +165,9 @@ func TestExportTxConstruction(t *testing.T) {
 			Operations:        exportOperations,
 		}
 
-		resp, apiErr := backend.ConstructionPreprocess(ctx, req)
+		resp, terr := backend.ConstructionPreprocess(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, metadataOptions, resp.Options)
 	})
 
@@ -184,9 +184,9 @@ func TestExportTxConstruction(t *testing.T) {
 			Return(nonce, nil)
 		clientMock.EXPECT().EstimateBaseFee(ctx).Return(big.NewInt(25_000_000_000), nil)
 
-		resp, apiErr := backend.ConstructionMetadata(ctx, req)
+		resp, terr := backend.ConstructionMetadata(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, payloadsMetadata, resp.Metadata)
 		require.Equal(t, suggestedFeeValue, resp.SuggestedFee[0].Value)
 	})
@@ -198,9 +198,9 @@ func TestExportTxConstruction(t *testing.T) {
 			Operations:        exportOperations,
 		}
 
-		resp, apiErr := backend.ConstructionPayloads(ctx, req)
+		resp, terr := backend.ConstructionPayloads(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, wrappedUnsignedExportTx, resp.UnsignedTransaction)
 		require.Equal(t, signingPayloads, resp.Payloads)
 	})
@@ -212,9 +212,9 @@ func TestExportTxConstruction(t *testing.T) {
 			Signed:            false,
 		}
 
-		resp, apiErr := backend.ConstructionParse(ctx, req)
+		resp, terr := backend.ConstructionParse(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Nil(t, resp.AccountIdentifierSigners)
 		require.Equal(t, exportOperations, resp.Operations)
 	})
@@ -226,9 +226,9 @@ func TestExportTxConstruction(t *testing.T) {
 			Signatures:          signatures,
 		}
 
-		resp, apiErr := backend.ConstructionCombine(ctx, req)
+		resp, terr := backend.ConstructionCombine(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, wrappedSignedExportTx, resp.SignedTransaction)
 	})
 
@@ -239,9 +239,9 @@ func TestExportTxConstruction(t *testing.T) {
 			Signed:            true,
 		}
 
-		resp, apiErr := backend.ConstructionParse(ctx, req)
+		resp, terr := backend.ConstructionParse(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, signers, resp.AccountIdentifierSigners)
 		require.Equal(t, exportOperations, resp.Operations)
 	})
@@ -256,18 +256,22 @@ func TestExportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
-		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedExportTx)
-		txID, _ := ids.FromString(signedExportTxHash)
+		require := require.New(t)
+
+		signedTxBytes, err := formatting.Decode(formatting.Hex, signedExportTx)
+		require.NoError(err)
+		txID, err := ids.FromString(signedExportTxHash)
+		require.NoError(err)
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
-		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
+		resp, terr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
 			NetworkIdentifier: networkIdentifier,
 			SignedTransaction: wrappedSignedExportTx,
 		})
 
-		require.Nil(t, apiErr)
-		require.Equal(t, signedExportTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(terr)
+		require.Equal(signedExportTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
 
@@ -381,9 +385,9 @@ func TestImportTxConstruction(t *testing.T) {
 			Metadata:          preprocessMetadata,
 		}
 
-		resp, apiErr := backend.ConstructionPreprocess(ctx, req)
+		resp, terr := backend.ConstructionPreprocess(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, metadataOptions, resp.Options)
 	})
 
@@ -397,9 +401,9 @@ func TestImportTxConstruction(t *testing.T) {
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.EXPECT().EstimateBaseFee(ctx).Return(big.NewInt(25_000_000_000), nil)
 
-		resp, apiErr := backend.ConstructionMetadata(ctx, req)
+		resp, terr := backend.ConstructionMetadata(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, payloadsMetadata, resp.Metadata)
 		require.Equal(t, suggestedFeeValue, resp.SuggestedFee[0].Value)
 	})
@@ -411,9 +415,9 @@ func TestImportTxConstruction(t *testing.T) {
 			Operations:        importOperations,
 		}
 
-		resp, apiErr := backend.ConstructionPayloads(ctx, req)
+		resp, terr := backend.ConstructionPayloads(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, wrappedUnsignedImportTx, resp.UnsignedTransaction)
 		require.Equal(t, signingPayloads, resp.Payloads)
 	})
@@ -425,9 +429,9 @@ func TestImportTxConstruction(t *testing.T) {
 			Signed:            false,
 		}
 
-		resp, apiErr := backend.ConstructionParse(ctx, req)
+		resp, terr := backend.ConstructionParse(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Nil(t, resp.AccountIdentifierSigners)
 		require.Equal(t, importOperations, resp.Operations)
 	})
@@ -439,9 +443,9 @@ func TestImportTxConstruction(t *testing.T) {
 			Signatures:          signatures,
 		}
 
-		resp, apiErr := backend.ConstructionCombine(ctx, req)
+		resp, terr := backend.ConstructionCombine(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, wrappedSignedImportTx, resp.SignedTransaction)
 	})
 
@@ -452,9 +456,9 @@ func TestImportTxConstruction(t *testing.T) {
 			Signed:            true,
 		}
 
-		resp, apiErr := backend.ConstructionParse(ctx, req)
+		resp, terr := backend.ConstructionParse(ctx, req)
 
-		require.Nil(t, apiErr)
+		require.Nil(t, terr)
 		require.Equal(t, signers, resp.AccountIdentifierSigners)
 		require.Equal(t, importOperations, resp.Operations)
 	})
@@ -469,17 +473,21 @@ func TestImportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("submit endpoint", func(t *testing.T) {
-		signedTxBytes, _ := formatting.Decode(formatting.Hex, signedImportTx)
-		txID, _ := ids.FromString(signedImportTxHash)
+		require := require.New(t)
+
+		signedTxBytes, err := formatting.Decode(formatting.Hex, signedImportTx)
+		require.NoError(err)
+		txID, err := ids.FromString(signedImportTxHash)
+		require.NoError(err)
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
-		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
+		resp, terr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
 			NetworkIdentifier: networkIdentifier,
 			SignedTransaction: wrappedSignedImportTx,
 		})
 
-		require.Nil(t, apiErr)
-		require.Equal(t, signedImportTxHash, resp.TransactionIdentifier.Hash)
+		require.Nil(terr)
+		require.Equal(signedImportTxHash, resp.TransactionIdentifier.Hash)
 	})
 }

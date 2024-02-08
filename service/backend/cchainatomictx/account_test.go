@@ -71,13 +71,13 @@ func TestAccountBalance(t *testing.T) {
 			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
 			Return(nil, ids.ShortEmpty, ids.Empty, nil)
 
-		resp, apiErr := backend.AccountBalance(context.Background(), &types.AccountBalanceRequest{
+		resp, terr := backend.AccountBalance(context.Background(), &types.AccountBalanceRequest{
 			NetworkIdentifier: &types.NetworkIdentifier{},
 			AccountIdentifier: &types.AccountIdentifier{
 				Address: accountAddress,
 			},
 		})
-		require.Nil(apiErr)
+		require.Nil(terr)
 
 		require.Len(resp.Balances, 1)
 		require.Equal(mapper.AtomicAvaxCurrency, resp.Balances[0].Currency)
@@ -120,13 +120,13 @@ func TestAccountCoins(t *testing.T) {
 			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
 			Return(nil, ids.ShortEmpty, ids.Empty, nil)
 
-		resp, apiErr := backend.AccountCoins(context.Background(), &types.AccountCoinsRequest{
+		resp, terr := backend.AccountCoins(context.Background(), &types.AccountCoinsRequest{
 			NetworkIdentifier: &types.NetworkIdentifier{},
 			AccountIdentifier: &types.AccountIdentifier{
 				Address: accountAddress,
 			},
 		})
-		require.Nil(apiErr)
+		require.Nil(terr)
 
 		require.Len(resp.Coins, 3)
 

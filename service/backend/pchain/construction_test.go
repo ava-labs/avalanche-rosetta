@@ -316,12 +316,12 @@ func TestExportTxConstruction(t *testing.T) {
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
-		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
+		resp, terr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
 			NetworkIdentifier: pChainNetworkIdentifier,
 			SignedTransaction: wrappedSignedExportTx,
 		})
 
-		require.Nil(apiErr)
+		require.Nil(terr)
 		require.Equal(signedExportTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
@@ -530,12 +530,12 @@ func TestImportTxConstruction(t *testing.T) {
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
-		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
+		resp, terr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
 			NetworkIdentifier: pChainNetworkIdentifier,
 			SignedTransaction: wrappedSignedImportTx,
 		})
 
-		require.Nil(apiErr)
+		require.Nil(terr)
 		require.Equal(signedImportTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
@@ -764,12 +764,12 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
-		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
+		resp, terr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
 			NetworkIdentifier: pChainNetworkIdentifier,
 			SignedTransaction: wrappedSignedTx,
 		})
 
-		require.Nil(apiErr)
+		require.Nil(terr)
 		require.Equal(signedTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
@@ -995,12 +995,12 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 
 		clientMock.EXPECT().IssueTx(ctx, signedTxBytes).Return(txID, nil)
 
-		resp, apiErr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
+		resp, terr := backend.ConstructionSubmit(ctx, &types.ConstructionSubmitRequest{
 			NetworkIdentifier: pChainNetworkIdentifier,
 			SignedTransaction: wrappedSignedTx,
 		})
 
-		require.Nil(apiErr)
+		require.Nil(terr)
 		require.Equal(signedTxHash, resp.TransactionIdentifier.Hash)
 	})
 }
