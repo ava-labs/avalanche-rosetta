@@ -76,7 +76,7 @@ func (t *TxParser) parseImportTx(importTx *evm.UnsignedImportTx) ([]*types.Opera
 	}
 
 	operations = append(operations, ins...)
-	outs := t.outsToOperations(len(ins), mapper.OpImport, importTx.Outs)
+	outs := outsToOperations(len(ins), mapper.OpImport, importTx.Outs)
 	operations = append(operations, outs...)
 
 	return operations, nil
@@ -131,7 +131,7 @@ func (t *TxParser) importedInToOperations(startIdx int64, opType string, ins []*
 	return operations, nil
 }
 
-func (*TxParser) outsToOperations(startIdx int, opType string, outs []evm.EVMOutput) []*types.Operation {
+func outsToOperations(startIdx int, opType string, outs []evm.EVMOutput) []*types.Operation {
 	idx := startIdx
 	operations := []*types.Operation{}
 	for _, out := range outs {
