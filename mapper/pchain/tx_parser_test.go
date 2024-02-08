@@ -173,7 +173,7 @@ func TestMapAddValidatorTx(t *testing.T) {
 
 	require.Equal(3, cntTxType)
 	require.Equal(2, cntInputMeta)
-	require.Equal(0, cntOutputMeta)
+	require.Zero(cntOutputMeta)
 	require.Equal(1, cntMetaType)
 }
 
@@ -388,7 +388,7 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	require.Equal(2, cntTxType)
 	require.Equal(1, cntInputMeta)
 	require.Equal(1, cntOutputMeta)
-	require.Equal(0, cntMetaType)
+	require.Zero(cntMetaType)
 
 	txType, ok := rosettaTransaction.Metadata[MetadataTxType].(string)
 	require.True(ok)
