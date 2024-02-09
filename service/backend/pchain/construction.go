@@ -265,16 +265,14 @@ func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (comm
 func getTxInputs(
 	unsignedTx txs.UnsignedTx,
 ) ([]*avax.TransferableInput, error) {
+	// TODO: Move to using [txs.Visitor] from AvalancheGo
+	// Ref: https://github.com/ava-labs/avalanchego/blob/master/vms/platformvm/txs/visitor.go
 	switch utx := unsignedTx.(type) {
 	case *txs.AddValidatorTx:
-		return utx.Ins, nil
-	case *txs.AddPermissionlessValidatorTx:
 		return utx.Ins, nil
 	case *txs.AddSubnetValidatorTx:
 		return utx.Ins, nil
 	case *txs.AddDelegatorTx:
-		return utx.Ins, nil
-	case *txs.AddPermissionlessDelegatorTx:
 		return utx.Ins, nil
 	case *txs.CreateChainTx:
 		return utx.Ins, nil
@@ -283,6 +281,20 @@ func getTxInputs(
 	case *txs.ImportTx:
 		return utx.ImportedInputs, nil
 	case *txs.ExportTx:
+		return utx.Ins, nil
+	case *txs.AdvanceTimeTx:
+		return nil, nil
+	case *txs.RewardValidatorTx:
+		return nil, nil
+	case *txs.TransformSubnetTx:
+		return utx.Ins, nil
+	case *txs.AddPermissionlessValidatorTx:
+		return utx.Ins, nil
+	case *txs.AddPermissionlessDelegatorTx:
+		return utx.Ins, nil
+	case *txs.TransferSubnetOwnershipTx:
+		return utx.Ins, nil
+	case *txs.BaseTx:
 		return utx.Ins, nil
 	default:
 		return nil, errUnknownTxType

@@ -2,6 +2,7 @@ package pchain
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils"
@@ -20,35 +21,40 @@ type BlockTxDependencies map[ids.ID]*SingleTxDependency
 // as this information is not part of the transaction objects on chain.
 func GetTxDependenciesIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 	// collect tx inputs
+	// TODO: Move to using [txs.Visitor] from AvalancheGo
+	// Ref: https://github.com/ava-labs/avalanchego/blob/master/vms/platformvm/txs/visitor.go
 	var ins []*avax.TransferableInput
 	switch unsignedTx := tx.(type) {
-	case *txs.ExportTx:
-		ins = unsignedTx.Ins
-	case *txs.ImportTx:
-		ins = unsignedTx.Ins
 	case *txs.AddValidatorTx:
-		ins = unsignedTx.Ins
-	case *txs.AddPermissionlessValidatorTx:
-		ins = unsignedTx.Ins
-	case *txs.AddDelegatorTx:
-		ins = unsignedTx.Ins
-	case *txs.AddPermissionlessDelegatorTx:
-		ins = unsignedTx.Ins
-	case *txs.CreateSubnetTx:
-		ins = unsignedTx.Ins
-	case *txs.CreateChainTx:
 		ins = unsignedTx.Ins
 	case *txs.AddSubnetValidatorTx:
 		ins = unsignedTx.Ins
-	case *txs.TransformSubnetTx:
+	case *txs.AddDelegatorTx:
 		ins = unsignedTx.Ins
-	case *txs.RemoveSubnetValidatorTx:
+	case *txs.CreateChainTx:
 		ins = unsignedTx.Ins
-
-	case *txs.RewardValidatorTx:
-		return []ids.ID{unsignedTx.TxID}, nil
+	case *txs.CreateSubnetTx:
+		ins = unsignedTx.Ins
+	case *txs.ImportTx:
+		ins = unsignedTx.Ins
+	case *txs.ExportTx:
+		ins = unsignedTx.Ins
 	case *txs.AdvanceTimeTx:
 		return []ids.ID{}, nil
+	case *txs.RewardValidatorTx:
+		return []ids.ID{unsignedTx.TxID}, nil
+	case *txs.RemoveSubnetValidatorTx:
+		ins = unsignedTx.Ins
+	case *txs.TransformSubnetTx:
+		ins = unsignedTx.Ins
+	case *txs.AddPermissionlessValidatorTx:
+		ins = unsignedTx.Ins
+	case *txs.AddPermissionlessDelegatorTx:
+		ins = unsignedTx.Ins
+	case *txs.TransferSubnetOwnershipTx:
+		ins = unsignedTx.Ins
+	case *txs.BaseTx:
+		ins = unsignedTx.Ins
 	default:
 		return nil, fmt.Errorf("unknown tx type %T", unsignedTx)
 	}
@@ -125,36 +131,46 @@ func (d *SingleTxDependency) GetUtxos() map[avax.UTXOID]*avax.UTXO {
 
 	if d.Tx != nil {
 		// Generate UTXOs from outputs
+		// TODO: Move to using [txs.Visitor] from AvalancheGo
+		// Ref: https://github.com/ava-labs/avalanchego/blob/master/vms/platformvm/txs/visitor.go
 		outsToAdd := make([]*avax.TransferableOutput, 0)
 		switch unsignedTx := d.Tx.Unsigned.(type) {
-		case *txs.ExportTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.ImportTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 		case *txs.AddValidatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
-		case *txs.AddPermissionlessValidatorTx:
+		case *txs.AddSubnetValidatorTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.AddDelegatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
-		case *txs.AddDelegatorTx:
+		case *txs.CreateChainTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.CreateSubnetTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.ImportTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.ExportTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.AdvanceTimeTx:
+			// No outputs to add
+		case *txs.RewardValidatorTx:
+			// No outputs to add
+		case *txs.RemoveSubnetValidatorTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.TransformSubnetTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.AddPermissionlessValidatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
 		case *txs.AddPermissionlessDelegatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
-		case *txs.CreateSubnetTx:
+		case *txs.TransferSubnetOwnershipTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.AddSubnetValidatorTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.TransformSubnetTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.RemoveSubnetValidatorTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.CreateChainTx:
+		case *txs.BaseTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 		default:
-			// no utxos extracted from unsupported transaction types
+			log.Printf("unknown type %T", unsignedTx)
 		}
 
 		// add collected utxos
