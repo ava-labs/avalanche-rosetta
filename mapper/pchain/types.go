@@ -78,18 +78,6 @@ type ImportExportOptions struct {
 	DestinationChain string `json:"destination_chain"`
 }
 
-// StakingOptions contain response fields returned by /construction/preprocess for P-chain AddValidator/AddDelegator transactions
-type StakingOptions struct {
-	NodeID          string   `json:"node_id"`
-	Start           uint64   `json:"start"`
-	End             uint64   `json:"end"`
-	Shares          uint32   `json:"shares"`
-	Memo            string   `json:"memo"`
-	Locktime        uint64   `json:"locktime"`
-	Threshold       uint32   `json:"threshold"`
-	RewardAddresses []string `json:"reward_addresses"`
-}
-
 // Metadata contains metadata values returned by /construction/metadata for P-chain transactions
 type Metadata struct {
 	NetworkID    uint32 `json:"network_id"`
