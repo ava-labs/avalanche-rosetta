@@ -266,9 +266,13 @@ func getTxInputs(
 	switch utx := unsignedTx.(type) {
 	case *txs.AddValidatorTx:
 		return utx.Ins, nil
+	case *txs.AddPermissionlessValidatorTx:
+		return utx.Ins, nil
 	case *txs.AddSubnetValidatorTx:
 		return utx.Ins, nil
 	case *txs.AddDelegatorTx:
+		return utx.Ins, nil
+	case *txs.AddPermissionlessDelegatorTx:
 		return utx.Ins, nil
 	case *txs.CreateChainTx:
 		return utx.Ins, nil

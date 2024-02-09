@@ -120,47 +120,55 @@ func (t *TxParser) Parse(signedTx *txs.Tx) (*types.Transaction, error) {
 		err    error
 	)
 
+	// TODO: Move to using [txs.Visitor] from AvalancheGo
+	// Ref: https://github.com/ava-labs/avalanchego/blob/master/vms/platformvm/txs/visitor.go
 	txID := signedTx.ID()
 	switch unsignedTx := signedTx.Unsigned.(type) {
-	case *txs.ExportTx:
-		txType = OpExportAvax
-		ops, err = t.parseExportTx(txID, unsignedTx)
-	case *txs.ImportTx:
-		txType = OpImportAvax
-		ops, err = t.parseImportTx(txID, unsignedTx)
 	case *txs.AddValidatorTx:
 		txType = OpAddValidator
 		ops, err = t.parseAddValidatorTx(txID, unsignedTx)
-	case *txs.AddDelegatorTx:
-		txType = OpAddDelegator
-		ops, err = t.parseAddDelegatorTx(txID, unsignedTx)
-	case *txs.RewardValidatorTx:
-		txType = OpRewardValidator
-		ops, err = t.parseRewardValidatorTx(unsignedTx)
-	case *txs.CreateSubnetTx:
-		txType = OpCreateSubnet
-		ops, err = t.parseCreateSubnetTx(txID, unsignedTx)
-	case *txs.CreateChainTx:
-		txType = OpCreateChain
-		ops, err = t.parseCreateChainTx(txID, unsignedTx)
 	case *txs.AddSubnetValidatorTx:
 		txType = OpAddSubnetValidator
 		ops, err = t.parseAddSubnetValidatorTx(txID, unsignedTx)
-	case *txs.AddPermissionlessValidatorTx:
-		txType = OpAddPermissionlessValidator
-		ops, err = t.parseAddPermissionlessValidatorTx(txID, unsignedTx)
-	case *txs.AddPermissionlessDelegatorTx:
-		txType = OpAddPermissionlessDelegator
-		ops, err = t.parseAddPermissionlessDelegatorTx(txID, unsignedTx)
+	case *txs.AddDelegatorTx:
+		txType = OpAddDelegator
+		ops, err = t.parseAddDelegatorTx(txID, unsignedTx)
+	case *txs.CreateChainTx:
+		txType = OpCreateChain
+		ops, err = t.parseCreateChainTx(txID, unsignedTx)
+	case *txs.CreateSubnetTx:
+		txType = OpCreateSubnet
+		ops, err = t.parseCreateSubnetTx(txID, unsignedTx)
+	case *txs.ImportTx:
+		txType = OpImportAvax
+		ops, err = t.parseImportTx(txID, unsignedTx)
+	case *txs.ExportTx:
+		txType = OpExportAvax
+		ops, err = t.parseExportTx(txID, unsignedTx)
+	case *txs.AdvanceTimeTx:
+		txType = OpAdvanceTime
+		// no op tx
+	case *txs.RewardValidatorTx:
+		txType = OpRewardValidator
+		ops, err = t.parseRewardValidatorTx(unsignedTx)
 	case *txs.RemoveSubnetValidatorTx:
 		txType = OpRemoveSubnetValidator
 		ops, err = t.parseRemoveSubnetValidatorTx(txID, unsignedTx)
 	case *txs.TransformSubnetTx:
 		txType = OpTransformSubnetValidator
 		ops, err = t.parseTransformSubnetTx(txID, unsignedTx)
-	case *txs.AdvanceTimeTx:
-		txType = OpAdvanceTime
-		// no op tx
+	case *txs.AddPermissionlessValidatorTx:
+		txType = OpAddPermissionlessValidator
+		ops, err = t.parseAddPermissionlessValidatorTx(txID, unsignedTx)
+	case *txs.AddPermissionlessDelegatorTx:
+		txType = OpAddPermissionlessDelegator
+		ops, err = t.parseAddPermissionlessDelegatorTx(txID, unsignedTx)
+	case *txs.TransferSubnetOwnershipTx:
+		txType = OpTransferSubnetOwnership
+		ops, err = t.parseTransferSubnetOwnershipTx(txID, unsignedTx)
+	case *txs.BaseTx:
+		txType = OpBase
+		ops, err = t.parseBaseTx(txID, unsignedTx)
 	default:
 		log.Printf("unknown type %T", unsignedTx)
 	}
@@ -358,6 +366,14 @@ func addMetadataToStakeOuts(ops *txOps, validator *txs.Validator) {
 		out.Metadata[MetadataStakingStartTime] = validator.Start
 		out.Metadata[MetadataStakingEndTime] = validator.End
 	}
+}
+
+func (t *TxParser) parseBaseTx(txID ids.ID, tx *txs.BaseTx) (*txOps, error) {
+	return t.baseTxToCombinedOperations(txID, tx, OpBase)
+}
+
+func (t *TxParser) parseTransferSubnetOwnershipTx(txID ids.ID, tx *txs.TransferSubnetOwnershipTx) (*txOps, error) {
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpTransferSubnetOwnership)
 }
 
 func (t *TxParser) parseCreateSubnetTx(txID ids.ID, tx *txs.CreateSubnetTx) (*txOps, error) {
