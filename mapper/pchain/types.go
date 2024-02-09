@@ -87,7 +87,7 @@ type StakingOptions struct {
 	BLSProofOfPossession    string   `json:"bls_proof_of_possession"`
 	ValidationRewardsOwners []string `json:"reward_addresses"`
 	DelegationRewardsOwners []string `json:"delegator_reward_addresses"`
-	Start                   uint64   `json:"start"` // TODO: Remove post-Durango
+	Start                   uint64   `json:"start"` // TODO: Remove Post-Durango Activation
 	End                     uint64   `json:"end"`
 	Subnet                  string   `json:"subnet"`
 	Shares                  uint32   `json:"shares"`

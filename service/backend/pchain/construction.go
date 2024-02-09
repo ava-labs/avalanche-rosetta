@@ -155,21 +155,23 @@ func buildStakingMetadata(options map[string]interface{}) (*pmapper.Metadata, *t
 	if err := mapper.UnmarshalJSONMap(options, &preprocessOptions); err != nil {
 		return nil, nil, err
 	}
-
-	stakingMetadata := &pmapper.StakingMetadata{
-		NodeID:          preprocessOptions.NodeID,
-		Start:           preprocessOptions.Start,
-		End:             preprocessOptions.End,
-		Memo:            preprocessOptions.Memo,
-		Locktime:        preprocessOptions.Locktime,
-		Threshold:       preprocessOptions.Threshold,
-		RewardAddresses: preprocessOptions.RewardAddresses,
-		Shares:          preprocessOptions.Shares,
-	}
-
 	zeroAvax := mapper.AtomicAvaxAmount(big.NewInt(0))
 
-	return &pmapper.Metadata{StakingMetadata: stakingMetadata}, zeroAvax, nil
+	return &pmapper.Metadata{
+		StakingMetadata: &pmapper.StakingMetadata{
+			NodeID:                  preprocessOptions.NodeID,
+			BLSPublicKey:            preprocessOptions.BLSPublicKey,
+			BLSProofOfPossession:    preprocessOptions.BLSProofOfPossession,
+			ValidationRewardsOwners: preprocessOptions.ValidationRewardsOwners,
+			DelegationRewardsOwners: preprocessOptions.DelegationRewardsOwners,
+			Start:                   preprocessOptions.Start,
+			End:                     preprocessOptions.End,
+			Subnet:                  preprocessOptions.Subnet,
+			Shares:                  preprocessOptions.Shares,
+			Locktime:                preprocessOptions.Locktime,
+			Threshold:               preprocessOptions.Threshold,
+		},
+	}, zeroAvax, nil
 }
 
 func (b *Backend) getBaseTxFee(ctx context.Context) (*types.Amount, error) {
