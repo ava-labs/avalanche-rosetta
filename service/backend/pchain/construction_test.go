@@ -600,16 +600,19 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	}
 
 	payloadsMetadata := map[string]interface{}{
-		"network_id":       float64(avalancheNetworkID),
-		"blockchain_id":    pChainID.String(),
-		"node_id":          nodeID,
-		"start":            float64(startTime),
-		"end":              float64(endTime),
-		"shares":           float64(shares),
-		"locktime":         0.0,
-		"threshold":        1.0,
-		"memo":             "",
-		"reward_addresses": []interface{}{stakeRewardAccount.Address},
+		"network_id":                 float64(avalancheNetworkID),
+		"blockchain_id":              pChainID.String(),
+		"node_id":                    nodeID,
+		"start":                      float64(startTime),
+		"end":                        float64(endTime),
+		"shares":                     float64(shares),
+		"locktime":                   0.0,
+		"subnet":                     "",
+		"threshold":                  1.0,
+		"reward_addresses":           []interface{}{stakeRewardAccount.Address},
+		"delegator_reward_addresses": nil,
+		"bls_proof_of_possession":    "",
+		"bls_public_key":             "",
 	}
 
 	signers := []*types.AccountIdentifier{pAccountIdentifier}
@@ -831,16 +834,19 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	}
 
 	payloadsMetadata := map[string]interface{}{
-		"network_id":       float64(avalancheNetworkID),
-		"blockchain_id":    pChainID.String(),
-		"node_id":          nodeID,
-		"start":            float64(startTime),
-		"end":              float64(endTime),
-		"shares":           0.0,
-		"locktime":         0.0,
-		"threshold":        1.0,
-		"memo":             "",
-		"reward_addresses": []interface{}{stakeRewardAccount.Address},
+		"network_id":                 float64(avalancheNetworkID),
+		"blockchain_id":              pChainID.String(),
+		"node_id":                    nodeID,
+		"start":                      float64(startTime),
+		"end":                        float64(endTime),
+		"shares":                     0.0,
+		"locktime":                   0.0,
+		"threshold":                  1.0,
+		"reward_addresses":           []interface{}{stakeRewardAccount.Address},
+		"bls_proof_of_possession":    "",
+		"bls_public_key":             "",
+		"delegator_reward_addresses": nil,
+		"subnet":                     "",
 	}
 
 	signers := []*types.AccountIdentifier{pAccountIdentifier}
