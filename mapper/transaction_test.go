@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -253,7 +252,7 @@ func TestCrossChainImportedInputs(t *testing.T) {
 		rawIdx      = 0
 		avaxAssetID = "U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK"
 		hexTx       = "0x000000000000000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d5000000000000000000000000000000000000000000000000000000000000000000000001d4e3812503247f042cc9bbb3395ceca49e28687726489b0ea2d4dd259fadb8b6000000003d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000500000000772651c00000000100000000000000013158e80abd5a1e1aa716003c9db096792c37962100000000772209123d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000010000000900000001309767786d3c3548f34373c858f2bab210c6bd6c837d069e314930273d32acc361e86a05bc5bd251e4cb5809bbca7680361ed3263ff5ba2aa467294bfa000aef00cfb71da5"
-		decodeTx, _ = formatting.Decode(formatting.Hex, hexTx)
+		decodeTx, _ = DecodeToBytes(hexTx)
 		tx          = &evm.Tx{}
 
 		networkIdentifier = &types.NetworkIdentifier{
