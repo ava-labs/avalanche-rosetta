@@ -272,7 +272,7 @@ func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*tx
 }
 
 func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPermissionlessValidatorTx) (*txOps, error) {
-	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddValidator)
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddPermissionlessValidator)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +308,7 @@ func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*tx
 }
 
 func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPermissionlessDelegatorTx) (*txOps, error) {
-	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddDelegator)
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddPermissionlessDelegator)
 	if err != nil {
 		return nil, err
 	}

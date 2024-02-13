@@ -43,10 +43,10 @@ func BuildTx(
 	case OpAddPermissionlessDelegator:
 		return buildAddPermissionlessDelegatorTx(matches, payloadMetadata, codec, avaxAssetID)
 	case OpAddValidator:
-		// TODO: Remove Post-Durango activation
+		// TODO: Remove Post-Durango
 		return buildAddValidatorTx(matches, payloadMetadata, codec, avaxAssetID)
 	case OpAddDelegator:
-		// TODO: Remove Post-Durango activation
+		// TODO: Remove Post-Durango
 		return buildAddDelegatorTx(matches, payloadMetadata, codec, avaxAssetID)
 	default:
 		return nil, nil, fmt.Errorf("invalid tx type: %s", opType)
@@ -124,7 +124,7 @@ func buildExportTx(
 	return tx, signers, tx.Sign(codec, nil)
 }
 
-// TODO: Remove Post-Durango activation
+// TODO: Remove Post-Durango
 // [buildAddValidatorTx] returns a duly initialized tx if it does not err
 func buildAddValidatorTx(
 	matches []*parser.Match,
@@ -188,7 +188,7 @@ func buildAddValidatorTx(
 	return tx, signers, tx.Sign(codec, nil)
 }
 
-// TODO: Remove Post-Durango activation
+// TODO: Remove Post-Durango
 // [buildAddDelegatorTx] returns a duly initialized tx if it does not err
 func buildAddDelegatorTx(
 	matches []*parser.Match,
