@@ -21,6 +21,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 
+	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
 	avajson "github.com/ava-labs/avalanchego/utils/json"
 )
@@ -46,12 +47,6 @@ var (
 	avalancheNetworkID = avaconstants.FujiID
 
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
-
-	opTypeInput  = "INPUT"
-	opTypeImport = "IMPORT"
-	opTypeExport = "EXPORT"
-	opTypeOutput = "OUTPUT"
-	opTypeStake  = "STAKE"
 
 	txFee = 1_000_000
 
@@ -112,13 +107,11 @@ func TestConstructionDerive(t *testing.T) {
 }
 
 func TestExportTxConstruction(t *testing.T) {
-	opExportAvax := "EXPORT_AVAX"
-
 	exportOperations := []*types.Operation{
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 0},
 			RelatedOperations:   nil,
-			Type:                opExportAvax,
+			Type:                pmapper.OpExportAvax,
 			Account:             pAccountIdentifier,
 			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-1_000_000_000)),
 			CoinChange: &types.CoinChange{
@@ -126,18 +119,18 @@ func TestExportTxConstruction(t *testing.T) {
 				CoinAction:     types.CoinSpent,
 			},
 			Metadata: map[string]interface{}{
-				"type":        opTypeInput,
+				"type":        pmapper.OpTypeInput,
 				"sig_indices": []interface{}{0.0},
 				"locktime":    0.0,
 			},
 		},
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
-			Type:                opExportAvax,
+			Type:                pmapper.OpExportAvax,
 			Account:             cAccountIdentifier,
 			Amount:              mapper.AtomicAvaxAmount(big.NewInt(999_000_000)),
 			Metadata: map[string]interface{}{
-				"type":      opTypeExport,
+				"type":      pmapper.OpTypeExport,
 				"threshold": 1.0,
 				"locktime":  0.0,
 			},
@@ -150,7 +143,7 @@ func TestExportTxConstruction(t *testing.T) {
 
 	metadataOptions := map[string]interface{}{
 		"destination_chain": constants.CChain.String(),
-		"type":              opExportAvax,
+		"type":              pmapper.OpExportAvax,
 	}
 
 	payloadsMetadata := map[string]interface{}{
@@ -327,13 +320,11 @@ func TestExportTxConstruction(t *testing.T) {
 }
 
 func TestImportTxConstruction(t *testing.T) {
-	opImportAvax := "IMPORT_AVAX"
-
 	importOperations := []*types.Operation{
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 0},
 			RelatedOperations:   nil,
-			Type:                opImportAvax,
+			Type:                pmapper.OpImportAvax,
 			Account:             cAccountIdentifier,
 			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-1_000_000_000)),
 			CoinChange: &types.CoinChange{
@@ -341,18 +332,18 @@ func TestImportTxConstruction(t *testing.T) {
 				CoinAction:     types.CoinSpent,
 			},
 			Metadata: map[string]interface{}{
-				"type":        opTypeImport,
+				"type":        pmapper.OpTypeImport,
 				"sig_indices": []interface{}{0.0},
 				"locktime":    0.0,
 			},
 		},
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
-			Type:                opImportAvax,
+			Type:                pmapper.OpImportAvax,
 			Account:             pAccountIdentifier,
 			Amount:              mapper.AtomicAvaxAmount(big.NewInt(999_000_000)),
 			Metadata: map[string]interface{}{
-				"type":      opTypeOutput,
+				"type":      pmapper.OpTypeOutput,
 				"threshold": 1.0,
 				"locktime":  0.0,
 			},
@@ -365,7 +356,7 @@ func TestImportTxConstruction(t *testing.T) {
 
 	metadataOptions := map[string]interface{}{
 		"source_chain": constants.CChain.String(),
-		"type":         opImportAvax,
+		"type":         pmapper.OpImportAvax,
 	}
 
 	payloadsMetadata := map[string]interface{}{
@@ -541,7 +532,6 @@ func TestImportTxConstruction(t *testing.T) {
 }
 
 func TestAddValidatorTxConstruction(t *testing.T) {
-	opAddValidator := "ADD_VALIDATOR"
 	startTime := uint64(1659592163)
 	endTime := startTime + 14*86400
 	shares := uint32(200000)
@@ -550,7 +540,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 0},
 			RelatedOperations:   nil,
-			Type:                opAddValidator,
+			Type:                pmapper.OpAddValidator,
 			Account:             pAccountIdentifier,
 			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-2_000_000_000_000)),
 			CoinChange: &types.CoinChange{
@@ -558,18 +548,18 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 				CoinAction:     "coin_spent",
 			},
 			Metadata: map[string]interface{}{
-				"type":        opTypeInput,
+				"type":        pmapper.OpTypeInput,
 				"sig_indices": []interface{}{0.0},
 				"locktime":    0.0,
 			},
 		},
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
-			Type:                opAddValidator,
+			Type:                pmapper.OpAddValidator,
 			Account:             pAccountIdentifier,
 			Amount:              mapper.AtomicAvaxAmount(big.NewInt(2_000_000_000_000)),
 			Metadata: map[string]interface{}{
-				"type":      opTypeStake,
+				"type":      pmapper.OpTypeStakeOutput,
 				"locktime":  0.0,
 				"threshold": 1.0,
 				// the following are ignored by payloads endpoint but generated by parse
@@ -590,7 +580,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	}
 
 	metadataOptions := map[string]interface{}{
-		"type":             opAddValidator,
+		"type":             pmapper.OpAddValidator,
 		"node_id":          nodeID,
 		"start":            startTime,
 		"end":              endTime,
@@ -775,7 +765,6 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 }
 
 func TestAddDelegatorTxConstruction(t *testing.T) {
-	opAddDelegator := "ADD_DELEGATOR"
 	startTime := uint64(1659592163)
 	endTime := startTime + 14*86400
 
@@ -783,7 +772,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 0},
 			RelatedOperations:   nil,
-			Type:                opAddDelegator,
+			Type:                pmapper.OpAddDelegator,
 			Account:             pAccountIdentifier,
 			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-25_000_000_000)),
 			CoinChange: &types.CoinChange{
@@ -791,18 +780,18 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 				CoinAction:     "coin_spent",
 			},
 			Metadata: map[string]interface{}{
-				"type":        opTypeInput,
+				"type":        pmapper.OpTypeInput,
 				"sig_indices": []interface{}{0.0},
 				"locktime":    0.0,
 			},
 		},
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 1},
-			Type:                opAddDelegator,
+			Type:                pmapper.OpAddDelegator,
 			Account:             pAccountIdentifier,
 			Amount:              mapper.AtomicAvaxAmount(big.NewInt(25_000_000_000)),
 			Metadata: map[string]interface{}{
-				"type":      opTypeStake,
+				"type":      pmapper.OpTypeStakeOutput,
 				"locktime":  0.0,
 				"threshold": 1.0,
 				// the following are ignored by payloads endpoint but generated by parse
@@ -822,7 +811,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	}
 
 	metadataOptions := map[string]interface{}{
-		"type":             opAddDelegator,
+		"type":             pmapper.OpAddDelegator,
 		"node_id":          nodeID,
 		"start":            startTime,
 		"end":              endTime,
