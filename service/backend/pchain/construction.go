@@ -156,20 +156,20 @@ func buildStakingMetadata(options map[string]interface{}) (*pmapper.Metadata, *t
 		return nil, nil, err
 	}
 
-	stakingMetadata := &pmapper.StakingMetadata{
-		NodeID:          preprocessOptions.NodeID,
-		Start:           preprocessOptions.Start,
-		End:             preprocessOptions.End,
-		Memo:            preprocessOptions.Memo,
-		Locktime:        preprocessOptions.Locktime,
-		Threshold:       preprocessOptions.Threshold,
-		RewardAddresses: preprocessOptions.RewardAddresses,
-		Shares:          preprocessOptions.Shares,
-	}
-
 	zeroAvax := mapper.AtomicAvaxAmount(big.NewInt(0))
 
-	return &pmapper.Metadata{StakingMetadata: stakingMetadata}, zeroAvax, nil
+	return &pmapper.Metadata{
+		StakingMetadata: &pmapper.StakingMetadata{
+			NodeID:                  preprocessOptions.NodeID,
+			Start:                   preprocessOptions.Start,
+			End:                     preprocessOptions.End,
+			Memo:                    preprocessOptions.Memo,
+			Locktime:                preprocessOptions.Locktime,
+			Threshold:               preprocessOptions.Threshold,
+			ValidationRewardsOwners: preprocessOptions.RewardAddresses,
+			Shares:                  preprocessOptions.Shares,
+		},
+	}, zeroAvax, nil
 }
 
 func (b *Backend) getBaseTxFee(ctx context.Context) (*types.Amount, error) {
