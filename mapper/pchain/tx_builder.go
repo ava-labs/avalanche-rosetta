@@ -207,7 +207,12 @@ func buildAddDelegatorTx(
 	if err != nil {
 		return nil, nil, err
 	}
-	rewardsOwner, err := buildOutputOwner(metadata.ValidationRewardsOwners, metadata.Locktime, metadata.Threshold)
+
+	rewardsOwner, err := buildOutputOwner(
+		metadata.ValidationRewardsOwners,
+		metadata.Locktime,
+		metadata.Threshold,
+	)
 	if err != nil {
 		return nil, nil, err
 	}
