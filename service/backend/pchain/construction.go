@@ -69,7 +69,7 @@ func (b *Backend) ConstructionMetadata(
 		metadata, suggestedFee, err = b.buildImportMetadata(ctx, req.Options)
 	case pmapper.OpExportAvax:
 		metadata, suggestedFee, err = b.buildExportMetadata(ctx, req.Options)
-	case pmapper.OpAddValidator, pmapper.OpAddDelegator:
+	case pmapper.OpAddValidator, pmapper.OpAddDelegator, pmapper.OpAddPermissionlessDelegator, pmapper.OpAddPermissionlessValidator:
 		metadata, suggestedFee, err = buildStakingMetadata(req.Options)
 		metadata.Threshold = opMetadata.Threshold
 		metadata.Locktime = opMetadata.Locktime

@@ -8,6 +8,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
@@ -272,21 +273,17 @@ func buildAddPermissionlessValidatorTx(
 
 	subnetID := constants.PrimaryNetworkID
 	if metadata.Subnet != "" {
-		subnetBytes, err := mapper.DecodeToBytes(metadata.Subnet)
+		subnetID, err = ids.FromString(metadata.Subnet)
 		if err != nil {
-			return nil, nil, err
-		}
-		if len(subnetBytes) != ids.IDLen {
 			return nil, nil, fmt.Errorf("%w: invalid subnet id", errInvalidMetadata)
 		}
-		subnetID = ids.ID(subnetBytes)
 	}
 
-	publicKeyBytes, err := mapper.DecodeToBytes(metadata.BLSPublicKey)
+	publicKeyBytes, err := formatting.Decode(formatting.HexNC, metadata.BLSPublicKey)
 	if err != nil {
 		return nil, nil, err
 	}
-	popBytes, err := mapper.DecodeToBytes(metadata.BLSProofOfPossession)
+	popBytes, err := formatting.Decode(formatting.HexNC, metadata.BLSProofOfPossession)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -398,14 +395,10 @@ func buildAddPermissionlessDelegatorTx(
 
 	subnetID := constants.PrimaryNetworkID
 	if metadata.Subnet != "" {
-		subnetBytes, err := mapper.DecodeToBytes(metadata.Subnet)
+		subnetID, err = ids.FromString(metadata.Subnet)
 		if err != nil {
-			return nil, nil, err
-		}
-		if len(subnetBytes) != ids.IDLen {
 			return nil, nil, fmt.Errorf("%w: invalid subnet id", errInvalidMetadata)
 		}
-		subnetID = ids.ID(subnetBytes)
 	}
 
 	tx := &txs.Tx{Unsigned: &txs.AddPermissionlessDelegatorTx{
