@@ -10,7 +10,6 @@ import (
 
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -303,7 +302,7 @@ func TestExportTxConstruction(t *testing.T) {
 	t.Run("submit endpoint", func(t *testing.T) {
 		require := require.New(t)
 
-		signedTxBytes, err := formatting.Decode(formatting.Hex, signedExportTx)
+		signedTxBytes, err := mapper.DecodeToBytes(signedExportTx)
 		require.NoError(err)
 		txID, err := ids.FromString(signedExportTxHash)
 		require.NoError(err)
@@ -514,7 +513,7 @@ func TestImportTxConstruction(t *testing.T) {
 	t.Run("submit endpoint", func(t *testing.T) {
 		require := require.New(t)
 
-		signedTxBytes, err := formatting.Decode(formatting.Hex, signedImportTx)
+		signedTxBytes, err := mapper.DecodeToBytes(signedImportTx)
 		require.NoError(err)
 
 		txID, err := ids.FromString(signedImportTxHash)
@@ -748,7 +747,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	t.Run("submit endpoint", func(t *testing.T) {
 		require := require.New(t)
 
-		signedTxBytes, err := formatting.Decode(formatting.Hex, signedTx)
+		signedTxBytes, err := mapper.DecodeToBytes(signedTx)
 		require.NoError(err)
 		txID, err := ids.FromString(signedTxHash)
 		require.NoError(err)
@@ -978,7 +977,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	t.Run("submit endpoint", func(t *testing.T) {
 		require := require.New(t)
 
-		signedTxBytes, err := formatting.Decode(formatting.Hex, signedTx)
+		signedTxBytes, err := mapper.DecodeToBytes(signedTx)
 		require.NoError(err)
 		txID, err := ids.FromString(signedTxHash)
 		require.NoError(err)
