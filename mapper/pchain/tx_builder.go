@@ -7,6 +7,7 @@ import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils"
+	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
@@ -264,12 +265,16 @@ func buildAddPermissionlessValidatorTx(
 		return nil, nil, err
 	}
 
-	subnetBytes, err := mapper.DecodeToBytes(metadata.Subnet)
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(subnetBytes) != ids.IDLen {
-		return nil, nil, fmt.Errorf("%w: invalid subnet id", errInvalidMetadata)
+	subnetID := constants.PrimaryNetworkID
+	if metadata.Subnet != "" {
+		subnetBytes, err := mapper.DecodeToBytes(metadata.Subnet)
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(subnetBytes) != ids.IDLen {
+			return nil, nil, fmt.Errorf("%w: invalid subnet id", errInvalidMetadata)
+		}
+		subnetID = ids.ID(subnetBytes)
 	}
 
 	publicKeyBytes, err := mapper.DecodeToBytes(metadata.BLSPublicKey)
@@ -338,7 +343,7 @@ func buildAddPermissionlessValidatorTx(
 			End:    metadata.End,
 			Wght:   weight,
 		},
-		Subnet:                ids.ID(subnetBytes),
+		Subnet:                subnetID,
 		Signer:                pop,
 		StakeOuts:             stakeOutputs,
 		ValidatorRewardsOwner: validationRewardsOwner,
@@ -386,12 +391,16 @@ func buildAddPermissionlessDelegatorTx(
 		return nil, nil, err
 	}
 
-	subnetBytes, err := mapper.DecodeToBytes(metadata.Subnet)
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(subnetBytes) != ids.IDLen {
-		return nil, nil, fmt.Errorf("%w: invalid subnet id", errInvalidMetadata)
+	subnetID := constants.PrimaryNetworkID
+	if metadata.Subnet != "" {
+		subnetBytes, err := mapper.DecodeToBytes(metadata.Subnet)
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(subnetBytes) != ids.IDLen {
+			return nil, nil, fmt.Errorf("%w: invalid subnet id", errInvalidMetadata)
+		}
+		subnetID = ids.ID(subnetBytes)
 	}
 
 	tx := &txs.Tx{Unsigned: &txs.AddPermissionlessDelegatorTx{
@@ -407,7 +416,7 @@ func buildAddPermissionlessDelegatorTx(
 			End:    metadata.End,
 			Wght:   weight,
 		},
-		Subnet:                 ids.ID(subnetBytes),
+		Subnet:                 subnetID,
 		StakeOuts:              stakeOutputs,
 		DelegationRewardsOwner: rewardsOwner,
 	}}
