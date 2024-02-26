@@ -112,12 +112,12 @@ type ExportMetadata struct {
 
 // StakingMetadata contain response fields returned by /construction/metadata for P-chain AddValidator/AddDelegator transactions
 type StakingMetadata struct {
-	NodeID          string   `json:"node_id"`
-	RewardAddresses []string `json:"reward_addresses"`
-	Start           uint64   `json:"start"`
-	End             uint64   `json:"end"`
-	Shares          uint32   `json:"shares"`
-	Locktime        uint64   `json:"locktime"`
-	Threshold       uint32   `json:"threshold"`
-	Memo            string   `json:"memo"`
+	NodeID                  string   `json:"node_id"`
+	ValidationRewardsOwners []string `json:"reward_addresses"`
+	Start                   uint64   `json:"start"`
+	End                     uint64   `json:"end"`
+	Shares                  uint32   `json:"shares"`
+	Locktime                uint64   `json:"locktime"`
+	Threshold               uint32   `json:"threshold"`
+	Memo                    string   `json:"memo"`
 }
