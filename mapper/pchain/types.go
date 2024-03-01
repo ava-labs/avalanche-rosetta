@@ -18,6 +18,8 @@ const (
 	OpRemoveSubnetValidator      = "REMOVE_SUBNET_VALIDATOR"
 	OpTransformSubnetValidator   = "TRANSFORM_SUBNET_VALIDATOR"
 	OpAdvanceTime                = "ADVANCE_TIME"
+	OpBase                       = "BASE"
+	OpTransferSubnetOwnership    = "TRANSFER_SUBNET_OWNERSHIP"
 
 	OpTypeImport      = "IMPORT"
 	OpTypeExport      = "EXPORT"
@@ -35,9 +37,13 @@ const (
 	MetadataMessage          = "message"
 	MetadataSigner           = "signer"
 
-	MetadataValidatorRewards     = "validator_rewards"
-	MetadataDelegationRewards    = "delegation_rewards"
-	MetadataDelegationFeeRewards = "delegation_fee_rewards"
+	MetadataValidatorRewards       = "validator_rewards"
+	MetadataValidatorRewardsOwner  = "validator_rewards_owner"
+	MetadataDelegationRewardsOwner = "delegation_rewards_owner"
+	MetadataDelegatorRewardsOwner  = "delegator_rewards_owner"
+	MetadataDelegationRewards      = "delegation_rewards"
+	MetadataDelegationFeeRewards   = "delegation_fee_rewards"
+	MetadataSubnetID               = "subnet_id"
 
 	SubAccountTypeSharedMemory       = "shared_memory"
 	SubAccountTypeUnlocked           = "unlocked"
@@ -80,14 +86,17 @@ type ImportExportOptions struct {
 
 // StakingOptions contain response fields returned by /construction/preprocess for P-chain AddValidator/AddDelegator transactions
 type StakingOptions struct {
-	NodeID          string   `json:"node_id"`
-	Start           uint64   `json:"start"`
-	End             uint64   `json:"end"`
-	Shares          uint32   `json:"shares"`
-	Memo            string   `json:"memo"`
-	Locktime        uint64   `json:"locktime"`
-	Threshold       uint32   `json:"threshold"`
-	RewardAddresses []string `json:"reward_addresses"`
+	NodeID                  string   `json:"node_id"`
+	BLSPublicKey            string   `json:"bls_public_key"`
+	BLSProofOfPossession    string   `json:"bls_proof_of_possession"`
+	ValidationRewardsOwners []string `json:"reward_addresses"`
+	DelegationRewardsOwners []string `json:"delegator_reward_addresses"`
+	Start                   uint64   `json:"start"` // TODO: Remove Post-Durango
+	End                     uint64   `json:"end"`
+	Subnet                  string   `json:"subnet"`
+	Shares                  uint32   `json:"shares"`
+	Locktime                uint64   `json:"locktime"`
+	Threshold               uint32   `json:"threshold"`
 }
 
 // Metadata contains metadata values returned by /construction/metadata for P-chain transactions
@@ -113,11 +122,14 @@ type ExportMetadata struct {
 // StakingMetadata contain response fields returned by /construction/metadata for P-chain AddValidator/AddDelegator transactions
 type StakingMetadata struct {
 	NodeID                  string   `json:"node_id"`
+	BLSPublicKey            string   `json:"bls_public_key"`
+	BLSProofOfPossession    string   `json:"bls_proof_of_possession"`
 	ValidationRewardsOwners []string `json:"reward_addresses"`
-	Start                   uint64   `json:"start"`
+	DelegationRewardsOwners []string `json:"delegator_reward_addresses"`
+	Start                   uint64   `json:"start"` // TODO: Remove Post-Durango
 	End                     uint64   `json:"end"`
+	Subnet                  string   `json:"subnet"`
 	Shares                  uint32   `json:"shares"`
 	Locktime                uint64   `json:"locktime"`
 	Threshold               uint32   `json:"threshold"`
-	Memo                    string   `json:"memo"`
 }

@@ -2,9 +2,11 @@ package pchain
 
 import (
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/block"
+	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
@@ -150,6 +152,7 @@ func buildExport() (*txs.Tx, *txs.ExportTx, map[string]*types.AccountIdentifier)
 	return signedTx, exportTx, inputTxAccounts
 }
 
+// TODO: Remove Post-Durango
 func buildAddDelegator() (*txs.Tx, *txs.AddDelegatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	txID, _ := ids.FromString("2JQGX1MBdszAaeV6eApCZm7CBpc917qWiyQ2cygFRJ6WteDkre")
@@ -219,6 +222,7 @@ func buildAddDelegator() (*txs.Tx, *txs.AddDelegatorTx, map[string]*types.Accoun
 	return signedTx, addDelegator, inputTxAccounts
 }
 
+// TODO: Remove Post-Durango
 func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 
@@ -292,4 +296,155 @@ func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.Account
 	}
 
 	return signedTx, addValidator, inputTxAccounts
+}
+
+func buildAddPermissionlessDelegator() (*txs.Tx, *txs.AddPermissionlessDelegatorTx, map[string]*types.AccountIdentifier) {
+	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
+	txID, _ := ids.FromString("2JQGX1MBdszAaeV6eApCZm7CBpc917qWiyQ2cygFRJ6WteDkre")
+	outAddr, _ := address.ParseToID("P-fuji1gdkq8g208e3j4epyjmx65jglsw7vauh86l47ac")
+	validatorID, _ := ids.NodeIDFromString("NodeID-BFa1padLXBj7VHa2JYvYGzcTBPQGjPhUy")
+	stakeAddr, _ := address.ParseToID("P-fuji1l022sue7g2kzvrcuxughl30xkss2cj0az3e5r2")
+	rewardAddr, _ := address.ParseToID("P-fuji1l022sue7g2kzvrcuxughl30xkss2cj0az3e5r2")
+	addPermissionlessDelegator := &txs.AddPermissionlessDelegatorTx{
+		BaseTx: txs.BaseTx{
+			BaseTx: avax.BaseTx{
+				NetworkID:    uint32(5),
+				BlockchainID: [32]byte{},
+				Outs: []*avax.TransferableOutput{{
+					Asset: avax.Asset{ID: avaxAssetID},
+					FxID:  [32]byte{},
+					Out: &secp256k1fx.TransferOutput{
+						Amt: 996649063,
+						OutputOwners: secp256k1fx.OutputOwners{
+							Locktime:  9,
+							Threshold: 1,
+							Addrs:     []ids.ShortID{outAddr},
+						},
+					},
+				}},
+				Ins: []*avax.TransferableInput{{
+					UTXOID: avax.UTXOID{TxID: txID, OutputIndex: 0, Symbol: false},
+					Asset:  avax.Asset{ID: avaxAssetID},
+					FxID:   [32]byte{},
+					In: &secp256k1fx.TransferInput{
+						Amt:   1996649063,
+						Input: secp256k1fx.Input{SigIndices: []uint32{}},
+					},
+				}},
+				Memo: []byte{},
+			},
+		},
+		Validator: txs.Validator{
+			NodeID: validatorID,
+			Start:  1656058022,
+			End:    1657872569,
+			Wght:   1000000000,
+		},
+		Subnet: constants.PrimaryNetworkID,
+		StakeOuts: []*avax.TransferableOutput{{
+			Asset: avax.Asset{ID: avaxAssetID},
+			FxID:  [32]byte{},
+			Out: &secp256k1fx.TransferOutput{
+				Amt: 1000000000,
+				OutputOwners: secp256k1fx.OutputOwners{
+					Locktime:  0,
+					Threshold: 1,
+					Addrs:     []ids.ShortID{stakeAddr},
+				},
+			},
+		}},
+		DelegationRewardsOwner: &secp256k1fx.OutputOwners{
+			Locktime:  0,
+			Threshold: 1,
+			Addrs:     []ids.ShortID{rewardAddr},
+		},
+	}
+
+	signedTx, _ := txs.NewSigned(addPermissionlessDelegator, block.Codec, nil)
+
+	inputTxAccounts := map[string]*types.AccountIdentifier{}
+	inputTxAccounts[addPermissionlessDelegator.Ins[0].String()] = &types.AccountIdentifier{Address: stakeAddr.String()}
+
+	return signedTx, addPermissionlessDelegator, inputTxAccounts
+}
+
+func buildAddPermissionlessValidator() (*txs.Tx, *txs.AddPermissionlessValidatorTx, map[string]*types.AccountIdentifier) {
+	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
+	txID, _ := ids.FromString("88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo")
+	stakeAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
+	rewardAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
+	validatorID, _ := ids.NodeIDFromString("NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX")
+	addPermissionlessValidator := &txs.AddPermissionlessValidatorTx{
+		BaseTx: txs.BaseTx{
+			BaseTx: avax.BaseTx{
+				NetworkID:    uint32(5),
+				BlockchainID: [32]byte{},
+				Outs:         nil,
+				Ins: []*avax.TransferableInput{ // two inputs, the second locktimed
+					{
+						UTXOID: avax.UTXOID{TxID: txID, OutputIndex: 0},
+						Asset:  avax.Asset{ID: avaxAssetID},
+						FxID:   [32]byte{},
+						In: &secp256k1fx.TransferInput{
+							Amt:   2000000000,
+							Input: secp256k1fx.Input{SigIndices: []uint32{1}},
+						},
+					},
+					{
+						UTXOID: avax.UTXOID{TxID: txID, OutputIndex: 1},
+						Asset:  avax.Asset{ID: avaxAssetID},
+						FxID:   [32]byte{},
+						In: &stakeable.LockIn{
+							Locktime: uint64(1666781236), // a unix time
+							TransferableIn: &secp256k1fx.TransferInput{
+								Amt:   2000000000,
+								Input: secp256k1fx.Input{SigIndices: []uint32{1}},
+							},
+						},
+					},
+				},
+				Memo: []byte{},
+			},
+		},
+		Validator: txs.Validator{
+			NodeID: validatorID,
+			Start:  1656084079,
+			End:    1687620079,
+			Wght:   2000000000,
+		},
+		Subnet: constants.PrimaryNetworkID,
+		Signer: &signer.Empty{},
+		StakeOuts: []*avax.TransferableOutput{{
+			Asset: avax.Asset{ID: avaxAssetID},
+			FxID:  [32]byte{},
+			Out: &secp256k1fx.TransferOutput{
+				Amt: 2000000000,
+				OutputOwners: secp256k1fx.OutputOwners{
+					Locktime:  0,
+					Threshold: 1,
+					Addrs:     []ids.ShortID{stakeAddr},
+				},
+			},
+		}},
+		ValidatorRewardsOwner: &secp256k1fx.OutputOwners{
+			Locktime:  0,
+			Threshold: 1,
+			Addrs:     []ids.ShortID{rewardAddr},
+		},
+		DelegatorRewardsOwner: &secp256k1fx.OutputOwners{
+			Locktime:  0,
+			Threshold: 1,
+			Addrs:     []ids.ShortID{rewardAddr},
+		},
+		DelegationShares: 20000,
+	}
+
+	signedTx, _ := txs.NewSigned(addPermissionlessValidator, block.Codec, nil)
+
+	inputTxAccounts := map[string]*types.AccountIdentifier{
+		addPermissionlessValidator.Ins[0].String(): {Address: stakeAddr.String()},
+		addPermissionlessValidator.Ins[1].String(): {Address: stakeAddr.String()},
+	}
+
+	return signedTx, addPermissionlessValidator, inputTxAccounts
 }

@@ -7,8 +7,11 @@ import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils"
+	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/parser"
@@ -37,9 +40,15 @@ func BuildTx(
 		return buildImportTx(matches, payloadMetadata, codec, avaxAssetID)
 	case OpExportAvax:
 		return buildExportTx(matches, payloadMetadata, codec, avaxAssetID)
+	case OpAddPermissionlessValidator:
+		return buildAddPermissionlessValidatorTx(matches, payloadMetadata, codec, avaxAssetID)
+	case OpAddPermissionlessDelegator:
+		return buildAddPermissionlessDelegatorTx(matches, payloadMetadata, codec, avaxAssetID)
 	case OpAddValidator:
+		// TODO: Remove Post-Durango
 		return buildAddValidatorTx(matches, payloadMetadata, codec, avaxAssetID)
 	case OpAddDelegator:
+		// TODO: Remove Post-Durango
 		return buildAddDelegatorTx(matches, payloadMetadata, codec, avaxAssetID)
 	default:
 		return nil, nil, fmt.Errorf("invalid tx type: %s", opType)
@@ -117,6 +126,7 @@ func buildExportTx(
 	return tx, signers, tx.Sign(codec, nil)
 }
 
+// TODO: Remove Post-Durango
 // [buildAddValidatorTx] returns a duly initialized tx if it does not err
 func buildAddValidatorTx(
 	matches []*parser.Match,
@@ -154,11 +164,6 @@ func buildAddValidatorTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	memo, err := mapper.DecodeToBytes(metadata.Memo)
-	if err != nil {
-		return nil, nil, fmt.Errorf("parse memo failed: %w", err)
-	}
-
 	weight, err := sumOutputAmounts(stakeOutputs)
 	if err != nil {
 		return nil, nil, err
@@ -170,15 +175,14 @@ func buildAddValidatorTx(
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
-			Memo:         memo,
 		}},
-		StakeOuts: stakeOutputs,
 		Validator: txs.Validator{
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,
 			Wght:   weight,
 		},
+		StakeOuts:        stakeOutputs,
 		RewardsOwner:     rewardsOwner,
 		DelegationShares: metadata.Shares,
 	}}
@@ -186,6 +190,7 @@ func buildAddValidatorTx(
 	return tx, signers, tx.Sign(codec, nil)
 }
 
+// TODO: Remove Post-Durango
 // [buildAddDelegatorTx] returns a duly initialized tx if it does not err
 func buildAddDelegatorTx(
 	matches []*parser.Match,
@@ -223,11 +228,6 @@ func buildAddDelegatorTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	memo, err := mapper.DecodeToBytes(metadata.Memo)
-	if err != nil {
-		return nil, nil, fmt.Errorf("parse memo failed: %w", err)
-	}
-
 	weight, err := sumOutputAmounts(stakeOutputs)
 	if err != nil {
 		return nil, nil, err
@@ -239,15 +239,183 @@ func buildAddDelegatorTx(
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
-			Memo:         memo,
 		}},
-		StakeOuts: stakeOutputs,
 		Validator: txs.Validator{
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,
 			Wght:   weight,
 		},
+		StakeOuts:              stakeOutputs,
+		DelegationRewardsOwner: rewardsOwner,
+	}}
+
+	return tx, signers, tx.Sign(codec, nil)
+}
+
+// [buildAddPermissionlessValidatorTx] returns a duly initialized tx if it does not err
+func buildAddPermissionlessValidatorTx(
+	matches []*parser.Match,
+	metadata Metadata,
+	codec codec.Manager,
+	avaxAssetID ids.ID,
+) (*txs.Tx, []*types.AccountIdentifier, error) {
+	if metadata.StakingMetadata == nil {
+		return nil, nil, errInvalidMetadata
+	}
+
+	blockchainID := metadata.BlockchainID
+
+	nodeID, err := ids.NodeIDFromString(metadata.NodeID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	subnetID := constants.PrimaryNetworkID
+	if metadata.Subnet != "" {
+		subnetID, err = ids.FromString(metadata.Subnet)
+		if err != nil {
+			return nil, nil, fmt.Errorf("%w: invalid subnet id", errInvalidMetadata)
+		}
+	}
+
+	publicKeyBytes, err := formatting.Decode(formatting.HexNC, metadata.BLSPublicKey)
+	if err != nil {
+		return nil, nil, err
+	}
+	popBytes, err := formatting.Decode(formatting.HexNC, metadata.BLSProofOfPossession)
+	if err != nil {
+		return nil, nil, err
+	}
+	pop := &signer.ProofOfPossession{}
+	copy(pop.PublicKey[:], publicKeyBytes)
+	copy(pop.ProofOfPossession[:], popBytes)
+	if err = pop.Verify(); err != nil {
+		return nil, nil, err
+	}
+
+	validationRewardsOwner, err := buildOutputOwner(
+		metadata.ValidationRewardsOwners,
+		metadata.Locktime,
+		metadata.Threshold,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var delegationRewardsOwner *secp256k1fx.OutputOwners
+	if len(metadata.DelegationRewardsOwners) == 0 {
+		delegationRewardsOwner = validationRewardsOwner
+	} else {
+		delegationRewardsOwner, err = buildOutputOwner(
+			metadata.DelegationRewardsOwners,
+			metadata.Locktime,
+			metadata.Threshold,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	ins, _, signers, err := buildInputs(matches[0].Operations, avaxAssetID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse inputs failed: %w", err)
+	}
+
+	outs, stakeOutputs, _, err := buildOutputs(matches[1].Operations, codec, avaxAssetID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
+	}
+
+	weight, err := sumOutputAmounts(stakeOutputs)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tx := &txs.Tx{Unsigned: &txs.AddPermissionlessValidatorTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+			NetworkID:    metadata.NetworkID,
+			BlockchainID: blockchainID,
+			Outs:         outs,
+			Ins:          ins,
+		}},
+		Validator: txs.Validator{
+			NodeID: nodeID,
+			Start:  metadata.Start,
+			End:    metadata.End,
+			Wght:   weight,
+		},
+		Subnet:                subnetID,
+		Signer:                pop,
+		StakeOuts:             stakeOutputs,
+		ValidatorRewardsOwner: validationRewardsOwner,
+		DelegatorRewardsOwner: delegationRewardsOwner,
+		DelegationShares:      metadata.Shares,
+	}}
+
+	return tx, signers, tx.Sign(codec, nil)
+}
+
+// [buildAddPermissionlessDelegatorTx] returns a duly initialized tx if it does not err
+func buildAddPermissionlessDelegatorTx(
+	matches []*parser.Match,
+	metadata Metadata,
+	codec codec.Manager,
+	avaxAssetID ids.ID,
+) (*txs.Tx, []*types.AccountIdentifier, error) {
+	if metadata.StakingMetadata == nil {
+		return nil, nil, errInvalidMetadata
+	}
+
+	blockchainID := metadata.BlockchainID
+
+	nodeID, err := ids.NodeIDFromString(metadata.NodeID)
+	if err != nil {
+		return nil, nil, err
+	}
+	rewardsOwner, err := buildOutputOwner(metadata.ValidationRewardsOwners, metadata.Locktime, metadata.Threshold)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ins, _, signers, err := buildInputs(matches[0].Operations, avaxAssetID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse inputs failed: %w", err)
+	}
+
+	outs, stakeOutputs, _, err := buildOutputs(matches[1].Operations, codec, avaxAssetID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
+	}
+
+	weight, err := sumOutputAmounts(stakeOutputs)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	subnetID := constants.PrimaryNetworkID
+	if metadata.Subnet != "" {
+		subnetID, err = ids.FromString(metadata.Subnet)
+		if err != nil {
+			return nil, nil, fmt.Errorf("%w: invalid subnet id", errInvalidMetadata)
+		}
+	}
+
+	tx := &txs.Tx{Unsigned: &txs.AddPermissionlessDelegatorTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+			NetworkID:    metadata.NetworkID,
+			BlockchainID: blockchainID,
+			Outs:         outs,
+			Ins:          ins,
+		}},
+		Validator: txs.Validator{
+			NodeID: nodeID,
+			Start:  metadata.Start,
+			End:    metadata.End,
+			Wght:   weight,
+		},
+		Subnet:                 subnetID,
+		StakeOuts:              stakeOutputs,
 		DelegationRewardsOwner: rewardsOwner,
 	}}
 

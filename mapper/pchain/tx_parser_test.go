@@ -144,6 +144,7 @@ func TestMapOutOperation(t *testing.T) {
 	require.Nil(rosettaOutOp[0].Metadata["sig_indices"])
 }
 
+// TODO: Remove Post-Durango
 func TestMapAddValidatorTx(t *testing.T) {
 	require := require.New(t)
 
@@ -177,6 +178,40 @@ func TestMapAddValidatorTx(t *testing.T) {
 	require.Equal(1, cntMetaType)
 }
 
+func TestMapAddPermissionlessValidatorTx(t *testing.T) {
+	require := require.New(t)
+
+	signedTx, addPermissionlessValidatorTx, inputAccounts := buildAddPermissionlessValidator()
+
+	require.Len(addPermissionlessValidatorTx.Ins, 2)
+	require.Empty(addPermissionlessValidatorTx.Outs)
+
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            avaconstants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, err := NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
+	rosettaTransaction, err := parser.Parse(signedTx)
+	require.NoError(err)
+
+	total := len(addPermissionlessValidatorTx.Ins) + len(addPermissionlessValidatorTx.Outs) + len(addPermissionlessValidatorTx.StakeOuts)
+	require.Len(rosettaTransaction.Operations, total)
+
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpAddPermissionlessValidator, OpTypeStakeOutput)
+
+	require.Equal(3, cntTxType)
+	require.Equal(2, cntInputMeta)
+	require.Zero(cntOutputMeta)
+	require.Equal(1, cntMetaType)
+}
+
+// TODO: Remove Post-Durango
 func TestMapAddDelegatorTx(t *testing.T) {
 	require := require.New(t)
 
@@ -223,6 +258,58 @@ func TestMapAddDelegatorTx(t *testing.T) {
 	require.Equal(OpAddDelegator, rosettaTransaction.Operations[0].Type)
 	require.Equal(OpAddDelegator, rosettaTransaction.Operations[1].Type)
 	require.Equal(OpAddDelegator, rosettaTransaction.Operations[2].Type)
+
+	require.Equal(OpTypeInput, rosettaTransaction.Operations[0].Metadata["type"])
+	require.Equal(OpTypeOutput, rosettaTransaction.Operations[1].Metadata["type"])
+	require.Equal(OpTypeStakeOutput, rosettaTransaction.Operations[2].Metadata["type"])
+}
+
+func TestMapAddPermissionlessDelegatorTx(t *testing.T) {
+	require := require.New(t)
+
+	signedTx, addPermissionlessDelegatorTx, inputAccounts := buildAddPermissionlessDelegator()
+
+	require.Len(addPermissionlessDelegatorTx.Ins, 1)
+	require.Len(addPermissionlessDelegatorTx.Outs, 1)
+	require.Len(addPermissionlessDelegatorTx.StakeOuts, 1)
+
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            avaconstants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, err := NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
+	rosettaTransaction, err := parser.Parse(signedTx)
+	require.NoError(err)
+
+	total := len(addPermissionlessDelegatorTx.Ins) + len(addPermissionlessDelegatorTx.Outs) + len(addPermissionlessDelegatorTx.StakeOuts)
+	require.Len(rosettaTransaction.Operations, total)
+
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpAddPermissionlessDelegator, OpTypeStakeOutput)
+
+	require.Equal(3, cntTxType)
+	require.Equal(1, cntInputMeta)
+	require.Equal(1, cntOutputMeta)
+	require.Equal(1, cntMetaType)
+
+	require.Equal(types.CoinSpent, rosettaTransaction.Operations[0].CoinChange.CoinAction)
+	require.Nil(rosettaTransaction.Operations[1].CoinChange)
+	require.Nil(rosettaTransaction.Operations[2].CoinChange)
+
+	require.Equal(addPermissionlessDelegatorTx.Ins[0].UTXOID.String(), rosettaTransaction.Operations[0].CoinChange.CoinIdentifier.Identifier)
+
+	require.Equal(int64(0), rosettaTransaction.Operations[0].OperationIdentifier.Index)
+	require.Equal(int64(1), rosettaTransaction.Operations[1].OperationIdentifier.Index)
+	require.Equal(int64(2), rosettaTransaction.Operations[2].OperationIdentifier.Index)
+
+	require.Equal(OpAddPermissionlessDelegator, rosettaTransaction.Operations[0].Type)
+	require.Equal(OpAddPermissionlessDelegator, rosettaTransaction.Operations[1].Type)
+	require.Equal(OpAddPermissionlessDelegator, rosettaTransaction.Operations[2].Type)
 
 	require.Equal(OpTypeInput, rosettaTransaction.Operations[0].Metadata["type"])
 	require.Equal(OpTypeOutput, rosettaTransaction.Operations[1].Metadata["type"])
