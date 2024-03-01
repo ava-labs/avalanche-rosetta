@@ -10,6 +10,8 @@ import (
 
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/formatting/address"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -535,6 +537,11 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	endTime := startTime + 14*86400
 	shares := uint32(200000)
 
+	_, _, stakeRewardAddrBytes, err := address.Parse(stakeRewardAccount.Address)
+	require.NoError(t, err)
+	stakeRewardAddrID, err := ids.ToShortID(stakeRewardAddrBytes)
+	require.NoError(t, err)
+
 	operations := []*types.Operation{
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 0},
@@ -566,6 +573,17 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 				"staking_start_time": startTime,
 				"staking_end_time":   endTime,
 				"validator_node_id":  nodeID,
+				"subnet_id":          pChainID.String(),
+				"delegation_rewards_owner": &secp256k1fx.OutputOwners{
+					Locktime:  0,
+					Threshold: 1,
+					Addrs:     []ids.ShortID{stakeRewardAddrID},
+				},
+				"validator_rewards_owner": &secp256k1fx.OutputOwners{
+					Locktime:  0,
+					Threshold: 1,
+					Addrs:     []ids.ShortID{stakeRewardAddrID},
+				},
 			},
 		},
 	}
@@ -770,6 +788,11 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	startTime := uint64(1659592163)
 	endTime := startTime + 14*86400
 
+	_, _, stakeRewardAddrBytes, err := address.Parse(stakeRewardAccount.Address)
+	require.NoError(t, err)
+	stakeRewardAddrID, err := ids.ToShortID(stakeRewardAddrBytes)
+	require.NoError(t, err)
+
 	operations := []*types.Operation{
 		{
 			OperationIdentifier: &types.OperationIdentifier{Index: 0},
@@ -801,6 +824,12 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 				"staking_start_time": startTime,
 				"staking_end_time":   endTime,
 				"validator_node_id":  nodeID,
+				"subnet_id":          pChainID.String(),
+				"delegator_rewards_owner": &secp256k1fx.OutputOwners{
+					Locktime:  0,
+					Threshold: 1,
+					Addrs:     []ids.ShortID{stakeRewardAddrID},
+				},
 			},
 		},
 	}

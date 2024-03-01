@@ -361,12 +361,12 @@ func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, star
 	}
 
 	for _, out := range ops.StakeOuts {
-		out.Metadata[MetadataValidatorNodeID] = validator.NodeID()
-		out.Metadata[MetadataStakingStartTime] = startTime
-		out.Metadata[MetadataStakingEndTime] = validator.EndTime()
+		out.Metadata[MetadataValidatorNodeID] = validator.NodeID().String()
+		out.Metadata[MetadataStakingStartTime] = uint64(startTime.Unix())
+		out.Metadata[MetadataStakingEndTime] = uint64(validator.EndTime().Unix())
 		out.Metadata[MetadataValidatorRewardsOwner] = validator.ValidationRewardsOwner()
 		out.Metadata[MetadataDelegationRewardsOwner] = validator.DelegationRewardsOwner()
-		out.Metadata[MetadataSubnetID] = validator.SubnetID()
+		out.Metadata[MetadataSubnetID] = validator.SubnetID().String()
 	}
 }
 
@@ -376,11 +376,11 @@ func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, star
 	}
 
 	for _, out := range ops.StakeOuts {
-		out.Metadata[MetadataValidatorNodeID] = delegator.NodeID()
-		out.Metadata[MetadataStakingStartTime] = startTime
-		out.Metadata[MetadataStakingEndTime] = delegator.EndTime()
+		out.Metadata[MetadataValidatorNodeID] = delegator.NodeID().String()
+		out.Metadata[MetadataStakingStartTime] = uint64(startTime.Unix())
+		out.Metadata[MetadataStakingEndTime] = uint64(delegator.EndTime().Unix())
 		out.Metadata[MetadataDelegatorRewardsOwner] = delegator.RewardsOwner()
-		out.Metadata[MetadataSubnetID] = delegator.SubnetID()
+		out.Metadata[MetadataSubnetID] = delegator.SubnetID().String()
 	}
 }
 
