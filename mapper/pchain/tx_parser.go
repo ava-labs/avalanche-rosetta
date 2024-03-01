@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
@@ -266,7 +267,7 @@ func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*tx
 	if err != nil {
 		return nil, err
 	}
-	addMetadataToStakeOuts(ops, &tx.Validator)
+	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime())
 
 	return ops, nil
 }
@@ -281,7 +282,7 @@ func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPer
 	if err != nil {
 		return nil, err
 	}
-	addMetadataToStakeOuts(ops, &tx.Validator)
+	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime())
 
 	if tx.Signer != nil {
 		for _, out := range ops.StakeOuts {
@@ -302,7 +303,7 @@ func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*tx
 	if err != nil {
 		return nil, err
 	}
-	addMetadataToStakeOuts(ops, &tx.Validator)
+	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime())
 
 	return ops, nil
 }
@@ -317,7 +318,7 @@ func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPer
 	if err != nil {
 		return nil, err
 	}
-	addMetadataToStakeOuts(ops, &tx.Validator)
+	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime())
 
 	return ops, nil
 }
@@ -338,33 +339,48 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 		return nil, err
 	}
 
-	var v *txs.Validator
 	switch utx := dep.Tx.Unsigned.(type) {
 	case *txs.AddValidatorTx:
-		v = &utx.Validator
+		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime())
 	case *txs.AddDelegatorTx:
-		v = &utx.Validator
+		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime())
 	case *txs.AddPermissionlessValidatorTx:
-		v = &utx.Validator
+		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime())
 	case *txs.AddPermissionlessDelegatorTx:
-		v = &utx.Validator
+		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime())
 	default:
 		return nil, errUnknownRewardSourceTransaction
 	}
-	addMetadataToStakeOuts(ops, v)
 
 	return ops, nil
 }
 
-func addMetadataToStakeOuts(ops *txOps, validator *txs.Validator) {
+func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, startTime time.Time) {
 	if validator == nil {
 		return
 	}
 
 	for _, out := range ops.StakeOuts {
-		out.Metadata[MetadataValidatorNodeID] = validator.NodeID.String()
-		out.Metadata[MetadataStakingStartTime] = validator.Start
-		out.Metadata[MetadataStakingEndTime] = validator.End
+		out.Metadata[MetadataValidatorNodeID] = validator.NodeID()
+		out.Metadata[MetadataStakingStartTime] = startTime
+		out.Metadata[MetadataStakingEndTime] = validator.EndTime()
+		out.Metadata[MetadataValidatorRewardsOwner] = validator.ValidationRewardsOwner()
+		out.Metadata[MetadataDelegationRewardsOwner] = validator.DelegationRewardsOwner()
+		out.Metadata[MetadataSubnetID] = validator.SubnetID()
+	}
+}
+
+func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, startTime time.Time) {
+	if delegator == nil {
+		return
+	}
+
+	for _, out := range ops.StakeOuts {
+		out.Metadata[MetadataValidatorNodeID] = delegator.NodeID()
+		out.Metadata[MetadataStakingStartTime] = startTime
+		out.Metadata[MetadataStakingEndTime] = delegator.EndTime()
+		out.Metadata[MetadataDelegatorRewardsOwner] = delegator.RewardsOwner()
+		out.Metadata[MetadataSubnetID] = delegator.SubnetID()
 	}
 }
 

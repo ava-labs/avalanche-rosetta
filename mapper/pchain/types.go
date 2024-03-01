@@ -37,9 +37,13 @@ const (
 	MetadataMessage          = "message"
 	MetadataSigner           = "signer"
 
-	MetadataValidatorRewards     = "validator_rewards"
-	MetadataDelegationRewards    = "delegation_rewards"
-	MetadataDelegationFeeRewards = "delegation_fee_rewards"
+	MetadataValidatorRewards       = "validator_rewards"
+	MetadataValidatorRewardsOwner  = "validator_rewards_owner"
+	MetadataDelegationRewardsOwner = "delegation_rewards_owner"
+	MetadataDelegatorRewardsOwner  = "delegator_rewards_owner"
+	MetadataDelegationRewards      = "delegation_rewards"
+	MetadataDelegationFeeRewards   = "delegation_fee_rewards"
+	MetadataSubnetID               = "subnet_id"
 
 	SubAccountTypeSharedMemory       = "shared_memory"
 	SubAccountTypeUnlocked           = "unlocked"
