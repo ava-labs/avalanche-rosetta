@@ -267,7 +267,7 @@ func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*tx
 	if err != nil {
 		return nil, err
 	}
-	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime())
+	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), t.cfg.Hrp)
 
 	return ops, nil
 }
@@ -282,7 +282,7 @@ func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPer
 	if err != nil {
 		return nil, err
 	}
-	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime())
+	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), t.cfg.Hrp)
 
 	if tx.Signer != nil {
 		for _, out := range ops.StakeOuts {
@@ -303,7 +303,7 @@ func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*tx
 	if err != nil {
 		return nil, err
 	}
-	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime())
+	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), t.cfg.Hrp)
 
 	return ops, nil
 }
@@ -318,7 +318,7 @@ func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPer
 	if err != nil {
 		return nil, err
 	}
-	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime())
+	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), t.cfg.Hrp)
 
 	return ops, nil
 }
@@ -341,13 +341,13 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 
 	switch utx := dep.Tx.Unsigned.(type) {
 	case *txs.AddValidatorTx:
-		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime())
+		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), t.cfg.Hrp)
 	case *txs.AddDelegatorTx:
-		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime())
+		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), t.cfg.Hrp)
 	case *txs.AddPermissionlessValidatorTx:
-		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime())
+		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), t.cfg.Hrp)
 	case *txs.AddPermissionlessDelegatorTx:
-		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime())
+		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), t.cfg.Hrp)
 	default:
 		return nil, errUnknownRewardSourceTransaction
 	}
@@ -355,7 +355,15 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 	return ops, nil
 }
 
-func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, startTime time.Time) {
+func getAddressArray(owners *secp256k1fx.OutputOwners, hrp string) []string {
+	addrs := make([]string, len(owners.Addrs))
+	for i, addr := range owners.Addresses() {
+		addrs[i], _ = address.Format("P", hrp, addr)
+	}
+	return addrs
+}
+
+func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, startTime time.Time, hrp string) {
 	if validator == nil {
 		return
 	}
@@ -364,13 +372,13 @@ func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, star
 		out.Metadata[MetadataValidatorNodeID] = validator.NodeID().String()
 		out.Metadata[MetadataStakingStartTime] = uint64(startTime.Unix())
 		out.Metadata[MetadataStakingEndTime] = uint64(validator.EndTime().Unix())
-		out.Metadata[MetadataValidatorRewardsOwner] = validator.ValidationRewardsOwner()
-		out.Metadata[MetadataDelegationRewardsOwner] = validator.DelegationRewardsOwner()
+		out.Metadata[MetadataValidatorRewardsOwner] = getAddressArray(validator.ValidationRewardsOwner().(*secp256k1fx.OutputOwners), hrp)
+		out.Metadata[MetadataDelegationRewardsOwner] = getAddressArray(validator.DelegationRewardsOwner().(*secp256k1fx.OutputOwners), hrp)
 		out.Metadata[MetadataSubnetID] = validator.SubnetID().String()
 	}
 }
 
-func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, startTime time.Time) {
+func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, startTime time.Time, hrp string) {
 	if delegator == nil {
 		return
 	}
@@ -379,7 +387,7 @@ func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, star
 		out.Metadata[MetadataValidatorNodeID] = delegator.NodeID().String()
 		out.Metadata[MetadataStakingStartTime] = uint64(startTime.Unix())
 		out.Metadata[MetadataStakingEndTime] = uint64(delegator.EndTime().Unix())
-		out.Metadata[MetadataDelegatorRewardsOwner] = delegator.RewardsOwner()
+		out.Metadata[MetadataDelegatorRewardsOwner] = getAddressArray(delegator.RewardsOwner().(*secp256k1fx.OutputOwners), hrp)
 		out.Metadata[MetadataSubnetID] = delegator.SubnetID().String()
 	}
 }
