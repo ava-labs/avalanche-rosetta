@@ -69,7 +69,7 @@ func (b *Backend) ConstructionMetadata(
 		metadata, suggestedFee, err = b.buildImportMetadata(ctx, req.Options)
 	case pmapper.OpExportAvax:
 		metadata, suggestedFee, err = b.buildExportMetadata(ctx, req.Options)
-	case pmapper.OpAddValidator, pmapper.OpAddDelegator:
+	case pmapper.OpAddValidator, pmapper.OpAddDelegator, pmapper.OpAddPermissionlessDelegator, pmapper.OpAddPermissionlessValidator:
 		metadata, suggestedFee, err = buildStakingMetadata(req.Options)
 		metadata.Threshold = opMetadata.Threshold
 		metadata.Locktime = opMetadata.Locktime
@@ -155,19 +155,21 @@ func buildStakingMetadata(options map[string]interface{}) (*pmapper.Metadata, *t
 	if err := mapper.UnmarshalJSONMap(options, &preprocessOptions); err != nil {
 		return nil, nil, err
 	}
-
 	zeroAvax := mapper.AtomicAvaxAmount(big.NewInt(0))
 
 	return &pmapper.Metadata{
 		StakingMetadata: &pmapper.StakingMetadata{
 			NodeID:                  preprocessOptions.NodeID,
+			BLSPublicKey:            preprocessOptions.BLSPublicKey,
+			BLSProofOfPossession:    preprocessOptions.BLSProofOfPossession,
+			ValidationRewardsOwners: preprocessOptions.ValidationRewardsOwners,
+			DelegationRewardsOwners: preprocessOptions.DelegationRewardsOwners,
 			Start:                   preprocessOptions.Start,
 			End:                     preprocessOptions.End,
-			Memo:                    preprocessOptions.Memo,
+			Subnet:                  preprocessOptions.Subnet,
+			Shares:                  preprocessOptions.Shares,
 			Locktime:                preprocessOptions.Locktime,
 			Threshold:               preprocessOptions.Threshold,
-			ValidationRewardsOwners: preprocessOptions.RewardAddresses,
-			Shares:                  preprocessOptions.Shares,
 		},
 	}, zeroAvax, nil
 }
@@ -263,6 +265,8 @@ func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (comm
 func getTxInputs(
 	unsignedTx txs.UnsignedTx,
 ) ([]*avax.TransferableInput, error) {
+	// TODO: Move to using [txs.Visitor] from AvalancheGo
+	// Ref: https://github.com/ava-labs/avalanchego/blob/master/vms/platformvm/txs/visitor.go
 	switch utx := unsignedTx.(type) {
 	case *txs.AddValidatorTx:
 		return utx.Ins, nil
@@ -277,6 +281,20 @@ func getTxInputs(
 	case *txs.ImportTx:
 		return utx.ImportedInputs, nil
 	case *txs.ExportTx:
+		return utx.Ins, nil
+	case *txs.AdvanceTimeTx:
+		return nil, nil
+	case *txs.RewardValidatorTx:
+		return nil, nil
+	case *txs.TransformSubnetTx:
+		return utx.Ins, nil
+	case *txs.AddPermissionlessValidatorTx:
+		return utx.Ins, nil
+	case *txs.AddPermissionlessDelegatorTx:
+		return utx.Ins, nil
+	case *txs.TransferSubnetOwnershipTx:
+		return utx.Ins, nil
+	case *txs.BaseTx:
 		return utx.Ins, nil
 	default:
 		return nil, errUnknownTxType
