@@ -62,11 +62,9 @@ func NewBackend(
 		avalancheNetworkID: avalancheNetworkID,
 	}
 
-	if nodeMode == service.ModeOnline {
-		var err error
-		if b.networkHRP, err = mapper.GetHRP(b.networkID); err != nil {
-			return nil, err
-		}
+	b.networkHRP, err = mapper.GetHRP(b.networkID)
+	if err != nil {
+		return nil, err
 	}
 
 	b.txParserCfg = pmapper.TxParserConfig{
