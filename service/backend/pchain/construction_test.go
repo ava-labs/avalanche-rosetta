@@ -72,7 +72,6 @@ func TestConstructionDerive(t *testing.T) {
 	parserMock := indexer.NewMockParser(ctrl)
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(
-		service.ModeOnline,
 		pChainMock,
 		parserMock,
 		avaxAssetID,
@@ -193,7 +192,6 @@ func TestExportTxConstruction(t *testing.T) {
 	parserMock := indexer.NewMockParser(ctrl)
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(
-		service.ModeOnline,
 		clientMock,
 		parserMock,
 		avaxAssetID,
@@ -404,7 +402,6 @@ func TestImportTxConstruction(t *testing.T) {
 	parserMock := indexer.NewMockParser(ctrl)
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(
-		service.ModeOnline,
 		clientMock,
 		parserMock,
 		avaxAssetID,
@@ -645,7 +642,6 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	parserMock := indexer.NewMockParser(ctrl)
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(
-		service.ModeOnline,
 		clientMock,
 		parserMock,
 		avaxAssetID,
@@ -880,7 +876,6 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	parserMock := indexer.NewMockParser(ctrl)
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(
-		service.ModeOnline,
 		clientMock,
 		parserMock,
 		avaxAssetID,

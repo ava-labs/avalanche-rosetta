@@ -17,7 +17,6 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
-	"github.com/ava-labs/avalanche-rosetta/service"
 	"github.com/ava-labs/avalanche-rosetta/service/backend/pchain/indexer"
 
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
@@ -56,7 +55,6 @@ func TestAccountBalance(t *testing.T) {
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	parserMock.EXPECT().ParseNonGenesisBlock(ctx, "", blockHeight).Return(parsedBlock, nil).AnyTimes()
 	backend, err := NewBackend(
-		service.ModeOnline,
 		pChainMock,
 		parserMock,
 		avaxAssetID,
@@ -255,7 +253,6 @@ func TestAccountPendingRewardsBalance(t *testing.T) {
 	}
 
 	backend, err := NewBackend(
-		service.ModeOnline,
 		pChainMock,
 		parserMock,
 		avaxAssetID,
@@ -361,7 +358,6 @@ func TestAccountCoins(t *testing.T) {
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	parserMock.EXPECT().ParseNonGenesisBlock(ctx, "", blockHeight).Return(parsedBlock, nil).AnyTimes()
 	backend, err := NewBackend(
-		service.ModeOnline,
 		pChainMock,
 		parserMock,
 		avaxAssetID,

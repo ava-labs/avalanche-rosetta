@@ -35,7 +35,6 @@ func TestShouldHandleRequest(t *testing.T) {
 	parserMock := indexer.NewMockParser(ctrl)
 	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
 	backend, err := NewBackend(
-		service.ModeOnline,
 		clientMock,
 		parserMock,
 		avaxAssetID,
