@@ -99,7 +99,7 @@ func TestFetchBlkDependencies(t *testing.T) {
 		Encoding: formatting.Hex,
 	}).Return(nil, nil)
 
-	backend, err := NewBackend(service.ModeOnline, mockPClient, mockIndexerParser, avaxAssetID, networkIdentifier, networkID)
+	backend, err := NewBackend(mockPClient, mockIndexerParser, avaxAssetID, networkIdentifier, networkID)
 	require.NoError(t, err)
 
 	deps, err := backend.fetchBlkDependencies(ctx, []*txs.Tx{tx})

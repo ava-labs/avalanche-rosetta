@@ -38,10 +38,9 @@ type Backend struct {
 
 // NewBackend creates a P-chain service backend
 func NewBackend(
-	nodeMode string,
 	pClient client.PChainClient,
 	indexerParser indexer.Parser,
-	assetID ids.ID,
+	avaxAssetID ids.ID,
 	networkIdentifier *types.NetworkIdentifier,
 	avalancheNetworkID uint32,
 ) (*Backend, error) {
@@ -50,34 +49,30 @@ func NewBackend(
 		return nil, err
 	}
 
-	b := &Backend{
+	networkHRP, err := mapper.GetHRP(networkIdentifier)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Backend{
 		genesisHandler:     genHandler,
 		networkID:          networkIdentifier,
+		networkHRP:         networkHRP,
+		avalancheNetworkID: avalancheNetworkID,
 		pClient:            pClient,
+		indexerParser:      indexerParser,
 		getUTXOsPageSize:   1024,
 		codec:              block.Codec,
 		codecVersion:       block.CodecVersion,
-		indexerParser:      indexerParser,
-		avaxAssetID:        assetID,
-		avalancheNetworkID: avalancheNetworkID,
-	}
-
-	if nodeMode == service.ModeOnline {
-		var err error
-		if b.networkHRP, err = mapper.GetHRP(b.networkID); err != nil {
-			return nil, err
-		}
-	}
-
-	b.txParserCfg = pmapper.TxParserConfig{
-		IsConstruction: false,
-		Hrp:            b.networkHRP,
-		ChainIDs:       nil,
-		AvaxAssetID:    b.avaxAssetID,
-		PChainClient:   b.pClient,
-	}
-
-	return b, nil
+		avaxAssetID:        avaxAssetID,
+		txParserCfg: pmapper.TxParserConfig{
+			IsConstruction: false,
+			Hrp:            networkHRP,
+			ChainIDs:       nil,
+			AvaxAssetID:    avaxAssetID,
+			PChainClient:   pClient,
+		},
+	}, nil
 }
 
 // ShouldHandleRequest returns whether a given request should be handled by this backend

@@ -136,7 +136,6 @@ func main() {
 	}
 
 	pChainBackend, err := pchain.NewBackend(
-		cfg.Mode,
 		pChainClient,
 		pIndexerParser,
 		avaxAssetID,
