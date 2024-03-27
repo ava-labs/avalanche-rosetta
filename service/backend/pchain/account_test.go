@@ -116,6 +116,61 @@ func TestAccountBalance(t *testing.T) {
 		}, resp.Balances)
 	})
 
+	t.Run("Account Balance should not call GetStake if sub account type is not staked or empty", func(t *testing.T) {
+		addr, _ := address.ParseToID(pChainAddr)
+		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
+		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
+		utxo1Id, _ := ids.FromString(utxos[1].id)
+
+		// Mock on GetAssetDescription
+		pChainMock.Mock.On("GetAssetDescription", ctx, mapper.AtomicAvaxCurrency.Symbol).Return(mockAssetDescription, nil)
+
+		// once before other calls, once after
+		pChainMock.Mock.On("GetHeight", ctx).Return(blockHeight, nil).Twice()
+		// Make sure pagination works as well
+		pageSize := uint32(2)
+		backend.getUTXOsPageSize = pageSize
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{addr}, "", pageSize, ids.ShortEmpty, ids.Empty).
+			Return([][]byte{utxo0Bytes, utxo1Bytes}, addr, utxo1Id, nil).Once()
+		pChainMock.Mock.On("GetAtomicUTXOs", ctx, []ids.ShortID{addr}, "", pageSize, addr, utxo1Id).
+			Return([][]byte{utxo1Bytes}, addr, utxo1Id, nil).Once()
+
+		resp, err := backend.AccountBalance(
+			ctx,
+			&types.AccountBalanceRequest{
+				NetworkIdentifier: &types.NetworkIdentifier{
+					Network: constants.FujiNetwork,
+					SubNetworkIdentifier: &types.SubNetworkIdentifier{
+						Network: constants.PChain.String(),
+					},
+				},
+				AccountIdentifier: &types.AccountIdentifier{
+					Address: pChainAddr,
+					SubAccount: &types.SubAccountIdentifier{
+						Address: pmapper.SubAccountTypeUnlocked,
+					},
+				},
+				Currencies: []*types.Currency{
+					mapper.AtomicAvaxCurrency,
+				},
+			},
+		)
+
+		expected := &types.AccountBalanceResponse{
+			Balances: []*types.Amount{
+				{
+					Value:    "3000000000", // 1B + 2B from UTXOs
+					Currency: mapper.AtomicAvaxCurrency,
+				},
+			},
+		}
+
+		assert.Nil(t, err)
+		assert.Equal(t, expected.Balances, resp.Balances)
+		pChainMock.AssertExpectations(t)
+		parserMock.AssertExpectations(t)
+	})
+
 	t.Run("Account Balance should return total of shared memory balance", func(t *testing.T) {
 		require := require.New(t)
 
