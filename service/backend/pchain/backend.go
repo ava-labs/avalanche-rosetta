@@ -54,7 +54,7 @@ func NewBackend(
 		return nil, err
 	}
 
-	b := &Backend{
+	return &Backend{
 		genesisHandler:     genHandler,
 		networkID:          networkIdentifier,
 		networkHRP:         networkHRP,
@@ -72,9 +72,7 @@ func NewBackend(
 			AvaxAssetID:    avaxAssetID,
 			PChainClient:   pClient,
 		},
-	}
-
-	return b, nil
+	}, nil
 }
 
 // ShouldHandleRequest returns whether a given request should be handled by this backend
