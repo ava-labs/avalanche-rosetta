@@ -202,7 +202,7 @@ func (p *parser) parseProposerBlock(blkBytes []byte) (*ParsedBlock, error) {
 	pChainBlkBytes := blkBytes
 	proposerTime := noProposerTime
 
-	proBlk, err := proposervmblock.Parse(blkBytes)
+	proBlk, err := proposervmblock.ParseWithoutVerification(blkBytes)
 	if err == nil {
 		// inner proposerVM bytes, to be parsed as P-chain block
 		pChainBlkBytes = proBlk.Block()
