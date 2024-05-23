@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/hashing"
 	"github.com/ava-labs/coreth/plugin/evm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -16,38 +15,6 @@ import (
 
 	ethtypes "github.com/ava-labs/coreth/core/types"
 )
-
-// Metadata used to be defined in the [avax] package in AvalancheGo
-// but it was removed. This code is copied here.
-//
-// Source: https://github.com/ava-labs/avalanchego/pull/3001
-type Metadata struct {
-	id            ids.ID // The ID of this data
-	unsignedBytes []byte // Unsigned byte representation of this data
-	bytes         []byte // Byte representation of this data
-}
-
-// Initialize set the bytes and ID
-func (md *Metadata) Initialize(unsignedBytes, bytes []byte) {
-	md.id = hashing.ComputeHash256Array(bytes)
-	md.unsignedBytes = unsignedBytes
-	md.bytes = bytes
-}
-
-// ID returns the unique ID of this data
-func (md *Metadata) ID() ids.ID {
-	return md.id
-}
-
-// UnsignedBytes returns the unsigned binary representation of this data
-func (md *Metadata) Bytes() []byte {
-	return md.unsignedBytes
-}
-
-// Bytes returns the binary representation of this data
-func (md *Metadata) SignedBytes() []byte {
-	return md.bytes
-}
 
 var WAVAX = &types.Currency{
 	Symbol:   "WAVAX",
@@ -348,7 +315,7 @@ func TestCrossChainExportedOuts(t *testing.T) {
 		}
 		metaBytes, _         = hex.DecodeString("000000000001000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d50000000000000000000000000000000000000000000000000000000000000000000000013158e80abd5a1e1aa716003c9db096792c3796210000000000138aee3d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000000000003b000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000700000000000f424000000000000000000000000100000001c83ea4dc195a9275a349e4f616cbb45e23eab2fb00000001000000090000000167fb4fdaa15ce6804e680dc182f0e702259e6f9572a9f5fe0fc6053094951f612a3d9e8128d08be17ae5122d1790160ac8f2e6d21c4b7dde702624eb6219de7301")
 		metaUnsignedBytes, _ = hex.DecodeString("000000000001000000057fc93d85c6d62c5b2ac0b519c87010ea5294012d1e407030d6acd0021cac10d50000000000000000000000000000000000000000000000000000000000000000000000013158e80abd5a1e1aa716003c9db096792c3796210000000000138aee3d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa000000000000003b000000013d9bdac0ed1d761330cf680efdeb1a42159eb387d6d2950c96f7d28f61bbe2aa0000000700000000000f424000000000000000000000000100000001c83ea4dc195a9275a349e4f616cbb45e23eab2fb")
-		meta                 = &Metadata{}
+		meta                 = &evm.Metadata{}
 	)
 
 	meta.Initialize(metaUnsignedBytes, metaBytes)
