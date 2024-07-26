@@ -63,8 +63,9 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 	}
 
 	fetchImportable := balanceType == pmapper.SubAccountTypeSharedMemory
+	fetchStaked := balanceType == pmapper.SubAccountTypeStaked || balanceType == ""
 
-	height, balance, typedErr := b.fetchBalance(ctx, req.AccountIdentifier.Address, fetchImportable, currencyAssetIDs)
+	height, balance, typedErr := b.fetchBalance(ctx, req.AccountIdentifier.Address, fetchStaked, fetchImportable, currencyAssetIDs)
 	if typedErr != nil {
 		return nil, typedErr
 	}
@@ -254,18 +255,18 @@ func (b *Backend) getPendingRewardsBalance(ctx context.Context, req *types.Accou
 	}, nil
 }
 
-func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImportable bool, assetIds set.Set[ids.ID]) (uint64, *AccountBalance, *types.Error) {
+func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchStaked bool, fetchImportable bool, assetIds set.Set[ids.ID]) (uint64, *AccountBalance, *types.Error) {
 	addr, err := address.ParseToID(addrString)
 	if err != nil {
 		return 0, nil, service.WrapError(service.ErrInvalidInput, "unable to convert address")
 	}
 
-	// utxos from fetchUTXOsAndStakedOutputs are guarateed to:
+	// utxos from fetchUTXOsAndStakedOutputs are guaranteed to:
 	// 1. be unique (no duplicates)
-	// 2. containt only assetIDs
+	// 2. contain only assetIDs
 	// 3. have not multisign utxos
 	// by parseAndFilterUTXOs call in fetchUTXOsAndStakedOutputs
-	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, !fetchImportable, fetchImportable, assetIds)
+	height, utxos, stakedUTXOBytes, typedErr := b.fetchUTXOsAndStakedOutputs(ctx, addr, fetchStaked, fetchImportable, assetIds)
 	if typedErr != nil {
 		return 0, nil, typedErr
 	}
@@ -275,14 +276,16 @@ func (b *Backend) fetchBalance(ctx context.Context, addrString string, fetchImpo
 		return 0, nil, service.WrapError(service.ErrInternalError, err)
 	}
 
-	// parse staked UTXO bytes to UTXO structs
-	stakedAmount, err := b.calculateStakedAmount(stakedUTXOBytes)
-	if err != nil {
-		return 0, nil, service.WrapError(service.ErrInternalError, err)
-	}
+	if fetchStaked {
+		// parse staked UTXO bytes to UTXO structs
+		stakedAmount, err := b.calculateStakedAmount(stakedUTXOBytes)
+		if err != nil {
+			return 0, nil, service.WrapError(service.ErrInternalError, err)
+		}
 
-	balance.Staked = stakedAmount
-	balance.Total += stakedAmount
+		balance.Staked = stakedAmount
+		balance.Total += stakedAmount
+	}
 
 	return height, balance, nil
 }
