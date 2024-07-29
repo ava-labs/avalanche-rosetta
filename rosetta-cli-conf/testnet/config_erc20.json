@@ -1,7 +1,7 @@
 {
   "network": {
     "blockchain": "Avalanche",
-    "network": "Fuji"
+    "network": "testnet"
   },
   "online_url": "http://localhost:8080",
   "http_timeout": 500,
@@ -20,8 +20,8 @@
     "broadcast_limit": 5,
     "constructor_dsl_file": "./avalanche_erc20.ros",
     "end_conditions": {
-      "create_account": 10,
-      "simple_transfer_erc20": 10
+      "create_account": 5,
+      "simple_transfer_erc20": 5
     },
     "prefunded_accounts": []
   },
@@ -40,7 +40,7 @@
     "interesting_accounts": "",
     "reconciliation_disabled": false,
     "balance_tracking_disabled": false,
-    "historical_balance_enabled": true,
+    "historical_balance_disabled": false,
     "coin_tracking_disabled": false,
     "results_output_file": "",
     "end_conditions": {
