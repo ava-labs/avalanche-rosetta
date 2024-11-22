@@ -11,6 +11,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
+	"github.com/ava-labs/avalanchego/ids"
 )
 
 // NetworkBackend represents a backend that implements /block family of apis for a subset of requests
@@ -81,7 +82,7 @@ func (s *NetworkService) NetworkStatus(
 	}
 
 	// Fetch peers
-	infoPeers, err := s.client.Peers(ctx)
+	infoPeers, err := s.client.Peers(ctx, []ids.NodeID{})
 	if err != nil {
 		return nil, WrapError(ErrClientError, err)
 	}

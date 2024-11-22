@@ -13,5 +13,5 @@ import (
 type InfoClient interface {
 	GetBlockchainID(context.Context, string, ...rpc.Option) (ids.ID, error)
 	IsBootstrapped(context.Context, string, ...rpc.Option) (bool, error)
-	Peers(context.Context, ...rpc.Option) ([]info.Peer, error)
+	Peers(context.Context, []ids.NodeID, ...rpc.Option) ([]info.Peer, error)
 }

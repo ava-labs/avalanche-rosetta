@@ -32,6 +32,7 @@ import (
 type MockClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockClientMockRecorder
+	isgomock struct{}
 }
 
 // MockClientMockRecorder is the mock recorder for MockClient.
@@ -127,18 +128,18 @@ func (mr *MockClientMockRecorder) ChainID(arg0 any) *gomock.Call {
 }
 
 // EstimateBaseFee mocks base method.
-func (m *MockClient) EstimateBaseFee(arg0 context.Context) (*big.Int, error) {
+func (m *MockClient) EstimateBaseFee(ctx context.Context) (*big.Int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EstimateBaseFee", arg0)
+	ret := m.ctrl.Call(m, "EstimateBaseFee", ctx)
 	ret0, _ := ret[0].(*big.Int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // EstimateBaseFee indicates an expected call of EstimateBaseFee.
-func (mr *MockClientMockRecorder) EstimateBaseFee(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) EstimateBaseFee(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EstimateBaseFee", reflect.TypeOf((*MockClient)(nil).EstimateBaseFee), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EstimateBaseFee", reflect.TypeOf((*MockClient)(nil).EstimateBaseFee), ctx)
 }
 
 // EstimateGas mocks base method.
@@ -157,10 +158,10 @@ func (mr *MockClientMockRecorder) EstimateGas(arg0, arg1 any) *gomock.Call {
 }
 
 // GetAtomicUTXOs mocks base method.
-func (m *MockClient) GetAtomicUTXOs(arg0 context.Context, arg1 []ids.ShortID, arg2 string, arg3 uint32, arg4 ids.ShortID, arg5 ids.ID, arg6 ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error) {
+func (m *MockClient) GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, sourceChain string, limit uint32, startAddress ids.ShortID, startUTXOID ids.ID, options ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1, arg2, arg3, arg4, arg5}
-	for _, a := range arg6 {
+	varargs := []any{ctx, addrs, sourceChain, limit, startAddress, startUTXOID}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetAtomicUTXOs", varargs...)
@@ -172,9 +173,9 @@ func (m *MockClient) GetAtomicUTXOs(arg0 context.Context, arg1 []ids.ShortID, ar
 }
 
 // GetAtomicUTXOs indicates an expected call of GetAtomicUTXOs.
-func (mr *MockClientMockRecorder) GetAtomicUTXOs(arg0, arg1, arg2, arg3, arg4, arg5 any, arg6 ...any) *gomock.Call {
+func (mr *MockClientMockRecorder) GetAtomicUTXOs(ctx, addrs, sourceChain, limit, startAddress, startUTXOID any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1, arg2, arg3, arg4, arg5}, arg6...)
+	varargs := append([]any{ctx, addrs, sourceChain, limit, startAddress, startUTXOID}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAtomicUTXOs", reflect.TypeOf((*MockClient)(nil).GetAtomicUTXOs), varargs...)
 }
 
@@ -199,11 +200,11 @@ func (mr *MockClientMockRecorder) GetBlockchainID(arg0, arg1 any, arg2 ...any) *
 }
 
 // GetContractInfo mocks base method.
-func (m *MockClient) GetContractInfo(arg0 common.Address, arg1 bool) (string, byte, error) {
+func (m *MockClient) GetContractInfo(arg0 common.Address, arg1 bool) (string, uint8, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetContractInfo", arg0, arg1)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(byte)
+	ret1, _ := ret[1].(uint8)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -265,10 +266,10 @@ func (mr *MockClientMockRecorder) IsBootstrapped(arg0, arg1 any, arg2 ...any) *g
 }
 
 // IssueTx mocks base method.
-func (m *MockClient) IssueTx(arg0 context.Context, arg1 []byte, arg2 ...rpc.Option) (ids.ID, error) {
+func (m *MockClient) IssueTx(ctx context.Context, txBytes []byte, options ...rpc.Option) (ids.ID, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1}
-	for _, a := range arg2 {
+	varargs := []any{ctx, txBytes}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "IssueTx", varargs...)
@@ -278,9 +279,9 @@ func (m *MockClient) IssueTx(arg0 context.Context, arg1 []byte, arg2 ...rpc.Opti
 }
 
 // IssueTx indicates an expected call of IssueTx.
-func (mr *MockClientMockRecorder) IssueTx(arg0, arg1 any, arg2 ...any) *gomock.Call {
+func (mr *MockClientMockRecorder) IssueTx(ctx, txBytes any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1}, arg2...)
+	varargs := append([]any{ctx, txBytes}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IssueTx", reflect.TypeOf((*MockClient)(nil).IssueTx), varargs...)
 }
 
@@ -300,10 +301,10 @@ func (mr *MockClientMockRecorder) NonceAt(arg0, arg1, arg2 any) *gomock.Call {
 }
 
 // Peers mocks base method.
-func (m *MockClient) Peers(arg0 context.Context, arg1 ...rpc.Option) ([]info.Peer, error) {
+func (m *MockClient) Peers(arg0 context.Context, arg1 []ids.NodeID, arg2 ...rpc.Option) ([]info.Peer, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
+	varargs := []any{arg0, arg1}
+	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Peers", varargs...)
@@ -313,9 +314,9 @@ func (m *MockClient) Peers(arg0 context.Context, arg1 ...rpc.Option) ([]info.Pee
 }
 
 // Peers indicates an expected call of Peers.
-func (mr *MockClientMockRecorder) Peers(arg0 any, arg1 ...any) *gomock.Call {
+func (mr *MockClientMockRecorder) Peers(arg0, arg1 any, arg2 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
+	varargs := append([]any{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Peers", reflect.TypeOf((*MockClient)(nil).Peers), varargs...)
 }
 
@@ -430,6 +431,7 @@ func (mr *MockClientMockRecorder) TxPoolContent(arg0 any) *gomock.Call {
 type MockPChainClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockPChainClientMockRecorder
+	isgomock struct{}
 }
 
 // MockPChainClientMockRecorder is the mock recorder for MockPChainClient.
@@ -450,10 +452,10 @@ func (m *MockPChainClient) EXPECT() *MockPChainClientMockRecorder {
 }
 
 // GetAssetDescription mocks base method.
-func (m *MockPChainClient) GetAssetDescription(arg0 context.Context, arg1 string, arg2 ...rpc.Option) (*avm.GetAssetDescriptionReply, error) {
+func (m *MockPChainClient) GetAssetDescription(ctx context.Context, assetID string, options ...rpc.Option) (*avm.GetAssetDescriptionReply, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1}
-	for _, a := range arg2 {
+	varargs := []any{ctx, assetID}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetAssetDescription", varargs...)
@@ -463,17 +465,17 @@ func (m *MockPChainClient) GetAssetDescription(arg0 context.Context, arg1 string
 }
 
 // GetAssetDescription indicates an expected call of GetAssetDescription.
-func (mr *MockPChainClientMockRecorder) GetAssetDescription(arg0, arg1 any, arg2 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetAssetDescription(ctx, assetID any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1}, arg2...)
+	varargs := append([]any{ctx, assetID}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetDescription", reflect.TypeOf((*MockPChainClient)(nil).GetAssetDescription), varargs...)
 }
 
 // GetAtomicUTXOs mocks base method.
-func (m *MockPChainClient) GetAtomicUTXOs(arg0 context.Context, arg1 []ids.ShortID, arg2 string, arg3 uint32, arg4 ids.ShortID, arg5 ids.ID, arg6 ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error) {
+func (m *MockPChainClient) GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, sourceChain string, limit uint32, startAddress ids.ShortID, startUTXOID ids.ID, options ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1, arg2, arg3, arg4, arg5}
-	for _, a := range arg6 {
+	varargs := []any{ctx, addrs, sourceChain, limit, startAddress, startUTXOID}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetAtomicUTXOs", varargs...)
@@ -485,17 +487,17 @@ func (m *MockPChainClient) GetAtomicUTXOs(arg0 context.Context, arg1 []ids.Short
 }
 
 // GetAtomicUTXOs indicates an expected call of GetAtomicUTXOs.
-func (mr *MockPChainClientMockRecorder) GetAtomicUTXOs(arg0, arg1, arg2, arg3, arg4, arg5 any, arg6 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetAtomicUTXOs(ctx, addrs, sourceChain, limit, startAddress, startUTXOID any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1, arg2, arg3, arg4, arg5}, arg6...)
+	varargs := append([]any{ctx, addrs, sourceChain, limit, startAddress, startUTXOID}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAtomicUTXOs", reflect.TypeOf((*MockPChainClient)(nil).GetAtomicUTXOs), varargs...)
 }
 
 // GetBalance mocks base method.
-func (m *MockPChainClient) GetBalance(arg0 context.Context, arg1 []ids.ShortID, arg2 ...rpc.Option) (*platformvm.GetBalanceResponse, error) {
+func (m *MockPChainClient) GetBalance(ctx context.Context, addrs []ids.ShortID, options ...rpc.Option) (*platformvm.GetBalanceResponse, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1}
-	for _, a := range arg2 {
+	varargs := []any{ctx, addrs}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetBalance", varargs...)
@@ -505,17 +507,17 @@ func (m *MockPChainClient) GetBalance(arg0 context.Context, arg1 []ids.ShortID, 
 }
 
 // GetBalance indicates an expected call of GetBalance.
-func (mr *MockPChainClientMockRecorder) GetBalance(arg0, arg1 any, arg2 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetBalance(ctx, addrs any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1}, arg2...)
+	varargs := append([]any{ctx, addrs}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBalance", reflect.TypeOf((*MockPChainClient)(nil).GetBalance), varargs...)
 }
 
 // GetBlock mocks base method.
-func (m *MockPChainClient) GetBlock(arg0 context.Context, arg1 ids.ID, arg2 ...rpc.Option) ([]byte, error) {
+func (m *MockPChainClient) GetBlock(ctx context.Context, blockID ids.ID, options ...rpc.Option) ([]byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1}
-	for _, a := range arg2 {
+	varargs := []any{ctx, blockID}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetBlock", varargs...)
@@ -525,9 +527,9 @@ func (m *MockPChainClient) GetBlock(arg0 context.Context, arg1 ids.ID, arg2 ...r
 }
 
 // GetBlock indicates an expected call of GetBlock.
-func (mr *MockPChainClientMockRecorder) GetBlock(arg0, arg1 any, arg2 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetBlock(ctx, blockID any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1}, arg2...)
+	varargs := append([]any{ctx, blockID}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlock", reflect.TypeOf((*MockPChainClient)(nil).GetBlock), varargs...)
 }
 
@@ -552,10 +554,10 @@ func (mr *MockPChainClientMockRecorder) GetBlockchainID(arg0, arg1 any, arg2 ...
 }
 
 // GetContainerByIndex mocks base method.
-func (m *MockPChainClient) GetContainerByIndex(arg0 context.Context, arg1 uint64, arg2 ...rpc.Option) (indexer.Container, error) {
+func (m *MockPChainClient) GetContainerByIndex(ctx context.Context, index uint64, options ...rpc.Option) (indexer.Container, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1}
-	for _, a := range arg2 {
+	varargs := []any{ctx, index}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetContainerByIndex", varargs...)
@@ -565,17 +567,17 @@ func (m *MockPChainClient) GetContainerByIndex(arg0 context.Context, arg1 uint64
 }
 
 // GetContainerByIndex indicates an expected call of GetContainerByIndex.
-func (mr *MockPChainClientMockRecorder) GetContainerByIndex(arg0, arg1 any, arg2 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetContainerByIndex(ctx, index any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1}, arg2...)
+	varargs := append([]any{ctx, index}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContainerByIndex", reflect.TypeOf((*MockPChainClient)(nil).GetContainerByIndex), varargs...)
 }
 
 // GetCurrentValidators mocks base method.
-func (m *MockPChainClient) GetCurrentValidators(arg0 context.Context, arg1 ids.ID, arg2 []ids.NodeID, arg3 ...rpc.Option) ([]platformvm.ClientPermissionlessValidator, error) {
+func (m *MockPChainClient) GetCurrentValidators(ctx context.Context, subnetID ids.ID, nodeIDs []ids.NodeID, options ...rpc.Option) ([]platformvm.ClientPermissionlessValidator, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1, arg2}
-	for _, a := range arg3 {
+	varargs := []any{ctx, subnetID, nodeIDs}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetCurrentValidators", varargs...)
@@ -585,17 +587,17 @@ func (m *MockPChainClient) GetCurrentValidators(arg0 context.Context, arg1 ids.I
 }
 
 // GetCurrentValidators indicates an expected call of GetCurrentValidators.
-func (mr *MockPChainClientMockRecorder) GetCurrentValidators(arg0, arg1, arg2 any, arg3 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetCurrentValidators(ctx, subnetID, nodeIDs any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1, arg2}, arg3...)
+	varargs := append([]any{ctx, subnetID, nodeIDs}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentValidators", reflect.TypeOf((*MockPChainClient)(nil).GetCurrentValidators), varargs...)
 }
 
 // GetHeight mocks base method.
-func (m *MockPChainClient) GetHeight(arg0 context.Context, arg1 ...rpc.Option) (uint64, error) {
+func (m *MockPChainClient) GetHeight(ctx context.Context, options ...rpc.Option) (uint64, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
+	varargs := []any{ctx}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetHeight", varargs...)
@@ -605,9 +607,9 @@ func (m *MockPChainClient) GetHeight(arg0 context.Context, arg1 ...rpc.Option) (
 }
 
 // GetHeight indicates an expected call of GetHeight.
-func (mr *MockPChainClientMockRecorder) GetHeight(arg0 any, arg1 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetHeight(ctx any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
+	varargs := append([]any{ctx}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeight", reflect.TypeOf((*MockPChainClient)(nil).GetHeight), varargs...)
 }
 
@@ -674,10 +676,10 @@ func (mr *MockPChainClientMockRecorder) GetRewardUTXOs(arg0, arg1 any, arg2 ...a
 }
 
 // GetStake mocks base method.
-func (m *MockPChainClient) GetStake(arg0 context.Context, arg1 []ids.ShortID, arg2 bool, arg3 ...rpc.Option) (map[ids.ID]uint64, [][]byte, error) {
+func (m *MockPChainClient) GetStake(ctx context.Context, addrs []ids.ShortID, validatorsOnly bool, options ...rpc.Option) (map[ids.ID]uint64, [][]byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1, arg2}
-	for _, a := range arg3 {
+	varargs := []any{ctx, addrs, validatorsOnly}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetStake", varargs...)
@@ -688,17 +690,17 @@ func (m *MockPChainClient) GetStake(arg0 context.Context, arg1 []ids.ShortID, ar
 }
 
 // GetStake indicates an expected call of GetStake.
-func (mr *MockPChainClientMockRecorder) GetStake(arg0, arg1, arg2 any, arg3 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetStake(ctx, addrs, validatorsOnly any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1, arg2}, arg3...)
+	varargs := append([]any{ctx, addrs, validatorsOnly}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStake", reflect.TypeOf((*MockPChainClient)(nil).GetStake), varargs...)
 }
 
 // GetTx mocks base method.
-func (m *MockPChainClient) GetTx(arg0 context.Context, arg1 ids.ID, arg2 ...rpc.Option) ([]byte, error) {
+func (m *MockPChainClient) GetTx(ctx context.Context, txID ids.ID, options ...rpc.Option) ([]byte, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1}
-	for _, a := range arg2 {
+	varargs := []any{ctx, txID}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetTx", varargs...)
@@ -708,9 +710,9 @@ func (m *MockPChainClient) GetTx(arg0 context.Context, arg1 ids.ID, arg2 ...rpc.
 }
 
 // GetTx indicates an expected call of GetTx.
-func (mr *MockPChainClientMockRecorder) GetTx(arg0, arg1 any, arg2 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetTx(ctx, txID any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1}, arg2...)
+	varargs := append([]any{ctx, txID}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTx", reflect.TypeOf((*MockPChainClient)(nil).GetTx), varargs...)
 }
 
@@ -735,10 +737,10 @@ func (mr *MockPChainClientMockRecorder) GetTxFee(arg0 any, arg1 ...any) *gomock.
 }
 
 // GetUTXOs mocks base method.
-func (m *MockPChainClient) GetUTXOs(arg0 context.Context, arg1 []ids.ShortID, arg2 uint32, arg3 ids.ShortID, arg4 ids.ID, arg5 ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error) {
+func (m *MockPChainClient) GetUTXOs(ctx context.Context, addrs []ids.ShortID, limit uint32, startAddress ids.ShortID, startUTXOID ids.ID, options ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1, arg2, arg3, arg4}
-	for _, a := range arg5 {
+	varargs := []any{ctx, addrs, limit, startAddress, startUTXOID}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetUTXOs", varargs...)
@@ -750,9 +752,9 @@ func (m *MockPChainClient) GetUTXOs(arg0 context.Context, arg1 []ids.ShortID, ar
 }
 
 // GetUTXOs indicates an expected call of GetUTXOs.
-func (mr *MockPChainClientMockRecorder) GetUTXOs(arg0, arg1, arg2, arg3, arg4 any, arg5 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) GetUTXOs(ctx, addrs, limit, startAddress, startUTXOID any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1, arg2, arg3, arg4}, arg5...)
+	varargs := append([]any{ctx, addrs, limit, startAddress, startUTXOID}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUTXOs", reflect.TypeOf((*MockPChainClient)(nil).GetUTXOs), varargs...)
 }
 
@@ -777,10 +779,10 @@ func (mr *MockPChainClientMockRecorder) IsBootstrapped(arg0, arg1 any, arg2 ...a
 }
 
 // IssueTx mocks base method.
-func (m *MockPChainClient) IssueTx(arg0 context.Context, arg1 []byte, arg2 ...rpc.Option) (ids.ID, error) {
+func (m *MockPChainClient) IssueTx(ctx context.Context, tx []byte, options ...rpc.Option) (ids.ID, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1}
-	for _, a := range arg2 {
+	varargs := []any{ctx, tx}
+	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "IssueTx", varargs...)
@@ -790,17 +792,17 @@ func (m *MockPChainClient) IssueTx(arg0 context.Context, arg1 []byte, arg2 ...rp
 }
 
 // IssueTx indicates an expected call of IssueTx.
-func (mr *MockPChainClientMockRecorder) IssueTx(arg0, arg1 any, arg2 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) IssueTx(ctx, tx any, options ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1}, arg2...)
+	varargs := append([]any{ctx, tx}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IssueTx", reflect.TypeOf((*MockPChainClient)(nil).IssueTx), varargs...)
 }
 
 // Peers mocks base method.
-func (m *MockPChainClient) Peers(arg0 context.Context, arg1 ...rpc.Option) ([]info.Peer, error) {
+func (m *MockPChainClient) Peers(arg0 context.Context, arg1 []ids.NodeID, arg2 ...rpc.Option) ([]info.Peer, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
+	varargs := []any{arg0, arg1}
+	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Peers", varargs...)
@@ -810,8 +812,8 @@ func (m *MockPChainClient) Peers(arg0 context.Context, arg1 ...rpc.Option) ([]in
 }
 
 // Peers indicates an expected call of Peers.
-func (mr *MockPChainClientMockRecorder) Peers(arg0 any, arg1 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) Peers(arg0, arg1 any, arg2 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
+	varargs := append([]any{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Peers", reflect.TypeOf((*MockPChainClient)(nil).Peers), varargs...)
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
+	"github.com/ava-labs/avalanchego/ids"
 
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )
@@ -21,7 +22,7 @@ func (b *Backend) NetworkIdentifier() *types.NetworkIdentifier {
 // NetworkStatus implements /network/status endpoint for P-chain
 func (b *Backend) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
 	// Fetch peers
-	infoPeers, err := b.pClient.Peers(ctx)
+	infoPeers, err := b.pClient.Peers(ctx, []ids.NodeID{})
 	if err != nil {
 		return nil, service.WrapError(service.ErrClientError, err)
 	}
