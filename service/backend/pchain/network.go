@@ -3,12 +3,12 @@ package pchain
 import (
 	"context"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 	"github.com/ava-labs/avalanche-rosetta/service"
-	"github.com/ava-labs/avalanchego/ids"
 
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 )

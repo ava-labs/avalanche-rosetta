@@ -15,8 +15,10 @@ const (
 	FujiNetwork = constants.FujiName
 )
 
-var mainnetUpgrades = upgrade.GetConfig(constants.MainnetID)
-var fujiUpgrades = upgrade.GetConfig(constants.FujiID)
+var (
+	mainnetUpgrades = upgrade.GetConfig(constants.MainnetID)
+	fujiUpgrades    = upgrade.GetConfig(constants.FujiID)
+)
 
 var (
 	MainnetAP5Activation = uint64(mainnetUpgrades.ApricotPhase5Time.Unix())

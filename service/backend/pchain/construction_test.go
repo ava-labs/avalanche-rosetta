@@ -49,26 +49,20 @@ var (
 
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 
-	txFee       = 1_000_000
-	txFeeString = "4099000"
+	staticFeeString  = "1000000"
+	dynamicFeeString = "4099000"
 
 	coinID1 = "2ryRVCwNSjEinTViuvDkzX41uQzx3g4babXxZMD46ZV1a9X4Eg:0"
 
-	gasPrice        = gas.Price(1000)
-	feeStateWeights = gas.Dimensions{
-		gas.Bandwidth: 1,
-		gas.DBRead:    1,
-		gas.DBWrite:   1,
-		gas.Compute:   1,
-	}
+	gasPrice = gas.Price(1000)
 )
 
 func getTxFee(timestamp time.Time) string {
 	upgradeConfig := upgrade.GetConfig(avalancheNetworkID)
 	if upgradeConfig.IsEtnaActivated(timestamp) {
-		return "4099000"
+		return dynamicFeeString
 	}
-	return "1000000"
+	return staticFeeString
 }
 
 func shouldMockGetFeeState(clientMock *client.MockPChainClient) {

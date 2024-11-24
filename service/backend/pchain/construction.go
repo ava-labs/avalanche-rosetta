@@ -12,7 +12,6 @@ import (
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	txfee "github.com/ava-labs/avalanchego/vms/platformvm/txs/fee"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -22,6 +21,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
+	txfee "github.com/ava-labs/avalanchego/vms/platformvm/txs/fee"
 )
 
 var (
@@ -61,6 +61,9 @@ func (b *Backend) ConstructionPreprocess(
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
 	fee, err := b.calculateFee(ctx, dummyBaseTx, 0)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
 
 	reqMetadata[pmapper.MetadataOpType] = matches[0].Operations[0].Type
 	reqMetadata[pmapper.MetadataBaseFee] = fee.Value
@@ -216,19 +219,11 @@ func (b *Backend) buildStakingMetadata(
 		return nil, nil, err
 	}
 	fee, err := b.calculateFee(ctx, dummyStakingTx, baseFee)
-
-	return stakingMetadata, fee, nil
-}
-
-func (b *Backend) getBaseTxFee(ctx context.Context) (*types.Amount, error) {
-	fees, err := b.pClient.GetTxFee(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	feeAmount := new(big.Int).SetUint64(uint64(fees.TxFee))
-	suggestedFee := mapper.AtomicAvaxAmount(feeAmount)
-	return suggestedFee, nil
+	return stakingMetadata, fee, nil
 }
 
 // ConstructionPayloads implements /construction/payloads endpoint for P-chain
