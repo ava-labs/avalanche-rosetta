@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"math/big"
 	"testing"
+	"time"
 
-	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/upgrade"
+	"github.com/ava-labs/avalanchego/vms/components/gas"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -23,7 +25,6 @@ import (
 
 	pmapper "github.com/ava-labs/avalanche-rosetta/mapper/pchain"
 	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
-	avajson "github.com/ava-labs/avalanchego/utils/json"
 )
 
 var (
@@ -48,10 +49,34 @@ var (
 
 	avaxAssetID, _ = ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 
-	txFee = 1_000_000
+	txFee       = 1_000_000
+	txFeeString = "4099000"
 
 	coinID1 = "2ryRVCwNSjEinTViuvDkzX41uQzx3g4babXxZMD46ZV1a9X4Eg:0"
+
+	gasPrice        = gas.Price(1000)
+	feeStateWeights = gas.Dimensions{
+		gas.Bandwidth: 1,
+		gas.DBRead:    1,
+		gas.DBWrite:   1,
+		gas.Compute:   1,
+	}
 )
+
+func getTxFee(timestamp time.Time) string {
+	upgradeConfig := upgrade.GetConfig(avalancheNetworkID)
+	if upgradeConfig.IsEtnaActivated(timestamp) {
+		return "4099000"
+	}
+	return "1000000"
+}
+
+func shouldMockGetFeeState(clientMock *client.MockPChainClient) {
+	upgradeConfig := upgrade.GetConfig(avalancheNetworkID)
+	if upgradeConfig.IsEtnaActivated(time.Now()) {
+		clientMock.EXPECT().GetFeeState(context.Background()).Return(gas.State{}, gasPrice, time.Time{}, nil)
+	}
+}
 
 func buildRosettaSignerJSON(coinIdentifiers []string, signers []*types.AccountIdentifier) string {
 	importSigners := []*common.Signer{}
@@ -142,6 +167,7 @@ func TestExportTxConstruction(t *testing.T) {
 
 	metadataOptions := map[string]interface{}{
 		"destination_chain": constants.CChain.String(),
+		"base_fee":          getTxFee(time.Now()),
 		"type":              pmapper.OpExportAvax,
 	}
 
@@ -201,6 +227,7 @@ func TestExportTxConstruction(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
 		resp, err := backend.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -214,7 +241,6 @@ func TestExportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
-		clientMock.EXPECT().GetTxFee(ctx).Return(&info.GetTxFeeResponse{TxFee: avajson.Uint64(txFee)}, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(cChainID, nil)
 
@@ -354,6 +380,7 @@ func TestImportTxConstruction(t *testing.T) {
 
 	metadataOptions := map[string]interface{}{
 		"source_chain": constants.CChain.String(),
+		"base_fee":     getTxFee(time.Now()),
 		"type":         pmapper.OpImportAvax,
 	}
 
@@ -411,6 +438,7 @@ func TestImportTxConstruction(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
 		resp, err := backend.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -424,7 +452,6 @@ func TestImportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
-		clientMock.EXPECT().GetTxFee(ctx).Return(&info.GetTxFeeResponse{TxFee: avajson.Uint64(txFee)}, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(cChainID, nil)
 
@@ -580,6 +607,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 
 	metadataOptions := map[string]interface{}{
 		"type":             pmapper.OpAddValidator,
+		"base_fee":         getTxFee(time.Now()),
 		"node_id":          nodeID,
 		"start":            startTime,
 		"end":              endTime,
@@ -651,6 +679,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
 		resp, err := backend.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -664,6 +693,7 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
 
 		resp, err := backend.ConstructionMetadata(
@@ -815,6 +845,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 
 	metadataOptions := map[string]interface{}{
 		"type":             pmapper.OpAddDelegator,
+		"base_fee":         getTxFee(time.Now()),
 		"node_id":          nodeID,
 		"start":            startTime,
 		"end":              endTime,
@@ -885,6 +916,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
 		resp, err := backend.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -898,6 +930,7 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
 
 		resp, err := backend.ConstructionMetadata(

@@ -20,6 +20,7 @@ const (
 	OpAdvanceTime                = "ADVANCE_TIME"
 	OpBase                       = "BASE"
 	OpTransferSubnetOwnership    = "TRANSFER_SUBNET_OWNERSHIP"
+	OpDummyBase                  = "DUMMY_BASE"
 
 	OpTypeImport      = "IMPORT"
 	OpTypeExport      = "EXPORT"
@@ -36,6 +37,8 @@ const (
 	MetadataStakingEndTime   = "staking_end_time"
 	MetadataMessage          = "message"
 	MetadataSigner           = "signer"
+
+	MetadataBaseFee = "base_fee"
 
 	MetadataValidatorRewards       = "validator_rewards"
 	MetadataValidatorRewardsOwner  = "validator_rewards_owner"
@@ -76,6 +79,7 @@ type OperationMetadata struct {
 	SigIndices []uint32 `json:"sig_indices,omitempty"`
 	Locktime   uint64   `json:"locktime"`
 	Threshold  uint32   `json:"threshold,omitempty"`
+	BasicFee   uint64   `json:"basic_fee,omitempty"`
 }
 
 // ImportExportOptions contain response fields returned by /construction/preprocess for P-chain Import/Export transactions

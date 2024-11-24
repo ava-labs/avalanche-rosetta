@@ -13,6 +13,7 @@ import (
 	context "context"
 	big "math/big"
 	reflect "reflect"
+	time "time"
 
 	api "github.com/ava-labs/avalanchego/api"
 	info "github.com/ava-labs/avalanchego/api/info"
@@ -20,6 +21,7 @@ import (
 	indexer "github.com/ava-labs/avalanchego/indexer"
 	rpc "github.com/ava-labs/avalanchego/utils/rpc"
 	avm "github.com/ava-labs/avalanchego/vms/avm"
+	gas "github.com/ava-labs/avalanchego/vms/components/gas"
 	platformvm "github.com/ava-labs/avalanchego/vms/platformvm"
 	signer "github.com/ava-labs/avalanchego/vms/platformvm/signer"
 	types "github.com/ava-labs/coreth/core/types"
@@ -591,6 +593,48 @@ func (mr *MockPChainClientMockRecorder) GetCurrentValidators(ctx, subnetID, node
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, subnetID, nodeIDs}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentValidators", reflect.TypeOf((*MockPChainClient)(nil).GetCurrentValidators), varargs...)
+}
+
+// GetFeeConfig mocks base method.
+func (m *MockPChainClient) GetFeeConfig(ctx context.Context, options ...rpc.Option) (*gas.Config, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range options {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetFeeConfig", varargs...)
+	ret0, _ := ret[0].(*gas.Config)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFeeConfig indicates an expected call of GetFeeConfig.
+func (mr *MockPChainClientMockRecorder) GetFeeConfig(ctx any, options ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, options...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeeConfig", reflect.TypeOf((*MockPChainClient)(nil).GetFeeConfig), varargs...)
+}
+
+// GetFeeState mocks base method.
+func (m *MockPChainClient) GetFeeState(ctx context.Context, options ...rpc.Option) (gas.State, gas.Price, time.Time, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range options {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetFeeState", varargs...)
+	ret0, _ := ret[0].(gas.State)
+	ret1, _ := ret[1].(gas.Price)
+	ret2, _ := ret[2].(time.Time)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetFeeState indicates an expected call of GetFeeState.
+func (mr *MockPChainClientMockRecorder) GetFeeState(ctx any, options ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, options...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeeState", reflect.TypeOf((*MockPChainClient)(nil).GetFeeState), varargs...)
 }
 
 // GetHeight mocks base method.

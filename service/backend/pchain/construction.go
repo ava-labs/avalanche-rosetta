@@ -6,11 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	txfee "github.com/ava-labs/avalanchego/vms/platformvm/txs/fee"
+	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
@@ -32,8 +35,8 @@ func (*Backend) ConstructionDerive(_ context.Context, req *types.ConstructionDer
 }
 
 // ConstructionPreprocess implements /construction/preprocess endpoint for P-chain
-func (*Backend) ConstructionPreprocess(
-	_ context.Context,
+func (b *Backend) ConstructionPreprocess(
+	ctx context.Context,
 	req *types.ConstructionPreprocessRequest,
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
 	matches, err := common.MatchOperations(req.Operations)
@@ -45,7 +48,22 @@ func (*Backend) ConstructionPreprocess(
 	if reqMetadata == nil {
 		reqMetadata = make(map[string]interface{})
 	}
+
+	// Build a dummy base tx to calculate the base fee
+	dummyBaseTx, _, err := pmapper.BuildTx(
+		pmapper.OpDummyBase,
+		matches,
+		pmapper.Metadata{BlockchainID: ids.Empty},
+		b.codec,
+		b.avaxAssetID,
+	)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+	fee, err := b.calculateFee(ctx, dummyBaseTx, 0)
+
 	reqMetadata[pmapper.MetadataOpType] = matches[0].Operations[0].Type
+	reqMetadata[pmapper.MetadataBaseFee] = fee.Value
 
 	return &types.ConstructionPreprocessResponse{
 		Options: reqMetadata,
@@ -62,15 +80,17 @@ func (b *Backend) ConstructionMetadata(
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	var suggestedFee *types.Amount
+	// Default to base fee for atomic txs
+	suggestedFee := mapper.AtomicAvaxAmount(big.NewInt(int64(opMetadata.BasicFee)))
+
 	var metadata *pmapper.Metadata
 	switch opMetadata.Type {
 	case pmapper.OpImportAvax:
-		metadata, suggestedFee, err = b.buildImportMetadata(ctx, req.Options)
+		metadata, err = b.buildImportMetadata(ctx, req.Options)
 	case pmapper.OpExportAvax:
-		metadata, suggestedFee, err = b.buildExportMetadata(ctx, req.Options)
+		metadata, err = b.buildExportMetadata(ctx, req.Options)
 	case pmapper.OpAddValidator, pmapper.OpAddDelegator, pmapper.OpAddPermissionlessDelegator, pmapper.OpAddPermissionlessValidator:
-		metadata, suggestedFee, err = buildStakingMetadata(req.Options)
+		metadata, suggestedFee, err = b.buildStakingMetadata(ctx, req.Options, opMetadata.Type, opMetadata.BasicFee)
 		metadata.Threshold = opMetadata.Threshold
 		metadata.Locktime = opMetadata.Locktime
 
@@ -103,43 +123,39 @@ func (b *Backend) ConstructionMetadata(
 	}, nil
 }
 
-func (b *Backend) buildImportMetadata(ctx context.Context, options map[string]interface{}) (*pmapper.Metadata, *types.Amount, error) {
+func (b *Backend) buildImportMetadata(
+	ctx context.Context,
+	options map[string]interface{},
+) (*pmapper.Metadata, error) {
 	var preprocessOptions pmapper.ImportExportOptions
 	if err := mapper.UnmarshalJSONMap(options, &preprocessOptions); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	sourceChainID, err := b.pClient.GetBlockchainID(ctx, preprocessOptions.SourceChain)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	suggestedFee, err := b.getBaseTxFee(ctx)
-	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	importMetadata := &pmapper.ImportMetadata{
 		SourceChainID: sourceChainID,
 	}
 
-	return &pmapper.Metadata{ImportMetadata: importMetadata}, suggestedFee, nil
+	return &pmapper.Metadata{ImportMetadata: importMetadata}, nil
 }
 
-func (b *Backend) buildExportMetadata(ctx context.Context, options map[string]interface{}) (*pmapper.Metadata, *types.Amount, error) {
+func (b *Backend) buildExportMetadata(
+	ctx context.Context,
+	options map[string]interface{},
+) (*pmapper.Metadata, error) {
 	var preprocessOptions pmapper.ImportExportOptions
 	if err := mapper.UnmarshalJSONMap(options, &preprocessOptions); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	destinationChainID, err := b.pClient.GetBlockchainID(ctx, preprocessOptions.DestinationChain)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	suggestedFee, err := b.getBaseTxFee(ctx)
-	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	exportMetadata := &pmapper.ExportMetadata{
@@ -147,17 +163,20 @@ func (b *Backend) buildExportMetadata(ctx context.Context, options map[string]in
 		DestinationChainID: destinationChainID,
 	}
 
-	return &pmapper.Metadata{ExportMetadata: exportMetadata}, suggestedFee, nil
+	return &pmapper.Metadata{ExportMetadata: exportMetadata}, nil
 }
 
-func buildStakingMetadata(options map[string]interface{}) (*pmapper.Metadata, *types.Amount, error) {
+func (b *Backend) buildStakingMetadata(
+	ctx context.Context,
+	options map[string]interface{},
+	opType string, baseFee uint64,
+) (*pmapper.Metadata, *types.Amount, error) {
 	var preprocessOptions pmapper.StakingOptions
 	if err := mapper.UnmarshalJSONMap(options, &preprocessOptions); err != nil {
 		return nil, nil, err
 	}
-	zeroAvax := mapper.AtomicAvaxAmount(big.NewInt(0))
 
-	return &pmapper.Metadata{
+	stakingMetadata := &pmapper.Metadata{
 		StakingMetadata: &pmapper.StakingMetadata{
 			NodeID:                  preprocessOptions.NodeID,
 			BLSPublicKey:            preprocessOptions.BLSPublicKey,
@@ -171,7 +190,34 @@ func buildStakingMetadata(options map[string]interface{}) (*pmapper.Metadata, *t
 			Locktime:                preprocessOptions.Locktime,
 			Threshold:               preprocessOptions.Threshold,
 		},
-	}, zeroAvax, nil
+	}
+
+	// Build a dummy staking tx to calculate the staking related fee
+	dummyStakingTx, _, err := pmapper.BuildTx(
+		opType,
+		// `matches` must have 2 elements, one for inputs and one for outputs
+		[]*parser.Match{
+			{
+				// inputs match
+				Operations: []*types.Operation{},
+				Amounts:    []*big.Int{},
+			},
+			{
+				// outputs match
+				Operations: []*types.Operation{},
+				Amounts:    []*big.Int{},
+			},
+		},
+		*stakingMetadata,
+		b.codec,
+		b.avaxAssetID,
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+	fee, err := b.calculateFee(ctx, dummyStakingTx, baseFee)
+
+	return stakingMetadata, fee, nil
 }
 
 func (b *Backend) getBaseTxFee(ctx context.Context) (*types.Amount, error) {
@@ -259,6 +305,42 @@ func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (comm
 	pTx.Tx.SetBytes(unsignedBytes, signedBytes)
 
 	return pTx, nil
+}
+
+func (b *Backend) calculateFee(ctx context.Context, tx *txs.Tx, initialFee uint64) (*types.Amount, error) {
+	feeCalculator, err := b.PickFeeCalculator(ctx, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	fee, err := feeCalculator.CalculateFee(tx.Unsigned)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.AtomicAvaxAmount(big.NewInt(int64(fee + initialFee))), nil
+}
+
+func (b *Backend) PickFeeCalculator(ctx context.Context, timestamp time.Time) (txfee.Calculator, error) {
+	if !b.upgradeConfig.IsEtnaActivated(timestamp) {
+		return b.NewStaticFeeCalculator(timestamp), nil
+	}
+
+	_, gasPrice, _, err := b.pClient.GetFeeState(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return txfee.NewDynamicCalculator(
+		b.feeConfig.DynamicFeeConfig.Weights,
+		gasPrice,
+	), nil
+}
+
+func (b *Backend) NewStaticFeeCalculator(timestamp time.Time) txfee.Calculator {
+	feeConfig := b.feeConfig.StaticFeeConfig
+	if !b.upgradeConfig.IsApricotPhase3Activated(timestamp) {
+		feeConfig.CreateSubnetTxFee = b.feeConfig.CreateAssetTxFee
+		feeConfig.CreateBlockchainTxFee = b.feeConfig.CreateAssetTxFee
+	}
+	return txfee.NewStaticCalculator(feeConfig)
 }
 
 // getTxInputs fetches tx inputs based on the tx type.
