@@ -167,6 +167,21 @@ func (t *TxParser) Parse(signedTx *txs.Tx) (*types.Transaction, error) {
 	case *txs.TransferSubnetOwnershipTx:
 		txType = OpTransferSubnetOwnership
 		ops, err = t.parseTransferSubnetOwnershipTx(txID, unsignedTx)
+	case *txs.ConvertSubnetToL1Tx:
+		txType = OpConvertSubnetToL1Tx
+		ops, err = t.parseConvertSubnetToL1Tx(txID, unsignedTx)
+	case *txs.RegisterL1ValidatorTx:
+		txType = OpRegisterL1ValidatorTx
+		ops, err = t.parseRegisterL1ValidatorTx(txID, unsignedTx)
+	case *txs.IncreaseL1ValidatorBalanceTx:
+		txType = OpIncreaseL1ValidatorBalanceTx
+		ops, err = t.parseIncreaseL1ValidatorBalanceTx(txID, unsignedTx)
+	case *txs.SetL1ValidatorWeightTx:
+		txType = OpSetL1ValidatorWeightTx
+		ops, err = t.parseSetL1ValidatorWeightTx(txID, unsignedTx)
+	case *txs.DisableL1ValidatorTx:
+		txType = OpDisableL1ValidatorTx
+		ops, err = t.parseDisableL1ValidatorTx(txID, unsignedTx)
 	case *txs.BaseTx:
 		txType = OpBase
 		ops, err = t.parseBaseTx(txID, unsignedTx)
@@ -418,6 +433,26 @@ func (t *TxParser) parseTransformSubnetTx(txID ids.ID, tx *txs.TransformSubnetTx
 
 func (t *TxParser) parseCreateChainTx(txID ids.ID, tx *txs.CreateChainTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpCreateChain)
+}
+
+func (t *TxParser) parseConvertSubnetToL1Tx(txID ids.ID, tx *txs.ConvertSubnetToL1Tx) (*txOps, error) {
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpConvertSubnetToL1Tx)
+}
+
+func (t *TxParser) parseRegisterL1ValidatorTx(txID ids.ID, tx *txs.RegisterL1ValidatorTx) (*txOps, error) {
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpRegisterL1ValidatorTx)
+}
+
+func (t *TxParser) parseIncreaseL1ValidatorBalanceTx(txID ids.ID, tx *txs.IncreaseL1ValidatorBalanceTx) (*txOps, error) {
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpIncreaseL1ValidatorBalanceTx)
+}
+
+func (t *TxParser) parseSetL1ValidatorWeightTx(txID ids.ID, tx *txs.SetL1ValidatorWeightTx) (*txOps, error) {
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpSetL1ValidatorWeightTx)
+}
+
+func (t *TxParser) parseDisableL1ValidatorTx(txID ids.ID, tx *txs.DisableL1ValidatorTx) (*txOps, error) {
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpDisableL1ValidatorTx)
 }
 
 func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType string) (*txOps, error) {

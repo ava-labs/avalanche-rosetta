@@ -371,6 +371,16 @@ func getTxInputs(
 		return utx.Ins, nil
 	case *txs.TransferSubnetOwnershipTx:
 		return utx.Ins, nil
+	case *txs.ConvertSubnetToL1Tx:
+		return utx.Ins, nil
+	case *txs.RegisterL1ValidatorTx:
+		return utx.Ins, nil
+	case *txs.IncreaseL1ValidatorBalanceTx:
+		return utx.Ins, nil
+	case *txs.SetL1ValidatorWeightTx:
+		return utx.Ins, nil
+	case *txs.DisableL1ValidatorTx:
+		return utx.Ins, nil
 	case *txs.BaseTx:
 		return utx.Ins, nil
 	default:
