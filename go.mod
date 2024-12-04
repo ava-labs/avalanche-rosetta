@@ -5,7 +5,7 @@ go 1.22.8
 toolchain go1.22.9
 
 require (
-	github.com/ava-labs/avalanchego v1.12.0-fuji
+	github.com/ava-labs/avalanchego v1.12.0
 	github.com/ava-labs/coreth v0.13.9-rc.1
 	github.com/coinbase/rosetta-sdk-go v0.6.5
 	github.com/ethereum/go-ethereum v1.13.14

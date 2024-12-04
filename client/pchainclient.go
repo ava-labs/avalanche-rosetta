@@ -63,7 +63,6 @@ type PChainClient interface {
 	IssueTx(ctx context.Context, tx []byte, options ...rpc.Option) (ids.ID, error)
 	GetStake(ctx context.Context, addrs []ids.ShortID, validatorsOnly bool, options ...rpc.Option) (map[ids.ID]uint64, [][]byte, error)
 	GetCurrentValidators(ctx context.Context, subnetID ids.ID, nodeIDs []ids.NodeID, options ...rpc.Option) ([]platformvm.ClientPermissionlessValidator, error)
-	GetFeeConfig(ctx context.Context, options ...rpc.Option) (*gas.Config, error)
 	GetFeeState(ctx context.Context, options ...rpc.Option) (gas.State, gas.Price, time.Time, error)
 
 	// avm.Client methods
