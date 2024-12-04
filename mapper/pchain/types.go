@@ -2,6 +2,7 @@ package pchain
 
 import (
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/coinbase/rosetta-sdk-go/parser"
 )
 
 const (
@@ -44,6 +45,7 @@ const (
 	MetadataSigner           = "signer"
 
 	MetadataBaseFee = "base_fee"
+	MetadataMatches = "matches"
 
 	MetadataValidatorRewards       = "validator_rewards"
 	MetadataValidatorRewardsOwner  = "validator_rewards_owner"
@@ -80,11 +82,11 @@ var (
 
 // OperationMetadata contains metadata fields specific to individual Rosetta operations as opposed to transactions
 type OperationMetadata struct {
-	Type       string   `json:"type"`
-	SigIndices []uint32 `json:"sig_indices,omitempty"`
-	Locktime   uint64   `json:"locktime"`
-	Threshold  uint32   `json:"threshold,omitempty"`
-	BasicFee   uint64   `json:"basic_fee,omitempty"`
+	Type       string          `json:"type"`
+	SigIndices []uint32        `json:"sig_indices,omitempty"`
+	Locktime   uint64          `json:"locktime"`
+	Threshold  uint32          `json:"threshold,omitempty"`
+	Matches    []*parser.Match `json:"matches,omitempty"`
 }
 
 // ImportExportOptions contain response fields returned by /construction/preprocess for P-chain Import/Export transactions
