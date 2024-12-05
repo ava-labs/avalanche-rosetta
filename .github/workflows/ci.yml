@@ -13,7 +13,7 @@ jobs:
   Build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.go_version }}
@@ -21,18 +21,18 @@ jobs:
   Test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.go_version }}
       - run: make test
   Lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: golangci/golangci-lint-action@v2
+      - uses: actions/checkout@v4
+      - uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.56.1
+          version: v1.61.0
   check_mockgen:
     name: Up-to-date mocks
     runs-on: ubuntu-latest
