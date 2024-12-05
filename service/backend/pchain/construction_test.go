@@ -222,7 +222,6 @@ func TestExportTxConstruction(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
-		shouldMockGetFeeState(clientMock)
 		resp, err := backend.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -236,6 +235,7 @@ func TestExportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(cChainID, nil)
 
@@ -436,7 +436,6 @@ func TestImportTxConstruction(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
-		shouldMockGetFeeState(clientMock)
 		resp, err := backend.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -450,6 +449,7 @@ func TestImportTxConstruction(t *testing.T) {
 	})
 
 	t.Run("metadata endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
 		clientMock.EXPECT().GetBlockchainID(ctx, constants.CChain.String()).Return(cChainID, nil)
 
@@ -687,7 +687,6 @@ func TestAddValidatorTxConstruction(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
-		shouldMockGetFeeState(clientMock)
 		resp, err := backend.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
@@ -927,7 +926,6 @@ func TestAddDelegatorTxConstruction(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("preprocess endpoint", func(t *testing.T) {
-		shouldMockGetFeeState(clientMock)
 		resp, err := backend.ConstructionPreprocess(
 			ctx,
 			&types.ConstructionPreprocessRequest{
