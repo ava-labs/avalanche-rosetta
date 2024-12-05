@@ -35,8 +35,8 @@ func (*Backend) ConstructionDerive(_ context.Context, req *types.ConstructionDer
 }
 
 // ConstructionPreprocess implements /construction/preprocess endpoint for P-chain
-func (b *Backend) ConstructionPreprocess(
-	ctx context.Context,
+func (*Backend) ConstructionPreprocess(
+	_ context.Context,
 	req *types.ConstructionPreprocessRequest,
 ) (*types.ConstructionPreprocessResponse, *types.Error) {
 	matches, err := common.MatchOperations(req.Operations)
@@ -95,6 +95,9 @@ func (b *Backend) ConstructionMetadata(
 		metadata, err = b.buildExportMetadata(ctx, req.Options)
 	case pmapper.OpAddValidator, pmapper.OpAddDelegator, pmapper.OpAddPermissionlessDelegator, pmapper.OpAddPermissionlessValidator:
 		metadata, suggestedFee, err = b.buildStakingMetadata(ctx, req.Options, opMetadata.Matches, opMetadata.Type)
+		if err != nil {
+			return nil, service.WrapError(service.ErrInternalError, err)
+		}
 		metadata.Threshold = opMetadata.Threshold
 		metadata.Locktime = opMetadata.Locktime
 
