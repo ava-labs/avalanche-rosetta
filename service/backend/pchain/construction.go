@@ -12,7 +12,6 @@ import (
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
@@ -71,22 +70,6 @@ func (b *Backend) ConstructionMetadata(
 		return nil, service.WrapError(service.ErrInvalidInput, errors.New("matches not found in options"))
 	}
 
-	// Build a dummy base tx to calculate the base fee
-	dummyBaseTx, _, err := pmapper.BuildTx(
-		pmapper.OpDummyBase,
-		opMetadata.Matches,
-		pmapper.Metadata{BlockchainID: ids.Empty},
-		b.codec,
-		b.avaxAssetID,
-	)
-	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, err)
-	}
-	suggestedFee, err := b.calculateFee(ctx, dummyBaseTx)
-	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, err)
-	}
-
 	var metadata *pmapper.Metadata
 	switch opMetadata.Type {
 	case pmapper.OpImportAvax:
@@ -94,7 +77,7 @@ func (b *Backend) ConstructionMetadata(
 	case pmapper.OpExportAvax:
 		metadata, err = b.buildExportMetadata(ctx, req.Options)
 	case pmapper.OpAddValidator, pmapper.OpAddDelegator, pmapper.OpAddPermissionlessDelegator, pmapper.OpAddPermissionlessValidator:
-		metadata, suggestedFee, err = b.buildStakingMetadata(ctx, req.Options, opMetadata.Matches, opMetadata.Type)
+		metadata, err = b.buildStakingMetadata(ctx, req.Options)
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, err)
 		}
@@ -107,6 +90,22 @@ func (b *Backend) ConstructionMetadata(
 			fmt.Errorf("invalid tx type for building metadata: %s", opMetadata.Type),
 		)
 	}
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+
+	// Suggested fee calculation
+	tx, _, err := pmapper.BuildTx(
+		opMetadata.Type,
+		opMetadata.Matches,
+		*metadata,
+		b.codec,
+		b.avaxAssetID,
+	)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInternalError, err)
+	}
+	suggestedFee, err := b.calculateFee(ctx, tx)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInternalError, err)
 	}
@@ -174,15 +173,13 @@ func (b *Backend) buildExportMetadata(
 	return &pmapper.Metadata{ExportMetadata: exportMetadata}, nil
 }
 
-func (b *Backend) buildStakingMetadata(
-	ctx context.Context,
+func (*Backend) buildStakingMetadata(
+	_ context.Context,
 	options map[string]interface{},
-	matches []*parser.Match,
-	opType string,
-) (*pmapper.Metadata, uint64, error) {
+) (*pmapper.Metadata, error) {
 	var preprocessOptions pmapper.StakingOptions
 	if err := mapper.UnmarshalJSONMap(options, &preprocessOptions); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	stakingMetadata := &pmapper.Metadata{
@@ -201,23 +198,7 @@ func (b *Backend) buildStakingMetadata(
 		},
 	}
 
-	// Build a dummy staking tx to calculate the staking related fee
-	dummyStakingTx, _, err := pmapper.BuildTx(
-		opType,
-		matches,
-		*stakingMetadata,
-		b.codec,
-		b.avaxAssetID,
-	)
-	if err != nil {
-		return nil, 0, err
-	}
-	suggestedFee, err := b.calculateFee(ctx, dummyStakingTx)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return stakingMetadata, suggestedFee, nil
+	return stakingMetadata, nil
 }
 
 // ConstructionPayloads implements /construction/payloads endpoint for P-chain

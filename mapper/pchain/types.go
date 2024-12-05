@@ -21,7 +21,6 @@ const (
 	OpAdvanceTime                  = "ADVANCE_TIME"
 	OpBase                         = "BASE"
 	OpTransferSubnetOwnership      = "TRANSFER_SUBNET_OWNERSHIP"
-	OpDummyBase                    = "DUMMY_BASE"
 	OpConvertSubnetToL1Tx          = "CONVERT_SUBNET_TO_L1_TX"
 	OpRegisterL1ValidatorTx        = "REGISTER_L1_VALIDATOR_TX"
 	OpIncreaseL1ValidatorBalanceTx = "INCREASE_L1_VALIDATOR_BALANCE_TX"

@@ -36,9 +36,6 @@ func BuildTx(
 	avaxAssetID ids.ID,
 ) (*txs.Tx, []*types.AccountIdentifier, error) {
 	switch opType {
-	case OpDummyBase:
-		// This is a dummy tx used to calculate fees
-		return buildDummyBaseTx(matches, payloadMetadata, codec, avaxAssetID)
 	case OpImportAvax:
 		return buildImportTx(matches, payloadMetadata, codec, avaxAssetID)
 	case OpExportAvax:
@@ -56,41 +53,6 @@ func BuildTx(
 	default:
 		return nil, nil, fmt.Errorf("invalid tx type: %s", opType)
 	}
-}
-
-// Builds a dummy base tx with any tx type (useful for calculating fees)
-func buildDummyBaseTx(
-	matches []*parser.Match,
-	metadata Metadata,
-	codec codec.Manager,
-	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
-	blockchainID := metadata.BlockchainID
-
-	ins, importedIns, signers, err := buildInputs(matches[0].Operations, avaxAssetID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("parse inputs failed: %w", err)
-	}
-
-	outs, stakeOuts, exportedOuts, err := buildOutputs(matches[1].Operations, codec, avaxAssetID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
-	}
-
-	// stuff different types of inputs/outputs together since
-	// dynamic fee algorithm treats them same
-	ins = append(ins, importedIns...)
-	outs = append(outs, stakeOuts...)
-	outs = append(outs, exportedOuts...)
-
-	tx := &txs.Tx{Unsigned: &txs.BaseTx{BaseTx: avax.BaseTx{
-		NetworkID:    metadata.NetworkID,
-		BlockchainID: blockchainID,
-		Outs:         outs,
-		Ins:          ins,
-	}}}
-
-	return tx, signers, tx.Sign(codec, nil)
 }
 
 // [buildImportTx] returns a duly initialized tx if it does not err
