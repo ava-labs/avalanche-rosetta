@@ -13,6 +13,7 @@ import (
 	context "context"
 	big "math/big"
 	reflect "reflect"
+	time "time"
 
 	api "github.com/ava-labs/avalanchego/api"
 	info "github.com/ava-labs/avalanchego/api/info"
@@ -20,6 +21,7 @@ import (
 	indexer "github.com/ava-labs/avalanchego/indexer"
 	rpc "github.com/ava-labs/avalanchego/utils/rpc"
 	avm "github.com/ava-labs/avalanchego/vms/avm"
+	gas "github.com/ava-labs/avalanchego/vms/components/gas"
 	platformvm "github.com/ava-labs/avalanchego/vms/platformvm"
 	signer "github.com/ava-labs/avalanchego/vms/platformvm/signer"
 	types "github.com/ava-labs/coreth/core/types"
@@ -300,10 +302,10 @@ func (mr *MockClientMockRecorder) NonceAt(arg0, arg1, arg2 any) *gomock.Call {
 }
 
 // Peers mocks base method.
-func (m *MockClient) Peers(arg0 context.Context, arg1 ...rpc.Option) ([]info.Peer, error) {
+func (m *MockClient) Peers(arg0 context.Context, arg1 []ids.NodeID, arg2 ...rpc.Option) ([]info.Peer, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
+	varargs := []any{arg0, arg1}
+	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Peers", varargs...)
@@ -313,9 +315,9 @@ func (m *MockClient) Peers(arg0 context.Context, arg1 ...rpc.Option) ([]info.Pee
 }
 
 // Peers indicates an expected call of Peers.
-func (mr *MockClientMockRecorder) Peers(arg0 any, arg1 ...any) *gomock.Call {
+func (mr *MockClientMockRecorder) Peers(arg0, arg1 any, arg2 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
+	varargs := append([]any{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Peers", reflect.TypeOf((*MockClient)(nil).Peers), varargs...)
 }
 
@@ -591,6 +593,28 @@ func (mr *MockPChainClientMockRecorder) GetCurrentValidators(arg0, arg1, arg2 an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentValidators", reflect.TypeOf((*MockPChainClient)(nil).GetCurrentValidators), varargs...)
 }
 
+// GetFeeState mocks base method.
+func (m *MockPChainClient) GetFeeState(arg0 context.Context, arg1 ...rpc.Option) (gas.State, gas.Price, time.Time, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetFeeState", varargs...)
+	ret0, _ := ret[0].(gas.State)
+	ret1, _ := ret[1].(gas.Price)
+	ret2, _ := ret[2].(time.Time)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetFeeState indicates an expected call of GetFeeState.
+func (mr *MockPChainClientMockRecorder) GetFeeState(arg0 any, arg1 ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeeState", reflect.TypeOf((*MockPChainClient)(nil).GetFeeState), varargs...)
+}
+
 // GetHeight mocks base method.
 func (m *MockPChainClient) GetHeight(arg0 context.Context, arg1 ...rpc.Option) (uint64, error) {
 	m.ctrl.T.Helper()
@@ -797,10 +821,10 @@ func (mr *MockPChainClientMockRecorder) IssueTx(arg0, arg1 any, arg2 ...any) *go
 }
 
 // Peers mocks base method.
-func (m *MockPChainClient) Peers(arg0 context.Context, arg1 ...rpc.Option) ([]info.Peer, error) {
+func (m *MockPChainClient) Peers(arg0 context.Context, arg1 []ids.NodeID, arg2 ...rpc.Option) ([]info.Peer, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
+	varargs := []any{arg0, arg1}
+	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Peers", varargs...)
@@ -810,8 +834,8 @@ func (m *MockPChainClient) Peers(arg0 context.Context, arg1 ...rpc.Option) ([]in
 }
 
 // Peers indicates an expected call of Peers.
-func (mr *MockPChainClientMockRecorder) Peers(arg0 any, arg1 ...any) *gomock.Call {
+func (mr *MockPChainClientMockRecorder) Peers(arg0, arg1 any, arg2 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
+	varargs := append([]any{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Peers", reflect.TypeOf((*MockPChainClient)(nil).Peers), varargs...)
 }

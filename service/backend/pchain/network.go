@@ -3,6 +3,7 @@ package pchain
 import (
 	"context"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
@@ -21,7 +22,7 @@ func (b *Backend) NetworkIdentifier() *types.NetworkIdentifier {
 // NetworkStatus implements /network/status endpoint for P-chain
 func (b *Backend) NetworkStatus(ctx context.Context, _ *types.NetworkRequest) (*types.NetworkStatusResponse, *types.Error) {
 	// Fetch peers
-	infoPeers, err := b.pClient.Peers(ctx)
+	infoPeers, err := b.pClient.Peers(ctx, []ids.NodeID{})
 	if err != nil {
 		return nil, service.WrapError(service.ErrClientError, err)
 	}

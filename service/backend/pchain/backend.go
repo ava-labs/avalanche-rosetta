@@ -2,7 +2,9 @@ package pchain
 
 import (
 	"github.com/ava-labs/avalanchego/codec"
+	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/upgrade"
 	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -34,6 +36,8 @@ type Backend struct {
 	codecVersion       uint16
 	avaxAssetID        ids.ID
 	txParserCfg        pmapper.TxParserConfig
+	upgradeConfig      upgrade.Config
+	feeConfig          genesis.TxFeeConfig
 }
 
 // NewBackend creates a P-chain service backend
@@ -54,6 +58,9 @@ func NewBackend(
 		return nil, err
 	}
 
+	upgradeConfig := upgrade.GetConfig(avalancheNetworkID)
+	feeConfig := genesis.GetTxFeeConfig(avalancheNetworkID)
+
 	return &Backend{
 		genesisHandler:     genHandler,
 		networkID:          networkIdentifier,
@@ -72,6 +79,8 @@ func NewBackend(
 			AvaxAssetID:    avaxAssetID,
 			PChainClient:   pClient,
 		},
+		upgradeConfig: upgradeConfig,
+		feeConfig:     feeConfig,
 	}, nil
 }
 

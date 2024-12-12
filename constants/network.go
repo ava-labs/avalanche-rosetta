@@ -1,8 +1,8 @@
 package constants
 
 import (
+	"github.com/ava-labs/avalanchego/upgrade"
 	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/coreth/params"
 )
 
 const (
@@ -16,6 +16,11 @@ const (
 )
 
 var (
-	MainnetAP5Activation = *params.AvalancheMainnetChainConfig.ApricotPhase5BlockTimestamp
-	FujiAP5Activation    = *params.AvalancheFujiChainConfig.ApricotPhase5BlockTimestamp
+	mainnetUpgrades = upgrade.GetConfig(constants.MainnetID)
+	fujiUpgrades    = upgrade.GetConfig(constants.FujiID)
+)
+
+var (
+	MainnetAP5Activation = uint64(mainnetUpgrades.ApricotPhase5Time.Unix())
+	FujiAP5Activation    = uint64(fujiUpgrades.ApricotPhase5Time.Unix())
 )

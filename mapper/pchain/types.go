@@ -2,24 +2,30 @@ package pchain
 
 import (
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/coinbase/rosetta-sdk-go/parser"
 )
 
 const (
-	OpImportAvax                 = "IMPORT_AVAX"
-	OpExportAvax                 = "EXPORT_AVAX"
-	OpAddValidator               = "ADD_VALIDATOR"
-	OpAddPermissionlessValidator = "ADD_PERMISSIONLESS_VALIDATOR"
-	OpAddDelegator               = "ADD_DELEGATOR"
-	OpAddPermissionlessDelegator = "ADD_PERMISSIONLESS_DELEGATOR"
-	OpRewardValidator            = "REWARD_VALIDATOR"
-	OpCreateChain                = "CREATE_CHAIN"
-	OpCreateSubnet               = "CREATE_SUBNET"
-	OpAddSubnetValidator         = "ADD_SUBNET_VALIDATOR"
-	OpRemoveSubnetValidator      = "REMOVE_SUBNET_VALIDATOR"
-	OpTransformSubnetValidator   = "TRANSFORM_SUBNET_VALIDATOR"
-	OpAdvanceTime                = "ADVANCE_TIME"
-	OpBase                       = "BASE"
-	OpTransferSubnetOwnership    = "TRANSFER_SUBNET_OWNERSHIP"
+	OpImportAvax                   = "IMPORT_AVAX"
+	OpExportAvax                   = "EXPORT_AVAX"
+	OpAddValidator                 = "ADD_VALIDATOR"
+	OpAddPermissionlessValidator   = "ADD_PERMISSIONLESS_VALIDATOR"
+	OpAddDelegator                 = "ADD_DELEGATOR"
+	OpAddPermissionlessDelegator   = "ADD_PERMISSIONLESS_DELEGATOR"
+	OpRewardValidator              = "REWARD_VALIDATOR"
+	OpCreateChain                  = "CREATE_CHAIN"
+	OpCreateSubnet                 = "CREATE_SUBNET"
+	OpAddSubnetValidator           = "ADD_SUBNET_VALIDATOR"
+	OpRemoveSubnetValidator        = "REMOVE_SUBNET_VALIDATOR"
+	OpTransformSubnetValidator     = "TRANSFORM_SUBNET_VALIDATOR"
+	OpAdvanceTime                  = "ADVANCE_TIME"
+	OpBase                         = "BASE"
+	OpTransferSubnetOwnership      = "TRANSFER_SUBNET_OWNERSHIP"
+	OpConvertSubnetToL1Tx          = "CONVERT_SUBNET_TO_L1_TX"
+	OpRegisterL1ValidatorTx        = "REGISTER_L1_VALIDATOR_TX"
+	OpIncreaseL1ValidatorBalanceTx = "INCREASE_L1_VALIDATOR_BALANCE_TX"
+	OpSetL1ValidatorWeightTx       = "SET_L1_VALIDATOR_WEIGHT_TX"
+	OpDisableL1ValidatorTx         = "DISABLE_L1_VALIDATOR_TX"
 
 	OpTypeImport      = "IMPORT"
 	OpTypeExport      = "EXPORT"
@@ -36,6 +42,9 @@ const (
 	MetadataStakingEndTime   = "staking_end_time"
 	MetadataMessage          = "message"
 	MetadataSigner           = "signer"
+
+	MetadataBaseFee = "base_fee"
+	MetadataMatches = "matches"
 
 	MetadataValidatorRewards       = "validator_rewards"
 	MetadataValidatorRewardsOwner  = "validator_rewards_owner"
@@ -72,10 +81,11 @@ var (
 
 // OperationMetadata contains metadata fields specific to individual Rosetta operations as opposed to transactions
 type OperationMetadata struct {
-	Type       string   `json:"type"`
-	SigIndices []uint32 `json:"sig_indices,omitempty"`
-	Locktime   uint64   `json:"locktime"`
-	Threshold  uint32   `json:"threshold,omitempty"`
+	Type       string          `json:"type"`
+	SigIndices []uint32        `json:"sig_indices,omitempty"`
+	Locktime   uint64          `json:"locktime"`
+	Threshold  uint32          `json:"threshold,omitempty"`
+	Matches    []*parser.Match `json:"matches,omitempty"`
 }
 
 // ImportExportOptions contain response fields returned by /construction/preprocess for P-chain Import/Export transactions

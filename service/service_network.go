@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
@@ -81,7 +82,7 @@ func (s *NetworkService) NetworkStatus(
 	}
 
 	// Fetch peers
-	infoPeers, err := s.client.Peers(ctx)
+	infoPeers, err := s.client.Peers(ctx, []ids.NodeID{})
 	if err != nil {
 		return nil, WrapError(ErrClientError, err)
 	}

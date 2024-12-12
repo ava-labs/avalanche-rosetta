@@ -53,6 +53,16 @@ func GetTxDependenciesIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 		ins = unsignedTx.Ins
 	case *txs.TransferSubnetOwnershipTx:
 		ins = unsignedTx.Ins
+	case *txs.ConvertSubnetToL1Tx:
+		ins = unsignedTx.Ins
+	case *txs.RegisterL1ValidatorTx:
+		ins = unsignedTx.Ins
+	case *txs.IncreaseL1ValidatorBalanceTx:
+		ins = unsignedTx.Ins
+	case *txs.SetL1ValidatorWeightTx:
+		ins = unsignedTx.Ins
+	case *txs.DisableL1ValidatorTx:
+		ins = unsignedTx.Ins
 	case *txs.BaseTx:
 		ins = unsignedTx.Ins
 	default:
@@ -166,6 +176,16 @@ func (d *SingleTxDependency) GetUtxos() map[avax.UTXOID]*avax.UTXO {
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
 		case *txs.TransferSubnetOwnershipTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.ConvertSubnetToL1Tx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.RegisterL1ValidatorTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.IncreaseL1ValidatorBalanceTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.SetL1ValidatorWeightTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.DisableL1ValidatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 		case *txs.BaseTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
