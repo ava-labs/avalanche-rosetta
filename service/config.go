@@ -8,7 +8,7 @@ import (
 	"github.com/ava-labs/coreth/params"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethtypes "github.com/ava-labs/libevm/core/types"
 )
 
 // Config holds the service configuration

@@ -3,9 +3,9 @@ package mapper
 import (
 	"testing"
 
+	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
 

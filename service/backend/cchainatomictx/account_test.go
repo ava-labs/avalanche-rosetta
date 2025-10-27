@@ -18,7 +18,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethtypes "github.com/ava-labs/libevm/core/types"
 )
 
 type utxo struct {

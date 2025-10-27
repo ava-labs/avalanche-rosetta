@@ -28,7 +28,6 @@ type PChainClient interface {
 	// info.Client methods
 	InfoClient
 	GetNodeID(context.Context, ...rpc.Option) (ids.NodeID, *signer.ProofOfPossession, error)
-	GetTxFee(context.Context, ...rpc.Option) (*info.GetTxFeeResponse, error)
 
 	// indexer.Client methods
 	// Note: we use indexer only to be able to retrieve blocks by height.
@@ -76,10 +75,10 @@ type (
 )
 
 type pchainClient struct {
-	platformvmClient
-	indexerClient
-	infoClient
-	xChainClient avm.Client
+	*platformvmClient
+	*indexerClient
+	*infoClient
+	xChainClient *avm.Client
 }
 
 // NewPChainClient returns a new client for Avalanche APIs related to P-chain

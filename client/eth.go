@@ -31,7 +31,7 @@ func NewEthClient(ctx context.Context, endpoint string) (*EthClient, error) {
 	}
 
 	return &EthClient{
-		Client: ethclient.NewClient(c),
+		Client: *ethclient.NewClient(c),
 		rpc:    c,
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,

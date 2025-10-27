@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ava-labs/libevm/common/hexutil"
+	"github.com/ava-labs/libevm/core/types"
 )
 
 // BlockMetadata returns meta data for a block

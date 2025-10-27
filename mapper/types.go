@@ -1,8 +1,8 @@
 package mapper
 
 import (
+	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 const (

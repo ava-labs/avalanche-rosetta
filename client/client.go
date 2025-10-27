@@ -8,10 +8,10 @@ import (
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/rpc"
-	"github.com/ava-labs/coreth/core/types"
-	"github.com/ava-labs/coreth/interfaces"
-	"github.com/ava-labs/coreth/plugin/evm"
-	"github.com/ethereum/go-ethereum/common"
+	evm "github.com/ava-labs/coreth/plugin/evm/client"
+	ethereum "github.com/ava-labs/libevm"
+	"github.com/ava-labs/libevm/common"
+	"github.com/ava-labs/libevm/core/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
 )
@@ -36,10 +36,10 @@ type Client interface {
 	BalanceAt(context.Context, common.Address, *big.Int) (*big.Int, error)
 	NonceAt(context.Context, common.Address, *big.Int) (uint64, error)
 	SuggestGasPrice(context.Context) (*big.Int, error)
-	EstimateGas(context.Context, interfaces.CallMsg) (uint64, error)
+	EstimateGas(context.Context, ethereum.CallMsg) (uint64, error)
 	TxPoolContent(context.Context) (*TxPoolContent, error)
 	GetContractInfo(common.Address, bool) (string, uint8, error)
-	CallContract(context.Context, interfaces.CallMsg, *big.Int) ([]byte, error)
+	CallContract(context.Context, ethereum.CallMsg, *big.Int) ([]byte, error)
 	IssueTx(ctx context.Context, txBytes []byte, options ...rpc.Option) (ids.ID, error)
 	GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, sourceChain string, limit uint32, startAddress ids.ShortID, startUTXOID ids.ID, options ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error)
 	EstimateBaseFee(ctx context.Context) (*big.Int, error)
@@ -64,7 +64,7 @@ func NewClient(ctx context.Context, endpoint string) (Client, error) {
 	}
 
 	return &client{
-		Client:         info.NewClient(endpoint),
+		Client:         *info.NewClient(endpoint),
 		EvmClient:      evm.NewClient(endpoint, constants.CChain.String()),
 		EthClient:      eth,
 		ContractClient: NewContractClient(eth.Client),

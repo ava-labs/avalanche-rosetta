@@ -7,16 +7,16 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/coreth/core"
+	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethtypes "github.com/ava-labs/libevm/core/types"
 )
 
 // BlockBackend represents a backend that implements /block family of apis for a subset of requests

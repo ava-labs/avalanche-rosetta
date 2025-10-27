@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/ava-labs/avalanchego/cache"
+	"github.com/ava-labs/avalanchego/cache/lru"
 	"github.com/ava-labs/coreth/ethclient"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ava-labs/libevm/common"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 // ContractClient is a client for the calling contract information
 type ContractClient struct {
 	ethClient ethclient.Client
-	cache     *cache.LRU[common.Address, *ContractInfo]
+	cache     *lru.Cache[common.Address, *ContractInfo]
 }
 
 type ContractInfo struct {
@@ -25,7 +25,7 @@ type ContractInfo struct {
 func NewContractClient(c ethclient.Client) *ContractClient {
 	return &ContractClient{
 		ethClient: c,
-		cache:     &cache.LRU[common.Address, *ContractInfo]{Size: contractCacheSize},
+		cache:     lru.NewCache[common.Address, *ContractInfo](contractCacheSize),
 	}
 }
 
@@ -37,7 +37,7 @@ func (c *ContractClient) GetContractInfo(addr common.Address, erc20 bool) (strin
 		return currency.Symbol, currency.Decimals, nil
 	}
 
-	token, err := NewContractInfoToken(addr, c.ethClient)
+	token, err := NewContractInfoToken(addr, &c.ethClient)
 	if err != nil {
 		return "", 0, err
 	}

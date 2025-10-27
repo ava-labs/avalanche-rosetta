@@ -6,7 +6,7 @@ import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/hashing"
-	"github.com/ava-labs/coreth/plugin/evm"
+	"github.com/ava-labs/coreth/plugin/evm/atomic"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -23,7 +23,7 @@ var (
 )
 
 type cAtomicTx struct {
-	Tx           *evm.Tx
+	Tx           *atomic.Tx
 	Codec        codec.Manager
 	CodecVersion uint16
 }
@@ -40,7 +40,7 @@ func (c *cAtomicTx) Marshal() ([]byte, error) {
 }
 
 func (c *cAtomicTx) Unmarshal(bytes []byte) error {
-	tx := evm.Tx{}
+	tx := atomic.Tx{}
 	_, err := c.Codec.Unmarshal(bytes, &tx)
 	if err != nil {
 		return err

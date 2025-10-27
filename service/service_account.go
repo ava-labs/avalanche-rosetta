@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ava-labs/coreth/interfaces"
+	ethereum "github.com/ava-labs/libevm"
+	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -128,7 +128,7 @@ func (s AccountService) AccountBalance(
 		}
 
 		contractAddress := common.HexToAddress(value.(string))
-		callMsg := interfaces.CallMsg{To: &contractAddress, Data: data}
+		callMsg := ethereum.CallMsg{To: &contractAddress, Data: data}
 		response, err := s.client.CallContract(ctx, callMsg, header.Number)
 		if err != nil {
 			return nil, WrapError(ErrInternalError, err)

@@ -128,7 +128,7 @@ linters-settings:
     no-extra-aliases: false
     # List of aliases
     alias:
-      - pkg: github.com/ava-labs/coreth/core/types
+      - pkg: github.com/ava-labs/libevm/core/types
         alias: ethtypes
       - pkg: github.com/ethereum/go-ethereum/common
         alias: ethcommon

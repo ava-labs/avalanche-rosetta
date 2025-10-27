@@ -11,10 +11,10 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	"github.com/ava-labs/coreth/plugin/evm"
+	"github.com/ava-labs/coreth/plugin/evm/atomic"
+	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )
@@ -23,7 +23,7 @@ var errMissingCoinIdentifier = errors.New("input operation does not have coin id
 
 // BuildTx constructs an evm tx based on the provided operation type, Rosetta matches and metadata
 // This method is only used during construction.
-func BuildTx(opType string, matches []*parser.Match, metadata Metadata, codec codec.Manager, avaxAssetID ids.ID) (*evm.Tx, []*types.AccountIdentifier, error) {
+func BuildTx(opType string, matches []*parser.Match, metadata Metadata, codec codec.Manager, avaxAssetID ids.ID) (*atomic.Tx, []*types.AccountIdentifier, error) {
 	switch opType {
 	case mapper.OpExport:
 		return buildExportTx(matches, metadata, codec, avaxAssetID)
@@ -40,7 +40,7 @@ func buildExportTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*evm.Tx, []*types.AccountIdentifier, error) {
+) (*atomic.Tx, []*types.AccountIdentifier, error) {
 	ins, signers := buildIns(matches, metadata, avaxAssetID)
 
 	exportedOutputs, err := buildExportedOutputs(matches, codec, avaxAssetID)
@@ -48,7 +48,7 @@ func buildExportTx(
 		return nil, nil, err
 	}
 
-	tx := &evm.Tx{UnsignedAtomicTx: &evm.UnsignedExportTx{
+	tx := &atomic.Tx{UnsignedAtomicTx: &atomic.UnsignedExportTx{
 		NetworkID:        metadata.NetworkID,
 		BlockchainID:     metadata.CChainID,
 		DestinationChain: *metadata.DestinationChainID,
@@ -64,7 +64,7 @@ func buildImportTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*evm.Tx, []*types.AccountIdentifier, error) {
+) (*atomic.Tx, []*types.AccountIdentifier, error) {
 	importedInputs, signers, err := buildImportedInputs(matches, avaxAssetID)
 	if err != nil {
 		return nil, nil, err
@@ -72,7 +72,7 @@ func buildImportTx(
 
 	outs := buildOuts(matches, avaxAssetID)
 
-	tx := &evm.Tx{UnsignedAtomicTx: &evm.UnsignedImportTx{
+	tx := &atomic.Tx{UnsignedAtomicTx: &atomic.UnsignedImportTx{
 		NetworkID:      metadata.NetworkID,
 		BlockchainID:   metadata.CChainID,
 		SourceChain:    *metadata.SourceChainID,
@@ -82,13 +82,13 @@ func buildImportTx(
 	return tx, signers, tx.Sign(codec, nil)
 }
 
-func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([]evm.EVMInput, []*types.AccountIdentifier) {
+func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([]atomic.EVMInput, []*types.AccountIdentifier) {
 	inputMatch := matches[0]
 
-	ins := []evm.EVMInput{}
+	ins := []atomic.EVMInput{}
 	signers := []*types.AccountIdentifier{}
 	for i, op := range inputMatch.Operations {
-		ins = append(ins, evm.EVMInput{
+		ins = append(ins, atomic.EVMInput{
 			Address: common.HexToAddress(op.Account.Address),
 			Amount:  inputMatch.Amounts[i].Uint64(),
 			AssetID: avaxAssetID,
@@ -100,7 +100,7 @@ func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([
 	// we do not use the signers as signing is performed externally to Rosetta
 	// instead we are using a dummy array with the same length as ins
 	evmSigners := make([][]*secp256k1.PrivateKey, len(ins))
-	evm.SortEVMInputsAndSigners(ins, evmSigners)
+	atomic.SortEVMInputsAndSigners(ins, evmSigners)
 
 	return ins, signers
 }
@@ -136,12 +136,12 @@ func buildImportedInputs(matches []*parser.Match, avaxAssetID ids.ID) ([]*avax.T
 	return importedInputs, signers, nil
 }
 
-func buildOuts(matches []*parser.Match, avaxAssetID ids.ID) []evm.EVMOutput {
+func buildOuts(matches []*parser.Match, avaxAssetID ids.ID) []atomic.EVMOutput {
 	outputMatch := matches[1]
 
-	outs := []evm.EVMOutput{}
+	outs := []atomic.EVMOutput{}
 	for i, op := range outputMatch.Operations {
-		outs = append(outs, evm.EVMOutput{
+		outs = append(outs, atomic.EVMOutput{
 			Address: common.HexToAddress(op.Account.Address),
 			Amount:  outputMatch.Amounts[i].Uint64(),
 			AssetID: avaxAssetID,

@@ -12,14 +12,15 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/coreth/core"
-	"github.com/ava-labs/coreth/plugin/evm"
+	"github.com/ava-labs/coreth/plugin/evm/atomic"
+	"github.com/ava-labs/coreth/plugin/evm/customtypes"
+	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/constants"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethtypes "github.com/ava-labs/libevm/core/types"
 )
 
 const (
@@ -143,7 +144,7 @@ func crossChainTransaction(
 	chainIDToAliasMapping map[ids.ID]constants.ChainIDAlias,
 	rawIdx int,
 	avaxAssetID string,
-	tx *evm.Tx,
+	tx *atomic.Tx,
 ) ([]*types.Operation, map[string]interface{}, error) {
 	var (
 		ops          = []*types.Operation{}
@@ -156,12 +157,12 @@ func crossChainTransaction(
 	)
 
 	// Prepare transaction for ID calcuation
-	if err := tx.Sign(evm.Codec, nil); err != nil {
+	if err := tx.Sign(atomic.Codec, nil); err != nil {
 		return nil, nil, err
 	}
 
 	switch t := tx.UnsignedAtomicTx.(type) {
-	case *evm.UnsignedImportTx:
+	case *atomic.UnsignedImportTx:
 		// Create de-duplicated list of input
 		// transaction IDs
 		mTxIDs := map[string]struct{}{}
@@ -210,7 +211,7 @@ func crossChainTransaction(
 			ops = append(ops, op)
 			idx++
 		}
-	case *evm.UnsignedExportTx:
+	case *atomic.UnsignedExportTx:
 		for _, in := range t.Ins {
 			if in.AssetID.String() != avaxAssetID {
 				continue
@@ -333,12 +334,12 @@ func CrossChainTransactions(
 ) ([]*types.Transaction, error) {
 	transactions := []*types.Transaction{}
 
-	extra := block.ExtData()
+	extra := customtypes.BlockExtData(block)
 	if len(extra) == 0 {
 		return transactions, nil
 	}
 
-	atomicTxs, err := evm.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, evm.Codec)
+	atomicTxs, err := atomic.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, atomic.Codec)
 	if err != nil {
 		return nil, err
 	}

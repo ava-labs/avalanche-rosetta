@@ -3,7 +3,7 @@ package cchainatomictx
 import (
 	"testing"
 
-	"github.com/ava-labs/coreth/plugin/evm"
+	"github.com/ava-labs/coreth/plugin/evm/atomic"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 
@@ -32,7 +32,7 @@ func TestShouldHandleRequest(t *testing.T) {
 	}
 
 	backend := &Backend{
-		codec:        evm.Codec,
+		codec:        atomic.Codec,
 		codecVersion: 0,
 	}
 

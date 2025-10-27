@@ -3,7 +3,7 @@ package cchainatomictx
 import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/coreth/plugin/evm"
+	"github.com/ava-labs/coreth/plugin/evm/atomic"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -33,7 +33,7 @@ func NewBackend(cClient client.Client, avaxAssetID ids.ID, avalancheNetworkID ui
 		avalancheNetworkID: avalancheNetworkID,
 		cClient:            cClient,
 		getUTXOsPageSize:   1024,
-		codec:              evm.Codec,
+		codec:              atomic.Codec,
 		codecVersion:       0,
 		avaxAssetID:        avaxAssetID,
 	}

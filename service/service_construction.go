@@ -8,11 +8,11 @@ import (
 	"math/big"
 
 	"github.com/ava-labs/coreth/core"
-	"github.com/ava-labs/coreth/interfaces"
+	ethereum "github.com/ava-labs/libevm"
+	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/crypto/sha3"
@@ -20,7 +20,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/client"
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 
-	ethtypes "github.com/ava-labs/coreth/core/types"
+	ethtypes "github.com/ava-labs/libevm/core/types"
 )
 
 const (
@@ -1259,7 +1259,7 @@ func (s ConstructionService) getNativeTransferGasLimit(
 		return nativeTransferGasLimit, nil
 	}
 	to := common.HexToAddress(toAddress)
-	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+	gasLimit, err := s.client.EstimateGas(ctx, ethereum.CallMsg{
 		From:  common.HexToAddress(fromAddress),
 		To:    &to,
 		Value: value,
@@ -1281,7 +1281,7 @@ func (s ConstructionService) getErc20TransferGasLimit(
 	// ToAddress for erc20 transfers is the contract address
 	contractAddress := common.HexToAddress(contract.(string))
 	data := generateErc20TransferData(toAddress, value)
-	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+	gasLimit, err := s.client.EstimateGas(ctx, ethereum.CallMsg{
 		From: common.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,
@@ -1307,7 +1307,7 @@ func (s ConstructionService) getBridgeUnwrapTransferGasLimit(
 	chainID := big.NewInt(defaultUnwrapChainID)
 	data := generateBridgeUnwrapTransferData(value, chainID)
 
-	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+	gasLimit, err := s.client.EstimateGas(ctx, ethereum.CallMsg{
 		From: common.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,
@@ -1325,7 +1325,7 @@ func (s ConstructionService) getGenericContractCallGasLimit(
 	data []byte,
 ) (uint64, error) {
 	contractAddress := common.HexToAddress(toAddress)
-	gasLimit, err := s.client.EstimateGas(ctx, interfaces.CallMsg{
+	gasLimit, err := s.client.EstimateGas(ctx, ethereum.CallMsg{
 		From: common.HexToAddress(fromAddress),
 		To:   &contractAddress,
 		Data: data,

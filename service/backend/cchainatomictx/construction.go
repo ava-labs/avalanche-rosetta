@@ -10,7 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
-	"github.com/ava-labs/coreth/plugin/evm"
+	"github.com/ava-labs/coreth/plugin/evm/atomic"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -20,7 +20,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 
 	cmapper "github.com/ava-labs/avalanche-rosetta/mapper/cchainatomictx"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethcommon "github.com/ava-labs/libevm/common"
 )
 
 var (
@@ -295,13 +295,13 @@ func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (comm
 
 // getTxCreds fetches credentials based on the tx type
 func getTxCreds(
-	unsignedAtomicTx evm.UnsignedAtomicTx,
+	unsignedAtomicTx atomic.UnsignedAtomicTx,
 	signatures []*types.Signature,
 ) ([]verify.Verifiable, error) {
 	switch uat := unsignedAtomicTx.(type) {
-	case *evm.UnsignedImportTx:
+	case *atomic.UnsignedImportTx:
 		return common.BuildCredentialList(uat.ImportedInputs, signatures)
-	case *evm.UnsignedExportTx:
+	case *atomic.UnsignedExportTx:
 		return common.BuildSingletonCredentialList(signatures)
 	}
 

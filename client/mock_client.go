@@ -24,9 +24,9 @@ import (
 	gas "github.com/ava-labs/avalanchego/vms/components/gas"
 	platformvm "github.com/ava-labs/avalanchego/vms/platformvm"
 	signer "github.com/ava-labs/avalanchego/vms/platformvm/signer"
-	types "github.com/ava-labs/coreth/core/types"
-	interfaces "github.com/ava-labs/coreth/interfaces"
-	common "github.com/ethereum/go-ethereum/common"
+	types "github.com/ava-labs/libevm/core/types"
+	interfaces "github.com/ava-labs/libevm"
+	common "github.com/ava-labs/libevm/common"
 	gomock "go.uber.org/mock/gomock"
 )
 
