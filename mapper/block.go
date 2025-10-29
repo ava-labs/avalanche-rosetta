@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"github.com/ava-labs/coreth/plugin/evm/customtypes"
 	"github.com/ava-labs/libevm/common/hexutil"
 	"github.com/ava-labs/libevm/core/types"
 )
@@ -17,11 +18,14 @@ func BlockMetadata(block *types.Block) map[string]interface{} {
 	if block.BaseFee() != nil {
 		meta["base_fee"] = hexutil.EncodeBig(block.BaseFee())
 	}
-	if block.BlockGasCost() != nil {
-		meta["block_gas_cost"] = hexutil.EncodeBig(block.BlockGasCost())
+
+	blockGasCost := customtypes.BlockGasCost(block)
+	eExtDataGasUsed := customtypes.BlockExtDataGasUsed(block)
+	if blockGasCost != nil {
+		meta["block_gas_cost"] = hexutil.EncodeBig(blockGasCost)
 	}
-	if block.ExtDataGasUsed() != nil {
-		meta["ext_data_gas_used"] = hexutil.EncodeBig(block.ExtDataGasUsed())
+	if eExtDataGasUsed != nil {
+		meta["ext_data_gas_used"] = hexutil.EncodeBig(eExtDataGasUsed)
 	}
 	return meta
 }

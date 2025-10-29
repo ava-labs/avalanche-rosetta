@@ -3,9 +3,8 @@ package service
 import (
 	"math/big"
 
-	"github.com/ava-labs/avalanchego/upgrade"
-	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/coreth/params"
+	"github.com/ava-labs/coreth/utils"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethtypes "github.com/ava-labs/libevm/core/types"
@@ -63,14 +62,34 @@ func (c Config) IsTokenListEmpty() bool {
 func (c Config) Signer() ethtypes.Signer {
 	if c.ChainID != nil {
 		if c.ChainID.Cmp(params.AvalancheMainnetChainID) == 0 {
-			return ethtypes.LatestSigner(params.GetChainConfig(upgrade.GetConfig(constants.MainnetID), params.AvalancheMainnetChainID))
+			return ethtypes.LatestSigner(GetChainConfig(params.AvalancheMainnetChainID))
 		}
 		if c.ChainID.Cmp(params.AvalancheFujiChainID) == 0 {
-			return ethtypes.LatestSigner(params.GetChainConfig(upgrade.GetConfig(constants.FujiID), params.AvalancheFujiChainID))
+			return ethtypes.LatestSigner(GetChainConfig(params.AvalancheFujiChainID))
 		}
 		if c.ChainID.Cmp(params.AvalancheLocalChainID) == 0 {
-			return ethtypes.LatestSigner(params.GetChainConfig(upgrade.GetConfig(constants.LocalID), params.AvalancheLocalChainID))
+			return ethtypes.LatestSigner(GetChainConfig(params.AvalancheLocalChainID))
 		}
 	}
 	return ethtypes.LatestSignerForChainID(c.ChainID)
+}
+func GetChainConfig(chainID *big.Int) *params.ChainConfig {
+	return &params.ChainConfig{
+		ChainID:             chainID,
+		HomesteadBlock:      big.NewInt(0),
+		DAOForkBlock:        big.NewInt(0),
+		DAOForkSupport:      true,
+		EIP150Block:         big.NewInt(0),
+		EIP155Block:         big.NewInt(0),
+		EIP158Block:         big.NewInt(0),
+		ByzantiumBlock:      big.NewInt(0),
+		ConstantinopleBlock: big.NewInt(0),
+		PetersburgBlock:     big.NewInt(0),
+		IstanbulBlock:       big.NewInt(0),
+		MuirGlacierBlock:    big.NewInt(0),
+		BerlinBlock:         big.NewInt(0),
+		LondonBlock:         big.NewInt(0),
+		ShanghaiTime:        utils.NewUint64(0),
+		CancunTime:          utils.NewUint64(0),
+	}
 }

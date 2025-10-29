@@ -290,10 +290,6 @@ func (b *Backend) calculateFee(ctx context.Context, tx *txs.Tx) (uint64, error) 
 }
 
 func (b *Backend) PickFeeCalculator(ctx context.Context, timestamp time.Time) (txfee.Calculator, error) {
-	if !b.upgradeConfig.IsEtnaActivated(timestamp) {
-		return b.NewStaticFeeCalculator(timestamp), nil
-	}
-
 	_, gasPrice, _, err := b.pClient.GetFeeState(ctx)
 	if err != nil {
 		return nil, err
@@ -302,15 +298,6 @@ func (b *Backend) PickFeeCalculator(ctx context.Context, timestamp time.Time) (t
 		b.feeConfig.DynamicFeeConfig.Weights,
 		gasPrice,
 	), nil
-}
-
-func (b *Backend) NewStaticFeeCalculator(timestamp time.Time) txfee.Calculator {
-	feeConfig := b.feeConfig.StaticFeeConfig
-	if !b.upgradeConfig.IsApricotPhase3Activated(timestamp) {
-		feeConfig.CreateSubnetTxFee = b.feeConfig.CreateAssetTxFee
-		feeConfig.CreateBlockchainTxFee = b.feeConfig.CreateAssetTxFee
-	}
-	return txfee.NewStaticCalculator(feeConfig)
 }
 
 // getTxInputs fetches tx inputs based on the tx type.
