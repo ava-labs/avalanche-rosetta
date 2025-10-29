@@ -3,8 +3,8 @@ package mapper
 import (
 	"math/big"
 
+	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 func Amount(value *big.Int, currency *types.Currency) *types.Amount {

@@ -5,8 +5,8 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/ava-labs/libevm/common/hexutil"
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
 )

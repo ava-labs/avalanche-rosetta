@@ -11,9 +11,9 @@ import (
 	"github.com/ava-labs/coreth/accounts/abi"
 	"github.com/ava-labs/coreth/accounts/abi/bind"
 	"github.com/ava-labs/libevm/core/types"
-	ethereum "github.com/ethereum/go-ethereum"
+	ethereum "github.com/ava-labs/libevm"
 	"github.com/ava-labs/libevm/common"
-	"github.com/ethereum/go-ethereum/event"
+	"github.com/ava-labs/libevm/event"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

@@ -20,7 +20,7 @@ import (
 	"github.com/ava-labs/avalanche-rosetta/service/backend/common"
 
 	avaconstants "github.com/ava-labs/avalanchego/utils/constants"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethcommon "github.com/ava-labs/libevm/common"
 )
 
 var (
