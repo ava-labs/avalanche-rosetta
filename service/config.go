@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/ava-labs/coreth/params"
-	"github.com/ava-labs/coreth/utils"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethtypes "github.com/ava-labs/libevm/core/types"
@@ -73,8 +72,9 @@ func (c Config) Signer() ethtypes.Signer {
 	}
 	return ethtypes.LatestSignerForChainID(c.ChainID)
 }
+
 func GetChainConfig(chainID *big.Int) *params.ChainConfig {
-	return &params.ChainConfig{
+	c := &params.ChainConfig{
 		ChainID:             chainID,
 		HomesteadBlock:      big.NewInt(0),
 		DAOForkBlock:        big.NewInt(0),
@@ -87,9 +87,7 @@ func GetChainConfig(chainID *big.Int) *params.ChainConfig {
 		PetersburgBlock:     big.NewInt(0),
 		IstanbulBlock:       big.NewInt(0),
 		MuirGlacierBlock:    big.NewInt(0),
-		BerlinBlock:         big.NewInt(0),
-		LondonBlock:         big.NewInt(0),
-		ShanghaiTime:        utils.NewUint64(0),
-		CancunTime:          utils.NewUint64(0),
 	}
+	params.SetEthUpgrades(c)
+	return c
 }

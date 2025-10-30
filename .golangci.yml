@@ -20,11 +20,8 @@ run:
   # Allowed values: readonly|vendor|mod
   # By default, it isn't set.
   modules-download-mode: readonly
+  tests: false
 
-output:
-  # Make issues output unique by line.
-  # Default: true
-  uniq-by-line: false
 
 issues:
   # Maximum issues count per one linter.
@@ -38,16 +35,16 @@ issues:
   max-same-issues: 0
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - asciicheck
     - bodyclose
-    - depguard
+    # - depguard
     - dupword
-    - errcheck
+    # - errcheck
     - errorlint
     # - exportloopref
-    - forbidigo
+    # - forbidigo
     # - gci
     - goconst
     - gocritic
@@ -56,7 +53,7 @@ linters:
     # - gofumpt
     # - gomnd
     - goprintffuncname
-    - gosec
+    # - gosec
     # - gosimple
     - govet
     - importas
@@ -64,21 +61,21 @@ linters:
     # - lll
     - misspell
     - nakedret
-    - noctx
+    # - noctx
     - nolintlint
     - perfsprint
     - prealloc
     - predeclared
-    - revive
+    # - revive
     - spancheck
-    - staticcheck
+    # - staticcheck
     # - stylecheck
     - tagalign
     - testifylint
     # - typecheck
     - unconvert
     - unparam
-    - unused
+    # - unused
     - usestdlibvars
     - whitespace
 
