@@ -73,8 +73,6 @@ linters:
     # - unused
     - usestdlibvars
     - whitespace
-
-linter:
   settings:
     depguard:
       rules:
@@ -94,11 +92,11 @@ linter:
     forbidigo:
       # Forbid the following identifiers (list of regexp).
       forbid:
-        - 'require\.Error$(# ErrorIs should be used instead)?'
-        - 'require\.ErrorContains$(# ErrorIs should be used instead)?'
-        - 'require\.EqualValues$(# Equal should be used instead)?'
-        - 'require\.NotEqualValues$(# NotEqual should be used instead)?'
-        - '^(t|b|tb|f)\.(Fatal|Fatalf|Error|Errorf)$(# the require library should be used instead)?'
+        - pattern: 'require\.Error$(# ErrorIs should be used instead)?'
+        - pattern: 'require\.ErrorContains$(# ErrorIs should be used instead)?'
+        - pattern: 'require\.EqualValues$(# Equal should be used instead)?'
+        - pattern: 'require\.NotEqualValues$(# NotEqual should be used instead)?'
+        - pattern: '^(t|b|tb|f)\.(Fatal|Fatalf|Error|Errorf)$(# the require library should be used instead)?'
       # Exclude godoc examples from forbidigo checks.
       exclude_godoc_examples: false
     gci:
