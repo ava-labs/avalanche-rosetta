@@ -28,6 +28,12 @@ WORKDIR /go/src/github.com/ava-labs/avalanche-rosetta
 ENV CGO_ENABLED=1
 ENV GOARCH=amd64
 ENV GOOS=linux
+ENV CGO_CFLAGS="-O -D__BLST_PORTABLE__"
+ENV CGO_CFLAGS_ALLOW="-D__BLST_PORTABLE__"
+
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN git checkout $ROSETTA_VERSION && \
     go mod download
