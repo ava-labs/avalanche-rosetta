@@ -1,6 +1,6 @@
 module github.com/ava-labs/avalanche-rosetta
 
-go 1.24.9
+go 1.25.3
 
 require (
 	github.com/ava-labs/avalanchego v1.14.0-rc.0
