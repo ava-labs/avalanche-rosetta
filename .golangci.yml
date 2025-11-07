@@ -97,16 +97,14 @@ linters:
         - pattern: 'require\.EqualValues$(# Equal should be used instead)?'
         - pattern: 'require\.NotEqualValues$(# NotEqual should be used instead)?'
         - pattern: '^(t|b|tb|f)\.(Fatal|Fatalf|Error|Errorf)$(# the require library should be used instead)?'
-      # Exclude godoc examples from forbidigo checks.
-      exclude_godoc_examples: false
-    gci:
-      sections:
-        - standard
-        - default
-        - blank
-        - dot
-        - prefix(github.com/ava-labs/avalanche-rosetta)
-        - alias
+    # gci:
+    #   sections:
+    #     - standard
+    #     - default
+    #     - blank
+    #     - dot
+    #     - prefix(github.com/ava-labs/avalanche-rosetta)
+    #     - alias
       skip-generated: true
       custom-order: true
     gosec:
