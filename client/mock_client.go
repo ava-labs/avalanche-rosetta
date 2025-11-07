@@ -24,9 +24,9 @@ import (
 	gas "github.com/ava-labs/avalanchego/vms/components/gas"
 	platformvm "github.com/ava-labs/avalanchego/vms/platformvm"
 	signer "github.com/ava-labs/avalanchego/vms/platformvm/signer"
-	types "github.com/ava-labs/libevm/core/types"
-	interfaces "github.com/ava-labs/libevm"
+	ethereum "github.com/ava-labs/libevm"
 	common "github.com/ava-labs/libevm/common"
+	types "github.com/ava-labs/libevm/core/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -99,7 +99,7 @@ func (mr *MockClientMockRecorder) BlockByNumber(arg0, arg1 any) *gomock.Call {
 }
 
 // CallContract mocks base method.
-func (m *MockClient) CallContract(arg0 context.Context, arg1 interfaces.CallMsg, arg2 *big.Int) ([]byte, error) {
+func (m *MockClient) CallContract(arg0 context.Context, arg1 ethereum.CallMsg, arg2 *big.Int) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CallContract", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]byte)
@@ -144,7 +144,7 @@ func (mr *MockClientMockRecorder) EstimateBaseFee(arg0 any) *gomock.Call {
 }
 
 // EstimateGas mocks base method.
-func (m *MockClient) EstimateGas(arg0 context.Context, arg1 interfaces.CallMsg) (uint64, error) {
+func (m *MockClient) EstimateGas(arg0 context.Context, arg1 ethereum.CallMsg) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EstimateGas", arg0, arg1)
 	ret0, _ := ret[0].(uint64)
@@ -736,26 +736,6 @@ func (mr *MockPChainClientMockRecorder) GetTx(arg0, arg1 any, arg2 ...any) *gomo
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTx", reflect.TypeOf((*MockPChainClient)(nil).GetTx), varargs...)
-}
-
-// GetTxFee mocks base method.
-func (m *MockPChainClient) GetTxFee(arg0 context.Context, arg1 ...rpc.Option) (*info.GetTxFeeResponse, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetTxFee", varargs...)
-	ret0, _ := ret[0].(*info.GetTxFeeResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTxFee indicates an expected call of GetTxFee.
-func (mr *MockPChainClientMockRecorder) GetTxFee(arg0 any, arg1 ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxFee", reflect.TypeOf((*MockPChainClient)(nil).GetTxFee), varargs...)
 }
 
 // GetUTXOs mocks base method.
