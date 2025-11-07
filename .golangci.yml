@@ -105,8 +105,8 @@ linters:
     #     - dot
     #     - prefix(github.com/ava-labs/avalanche-rosetta)
     #     - alias
-      skip-generated: true
-      custom-order: true
+    #  skip-generated: true
+    #  custom-order: true
     gosec:
       excludes:
         - G107 # Url provided to HTTP request as taint input https://securego.io/docs/rules/g107
