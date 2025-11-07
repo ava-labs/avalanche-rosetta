@@ -10,6 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/evm/emulate"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/coreth/core"
 	"github.com/ava-labs/coreth/plugin/evm/atomic"
@@ -334,31 +335,37 @@ func CrossChainTransactions(
 ) ([]*types.Transaction, error) {
 	transactions := []*types.Transaction{}
 
-	extra := customtypes.BlockExtData(block)
-	if len(extra) == 0 {
-		return transactions, nil
-	}
+	err := emulate.CChain(func() error {
+		extra := customtypes.BlockExtData(block)
+		if len(extra) == 0 {
+			return nil
+		}
 
-	atomicTxs, err := atomic.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, atomic.Codec)
+		atomicTxs, err := atomic.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, atomic.Codec)
+		if err != nil {
+			return err
+		}
+
+		for _, tx := range atomicTxs {
+			txOps, metadata, err := crossChainTransaction(networkIdentifier, chainIDToAliasMapping, 0, avaxAssetID, tx)
+			if err != nil {
+				return err
+			}
+
+			transaction := &types.Transaction{
+				TransactionIdentifier: &types.TransactionIdentifier{
+					Hash: tx.ID().String(),
+				},
+				Operations: txOps,
+				Metadata:   metadata,
+			}
+
+			transactions = append(transactions, transaction)
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, err
-	}
-
-	for _, tx := range atomicTxs {
-		txOps, metadata, err := crossChainTransaction(networkIdentifier, chainIDToAliasMapping, 0, avaxAssetID, tx)
-		if err != nil {
-			return nil, err
-		}
-
-		transaction := &types.Transaction{
-			TransactionIdentifier: &types.TransactionIdentifier{
-				Hash: tx.ID().String(),
-			},
-			Operations: txOps,
-			Metadata:   metadata,
-		}
-
-		transactions = append(transactions, transaction)
 	}
 
 	return transactions, nil

@@ -7,6 +7,8 @@ import (
 )
 
 // BlockMetadata returns meta data for a block
+// Must be called within emulate.CChain, otherwise the functions like
+// customtypes.BlockExtDataGasUsed will panic.
 func BlockMetadata(block *types.Block) map[string]interface{} {
 	meta := map[string]interface{}{
 		"gas_limit":  hexutil.EncodeUint64(block.GasLimit()),
@@ -20,12 +22,12 @@ func BlockMetadata(block *types.Block) map[string]interface{} {
 	}
 
 	blockGasCost := customtypes.BlockGasCost(block)
-	eExtDataGasUsed := customtypes.BlockExtDataGasUsed(block)
+	extDataGasUsed := customtypes.BlockExtDataGasUsed(block)
 	if blockGasCost != nil {
 		meta["block_gas_cost"] = hexutil.EncodeBig(blockGasCost)
 	}
-	if eExtDataGasUsed != nil {
-		meta["ext_data_gas_used"] = hexutil.EncodeBig(eExtDataGasUsed)
+	if extDataGasUsed != nil {
+		meta["ext_data_gas_used"] = hexutil.EncodeBig(extDataGasUsed)
 	}
 	return meta
 }

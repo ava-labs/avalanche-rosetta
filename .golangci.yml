@@ -19,7 +19,7 @@ run:
   #
   # Allowed values: readonly|vendor|mod
   # By default, it isn't set.
-  modules-download-mode: readonly
+  modules-download-mode: mod
   tests: false
 
 
