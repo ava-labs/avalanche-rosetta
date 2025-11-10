@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Build avalanche
 # ------------------------------------------------------------------------------
-FROM golang:1.25.3 AS avalanche
+FROM golang:1.24.9 AS avalanche
 
 ARG AVALANCHE_VERSION
 
@@ -16,9 +16,9 @@ RUN git checkout $AVALANCHE_VERSION && \
 # ------------------------------------------------------------------------------
 # Build avalanche rosetta
 # ------------------------------------------------------------------------------
-FROM golang:1.25.3 AS rosetta
+FROM golang:1.24.9 AS rosetta
 
-ARG ROSETTA_VERSION
+ARG ROS_COMMIT
 
 RUN git clone https://github.com/ava-labs/avalanche-rosetta.git \
   /go/src/github.com/ava-labs/avalanche-rosetta
@@ -35,7 +35,7 @@ RUN apt-get update -y && \
     apt-get install -y --no-install-recommends build-essential && \
     rm -rf /var/lib/apt/lists/*
 
-RUN git checkout $ROSETTA_VERSION && \
+RUN git checkout $ROS_COMMIT && \
     go mod download
 
 RUN \

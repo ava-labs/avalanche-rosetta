@@ -26,7 +26,7 @@ test:
 docker-build:
 	docker build \
 		--build-arg AVALANCHE_VERSION=${AVALANCHE_VERSION} \
-		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
+		--build-arg ROS_COMMIT=${GIT_COMMIT} \
 		-t ${DOCKER_TAG} \
 		-f Dockerfile \
 		.
@@ -34,7 +34,7 @@ docker-build:
 docker-build-arm64:
 	docker build \
 		--build-arg AVALANCHE_VERSION=${AVALANCHE_VERSION} \
-		--build-arg ROSETTA_VERSION=${GIT_COMMIT} \
+		--build-arg ROS_COMMIT=${GIT_COMMIT} \
 		-t ${DOCKER_TAG} \
 		-f Dockerfile.arm64 \
 		.
