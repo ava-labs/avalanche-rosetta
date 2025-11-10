@@ -26,8 +26,6 @@ RUN git clone https://github.com/ava-labs/avalanche-rosetta.git \
 WORKDIR /go/src/github.com/ava-labs/avalanche-rosetta
 
 ENV CGO_ENABLED=1
-ENV GOARCH=amd64
-ENV GOOS=linux
 ENV CGO_CFLAGS="-O -D__BLST_PORTABLE__"
 ENV CGO_CFLAGS_ALLOW="-D__BLST_PORTABLE__"
 
