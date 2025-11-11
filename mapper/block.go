@@ -7,8 +7,6 @@ import (
 )
 
 // BlockMetadata returns meta data for a block
-// Must be called within emulate.CChain, otherwise the functions like
-// customtypes.BlockExtDataGasUsed will panic.
 func BlockMetadata(block *types.Block) map[string]interface{} {
 	meta := map[string]interface{}{
 		"gas_limit":  hexutil.EncodeUint64(block.GasLimit()),

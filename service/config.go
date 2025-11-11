@@ -3,7 +3,6 @@ package service
 import (
 	"math/big"
 
-	"github.com/ava-labs/avalanchego/vms/evm/emulate"
 	"github.com/ava-labs/coreth/params"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -89,12 +88,6 @@ func GetChainConfig(chainID *big.Int) *params.ChainConfig {
 		IstanbulBlock:       big.NewInt(0),
 		MuirGlacierBlock:    big.NewInt(0),
 	}
-	err := emulate.CChain(func() error {
-		params.SetEthUpgrades(c)
-		return nil
-	})
-	if err != nil {
-		return nil
-	}
+	params.SetEthUpgrades(c)
 	return c
 }

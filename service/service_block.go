@@ -2,12 +2,10 @@ package service
 
 import (
 	"context"
-	"errors"
 	"math/big"
 	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/evm/emulate"
 	"github.com/ava-labs/coreth/core"
 	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/server"
@@ -86,8 +84,10 @@ func (s *BlockService) Block(
 	}
 
 	var (
-		block *ethtypes.Block
-		err   error
+		blockIdentifier       *types.BlockIdentifier
+		parentBlockIdentifier *types.BlockIdentifier
+		block                 *ethtypes.Block
+		err                   error
 	)
 
 	if hash := request.BlockIdentifier.Hash; hash != nil {
@@ -101,69 +101,45 @@ func (s *BlockService) Block(
 		}
 		return nil, WrapError(ErrClientError, err)
 	}
-	return s.parseBlock(ctx, request, block)
-}
 
-func (s *BlockService) parseBlock(ctx context.Context, request *types.BlockRequest, block *ethtypes.Block) (*types.BlockResponse, *types.Error) {
-	var (
-		blockIdentifier       *types.BlockIdentifier
-		parentBlockIdentifier *types.BlockIdentifier
-		blockResponse         *types.BlockResponse
-		rosettaErr            *types.Error
-	)
-
-	// emulate.CChain is used to simulate "block" function calls in a Coreth node.
-	// Otherwise, methods like block.Hash() will not include Avalanche-specific
-	// headers while calculating the block hash, and give incorrect data.
-	err := emulate.CChain(func() error {
-		blockIdentifier = &types.BlockIdentifier{
-			Index: block.Number().Int64(),
-			Hash:  block.Hash().String(), // block.Hash() is cached, so it must be used within emulate.CChain
-		}
-
-		if block.ParentHash().String() != s.config.GenesisBlockHash {
-			parentBlock, err := s.client.HeaderByHash(ctx, block.ParentHash())
-			if err != nil {
-				return err
-			}
-
-			parentBlockIdentifier = &types.BlockIdentifier{
-				Index: parentBlock.Number.Int64(),
-				Hash:  parentBlock.Hash().String(),
-			}
-		} else {
-			parentBlockIdentifier = s.genesisBlock.BlockIdentifier
-		}
-
-		transactions, rosettaErr := s.fetchTransactions(ctx, block)
-		if rosettaErr != nil {
-			return errors.New("failed to fetch transactions")
-		}
-
-		crosstx, rosettaErr := s.parseCrossChainTransactions(request.NetworkIdentifier, block)
-		if rosettaErr != nil {
-			return errors.New("failed to parse cross chain transactions")
-		}
-
-		blockResponse = &types.BlockResponse{
-			Block: &types.Block{
-				BlockIdentifier:       blockIdentifier,
-				ParentBlockIdentifier: parentBlockIdentifier,
-				Timestamp:             int64(block.Time() * utils.MillisecondsInSecond),
-				Transactions:          append(transactions, crosstx...),
-				Metadata:              mapper.BlockMetadata(block),
-			},
-		}
-		return nil
-	})
-	if err != nil {
-		if rosettaErr != nil {
-			return nil, rosettaErr
-		}
-		return nil, WrapError(ErrClientError, err)
+	blockIdentifier = &types.BlockIdentifier{
+		Index: block.Number().Int64(),
+		Hash:  block.Hash().String(),
 	}
 
-	return blockResponse, nil
+	if block.ParentHash().String() != s.config.GenesisBlockHash {
+		parentBlock, err := s.client.HeaderByHash(ctx, block.ParentHash())
+		if err != nil {
+			return nil, WrapError(ErrClientError, err)
+		}
+
+		parentBlockIdentifier = &types.BlockIdentifier{
+			Index: parentBlock.Number.Int64(),
+			Hash:  parentBlock.Hash().String(),
+		}
+	} else {
+		parentBlockIdentifier = s.genesisBlock.BlockIdentifier
+	}
+
+	transactions, terr := s.fetchTransactions(ctx, block)
+	if terr != nil {
+		return nil, terr
+	}
+
+	crosstx, terr := s.parseCrossChainTransactions(request.NetworkIdentifier, block)
+	if terr != nil {
+		return nil, terr
+	}
+
+	return &types.BlockResponse{
+		Block: &types.Block{
+			BlockIdentifier:       blockIdentifier,
+			ParentBlockIdentifier: parentBlockIdentifier,
+			Timestamp:             int64(block.Time() * utils.MillisecondsInSecond),
+			Transactions:          append(transactions, crosstx...),
+			Metadata:              mapper.BlockMetadata(block),
+		},
+	}, nil
 }
 
 // BlockTransaction implements the /block/transaction endpoint.
