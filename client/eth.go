@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/ava-labs/coreth/eth/tracers"
-	"github.com/ava-labs/coreth/ethclient"
+	ethclient "github.com/ava-labs/coreth/plugin/evm/customethclient"
 	"github.com/ava-labs/coreth/rpc"
 )
 
@@ -31,7 +31,7 @@ func NewEthClient(ctx context.Context, endpoint string) (*EthClient, error) {
 	}
 
 	return &EthClient{
-		Client: *ethclient.NewClient(c),
+		Client: *ethclient.New(c),
 		rpc:    c,
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,
