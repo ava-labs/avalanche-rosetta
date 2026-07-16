@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/ava-labs/avalanchego/cache/lru"
-	ethclient "github.com/ava-labs/coreth/plugin/evm/customethclient"
+	ethclient "github.com/ava-labs/avalanchego/graft/coreth/ethclient"
 	"github.com/ava-labs/libevm/common"
 )
 

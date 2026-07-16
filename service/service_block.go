@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/coreth/core"
+	"github.com/ava-labs/avalanchego/graft/coreth/core"
 	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"

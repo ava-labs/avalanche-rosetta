@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ava-labs/coreth/plugin/evm"
+	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm"
 )
 
 func TestMain(m *testing.M) {

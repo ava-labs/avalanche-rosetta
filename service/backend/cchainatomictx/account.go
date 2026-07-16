@@ -43,7 +43,7 @@ func (b *Backend) AccountBalance(ctx context.Context, req *types.AccountBalanceR
 			return nil, service.WrapError(service.ErrInternalError, "unable to extract amount from UTXO")
 		}
 
-		balanceValue, err = math.Add64(balanceValue, amountValue.Uint64())
+		balanceValue, err = math.Add(balanceValue, amountValue.Uint64())
 		if err != nil {
 			return nil, service.WrapError(service.ErrInternalError, "overflow while calculating balance")
 		}
