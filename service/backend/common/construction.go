@@ -288,10 +288,11 @@ func BuildCredentialList(ins []*avax.TransferableInput, signatures []*types.Sign
 	return creds, nil
 }
 
-// BuildSingletonCredentialList builds a list of a single *secp256k1fx.Credential using the given signatures
+// BuildSingletonCredentialList builds a list of a single *secp256k1fx.Credential using all provided signatures.
+// All signatures are placed into one credential — use this for auth credentials (e.g. ValidatorAuthority).
 func BuildSingletonCredentialList(signatures []*types.Signature) ([]verify.Verifiable, error) {
 	offset := 0
-	cred, err := buildCredential(1, &offset, signatures)
+	cred, err := buildCredential(len(signatures), &offset, signatures)
 	if err != nil {
 		return nil, err
 	}
