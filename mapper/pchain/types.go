@@ -27,6 +27,11 @@ const (
 	OpSetL1ValidatorWeightTx       = "SET_L1_VALIDATOR_WEIGHT_TX"
 	OpDisableL1ValidatorTx         = "DISABLE_L1_VALIDATOR_TX"
 
+	// Helicon (ACP-236) transaction types
+	OpAddAutoRenewedValidator       = "ADD_AUTO_RENEWED_VALIDATOR"
+	OpSetAutoRenewedValidatorConfig = "SET_AUTO_RENEWED_VALIDATOR_CONFIG"
+	OpRewardAutoRenewedValidator    = "REWARD_AUTO_RENEWED_VALIDATOR"
+
 	OpTypeImport      = "IMPORT"
 	OpTypeExport      = "EXPORT"
 	OpTypeInput       = "INPUT"
@@ -44,6 +49,10 @@ const (
 	MetadataDelegationFee    = "delegation_fee"
 	MetadataMessage          = "message"
 	MetadataSigner           = "signer"
+
+	// Helicon (ACP-236) metadata keys
+	MetadataAutoCompoundRewardShares = "auto_compound_reward_shares"
+	MetadataPeriod                   = "period"
 
 	MetadataBaseFee = "base_fee"
 	MetadataMatches = "matches"
@@ -77,6 +86,9 @@ var (
 		OpTransformSubnetValidator,
 		OpAddPermissionlessValidator,
 		OpAddPermissionlessDelegator,
+		OpAddAutoRenewedValidator,
+		OpSetAutoRenewedValidatorConfig,
+		OpRewardAutoRenewedValidator,
 	}
 	CallMethods = []string{}
 )
@@ -118,6 +130,8 @@ type Metadata struct {
 	*ImportMetadata
 	*ExportMetadata
 	*StakingMetadata
+	AutoRenewedValidator       *AutoRenewedValidatorMetadata       `json:"auto_renewed_validator,omitempty"`
+	AutoRenewedValidatorConfig *AutoRenewedValidatorConfigMetadata `json:"auto_renewed_validator_config,omitempty"`
 }
 
 // ImportMetadata contain response fields returned by /construction/metadata for P-chain Import transactions
@@ -129,6 +143,60 @@ type ImportMetadata struct {
 type ExportMetadata struct {
 	DestinationChain   string `json:"destination_chain"`
 	DestinationChainID ids.ID `json:"destination_chain_id"`
+}
+
+// AutoRenewedValidatorOptions contain options for /construction/preprocess for OpAddAutoRenewedValidator transactions
+type AutoRenewedValidatorOptions struct {
+	NodeID                   string   `json:"node_id"`
+	BLSPublicKey             string   `json:"bls_public_key"`
+	BLSProofOfPossession     string   `json:"bls_proof_of_possession"`
+	ValidationRewardsOwners  []string `json:"reward_addresses"`
+	DelegationRewardsOwners  []string `json:"delegator_reward_addresses"`
+	ValidatorAuthorityOwners []string `json:"validator_authority_addresses"`
+	Shares                   uint32   `json:"shares"`
+	AutoCompoundRewardShares uint32   `json:"auto_compound_reward_shares"`
+	Period                   uint64   `json:"period"`
+	Locktime                 uint64   `json:"locktime"`
+	Threshold                uint32   `json:"threshold"`
+}
+
+// AutoRenewedValidatorMetadata contain response fields returned by /construction/metadata for OpAddAutoRenewedValidator transactions
+type AutoRenewedValidatorMetadata struct {
+	NodeID                   string   `json:"node_id"`
+	BLSPublicKey             string   `json:"bls_public_key"`
+	BLSProofOfPossession     string   `json:"bls_proof_of_possession"`
+	ValidationRewardsOwners  []string `json:"reward_addresses"`
+	DelegationRewardsOwners  []string `json:"delegator_reward_addresses"`
+	ValidatorAuthorityOwners []string `json:"validator_authority_addresses"`
+	Shares                   uint32   `json:"shares"`
+	AutoCompoundRewardShares uint32   `json:"auto_compound_reward_shares"`
+	Period                   uint64   `json:"period"`
+	Locktime                 uint64   `json:"locktime"`
+	Threshold                uint32   `json:"threshold"`
+}
+
+// AutoRenewedValidatorConfigOptions contain options for /construction/preprocess for OpSetAutoRenewedValidatorConfig transactions
+type AutoRenewedValidatorConfigOptions struct {
+	StakingTxID              string `json:"staking_tx_id"`
+	AutoCompoundRewardShares uint32 `json:"auto_compound_reward_shares"`
+	Period                   uint64 `json:"period"`
+	// AuthAddress is the bech32 address of the key that controls the validator's
+	// ValidatorAuthority (at index AuthSigIndex). Required: the construction
+	// flow returns a signing payload for this address so the caller can provide
+	// the authority signature for the Auth credential.
+	AuthAddress string `json:"auth_address"`
+	// AuthSigIndex is the position of AuthAddress within ValidatorAuthority.Addrs.
+	// Defaults to 0 if omitted.
+	AuthSigIndex uint32 `json:"auth_sig_index"`
+}
+
+// AutoRenewedValidatorConfigMetadata contain response fields returned by /construction/metadata for OpSetAutoRenewedValidatorConfig transactions
+type AutoRenewedValidatorConfigMetadata struct {
+	StakingTxID              ids.ID `json:"staking_tx_id"`
+	AutoCompoundRewardShares uint32 `json:"auto_compound_reward_shares"`
+	Period                   uint64 `json:"period"`
+	AuthAddress              string `json:"auth_address"`
+	AuthSigIndex             uint32 `json:"auth_sig_index"`
 }
 
 // StakingMetadata contain response fields returned by /construction/metadata for P-chain AddValidator/AddDelegator transactions

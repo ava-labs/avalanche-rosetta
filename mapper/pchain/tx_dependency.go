@@ -65,6 +65,12 @@ func GetTxDependenciesIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
 		ins = unsignedTx.Ins
 	case *txs.BaseTx:
 		ins = unsignedTx.Ins
+	case *txs.AddAutoRenewedValidatorTx:
+		ins = unsignedTx.Ins
+	case *txs.SetAutoRenewedValidatorConfigTx:
+		ins = unsignedTx.Ins
+	case *txs.RewardAutoRenewedValidatorTx:
+		return []ids.ID{unsignedTx.TxID}, nil
 	default:
 		return nil, fmt.Errorf("unknown tx type %T", unsignedTx)
 	}
@@ -189,6 +195,13 @@ func (d *SingleTxDependency) GetUtxos() map[avax.UTXOID]*avax.UTXO {
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 		case *txs.BaseTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.AddAutoRenewedValidatorTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
+		case *txs.SetAutoRenewedValidatorConfigTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *txs.RewardAutoRenewedValidatorTx:
+			// No outputs to add; rewards are tracked via RewardUTXOs
 		default:
 			log.Printf("unknown type %T", unsignedTx)
 		}

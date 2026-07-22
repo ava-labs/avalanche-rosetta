@@ -6,6 +6,8 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -518,6 +520,260 @@ func TestMapNonConstructionExportTx(t *testing.T) {
 	out.Status = types.String(mapper.StatusSuccess)
 	out.CoinChange = exportOutputs[0].CoinChange
 	require.Equal([]*types.Operation{out}, exportOutputs)
+}
+
+func TestMapAddAutoRenewedValidatorTx(t *testing.T) {
+	require := require.New(t)
+
+	signedTx, utx, inputAccounts := buildAddAutoRenewedValidator()
+
+	require.Len(utx.Ins, 1)
+	require.Empty(utx.Outs)
+	require.Len(utx.StakeOuts, 1)
+
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            avaconstants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, err := NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
+	rosettaTransaction, err := parser.Parse(signedTx)
+	require.NoError(err)
+
+	total := len(utx.Ins) + len(utx.Outs) + len(utx.StakeOuts)
+	require.Len(rosettaTransaction.Operations, total)
+
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpAddAutoRenewedValidator, OpTypeStakeOutput)
+
+	require.Equal(2, cntTxType)
+	require.Equal(1, cntInputMeta)
+	require.Zero(cntOutputMeta)
+	require.Equal(1, cntMetaType)
+
+	stakeOutOp := rosettaTransaction.Operations[1]
+	require.Equal(OpTypeStakeOutput, stakeOutOp.Metadata["type"])
+	require.Equal(utx.Weight(), stakeOutOp.Metadata[MetadataValidatorWeight])
+	require.Equal(utx.DelegationShares, stakeOutOp.Metadata[MetadataDelegationFee])
+	require.Equal(utx.AutoCompoundRewardShares, stakeOutOp.Metadata[MetadataAutoCompoundRewardShares])
+	require.Equal(utx.Period, stakeOutOp.Metadata[MetadataPeriod])
+	require.Equal(utx.NodeID().String(), stakeOutOp.Metadata[MetadataValidatorNodeID])
+}
+
+func TestMapSetAutoRenewedValidatorConfigTx(t *testing.T) {
+	require := require.New(t)
+
+	signedTx, utx, inputAccounts := buildSetAutoRenewedValidatorConfig()
+
+	require.Len(utx.Ins, 1)
+	require.Len(utx.Outs, 1)
+
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
+	parserCfg := TxParserConfig{
+		IsConstruction: true,
+		Hrp:            avaconstants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, err := NewTxParser(parserCfg, inputAccounts, nil)
+	require.NoError(err)
+	rosettaTransaction, err := parser.Parse(signedTx)
+	require.NoError(err)
+
+	total := len(utx.Ins) + len(utx.Outs)
+	require.Len(rosettaTransaction.Operations, total)
+
+	cntTxType, cntInputMeta, cntOutputMeta, cntMetaType := verifyRosettaTransaction(rosettaTransaction.Operations, OpSetAutoRenewedValidatorConfig, OpTypeStakeOutput)
+
+	require.Equal(2, cntTxType)
+	require.Equal(1, cntInputMeta)
+	require.Equal(1, cntOutputMeta)
+	require.Zero(cntMetaType)
+}
+
+func TestMapRewardAutoRenewedValidatorTx(t *testing.T) {
+	require := require.New(t)
+
+	// Build the staking tx that will be the dependency
+	stakingTx, stakingUtx, _ := buildAddAutoRenewedValidator()
+	stakingTxID := stakingTx.ID()
+
+	// Build reward UTXO
+	rewardAssetID := avaxAssetID
+	rewardAddr, _ := ids.ToShortID(avaxAssetID[:20]) // deterministic address for test
+	rewardUTXO := &avax.UTXO{
+		UTXOID: avax.UTXOID{TxID: stakingTxID, OutputIndex: 100},
+		Asset:  avax.Asset{ID: rewardAssetID},
+		Out: &secp256k1fx.TransferOutput{
+			Amt: uint64(500000000),
+			OutputOwners: secp256k1fx.OutputOwners{
+				Threshold: 1,
+				Addrs:     []ids.ShortID{rewardAddr},
+			},
+		},
+	}
+
+	// Build the reward tx
+	rewardUtx := &txs.RewardAutoRenewedValidatorTx{
+		TxID:      stakingTxID,
+		Timestamp: 1,
+	}
+	rewardSignedTx, err := txs.NewSigned(rewardUtx, txs.Codec, nil)
+	require.NoError(err)
+
+	deps := BlockTxDependencies{
+		stakingTxID: {
+			Tx:          stakingTx,
+			RewardUTXOs: []*avax.UTXO{rewardUTXO},
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
+	parserCfg := TxParserConfig{
+		IsConstruction: false,
+		Hrp:            avaconstants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+	parser, err := NewTxParser(parserCfg, map[string]*types.AccountIdentifier{}, deps)
+	require.NoError(err)
+	rosettaTransaction, err := parser.Parse(rewardSignedTx)
+	require.NoError(err)
+
+	require.Len(rosettaTransaction.Operations, 1)
+	rewardOp := rosettaTransaction.Operations[0]
+	require.Equal(OpRewardAutoRenewedValidator, rewardOp.Type)
+	require.Equal(OpTypeReward, rewardOp.Metadata["type"])
+	require.Equal(stakingUtx.NodeID().String(), rewardOp.Metadata[MetadataValidatorNodeID])
+	require.Equal(stakingUtx.AutoCompoundRewardShares, rewardOp.Metadata[MetadataAutoCompoundRewardShares])
+	require.Equal(stakingUtx.Period, rewardOp.Metadata[MetadataPeriod])
+}
+
+func TestBuildTxAddAutoRenewedValidatorAddressValidation(t *testing.T) {
+	// Both cases must error before BLS parsing (nil codec/matches are safe to pass).
+	tests := []struct {
+		name    string
+		meta    *AutoRenewedValidatorMetadata
+		wantErr string
+	}{
+		{
+			name: "both reward and authority empty",
+			meta: &AutoRenewedValidatorMetadata{
+				NodeID: "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+			},
+			wantErr: "reward_addresses must be non-empty",
+		},
+		{
+			name: "only authority set, reward empty",
+			meta: &AutoRenewedValidatorMetadata{
+				NodeID:                   "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+				ValidatorAuthorityOwners: []string{"P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je"},
+			},
+			wantErr: "reward_addresses must be non-empty",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := BuildTx(OpAddAutoRenewedValidator, nil, Metadata{AutoRenewedValidator: tc.meta}, nil, avaxAssetID)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tc.wantErr)
+		})
+	}
+}
+
+func TestBuildTxSetAutoRenewedValidatorConfigValidation(t *testing.T) {
+	tests := []struct {
+		name    string
+		meta    *AutoRenewedValidatorConfigMetadata
+		wantErr string
+	}{
+		{
+			name:    "nil metadata",
+			meta:    nil,
+			wantErr: "invalid metadata",
+		},
+		{
+			name: "empty auth_address",
+			meta: &AutoRenewedValidatorConfigMetadata{
+				AutoCompoundRewardShares: 500000,
+				Period:                   7 * 24 * 3600,
+			},
+			wantErr: "auth_address is required",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := BuildTx(OpSetAutoRenewedValidatorConfig, nil, Metadata{AutoRenewedValidatorConfig: tc.meta}, nil, avaxAssetID)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tc.wantErr)
+		})
+	}
+}
+
+func TestParseRewardAutoRenewedValidatorTxErrors(t *testing.T) {
+	stakingTx, _, _ := buildAddAutoRenewedValidator()
+	stakingTxID := stakingTx.ID()
+
+	rewardUtx := &txs.RewardAutoRenewedValidatorTx{
+		TxID:      stakingTxID,
+		Timestamp: 1,
+	}
+	rewardSignedTx, err := txs.NewSigned(rewardUtx, txs.Codec, nil)
+	require.NoError(t, err)
+
+	// A dep whose Tx is not AddAutoRenewedValidatorTx (use ImportTx as a stand-in).
+	wrongTypeTx, _ := txs.NewSigned(&txs.ImportTx{}, txs.Codec, nil)
+
+	tests := []struct {
+		name    string
+		deps    BlockTxDependencies
+		wantErr error
+	}{
+		{
+			name:    "nil dependency map",
+			deps:    nil,
+			wantErr: errNoDependencyTxs,
+		},
+		{
+			name:    "dep not found",
+			deps:    BlockTxDependencies{},
+			wantErr: errNoMatchingRewardOutputs,
+		},
+		{
+			name: "wrong dep tx type",
+			deps: BlockTxDependencies{
+				stakingTxID: {Tx: wrongTypeTx},
+			},
+			wantErr: errUnknownRewardSourceTransaction,
+		},
+	}
+
+	ctrl := gomock.NewController(t)
+	pchainClient := client.NewMockPChainClient(ctrl)
+	parserCfg := TxParserConfig{
+		IsConstruction: false,
+		Hrp:            avaconstants.FujiHRP,
+		ChainIDs:       chainIDs,
+		AvaxAssetID:    avaxAssetID,
+		PChainClient:   pchainClient,
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			parser, err := NewTxParser(parserCfg, map[string]*types.AccountIdentifier{}, tc.deps)
+			require.NoError(t, err)
+			_, err = parser.Parse(rewardSignedTx)
+			require.ErrorIs(t, err, tc.wantErr)
+		})
+	}
 }
 
 func verifyRosettaTransaction(operations []*types.Operation, txType string, metaType string) (int, int, int, int) {

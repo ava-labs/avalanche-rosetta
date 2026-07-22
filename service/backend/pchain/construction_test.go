@@ -1053,6 +1053,298 @@ func marshalSigningPayloads(payloads []*types.SigningPayload) string {
 	return string(bytes)
 }
 
+func TestAddAutoRenewedValidatorTxConstruction(t *testing.T) {
+	period := uint64(14 * 86400)
+	shares := uint32(200000)
+	autoCompoundShares := uint32(300000)
+
+	operations := []*types.Operation{
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 0},
+			Type:                pmapper.OpAddAutoRenewedValidator,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-2_000_000_000_000)),
+			CoinChange: &types.CoinChange{
+				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
+				CoinAction:     "coin_spent",
+			},
+			Metadata: map[string]interface{}{
+				"type":        pmapper.OpTypeInput,
+				"sig_indices": []interface{}{0.0},
+				"locktime":    0.0,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 1},
+			Type:                pmapper.OpAddAutoRenewedValidator,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(2_000_000_000_000)),
+			Metadata: map[string]interface{}{
+				"type":      pmapper.OpTypeStakeOutput,
+				"locktime":  0.0,
+				"threshold": 1.0,
+			},
+		},
+	}
+
+	preprocessMetadata := map[string]interface{}{
+		"node_id":                  nodeID,
+		"shares":                   shares,
+		"auto_compound_reward_shares": autoCompoundShares,
+		"period":                   period,
+		"reward_addresses":         []string{ewoqAccountP.Address},
+		"bls_public_key":           sampleBlsPublicKey,
+		"bls_proof_of_possession":  sampleProofOfPossession,
+	}
+
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	clientMock := client.NewMockPChainClient(ctrl)
+	parserMock := indexer.NewMockParser(ctrl)
+	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	backend, err := NewBackend(
+		clientMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
+	require.NoError(t, err)
+
+	var metadataOptions map[string]interface{}
+	var payloadsMetadata map[string]interface{}
+	var unsignedTx string
+
+	t.Run("preprocess endpoint", func(t *testing.T) {
+		resp, terr := backend.ConstructionPreprocess(
+			ctx,
+			&types.ConstructionPreprocessRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Operations:        operations,
+				Metadata:          preprocessMetadata,
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.Options)
+		require.Equal(t, pmapper.OpAddAutoRenewedValidator, resp.Options[pmapper.MetadataOpType])
+		metadataOptions = resp.Options
+	})
+
+	t.Run("metadata endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
+		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
+
+		resp, terr := backend.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Options:           metadataOptions,
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.Metadata)
+		// Verify the auto_renewed_validator field is present and correctly populated
+		require.Equal(t, nodeID, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["node_id"])
+		require.Equal(t, sampleBlsPublicKey, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["bls_public_key"])
+		require.EqualValues(t, period, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["period"])
+		require.EqualValues(t, autoCompoundShares, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["auto_compound_reward_shares"])
+		payloadsMetadata = resp.Metadata
+	})
+
+	t.Run("payloads endpoint", func(t *testing.T) {
+		resp, terr := backend.ConstructionPayloads(
+			ctx,
+			&types.ConstructionPayloadsRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Operations:        operations,
+				Metadata:          payloadsMetadata,
+			},
+		)
+		require.Nil(t, terr)
+		// One signing payload: the single BaseTx input (no auth credential for this tx type).
+		require.Len(t, resp.Payloads, 1)
+		unsignedTx = resp.UnsignedTransaction
+	})
+
+	t.Run("combine endpoint", func(t *testing.T) {
+		dummySig := make([]byte, 65)
+		sig := &types.Signature{
+			SigningPayload: &types.SigningPayload{
+				AccountIdentifier: ewoqAccountP,
+				Bytes:             dummySig,
+				SignatureType:     types.EcdsaRecovery,
+			},
+			SignatureType: types.EcdsaRecovery,
+			Bytes:         dummySig,
+		}
+		resp, terr := backend.ConstructionCombine(
+			ctx,
+			&types.ConstructionCombineRequest{
+				NetworkIdentifier:   pChainNetworkIdentifier,
+				UnsignedTransaction: unsignedTx,
+				Signatures:          []*types.Signature{sig},
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.SignedTransaction)
+
+		// One credential for the single BaseTx input; no auth credential.
+		rosettaTx, err := backend.parsePayloadTxFromString(resp.SignedTransaction)
+		require.NoError(t, err)
+		parsedPTx, ok := rosettaTx.Tx.(*pTx)
+		require.True(t, ok)
+		require.Len(t, parsedPTx.Tx.Creds, 1)
+	})
+}
+
+func TestSetAutoRenewedValidatorConfigTxConstruction(t *testing.T) { //nolint:gocognit
+	stakingTxIDStr := "88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo"
+	autoCompoundShares := uint32(500000)
+	period := uint64(7 * 86400)
+
+	operations := []*types.Operation{
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 0},
+			Type:                pmapper.OpSetAutoRenewedValidatorConfig,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-1_000_000)),
+			CoinChange: &types.CoinChange{
+				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
+				CoinAction:     "coin_spent",
+			},
+			Metadata: map[string]interface{}{
+				"type":        pmapper.OpTypeInput,
+				"sig_indices": []interface{}{0.0},
+				"locktime":    0.0,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 1},
+			Type:                pmapper.OpSetAutoRenewedValidatorConfig,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(900_000)),
+			Metadata: map[string]interface{}{
+				"type":      pmapper.OpTypeOutput,
+				"locktime":  0.0,
+				"threshold": 1.0,
+			},
+		},
+	}
+
+	authAddress := ewoqAccountP.Address
+	preprocessMetadata := map[string]interface{}{
+		"staking_tx_id":              stakingTxIDStr,
+		"auto_compound_reward_shares": autoCompoundShares,
+		"period":                     period,
+		"auth_address":               authAddress,
+		"auth_sig_index":             uint32(0),
+	}
+
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	clientMock := client.NewMockPChainClient(ctrl)
+	parserMock := indexer.NewMockParser(ctrl)
+	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	backend, err := NewBackend(
+		clientMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
+	require.NoError(t, err)
+
+	var metadataOptions map[string]interface{}
+	var payloadsMetadata map[string]interface{}
+	var unsignedTx string
+
+	t.Run("preprocess endpoint", func(t *testing.T) {
+		resp, terr := backend.ConstructionPreprocess(
+			ctx,
+			&types.ConstructionPreprocessRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Operations:        operations,
+				Metadata:          preprocessMetadata,
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.Options)
+		require.Equal(t, pmapper.OpSetAutoRenewedValidatorConfig, resp.Options[pmapper.MetadataOpType])
+		metadataOptions = resp.Options
+	})
+
+	t.Run("metadata endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
+		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
+
+		resp, terr := backend.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Options:           metadataOptions,
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.Metadata)
+		// Verify the auto_renewed_validator_config field is present and correctly populated
+		cfg := resp.Metadata["auto_renewed_validator_config"].(map[string]interface{})
+		require.EqualValues(t, autoCompoundShares, cfg["auto_compound_reward_shares"])
+		require.EqualValues(t, period, cfg["period"])
+		require.EqualValues(t, authAddress, cfg["auth_address"])
+		require.EqualValues(t, float64(0), cfg["auth_sig_index"]) // JSON numbers decode as float64
+		payloadsMetadata = resp.Metadata
+	})
+
+	t.Run("payloads endpoint", func(t *testing.T) {
+		resp, terr := backend.ConstructionPayloads(
+			ctx,
+			&types.ConstructionPayloadsRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Operations:        operations,
+				Metadata:          payloadsMetadata,
+			},
+		)
+		require.Nil(t, terr)
+		// Two payloads: one for the BaseTx input, one for the Auth credential.
+		require.Len(t, resp.Payloads, 2)
+		unsignedTx = resp.UnsignedTransaction
+	})
+
+	t.Run("combine endpoint", func(t *testing.T) {
+		dummySig := make([]byte, 65) // all-zero 65-byte signature (secp256k1.SignatureLen)
+		mkSig := func() *types.Signature {
+			return &types.Signature{
+				SigningPayload: &types.SigningPayload{
+					AccountIdentifier: ewoqAccountP,
+					Bytes:             dummySig,
+					SignatureType:     types.EcdsaRecovery,
+				},
+				SignatureType: types.EcdsaRecovery,
+				Bytes:         dummySig,
+			}
+		}
+		// Provide 2 signatures: one for the BaseTx input credential, one for Auth.
+		resp, terr := backend.ConstructionCombine(
+			ctx,
+			&types.ConstructionCombineRequest{
+				NetworkIdentifier:   pChainNetworkIdentifier,
+				UnsignedTransaction: unsignedTx,
+				Signatures:          []*types.Signature{mkSig(), mkSig()},
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.SignedTransaction)
+
+		// Parse the signed tx and verify credential structure:
+		// 1 credential for the BaseTx input + 1 credential for the Auth field.
+		rosettaTx, err := backend.parsePayloadTxFromString(resp.SignedTransaction)
+		require.NoError(t, err)
+		parsedPTx, ok := rosettaTx.Tx.(*pTx)
+		require.True(t, ok)
+		require.Len(t, parsedPTx.Tx.Creds, 2)
+	})
+}
+
 func parsePoP(blsPublicKey, blsProofOfPossession string) (*signer.ProofOfPossession, error) {
 	publicKeyBytes, err := formatting.Decode(formatting.HexNC, blsPublicKey)
 	if err != nil {

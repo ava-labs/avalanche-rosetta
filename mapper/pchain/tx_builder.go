@@ -50,6 +50,10 @@ func BuildTx(
 	case OpAddDelegator:
 		// TODO: Remove Post-Durango
 		return buildAddDelegatorTx(matches, payloadMetadata, codec, avaxAssetID)
+	case OpAddAutoRenewedValidator:
+		return buildAddAutoRenewedValidatorTx(matches, payloadMetadata, codec, avaxAssetID)
+	case OpSetAutoRenewedValidatorConfig:
+		return buildSetAutoRenewedValidatorConfigTx(matches, payloadMetadata, codec, avaxAssetID)
 	default:
 		return nil, nil, fmt.Errorf("invalid tx type: %s", opType)
 	}
@@ -574,6 +578,140 @@ func buildOutputs(
 	avax.SortTransferableOutputs(exported, codec)
 
 	return outs, stakeOutputs, exported, nil
+}
+
+func buildAddAutoRenewedValidatorTx(
+	matches []*parser.Match,
+	metadata Metadata,
+	codec codec.Manager,
+	avaxAssetID ids.ID,
+) (*txs.Tx, []*types.AccountIdentifier, error) {
+	if metadata.AutoRenewedValidator == nil {
+		return nil, nil, errInvalidMetadata
+	}
+	m := metadata.AutoRenewedValidator
+
+	// Validate required address fields before the more expensive BLS parsing.
+	if len(m.ValidationRewardsOwners) == 0 {
+		return nil, nil, errors.New("reward_addresses must be non-empty for AddAutoRenewedValidatorTx")
+	}
+	authorityAddrs := m.ValidatorAuthorityOwners
+	if len(authorityAddrs) == 0 {
+		authorityAddrs = m.ValidationRewardsOwners
+	}
+
+	nodeID, err := ids.NodeIDFromString(m.NodeID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid node_id: %w", err)
+	}
+
+	publicKeyBytes, err := formatting.Decode(formatting.HexNC, m.BLSPublicKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid bls_public_key: %w", err)
+	}
+	popBytes, err := formatting.Decode(formatting.HexNC, m.BLSProofOfPossession)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid bls_proof_of_possession: %w", err)
+	}
+	pop := &signer.ProofOfPossession{}
+	copy(pop.PublicKey[:], publicKeyBytes)
+	copy(pop.ProofOfPossession[:], popBytes)
+	if err = pop.Verify(); err != nil {
+		return nil, nil, fmt.Errorf("invalid BLS proof of possession: %w", err)
+	}
+
+	validationRewardsOwner, err := buildOutputOwner(m.ValidationRewardsOwners, m.Locktime, m.Threshold)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid reward_addresses: %w", err)
+	}
+
+	delegationRewardsOwner := validationRewardsOwner
+	if len(m.DelegationRewardsOwners) > 0 {
+		delegationRewardsOwner, err = buildOutputOwner(m.DelegationRewardsOwners, m.Locktime, m.Threshold)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid delegator_reward_addresses: %w", err)
+		}
+	}
+
+	validatorAuthority, err := buildOutputOwner(authorityAddrs, m.Locktime, m.Threshold)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid validator_authority_addresses: %w", err)
+	}
+
+	ins, _, signers, err := buildInputs(matches[0].Operations, avaxAssetID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse inputs failed: %w", err)
+	}
+
+	outs, stakeOutputs, _, err := buildOutputs(matches[1].Operations, codec, avaxAssetID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
+	}
+
+	tx := &txs.Tx{Unsigned: &txs.AddAutoRenewedValidatorTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+			NetworkID:    metadata.NetworkID,
+			BlockchainID: metadata.BlockchainID,
+			Outs:         outs,
+			Ins:          ins,
+		}},
+		ValidatorNodeID:          nodeID[:],
+		Signer:                   pop,
+		StakeOuts:                stakeOutputs,
+		ValidatorRewardsOwner:    validationRewardsOwner,
+		DelegatorRewardsOwner:    delegationRewardsOwner,
+		ValidatorAuthority:       validatorAuthority,
+		DelegationShares:         m.Shares,
+		AutoCompoundRewardShares: m.AutoCompoundRewardShares,
+		Period:                   m.Period,
+	}}
+
+	return tx, signers, tx.Sign(codec, nil)
+}
+
+func buildSetAutoRenewedValidatorConfigTx(
+	matches []*parser.Match,
+	metadata Metadata,
+	codec codec.Manager,
+	avaxAssetID ids.ID,
+) (*txs.Tx, []*types.AccountIdentifier, error) {
+	if metadata.AutoRenewedValidatorConfig == nil {
+		return nil, nil, errInvalidMetadata
+	}
+	m := metadata.AutoRenewedValidatorConfig
+
+	if m.AuthAddress == "" {
+		return nil, nil, errors.New("auth_address is required for SetAutoRenewedValidatorConfigTx")
+	}
+
+	ins, _, signers, err := buildInputs(matches[0].Operations, avaxAssetID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse inputs failed: %w", err)
+	}
+
+	outs, _, _, err := buildOutputs(matches[1].Operations, codec, avaxAssetID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
+	}
+
+	tx := &txs.Tx{Unsigned: &txs.SetAutoRenewedValidatorConfigTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+			NetworkID:    metadata.NetworkID,
+			BlockchainID: metadata.BlockchainID,
+			Outs:         outs,
+			Ins:          ins,
+		}},
+		TxID:                     m.StakingTxID,
+		Auth:                     &secp256k1fx.Input{SigIndices: []uint32{m.AuthSigIndex}},
+		AutoCompoundRewardShares: m.AutoCompoundRewardShares,
+		Period:                   m.Period,
+	}}
+
+	// Append the authority key as the last signer so /construction/payloads
+	// returns an extra signing payload for the ValidatorAuthority credential.
+	signers = append(signers, &types.AccountIdentifier{Address: m.AuthAddress})
+
+	return tx, signers, tx.Sign(codec, nil)
 }
 
 func sumOutputAmounts(stakeOutputs []*avax.TransferableOutput) (uint64, error) {

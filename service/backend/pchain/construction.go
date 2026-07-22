@@ -12,6 +12,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
@@ -83,7 +84,10 @@ func (b *Backend) ConstructionMetadata(
 		}
 		metadata.Threshold = opMetadata.Threshold
 		metadata.Locktime = opMetadata.Locktime
-
+	case pmapper.OpAddAutoRenewedValidator:
+		metadata, err = b.buildAutoRenewedValidatorMetadata(ctx, req.Options)
+	case pmapper.OpSetAutoRenewedValidatorConfig:
+		metadata, err = b.buildAutoRenewedValidatorConfigMetadata(ctx, req.Options)
 	default:
 		return nil, service.WrapError(
 			service.ErrInternalError,
@@ -173,6 +177,57 @@ func (b *Backend) buildExportMetadata(
 	return &pmapper.Metadata{ExportMetadata: exportMetadata}, nil
 }
 
+func (*Backend) buildAutoRenewedValidatorMetadata(
+	_ context.Context,
+	options map[string]interface{},
+) (*pmapper.Metadata, error) {
+	var opts pmapper.AutoRenewedValidatorOptions
+	if err := mapper.UnmarshalJSONMap(options, &opts); err != nil {
+		return nil, err
+	}
+
+	return &pmapper.Metadata{
+		AutoRenewedValidator: &pmapper.AutoRenewedValidatorMetadata{
+			NodeID:                   opts.NodeID,
+			BLSPublicKey:             opts.BLSPublicKey,
+			BLSProofOfPossession:     opts.BLSProofOfPossession,
+			ValidationRewardsOwners:  opts.ValidationRewardsOwners,
+			DelegationRewardsOwners:  opts.DelegationRewardsOwners,
+			ValidatorAuthorityOwners: opts.ValidatorAuthorityOwners,
+			Shares:                   opts.Shares,
+			AutoCompoundRewardShares: opts.AutoCompoundRewardShares,
+			Period:                   opts.Period,
+			Locktime:                 opts.Locktime,
+			Threshold:                opts.Threshold,
+		},
+	}, nil
+}
+
+func (*Backend) buildAutoRenewedValidatorConfigMetadata(
+	_ context.Context,
+	options map[string]interface{},
+) (*pmapper.Metadata, error) {
+	var opts pmapper.AutoRenewedValidatorConfigOptions
+	if err := mapper.UnmarshalJSONMap(options, &opts); err != nil {
+		return nil, err
+	}
+
+	stakingTxID, err := ids.FromString(opts.StakingTxID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid staking_tx_id: %w", err)
+	}
+
+	return &pmapper.Metadata{
+		AutoRenewedValidatorConfig: &pmapper.AutoRenewedValidatorConfigMetadata{
+			StakingTxID:              stakingTxID,
+			AutoCompoundRewardShares: opts.AutoCompoundRewardShares,
+			Period:                   opts.Period,
+			AuthAddress:              opts.AuthAddress,
+			AuthSigIndex:             opts.AuthSigIndex,
+		},
+	}, nil
+}
+
 func (*Backend) buildStakingMetadata(
 	_ context.Context,
 	options map[string]interface{},
@@ -255,9 +310,33 @@ func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (comm
 		return nil, service.WrapError(service.ErrInvalidInput, err)
 	}
 
-	creds, err := common.BuildCredentialList(ins, signatures)
+	numAuthSigs, err := getTxAuthSigCount(pTx.Tx.Unsigned)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	wantTotal := len(ins) + numAuthSigs
+	if len(signatures) < wantTotal {
+		return nil, service.WrapError(service.ErrInvalidInput, errors.New(fmt.Sprintf(
+			"need %d signature(s) (%d for inputs, %d for auth), got %d",
+			wantTotal, len(ins), numAuthSigs, len(signatures),
+		)))
+	}
+
+	inputSigs := signatures[:len(signatures)-numAuthSigs]
+	authSigs := signatures[len(signatures)-numAuthSigs:]
+
+	creds, err := common.BuildCredentialList(ins, inputSigs)
+	if err != nil {
+		return nil, service.WrapError(service.ErrInvalidInput, err)
+	}
+
+	if numAuthSigs > 0 {
+		authCreds, err := common.BuildSingletonCredentialList(authSigs)
+		if err != nil {
+			return nil, service.WrapError(service.ErrInvalidInput, err)
+		}
+		creds = append(creds, authCreds...)
 	}
 
 	unsignedBytes, err := pTx.Marshal()
@@ -275,6 +354,21 @@ func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (comm
 	pTx.Tx.SetBytes(unsignedBytes, signedBytes)
 
 	return pTx, nil
+}
+
+// getTxAuthSigCount returns the number of trailing signatures required for a
+// tx-level authorization credential (e.g. SetAutoRenewedValidatorConfigTx.Auth).
+// Returns 0 for tx types that have no such credential.
+func getTxAuthSigCount(unsignedTx txs.UnsignedTx) (int, error) {
+	utx, ok := unsignedTx.(*txs.SetAutoRenewedValidatorConfigTx)
+	if !ok {
+		return 0, nil
+	}
+	authInput, ok := utx.Auth.(*secp256k1fx.Input)
+	if !ok {
+		return 0, errors.New("unsupported auth type in SetAutoRenewedValidatorConfigTx")
+	}
+	return len(authInput.SigIndices), nil
 }
 
 func (b *Backend) calculateFee(ctx context.Context, tx *txs.Tx) (uint64, error) {
@@ -345,6 +439,12 @@ func getTxInputs(
 		return utx.Ins, nil
 	case *txs.BaseTx:
 		return utx.Ins, nil
+	case *txs.AddAutoRenewedValidatorTx:
+		return utx.Ins, nil
+	case *txs.SetAutoRenewedValidatorConfigTx:
+		return utx.Ins, nil
+	case *txs.RewardAutoRenewedValidatorTx:
+		return nil, nil
 	default:
 		return nil, errUnknownTxType
 	}
