@@ -86,6 +86,16 @@ func (b *Backend) ConstructionMetadata(
 		metadata.Locktime = opMetadata.Locktime
 	case pmapper.OpAddAutoRenewedValidator:
 		metadata, err = b.buildAutoRenewedValidatorMetadata(ctx, req.Options)
+		if err != nil {
+			return nil, service.WrapError(service.ErrInternalError, err)
+		}
+		// Take threshold and locktime from the shared option parsing so they pick up
+		// the same defaults as the other staking types. ParseOpMetadata defaults the
+		// threshold to 1; a zero threshold alongside a non-empty address set makes the
+		// rewards and authority owners fail secp256k1fx.OutputOwners.Verify with
+		// ErrOutputUnoptimized, so the tx would be rejected on submit.
+		metadata.AutoRenewedValidator.Threshold = opMetadata.Threshold
+		metadata.AutoRenewedValidator.Locktime = opMetadata.Locktime
 	case pmapper.OpSetAutoRenewedValidatorConfig:
 		metadata, err = b.buildAutoRenewedValidatorConfigMetadata(ctx, req.Options)
 	default:

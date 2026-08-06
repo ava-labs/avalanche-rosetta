@@ -13,7 +13,10 @@ import (
 	"github.com/ava-labs/avalanchego/upgrade"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/gas"
+	"github.com/ava-labs/avalanchego/vms/platformvm/fx"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -1164,6 +1167,30 @@ func TestAddAutoRenewedValidatorTxConstruction(t *testing.T) {
 		// One signing payload: the single BaseTx input (no auth credential for this tx type).
 		require.Len(t, resp.Payloads, 1)
 		unsignedTx = resp.UnsignedTransaction
+
+		// The rewards and authority owners must be spendable. preprocessMetadata omits
+		// "threshold", so this asserts the default of 1 is applied: a zero threshold with
+		// a non-empty address set fails secp256k1fx.OutputOwners.Verify with
+		// ErrOutputUnoptimized, and the network would reject the tx on submit.
+		rosettaTx, err := backend.parsePayloadTxFromString(unsignedTx)
+		require.NoError(t, err)
+		parsedPTx, ok := rosettaTx.Tx.(*pTx)
+		require.True(t, ok)
+		utx, ok := parsedPTx.Tx.Unsigned.(*txs.AddAutoRenewedValidatorTx)
+		require.True(t, ok)
+
+		for name, owner := range map[string]fx.Owner{
+			"ValidatorRewardsOwner": utx.ValidatorRewardsOwner,
+			"DelegatorRewardsOwner": utx.DelegatorRewardsOwner,
+			"ValidatorAuthority":    utx.ValidatorAuthority,
+		} {
+			outputOwners, ok := owner.(*secp256k1fx.OutputOwners)
+			require.Truef(t, ok, "%s is not *secp256k1fx.OutputOwners", name)
+			require.NoErrorf(t, outputOwners.Verify(), "%s is not spendable", name)
+			require.EqualValuesf(t, 1, outputOwners.Threshold, "%s threshold", name)
+			require.EqualValuesf(t, 0, outputOwners.Locktime, "%s locktime", name)
+			require.Lenf(t, outputOwners.Addrs, 1, "%s addrs", name)
+		}
 	})
 
 	t.Run("combine endpoint", func(t *testing.T) {
