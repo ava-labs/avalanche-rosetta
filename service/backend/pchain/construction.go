@@ -186,6 +186,12 @@ func (*Backend) buildAutoRenewedValidatorMetadata(
 		return nil, err
 	}
 
+	// buildOutputOwner returns an empty (unspendable) owner for an empty address
+	// list without erroring, so guard it here where the metadata is constructed.
+	if len(opts.ValidationRewardsOwners) == 0 {
+		return nil, errors.New("reward_addresses must be non-empty")
+	}
+
 	return &pmapper.Metadata{
 		AutoRenewedValidator: &pmapper.AutoRenewedValidatorMetadata{
 			NodeID:                   opts.NodeID,
@@ -210,6 +216,12 @@ func (*Backend) buildAutoRenewedValidatorConfigMetadata(
 	var opts pmapper.AutoRenewedValidatorConfigOptions
 	if err := mapper.UnmarshalJSONMap(options, &opts); err != nil {
 		return nil, err
+	}
+
+	// The authority key produces an extra signing payload in the construction
+	// flow, so its address is required.
+	if opts.AuthAddress == "" {
+		return nil, errors.New("auth_address must be non-empty")
 	}
 
 	stakingTxID, err := ids.FromString(opts.StakingTxID)

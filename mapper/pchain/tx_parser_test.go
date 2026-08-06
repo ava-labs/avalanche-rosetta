@@ -657,38 +657,6 @@ func TestMapRewardAutoRenewedValidatorTx(t *testing.T) {
 	require.Equal(stakingUtx.Period, rewardOp.Metadata[MetadataPeriod])
 }
 
-func TestBuildTxAddAutoRenewedValidatorAddressValidation(t *testing.T) {
-	// Both cases must error before BLS parsing (nil codec/matches are safe to pass).
-	tests := []struct {
-		name    string
-		meta    *AutoRenewedValidatorMetadata
-		wantErr string
-	}{
-		{
-			name: "both reward and authority empty",
-			meta: &AutoRenewedValidatorMetadata{
-				NodeID: "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
-			},
-			wantErr: "reward_addresses must be non-empty",
-		},
-		{
-			name: "only authority set, reward empty",
-			meta: &AutoRenewedValidatorMetadata{
-				NodeID:                   "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
-				ValidatorAuthorityOwners: []string{"P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je"},
-			},
-			wantErr: "reward_addresses must be non-empty",
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			_, _, err := BuildTx(OpAddAutoRenewedValidator, nil, Metadata{AutoRenewedValidator: tc.meta}, nil, avaxAssetID)
-			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.wantErr)
-		})
-	}
-}
-
 func TestBuildTxSetAutoRenewedValidatorConfigValidation(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -699,14 +667,6 @@ func TestBuildTxSetAutoRenewedValidatorConfigValidation(t *testing.T) {
 			name:    "nil metadata",
 			meta:    nil,
 			wantErr: "invalid metadata",
-		},
-		{
-			name: "empty auth_address",
-			meta: &AutoRenewedValidatorConfigMetadata{
-				AutoCompoundRewardShares: 500000,
-				Period:                   7 * 24 * 3600,
-			},
-			wantErr: "auth_address is required",
 		},
 	}
 	for _, tc := range tests {

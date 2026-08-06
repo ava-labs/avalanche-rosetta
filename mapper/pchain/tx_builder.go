@@ -591,10 +591,8 @@ func buildAddAutoRenewedValidatorTx(
 	}
 	m := metadata.AutoRenewedValidator
 
-	// Validate required address fields before the more expensive BLS parsing.
-	if len(m.ValidationRewardsOwners) == 0 {
-		return nil, nil, errors.New("reward_addresses must be non-empty for AddAutoRenewedValidatorTx")
-	}
+	// reward_addresses is validated to be non-empty in buildAutoRenewedValidatorMetadata,
+	// so it is safe to fall back to it for the authority owner here.
 	authorityAddrs := m.ValidatorAuthorityOwners
 	if len(authorityAddrs) == 0 {
 		authorityAddrs = m.ValidationRewardsOwners
@@ -680,10 +678,7 @@ func buildSetAutoRenewedValidatorConfigTx(
 	}
 	m := metadata.AutoRenewedValidatorConfig
 
-	if m.AuthAddress == "" {
-		return nil, nil, errors.New("auth_address is required for SetAutoRenewedValidatorConfigTx")
-	}
-
+	// auth_address is validated to be non-empty in buildAutoRenewedValidatorConfigMetadata.
 	ins, _, signers, err := buildInputs(matches[0].Operations, avaxAssetID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parse inputs failed: %w", err)

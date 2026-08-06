@@ -1359,3 +1359,18 @@ func parsePoP(blsPublicKey, blsProofOfPossession string) (*signer.ProofOfPossess
 	copy(pop.ProofOfPossession[:], popBytes)
 	return pop, nil
 }
+
+// The metadata handlers ignore their receiver, so an empty Backend is enough.
+func TestBuildAutoRenewedValidatorMetadataValidation(t *testing.T) {
+	_, err := (&Backend{}).buildAutoRenewedValidatorMetadata(context.Background(), map[string]interface{}{
+		"node_id": "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "reward_addresses must be non-empty")
+}
+
+func TestBuildAutoRenewedValidatorConfigMetadataValidation(t *testing.T) {
+	_, err := (&Backend{}).buildAutoRenewedValidatorConfigMetadata(context.Background(), map[string]interface{}{})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "auth_address must be non-empty")
+}
