@@ -14,6 +14,8 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/gas"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -1148,6 +1150,9 @@ func TestAddAutoRenewedValidatorTxConstruction(t *testing.T) {
 		require.Equal(t, sampleBlsPublicKey, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["bls_public_key"])
 		require.EqualValues(t, period, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["period"])
 		require.EqualValues(t, autoCompoundShares, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["auto_compound_reward_shares"])
+		// preprocessMetadata omits "threshold", so it must default to 1; a 0 threshold
+		// on a non-empty owner is rejected by the P-chain (ErrOutputUnoptimized).
+		require.EqualValues(t, 1, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["threshold"])
 		payloadsMetadata = resp.Metadata
 	})
 
@@ -1194,6 +1199,16 @@ func TestAddAutoRenewedValidatorTxConstruction(t *testing.T) {
 		parsedPTx, ok := rosettaTx.Tx.(*pTx)
 		require.True(t, ok)
 		require.Len(t, parsedPTx.Tx.Creds, 1)
+
+		// With no client-supplied threshold, all three owners must default to 1 so
+		// the tx is accepted on submit.
+		utx, ok := parsedPTx.Tx.Unsigned.(*txs.AddAutoRenewedValidatorTx)
+		require.True(t, ok)
+		for _, owner := range []interface{}{utx.ValidatorRewardsOwner, utx.DelegatorRewardsOwner, utx.ValidatorAuthority} {
+			oo, ok := owner.(*secp256k1fx.OutputOwners)
+			require.True(t, ok)
+			require.Equal(t, uint32(1), oo.Threshold)
+		}
 	})
 }
 

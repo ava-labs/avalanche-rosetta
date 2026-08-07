@@ -192,6 +192,14 @@ func (*Backend) buildAutoRenewedValidatorMetadata(
 		return nil, errors.New("reward_addresses must be non-empty")
 	}
 
+	// A zero threshold on a non-empty owner is rejected by the P-chain on issue
+	// (OutputOwners.Verify returns ErrOutputUnoptimized), so default it to 1 when
+	// the client does not specify one.
+	threshold := opts.Threshold
+	if threshold == 0 {
+		threshold = 1
+	}
+
 	return &pmapper.Metadata{
 		AutoRenewedValidator: &pmapper.AutoRenewedValidatorMetadata{
 			NodeID:                   opts.NodeID,
@@ -204,7 +212,7 @@ func (*Backend) buildAutoRenewedValidatorMetadata(
 			AutoCompoundRewardShares: opts.AutoCompoundRewardShares,
 			Period:                   opts.Period,
 			Locktime:                 opts.Locktime,
-			Threshold:                opts.Threshold,
+			Threshold:                threshold,
 		},
 	}, nil
 }
