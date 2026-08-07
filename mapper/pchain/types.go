@@ -190,23 +190,22 @@ type AutoRenewedValidatorConfigOptions struct {
 	StakingTxID              string `json:"staking_tx_id"`
 	AutoCompoundRewardShares uint32 `json:"auto_compound_reward_shares"`
 	Period                   uint64 `json:"period"`
-	// AuthAddress is the bech32 address of the key that controls the validator's
-	// ValidatorAuthority (at index AuthSigIndex). Required: the construction
-	// flow returns a signing payload for this address so the caller can provide
-	// the authority signature for the Auth credential.
-	AuthAddress string `json:"auth_address"`
-	// AuthSigIndex is the position of AuthAddress within ValidatorAuthority.Addrs.
-	// Defaults to 0 if omitted.
-	AuthSigIndex uint32 `json:"auth_sig_index"`
+	// AuthAddresses are the bech32 addresses of the keys authorizing the change. The
+	// construction flow returns one signing payload per address so the caller can
+	// provide the ValidatorAuthority credential signatures. Required.
+	// AuthAddresses[i] must control ValidatorAuthority.Addrs[AuthSigIndices[i]], and
+	// AuthSigIndices must be strictly ascending (as secp256k1fx.Input requires).
+	AuthAddresses  []string `json:"auth_addresses"`
+	AuthSigIndices []uint32 `json:"auth_sig_indices"`
 }
 
 // AutoRenewedValidatorConfigMetadata contain response fields returned by /construction/metadata for OpSetAutoRenewedValidatorConfig transactions
 type AutoRenewedValidatorConfigMetadata struct {
-	StakingTxID              ids.ID `json:"staking_tx_id"`
-	AutoCompoundRewardShares uint32 `json:"auto_compound_reward_shares"`
-	Period                   uint64 `json:"period"`
-	AuthAddress              string `json:"auth_address"`
-	AuthSigIndex             uint32 `json:"auth_sig_index"`
+	StakingTxID              ids.ID   `json:"staking_tx_id"`
+	AutoCompoundRewardShares uint32   `json:"auto_compound_reward_shares"`
+	Period                   uint64   `json:"period"`
+	AuthAddresses            []string `json:"auth_addresses"`
+	AuthSigIndices           []uint32 `json:"auth_sig_indices"`
 }
 
 // StakingMetadata contain response fields returned by /construction/metadata for P-chain AddValidator/AddDelegator transactions

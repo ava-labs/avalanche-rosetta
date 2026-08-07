@@ -673,7 +673,8 @@ func buildSetAutoRenewedValidatorConfigTx(
 	}
 	m := metadata.AutoRenewedValidatorConfig
 
-	// auth_address is validated to be non-empty in buildAutoRenewedValidatorConfigMetadata.
+	// auth_addresses/auth_sig_indices are validated (non-empty, equal length, and
+	// strictly ascending indices) in buildAutoRenewedValidatorConfigMetadata.
 	ins, _, signers, err := buildInputs(matches[0].Operations, avaxAssetID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parse inputs failed: %w", err)
@@ -692,14 +693,17 @@ func buildSetAutoRenewedValidatorConfigTx(
 			Ins:          ins,
 		}},
 		TxID:                     m.StakingTxID,
-		Auth:                     &secp256k1fx.Input{SigIndices: []uint32{m.AuthSigIndex}},
+		Auth:                     &secp256k1fx.Input{SigIndices: m.AuthSigIndices},
 		AutoCompoundRewardShares: m.AutoCompoundRewardShares,
 		Period:                   m.Period,
 	}}
 
-	// Append the authority key as the last signer so /construction/payloads
-	// returns an extra signing payload for the ValidatorAuthority credential.
-	signers = append(signers, &types.AccountIdentifier{Address: m.AuthAddress})
+	// Append each authority key as a trailing signer so /construction/payloads
+	// returns one signing payload per ValidatorAuthority credential signature, in the
+	// same order as Auth.SigIndices (so CombineTx assembles the credential correctly).
+	for _, addr := range m.AuthAddresses {
+		signers = append(signers, &types.AccountIdentifier{Address: addr})
+	}
 
 	return tx, signers, tx.Sign(codec, nil)
 }

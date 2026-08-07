@@ -238,10 +238,19 @@ func (*Backend) buildAutoRenewedValidatorConfigMetadata(
 		return nil, err
 	}
 
-	// The authority key produces an extra signing payload in the construction
-	// flow, so its address is required.
-	if opts.AuthAddress == "" {
-		return nil, errors.New("auth_address must be non-empty")
+	// Each authority key produces an extra signing payload in the construction flow,
+	// so at least one is required. AuthAddresses[i] pairs with AuthSigIndices[i], and
+	// the indices must be strictly ascending, as secp256k1fx.Input requires.
+	if len(opts.AuthAddresses) == 0 {
+		return nil, errors.New("auth_addresses must be non-empty")
+	}
+	if len(opts.AuthAddresses) != len(opts.AuthSigIndices) {
+		return nil, errors.New("auth_addresses and auth_sig_indices must have equal length")
+	}
+	for i := 1; i < len(opts.AuthSigIndices); i++ {
+		if opts.AuthSigIndices[i] <= opts.AuthSigIndices[i-1] {
+			return nil, errors.New("auth_sig_indices must be strictly ascending")
+		}
 	}
 
 	stakingTxID, err := ids.FromString(opts.StakingTxID)
@@ -254,8 +263,8 @@ func (*Backend) buildAutoRenewedValidatorConfigMetadata(
 			StakingTxID:              stakingTxID,
 			AutoCompoundRewardShares: opts.AutoCompoundRewardShares,
 			Period:                   opts.Period,
-			AuthAddress:              opts.AuthAddress,
-			AuthSigIndex:             opts.AuthSigIndex,
+			AuthAddresses:            opts.AuthAddresses,
+			AuthSigIndices:           opts.AuthSigIndices,
 		},
 	}, nil
 }
