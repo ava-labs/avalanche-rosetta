@@ -116,6 +116,175 @@ func TestTxDependencyIsCreateChain(t *testing.T) {
 	require.Equal(res, res2)
 }
 
+func TestTxDependencyIsAddAutoRenewedValidator(t *testing.T) {
+	require := require.New(t)
+
+	avaxAssetID := ids.GenerateTestID()
+	nodeID := ids.GenerateTestNodeID()
+
+	in := &avax.TransferableInput{
+		UTXOID: avax.UTXOID{
+			TxID:        ids.ID{'t', 'x', 'I', 'D'},
+			OutputIndex: 0,
+		},
+		Asset: avax.Asset{ID: avaxAssetID},
+		In: &secp256k1fx.TransferInput{
+			Amt:   uint64(3000000000),
+			Input: secp256k1fx.Input{SigIndices: []uint32{0}},
+		},
+	}
+	out := &avax.TransferableOutput{
+		Asset: avax.Asset{ID: avaxAssetID},
+		Out: &secp256k1fx.TransferOutput{
+			Amt: uint64(1000000000),
+			OutputOwners: secp256k1fx.OutputOwners{
+				Threshold: 1,
+				Addrs:     []ids.ShortID{preFundedKeys[0].PublicKey().Address()},
+			},
+		},
+	}
+	stake := &avax.TransferableOutput{
+		Asset: avax.Asset{ID: avaxAssetID},
+		Out: &secp256k1fx.TransferOutput{
+			Amt: uint64(2000000000),
+			OutputOwners: secp256k1fx.OutputOwners{
+				Threshold: 1,
+				Addrs:     []ids.ShortID{preFundedKeys[1].PublicKey().Address()},
+			},
+		},
+	}
+	rewardsOwner := &secp256k1fx.OutputOwners{
+		Threshold: 1,
+		Addrs:     []ids.ShortID{preFundedKeys[0].PublicKey().Address()},
+	}
+	utx := &txs.AddAutoRenewedValidatorTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+			NetworkID:    uint32(1492),
+			BlockchainID: ids.GenerateTestID(),
+			Ins:          []*avax.TransferableInput{in},
+			Outs:         []*avax.TransferableOutput{out},
+		}},
+		ValidatorNodeID:          nodeID[:],
+		Signer:                   &signer.Empty{},
+		StakeOuts:                []*avax.TransferableOutput{stake},
+		ValidatorRewardsOwner:    rewardsOwner,
+		DelegatorRewardsOwner:    rewardsOwner,
+		ValidatorAuthority:       rewardsOwner,
+		DelegationShares:         20000,
+		AutoCompoundRewardShares: 300000,
+		Period:                   14 * 24 * 3600,
+	}
+	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	require.NoError(err)
+
+	dep := &SingleTxDependency{Tx: tx}
+	res := dep.GetUtxos()
+	require.Len(res, 2)
+
+	outUTXO := &avax.UTXO{
+		UTXOID: avax.UTXOID{TxID: tx.ID(), OutputIndex: 0},
+		Asset:  out.Asset,
+		Out:    out.Out,
+	}
+	stakeUTXO := &avax.UTXO{
+		UTXOID: avax.UTXOID{TxID: tx.ID(), OutputIndex: 1},
+		Asset:  stake.Asset,
+		Out:    stake.Out,
+	}
+
+	found, ok := res[outUTXO.UTXOID]
+	require.True(ok)
+	require.Equal(outUTXO, found)
+
+	found, ok = res[stakeUTXO.UTXOID]
+	require.True(ok)
+	require.Equal(stakeUTXO, found)
+
+	res2 := dep.GetUtxos()
+	require.Equal(res, res2)
+}
+
+func TestTxDependencyIsSetAutoRenewedValidatorConfig(t *testing.T) {
+	require := require.New(t)
+
+	avaxAssetID := ids.GenerateTestID()
+	stakingTxID := ids.GenerateTestID()
+
+	in := &avax.TransferableInput{
+		UTXOID: avax.UTXOID{
+			TxID:        ids.ID{'t', 'x', 'I', 'D'},
+			OutputIndex: 0,
+		},
+		Asset: avax.Asset{ID: avaxAssetID},
+		In: &secp256k1fx.TransferInput{
+			Amt:   uint64(1000000),
+			Input: secp256k1fx.Input{SigIndices: []uint32{0}},
+		},
+	}
+	out := &avax.TransferableOutput{
+		Asset: avax.Asset{ID: avaxAssetID},
+		Out: &secp256k1fx.TransferOutput{
+			Amt: uint64(900000),
+			OutputOwners: secp256k1fx.OutputOwners{
+				Threshold: 1,
+				Addrs:     []ids.ShortID{preFundedKeys[0].PublicKey().Address()},
+			},
+		},
+	}
+	utx := &txs.SetAutoRenewedValidatorConfigTx{
+		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+			NetworkID:    uint32(1492),
+			BlockchainID: ids.GenerateTestID(),
+			Ins:          []*avax.TransferableInput{in},
+			Outs:         []*avax.TransferableOutput{out},
+		}},
+		TxID:                     stakingTxID,
+		Auth:                     &secp256k1fx.Input{SigIndices: []uint32{0}},
+		AutoCompoundRewardShares: 500000,
+		Period:                   7 * 24 * 3600,
+	}
+	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	require.NoError(err)
+
+	dep := &SingleTxDependency{Tx: tx}
+	res := dep.GetUtxos()
+	require.Len(res, 1)
+
+	expectedUTXO := &avax.UTXO{
+		UTXOID: avax.UTXOID{TxID: tx.ID(), OutputIndex: 0},
+		Asset:  out.Asset,
+		Out:    out.Out,
+	}
+
+	utxo, ok := res[expectedUTXO.UTXOID]
+	require.True(ok)
+	require.Equal(expectedUTXO, utxo)
+
+	res2 := dep.GetUtxos()
+	require.Equal(res, res2)
+}
+
+func TestTxDependencyIsRewardAutoRenewedValidator(t *testing.T) {
+	require := require.New(t)
+
+	stakingTxID := ids.GenerateTestID()
+
+	utx := &txs.RewardAutoRenewedValidatorTx{
+		TxID:      stakingTxID,
+		Timestamp: 1,
+	}
+	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	require.NoError(err)
+
+	dep := &SingleTxDependency{Tx: tx}
+	res := dep.GetUtxos()
+	// RewardAutoRenewedValidatorTx has no outputs; rewards are tracked separately via RewardUTXOs
+	require.Empty(res)
+
+	res2 := dep.GetUtxos()
+	require.Equal(res, res2)
+}
+
 // TODO: Remove Post-Durango
 func TestTxDependencyIsAddValidator(t *testing.T) {
 	require := require.New(t)
@@ -219,7 +388,6 @@ func TestTxDependencyIsAddValidator(t *testing.T) {
 	res2 := dep.GetUtxos()
 	require.Equal(res, res2)
 }
-
 func TestTxDependencyIsAddPermissionlessValidator(t *testing.T) {
 	require := require.New(t)
 

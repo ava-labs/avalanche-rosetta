@@ -151,6 +151,13 @@ func BuildPayloads(
 		AccountIdentifierSigners: accountIdentifierSigners,
 	}
 
+	// BuildTx returns one signer per input operation followed by any tx-level
+	// signers (e.g. a ValidatorAuthority credential) that are not tied to an input.
+	// Record those trailing signers so /construction/parse can report them too.
+	if len(signers) > len(accountIdentifierSigners) {
+		rosettaTx.ExtraSigners = signers[len(accountIdentifierSigners):]
+	}
+
 	payloads := make([]*types.SigningPayload, len(signers))
 	for i, signer := range signers {
 		payloads[i] = &types.SigningPayload{
@@ -244,6 +251,7 @@ func Combine(
 	signedTransaction, err := json.Marshal(&RosettaTx{
 		Tx:                       combinedTx,
 		AccountIdentifierSigners: rosettaTx.AccountIdentifierSigners,
+		ExtraSigners:             rosettaTx.ExtraSigners,
 		DestinationChain:         rosettaTx.DestinationChain,
 		DestinationChainID:       rosettaTx.DestinationChainID,
 	})
@@ -288,10 +296,11 @@ func BuildCredentialList(ins []*avax.TransferableInput, signatures []*types.Sign
 	return creds, nil
 }
 
-// BuildSingletonCredentialList builds a list of a single *secp256k1fx.Credential using the given signatures
+// BuildSingletonCredentialList builds a list of a single *secp256k1fx.Credential using all provided signatures.
+// All signatures are placed into one credential — use this for auth credentials (e.g. ValidatorAuthority).
 func BuildSingletonCredentialList(signatures []*types.Signature) ([]verify.Verifiable, error) {
 	offset := 0
-	cred, err := buildCredential(1, &offset, signatures)
+	cred, err := buildCredential(len(signatures), &offset, signatures)
 	if err != nil {
 		return nil, err
 	}

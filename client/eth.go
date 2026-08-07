@@ -3,9 +3,9 @@ package client
 import (
 	"context"
 
-	"github.com/ava-labs/coreth/eth/tracers"
-	ethclient "github.com/ava-labs/coreth/plugin/evm/customethclient"
-	"github.com/ava-labs/coreth/rpc"
+	"github.com/ava-labs/avalanchego/graft/coreth/eth/tracers"
+	ethclient "github.com/ava-labs/avalanchego/graft/coreth/ethclient"
+	"github.com/ava-labs/avalanchego/graft/evm/rpc"
 )
 
 var (
@@ -31,7 +31,7 @@ func NewEthClient(ctx context.Context, endpoint string) (*EthClient, error) {
 	}
 
 	return &EthClient{
-		Client: *ethclient.New(c),
+		Client: *ethclient.NewClient(c),
 		rpc:    c,
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,

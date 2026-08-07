@@ -3,7 +3,7 @@ package service
 import (
 	"math/big"
 
-	"github.com/ava-labs/coreth/params"
+	"github.com/ava-labs/avalanchego/graft/coreth/params"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	ethtypes "github.com/ava-labs/libevm/core/types"

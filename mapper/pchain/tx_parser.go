@@ -185,6 +185,15 @@ func (t *TxParser) Parse(signedTx *txs.Tx) (*types.Transaction, error) {
 	case *txs.BaseTx:
 		txType = OpBase
 		ops, err = t.parseBaseTx(txID, unsignedTx)
+	case *txs.AddAutoRenewedValidatorTx:
+		txType = OpAddAutoRenewedValidator
+		ops, err = t.parseAddAutoRenewedValidatorTx(txID, unsignedTx)
+	case *txs.SetAutoRenewedValidatorConfigTx:
+		txType = OpSetAutoRenewedValidatorConfig
+		ops, err = t.parseSetAutoRenewedValidatorConfigTx(txID, unsignedTx)
+	case *txs.RewardAutoRenewedValidatorTx:
+		txType = OpRewardAutoRenewedValidator
+		ops, err = t.parseRewardAutoRenewedValidatorTx(unsignedTx)
 	default:
 		log.Printf("unknown type %T", unsignedTx)
 	}
@@ -282,7 +291,7 @@ func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*tx
 	if err != nil {
 		return nil, err
 	}
-	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), t.cfg.Hrp)
+	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), tx.Validator.EndTime(), t.cfg.Hrp)
 
 	return ops, nil
 }
@@ -297,7 +306,7 @@ func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPer
 	if err != nil {
 		return nil, err
 	}
-	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), t.cfg.Hrp)
+	addValidatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), tx.Validator.EndTime(), t.cfg.Hrp)
 
 	if tx.Signer != nil {
 		for _, out := range ops.StakeOuts {
@@ -318,7 +327,7 @@ func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*tx
 	if err != nil {
 		return nil, err
 	}
-	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), t.cfg.Hrp)
+	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), tx.Validator.EndTime(), t.cfg.Hrp)
 
 	return ops, nil
 }
@@ -333,7 +342,7 @@ func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPer
 	if err != nil {
 		return nil, err
 	}
-	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), t.cfg.Hrp)
+	addDelegatorMetadataToStakeOuts(ops, tx, tx.Validator.StartTime(), tx.Validator.EndTime(), t.cfg.Hrp)
 
 	return ops, nil
 }
@@ -356,13 +365,13 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 
 	switch utx := dep.Tx.Unsigned.(type) {
 	case *txs.AddValidatorTx:
-		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), t.cfg.Hrp)
+		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), utx.Validator.EndTime(), t.cfg.Hrp)
 	case *txs.AddDelegatorTx:
-		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), t.cfg.Hrp)
+		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), utx.Validator.EndTime(), t.cfg.Hrp)
 	case *txs.AddPermissionlessValidatorTx:
-		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), t.cfg.Hrp)
+		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), utx.Validator.EndTime(), t.cfg.Hrp)
 	case *txs.AddPermissionlessDelegatorTx:
-		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), t.cfg.Hrp)
+		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), utx.Validator.EndTime(), t.cfg.Hrp)
 	default:
 		return nil, errUnknownRewardSourceTransaction
 	}
@@ -378,7 +387,7 @@ func getAddressArray(owners *secp256k1fx.OutputOwners, hrp string) []string {
 	return addrs
 }
 
-func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, startTime time.Time, hrp string) {
+func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, startTime, endTime time.Time, hrp string) {
 	if validator == nil {
 		return
 	}
@@ -386,7 +395,7 @@ func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, star
 	for _, out := range ops.StakeOuts {
 		out.Metadata[MetadataValidatorNodeID] = validator.NodeID().String()
 		out.Metadata[MetadataStakingStartTime] = uint64(startTime.Unix())
-		out.Metadata[MetadataStakingEndTime] = uint64(validator.EndTime().Unix())
+		out.Metadata[MetadataStakingEndTime] = uint64(endTime.Unix())
 		out.Metadata[MetadataValidatorWeight] = validator.Weight()
 		out.Metadata[MetadataValidatorRewardsOwner] = getAddressArray(validator.ValidationRewardsOwner().(*secp256k1fx.OutputOwners), hrp)
 		out.Metadata[MetadataDelegationRewardsOwner] = getAddressArray(validator.DelegationRewardsOwner().(*secp256k1fx.OutputOwners), hrp)
@@ -401,7 +410,7 @@ func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, star
 	}
 }
 
-func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, startTime time.Time, hrp string) {
+func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, startTime, endTime time.Time, hrp string) {
 	if delegator == nil {
 		return
 	}
@@ -409,7 +418,7 @@ func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, star
 	for _, out := range ops.StakeOuts {
 		out.Metadata[MetadataValidatorNodeID] = delegator.NodeID().String()
 		out.Metadata[MetadataStakingStartTime] = uint64(startTime.Unix())
-		out.Metadata[MetadataStakingEndTime] = uint64(delegator.EndTime().Unix())
+		out.Metadata[MetadataStakingEndTime] = uint64(endTime.Unix())
 		out.Metadata[MetadataValidatorWeight] = delegator.Weight()
 		out.Metadata[MetadataDelegatorRewardsOwner] = getAddressArray(delegator.RewardsOwner().(*secp256k1fx.OutputOwners), hrp)
 		out.Metadata[MetadataSubnetID] = delegator.SubnetID().String()
@@ -462,6 +471,83 @@ func (t *TxParser) parseSetL1ValidatorWeightTx(txID ids.ID, tx *txs.SetL1Validat
 
 func (t *TxParser) parseDisableL1ValidatorTx(txID ids.ID, tx *txs.DisableL1ValidatorTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpDisableL1ValidatorTx)
+}
+
+func (t *TxParser) parseAddAutoRenewedValidatorTx(txID ids.ID, tx *txs.AddAutoRenewedValidatorTx) (*txOps, error) {
+	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddAutoRenewedValidator)
+	if err != nil {
+		return nil, err
+	}
+
+	err = t.outsToOperations(ops, OpAddAutoRenewedValidator, txID, tx.Stake(), OpTypeStakeOutput, constants.PChain)
+	if err != nil {
+		return nil, err
+	}
+	addAutoRenewedValidatorMetadataToStakeOuts(ops, tx, t.cfg.Hrp)
+
+	if tx.Signer != nil {
+		for _, out := range ops.StakeOuts {
+			out.Metadata[MetadataSigner] = tx.Signer
+		}
+	}
+
+	return ops, nil
+}
+
+func (t *TxParser) parseSetAutoRenewedValidatorConfigTx(txID ids.ID, tx *txs.SetAutoRenewedValidatorConfigTx) (*txOps, error) {
+	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpSetAutoRenewedValidatorConfig)
+}
+
+func (t *TxParser) parseRewardAutoRenewedValidatorTx(tx *txs.RewardAutoRenewedValidatorTx) (*txOps, error) {
+	if t.dependencyTxs == nil {
+		return nil, errNoDependencyTxs
+	}
+	dep := t.dependencyTxs[tx.TxID]
+	if dep == nil {
+		return nil, errNoMatchingRewardOutputs
+	}
+
+	ops := newTxOps(t.cfg.IsConstruction)
+	err := t.utxosToOperations(ops, OpRewardAutoRenewedValidator, dep.RewardUTXOs, OpTypeReward, constants.PChain)
+	if err != nil {
+		return nil, err
+	}
+
+	utx, ok := dep.Tx.Unsigned.(*txs.AddAutoRenewedValidatorTx)
+	if !ok {
+		return nil, errUnknownRewardSourceTransaction
+	}
+	addAutoRenewedValidatorMetadataToStakeOuts(ops, utx, t.cfg.Hrp)
+
+	return ops, nil
+}
+
+// addAutoRenewedValidatorMetadataToStakeOuts adds ACP-236 auto-renewed validator metadata
+// to stake/reward outputs. Unlike BoundedStaker-based validators, auto-renewed validators
+// have no fixed start/end time — they use Period and AutoCompoundRewardShares instead.
+func addAutoRenewedValidatorMetadataToStakeOuts(ops *txOps, tx *txs.AddAutoRenewedValidatorTx, hrp string) {
+	if tx == nil {
+		return
+	}
+	for _, out := range ops.StakeOuts {
+		out.Metadata[MetadataValidatorNodeID] = tx.NodeID().String()
+		// Weight reported here is the registration weight from the staking tx. Under
+		// ACP-236 the on-chain weight grows as rewards are auto-compounded across
+		// cycles, so this reflects the initial stake, not the current live weight.
+		// Auto-renewed validators also have no fixed start/end time, so the
+		// MetadataStakingStartTime/EndTime keys set for bounded stakers are omitted.
+		out.Metadata[MetadataValidatorWeight] = tx.Weight()
+		out.Metadata[MetadataDelegationFee] = tx.DelegationShares
+		out.Metadata[MetadataAutoCompoundRewardShares] = tx.AutoCompoundRewardShares
+		out.Metadata[MetadataPeriod] = tx.Period
+		if validatorRewardsOwner, ok := tx.ValidatorRewardsOwner.(*secp256k1fx.OutputOwners); ok {
+			out.Metadata[MetadataValidatorRewardsOwner] = getAddressArray(validatorRewardsOwner, hrp)
+		}
+		if delegatorRewardsOwner, ok := tx.DelegatorRewardsOwner.(*secp256k1fx.OutputOwners); ok {
+			out.Metadata[MetadataDelegationRewardsOwner] = getAddressArray(delegatorRewardsOwner, hrp)
+		}
+		out.Metadata[MetadataSubnetID] = tx.SubnetID().String()
+	}
 }
 
 func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType string) (*txOps, error) {

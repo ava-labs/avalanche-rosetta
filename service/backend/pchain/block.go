@@ -158,24 +158,72 @@ func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTran
 	return nil, service.ErrTransactionNotFound
 }
 
-func (b *Backend) fetchBlkDependencies(ctx context.Context, txs []*txs.Tx) (pmapper.BlockTxDependencies, error) {
+// depRequest pairs a dependency tx ID with the tx ID used to query reward UTXOs.
+// For most tx types rewardUTXOTxID is ids.Empty, meaning the dep tx ID is used.
+// For RewardAutoRenewedValidatorTx, AvalancheGo stores reward UTXOs under the
+// reward tx's own ID (not the referenced staking tx ID), so rewardUTXOTxID is
+// set to the reward tx's ID.
+type depRequest struct {
+	depTxID        ids.ID
+	rewardUTXOTxID ids.ID
+}
+
+func (b *Backend) fetchBlkDependencies(ctx context.Context, blkTxs []*txs.Tx) (pmapper.BlockTxDependencies, error) {
 	blockDeps := make(pmapper.BlockTxDependencies)
-	depsTxIDs := []ids.ID{}
-	for _, tx := range txs {
-		inputTxsIds, err := pmapper.GetTxDependenciesIDs(tx.Unsigned)
+
+	// depReqByTxID dedupes dependency requests by depTxID. Several txs in a block can
+	// reference the same dependency tx; without deduping, concurrent fetches for the
+	// same tx ID all write to blockDeps and the last writer wins nondeterministically.
+	// That is a correctness bug for RewardAutoRenewedValidatorTx: its request carries
+	// the reward-UTXO override (rewardUTXOTxID), while a duplicate request from an
+	// unrelated tx spending the same staking tx carries ids.Empty. If the latter wins,
+	// reward UTXOs are queried under the staking tx ID (where they are not stored) and
+	// come back empty, so the reward operations disappear from /block.
+	depReqByTxID := make(map[ids.ID]depRequest)
+	addDepReq := func(req depRequest) {
+		// Prefer the request carrying a reward-UTXO override over a bare one.
+		if existing, ok := depReqByTxID[req.depTxID]; ok &&
+			!(existing.rewardUTXOTxID == ids.Empty && req.rewardUTXOTxID != ids.Empty) {
+			return
+		}
+		depReqByTxID[req.depTxID] = req
+	}
+
+	// rewardTxIDs maps stakingTxID → rewardTxID for RewardAutoRenewedValidatorTx deps.
+	// Used after fetching to also index each dep under its reward tx ID so that
+	// isMultisig can resolve reward UTXOs when they are spent in a later block.
+	rewardTxIDs := make(map[ids.ID]ids.ID)
+	for _, tx := range blkTxs {
+		if utx, ok := tx.Unsigned.(*txs.RewardAutoRenewedValidatorTx); ok {
+			// Reward UTXOs are stored under the reward tx's own ID in AvalancheGo,
+			// not under the staking tx ID (utx.TxID). Fetch the staking tx for
+			// validator metadata, but query reward UTXOs with the reward tx ID.
+			// RewardAutoRenewedValidatorTx has no BaseTx inputs (InputIDs returns nil),
+			// so bypassing GetTxDependenciesIDs is safe for the current protocol.
+			rewardTxID := tx.ID()
+			rewardTxIDs[utx.TxID] = rewardTxID
+			addDepReq(depRequest{
+				depTxID:        utx.TxID,
+				rewardUTXOTxID: rewardTxID,
+			})
+			continue
+		}
+		inputTxIDs, err := pmapper.GetTxDependenciesIDs(tx.Unsigned)
 		if err != nil {
 			return nil, err
 		}
-		depsTxIDs = append(depsTxIDs, inputTxsIds...)
+		for _, id := range inputTxIDs {
+			addDepReq(depRequest{depTxID: id})
+		}
 	}
 
-	dependencyTxChan := make(chan *pmapper.SingleTxDependency, len(depsTxIDs))
+	dependencyTxChan := make(chan *pmapper.SingleTxDependency, len(depReqByTxID))
 	eg, ctx := errgroup.WithContext(ctx)
 
-	for _, txID := range depsTxIDs {
-		txID := txID
+	for _, req := range depReqByTxID {
+		req := req
 		eg.Go(func() error {
-			return b.fetchDependencyTx(ctx, txID, dependencyTxChan)
+			return b.fetchDependencyTx(ctx, req.depTxID, req.rewardUTXOTxID, dependencyTxChan)
 		})
 	}
 	if err := eg.Wait(); err != nil {
@@ -187,10 +235,21 @@ func (b *Backend) fetchBlkDependencies(ctx context.Context, txs []*txs.Tx) (pmap
 		blockDeps[dTx.Tx.ID()] = dTx
 	}
 
+	// Index reward deps under their reward tx ID as well, so that isMultisig
+	// can look up the dep when a downstream tx spends a reward UTXO (whose
+	// UTXOID.TxID is the reward tx ID, not the staking tx ID).
+	for stakingTxID, rewardTxID := range rewardTxIDs {
+		if dep, ok := blockDeps[stakingTxID]; ok {
+			blockDeps[rewardTxID] = dep
+		}
+	}
+
 	return blockDeps, nil
 }
 
-func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *pmapper.SingleTxDependency) error {
+// fetchDependencyTx fetches a dependency tx and its reward UTXOs.
+// rewardUTXOTxID, when non-zero, overrides the tx ID used to query GetRewardUTXOs.
+func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, rewardUTXOTxID ids.ID, out chan *pmapper.SingleTxDependency) error {
 	// Genesis state contains initial allocation UTXOs. These are not technically part of a transaction.
 	// As a result, their UTXO id uses zero value transaction id. In that case, return genesis allocation data
 	if txID == ids.Empty {
@@ -213,8 +272,13 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, out chan *
 		return err
 	}
 
+	utxoQueryID := txID
+	if rewardUTXOTxID != ids.Empty {
+		utxoQueryID = rewardUTXOTxID
+	}
+
 	utxoBytes, err := b.pClient.GetRewardUTXOs(ctx, &api.GetTxArgs{
-		TxID:     txID,
+		TxID:     utxoQueryID,
 		Encoding: formatting.Hex,
 	})
 	if err != nil {
