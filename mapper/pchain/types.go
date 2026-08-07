@@ -158,6 +158,11 @@ type AutoRenewedValidatorOptions struct {
 	Period                   uint64   `json:"period"`
 	Locktime                 uint64   `json:"locktime"`
 	Threshold                uint32   `json:"threshold"`
+	// ValidatorAuthorityLocktime and ValidatorAuthorityThreshold apply to the
+	// ValidatorAuthority owner and are kept independent of the reward owners above,
+	// so a reward-output locktime can never make the authority temporarily unusable.
+	ValidatorAuthorityLocktime  uint64 `json:"validator_authority_locktime"`
+	ValidatorAuthorityThreshold uint32 `json:"validator_authority_threshold"`
 }
 
 // AutoRenewedValidatorMetadata contain response fields returned by /construction/metadata for OpAddAutoRenewedValidator transactions
@@ -173,6 +178,11 @@ type AutoRenewedValidatorMetadata struct {
 	Period                   uint64   `json:"period"`
 	Locktime                 uint64   `json:"locktime"`
 	Threshold                uint32   `json:"threshold"`
+	// ValidatorAuthorityLocktime and ValidatorAuthorityThreshold apply to the
+	// ValidatorAuthority owner and are kept independent of the reward owners above,
+	// so a reward-output locktime can never make the authority temporarily unusable.
+	ValidatorAuthorityLocktime  uint64 `json:"validator_authority_locktime"`
+	ValidatorAuthorityThreshold uint32 `json:"validator_authority_threshold"`
 }
 
 // AutoRenewedValidatorConfigOptions contain options for /construction/preprocess for OpSetAutoRenewedValidatorConfig transactions

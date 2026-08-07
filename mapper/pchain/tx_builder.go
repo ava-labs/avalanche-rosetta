@@ -591,13 +591,8 @@ func buildAddAutoRenewedValidatorTx(
 	}
 	m := metadata.AutoRenewedValidator
 
-	// reward_addresses is validated to be non-empty in buildAutoRenewedValidatorMetadata,
-	// so it is safe to fall back to it for the authority owner here.
-	authorityAddrs := m.ValidatorAuthorityOwners
-	if len(authorityAddrs) == 0 {
-		authorityAddrs = m.ValidationRewardsOwners
-	}
-
+	// reward_addresses and validator_authority_addresses are validated to be
+	// non-empty in buildAutoRenewedValidatorMetadata.
 	nodeID, err := ids.NodeIDFromString(m.NodeID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid node_id: %w", err)
@@ -631,7 +626,7 @@ func buildAddAutoRenewedValidatorTx(
 		}
 	}
 
-	validatorAuthority, err := buildOutputOwner(authorityAddrs, m.Locktime, m.Threshold)
+	validatorAuthority, err := buildOutputOwner(m.ValidatorAuthorityOwners, m.ValidatorAuthorityLocktime, m.ValidatorAuthorityThreshold)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid validator_authority_addresses: %w", err)
 	}

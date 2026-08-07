@@ -187,32 +187,44 @@ func (*Backend) buildAutoRenewedValidatorMetadata(
 	}
 
 	// buildOutputOwner returns an empty (unspendable) owner for an empty address
-	// list without erroring, so guard it here where the metadata is constructed.
+	// list without erroring, so guard both owner lists here where the metadata is
+	// constructed. validator_authority_addresses must be explicit: silently falling
+	// back to the reward addresses would grant the reward key permanent authority to
+	// reconfigure or stop the validator, which the caller never asked for.
 	if len(opts.ValidationRewardsOwners) == 0 {
 		return nil, errors.New("reward_addresses must be non-empty")
 	}
+	if len(opts.ValidatorAuthorityOwners) == 0 {
+		return nil, errors.New("validator_authority_addresses must be non-empty")
+	}
 
 	// A zero threshold on a non-empty owner is rejected by the P-chain on issue
-	// (OutputOwners.Verify returns ErrOutputUnoptimized), so default it to 1 when
+	// (OutputOwners.Verify returns ErrOutputUnoptimized), so default each to 1 when
 	// the client does not specify one.
 	threshold := opts.Threshold
 	if threshold == 0 {
 		threshold = 1
 	}
+	authorityThreshold := opts.ValidatorAuthorityThreshold
+	if authorityThreshold == 0 {
+		authorityThreshold = 1
+	}
 
 	return &pmapper.Metadata{
 		AutoRenewedValidator: &pmapper.AutoRenewedValidatorMetadata{
-			NodeID:                   opts.NodeID,
-			BLSPublicKey:             opts.BLSPublicKey,
-			BLSProofOfPossession:     opts.BLSProofOfPossession,
-			ValidationRewardsOwners:  opts.ValidationRewardsOwners,
-			DelegationRewardsOwners:  opts.DelegationRewardsOwners,
-			ValidatorAuthorityOwners: opts.ValidatorAuthorityOwners,
-			Shares:                   opts.Shares,
-			AutoCompoundRewardShares: opts.AutoCompoundRewardShares,
-			Period:                   opts.Period,
-			Locktime:                 opts.Locktime,
-			Threshold:                threshold,
+			NodeID:                      opts.NodeID,
+			BLSPublicKey:                opts.BLSPublicKey,
+			BLSProofOfPossession:        opts.BLSProofOfPossession,
+			ValidationRewardsOwners:     opts.ValidationRewardsOwners,
+			DelegationRewardsOwners:     opts.DelegationRewardsOwners,
+			ValidatorAuthorityOwners:    opts.ValidatorAuthorityOwners,
+			Shares:                      opts.Shares,
+			AutoCompoundRewardShares:    opts.AutoCompoundRewardShares,
+			Period:                      opts.Period,
+			Locktime:                    opts.Locktime,
+			Threshold:                   threshold,
+			ValidatorAuthorityLocktime:  opts.ValidatorAuthorityLocktime,
+			ValidatorAuthorityThreshold: authorityThreshold,
 		},
 	}, nil
 }

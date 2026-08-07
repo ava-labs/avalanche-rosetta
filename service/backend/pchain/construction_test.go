@@ -1094,9 +1094,10 @@ func TestAddAutoRenewedValidatorTxConstruction(t *testing.T) {
 		"shares":                   shares,
 		"auto_compound_reward_shares": autoCompoundShares,
 		"period":                   period,
-		"reward_addresses":         []string{ewoqAccountP.Address},
-		"bls_public_key":           sampleBlsPublicKey,
-		"bls_proof_of_possession":  sampleProofOfPossession,
+		"reward_addresses":              []string{ewoqAccountP.Address},
+		"validator_authority_addresses": []string{ewoqAccountP.Address},
+		"bls_public_key":                sampleBlsPublicKey,
+		"bls_proof_of_possession":       sampleProofOfPossession,
 	}
 
 	ctx := context.Background()
@@ -1388,11 +1389,23 @@ func parsePoP(blsPublicKey, blsProofOfPossession string) (*signer.ProofOfPossess
 
 // The metadata handlers ignore their receiver, so an empty Backend is enough.
 func TestBuildAutoRenewedValidatorMetadataValidation(t *testing.T) {
+	authAddr := "P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je"
+
+	// reward_addresses is required.
 	_, err := (&Backend{}).buildAutoRenewedValidatorMetadata(context.Background(), map[string]interface{}{
 		"node_id": "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "reward_addresses must be non-empty")
+
+	// validator_authority_addresses is required and must NOT silently fall back to
+	// the reward addresses (that would be an unintended authority grant).
+	_, err = (&Backend{}).buildAutoRenewedValidatorMetadata(context.Background(), map[string]interface{}{
+		"node_id":          "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+		"reward_addresses": []string{authAddr},
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "validator_authority_addresses must be non-empty")
 }
 
 func TestBuildAutoRenewedValidatorConfigMetadataValidation(t *testing.T) {
