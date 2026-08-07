@@ -171,7 +171,24 @@ type depRequest struct {
 func (b *Backend) fetchBlkDependencies(ctx context.Context, blkTxs []*txs.Tx) (pmapper.BlockTxDependencies, error) {
 	blockDeps := make(pmapper.BlockTxDependencies)
 
-	var depReqs []depRequest
+	// depReqByTxID dedupes dependency requests by depTxID. Several txs in a block can
+	// reference the same dependency tx; without deduping, concurrent fetches for the
+	// same tx ID all write to blockDeps and the last writer wins nondeterministically.
+	// That is a correctness bug for RewardAutoRenewedValidatorTx: its request carries
+	// the reward-UTXO override (rewardUTXOTxID), while a duplicate request from an
+	// unrelated tx spending the same staking tx carries ids.Empty. If the latter wins,
+	// reward UTXOs are queried under the staking tx ID (where they are not stored) and
+	// come back empty, so the reward operations disappear from /block.
+	depReqByTxID := make(map[ids.ID]depRequest)
+	addDepReq := func(req depRequest) {
+		// Prefer the request carrying a reward-UTXO override over a bare one.
+		if existing, ok := depReqByTxID[req.depTxID]; ok &&
+			!(existing.rewardUTXOTxID == ids.Empty && req.rewardUTXOTxID != ids.Empty) {
+			return
+		}
+		depReqByTxID[req.depTxID] = req
+	}
+
 	// rewardTxIDs maps stakingTxID → rewardTxID for RewardAutoRenewedValidatorTx deps.
 	// Used after fetching to also index each dep under its reward tx ID so that
 	// isMultisig can resolve reward UTXOs when they are spent in a later block.
@@ -185,7 +202,7 @@ func (b *Backend) fetchBlkDependencies(ctx context.Context, blkTxs []*txs.Tx) (p
 			// so bypassing GetTxDependenciesIDs is safe for the current protocol.
 			rewardTxID := tx.ID()
 			rewardTxIDs[utx.TxID] = rewardTxID
-			depReqs = append(depReqs, depRequest{
+			addDepReq(depRequest{
 				depTxID:        utx.TxID,
 				rewardUTXOTxID: rewardTxID,
 			})
@@ -196,14 +213,14 @@ func (b *Backend) fetchBlkDependencies(ctx context.Context, blkTxs []*txs.Tx) (p
 			return nil, err
 		}
 		for _, id := range inputTxIDs {
-			depReqs = append(depReqs, depRequest{depTxID: id})
+			addDepReq(depRequest{depTxID: id})
 		}
 	}
 
-	dependencyTxChan := make(chan *pmapper.SingleTxDependency, len(depReqs))
+	dependencyTxChan := make(chan *pmapper.SingleTxDependency, len(depReqByTxID))
 	eg, ctx := errgroup.WithContext(ctx)
 
-	for _, req := range depReqs {
+	for _, req := range depReqByTxID {
 		req := req
 		eg.Go(func() error {
 			return b.fetchDependencyTx(ctx, req.depTxID, req.rewardUTXOTxID, dependencyTxChan)

@@ -215,3 +215,90 @@ func TestFetchBlkDependenciesRewardAutoRenewedValidator(t *testing.T) {
 	require.Contains(t, deps, rewardTxID)
 	require.Same(t, deps[stakingTxID], deps[rewardTxID])
 }
+
+// TestFetchBlkDependenciesRewardAndSpendSameStakingTx guards against a dependency
+// dedup regression: when a block holds both a RewardAutoRenewedValidatorTx (referencing
+// staking tx X) and another tx spending an output of X, two requests for X are produced —
+// one with the reward-UTXO override and one without. The staking tx must be fetched once
+// and its reward UTXOs queried under the reward tx ID; the strict gomock expectations below
+// (GetTx once, GetRewardUTXOs only with rewardTxID) fail if the bare duplicate request wins.
+func TestFetchBlkDependenciesRewardAndSpendSameStakingTx(t *testing.T) {
+	dummyGenesis = &indexer.ParsedGenesisBlock{}
+
+	ctrl := gomock.NewController(t)
+	mockPClient := client.NewMockPChainClient(ctrl)
+	mockIndexerParser := indexer.NewMockParser(ctrl)
+
+	ctx := context.Background()
+
+	networkID := avaconstants.MainnetID
+	networkIdentifier := &types.NetworkIdentifier{
+		Blockchain: service.BlockchainName,
+		Network:    constants.MainnetNetwork,
+		SubNetworkIdentifier: &types.SubNetworkIdentifier{
+			Network: constants.PChain.String(),
+		},
+	}
+
+	rewardsOwner := &secp256k1fx.OutputOwners{
+		Threshold: 1,
+		Addrs:     []ids.ShortID{ids.GenerateTestShortID()},
+	}
+	validatorNodeID := ids.GenerateTestNodeID()
+	stakingTx, err := txs.NewSigned(&txs.AddAutoRenewedValidatorTx{
+		BaseTx:                txs.BaseTx{BaseTx: avax.BaseTx{NetworkID: networkID}},
+		ValidatorNodeID:       validatorNodeID[:],
+		Signer:                &signer.Empty{},
+		ValidatorRewardsOwner: rewardsOwner,
+		DelegatorRewardsOwner: rewardsOwner,
+		ValidatorAuthority:    rewardsOwner,
+	}, txs.Codec, nil)
+	require.NoError(t, err)
+	stakingTxID := stakingTx.ID()
+
+	rewardTx, err := txs.NewSigned(&txs.RewardAutoRenewedValidatorTx{
+		TxID:      stakingTxID,
+		Timestamp: 1,
+	}, txs.Codec, nil)
+	require.NoError(t, err)
+	rewardTxID := rewardTx.ID()
+
+	// A second tx in the same block that spends an output of the staking tx X,
+	// producing a bare {X, ids.Empty} dependency request alongside the reward tx's
+	// {X, rewardTxID} request.
+	spendingTx := &txs.Tx{
+		Unsigned: &txs.ExportTx{
+			BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+				NetworkID:    networkID,
+				BlockchainID: pChainID,
+				Ins: []*avax.TransferableInput{
+					{
+						UTXOID: avax.UTXOID{TxID: stakingTxID, OutputIndex: 0},
+						Asset:  avax.Asset{ID: avaxAssetID},
+						In:     &secp256k1fx.TransferInput{Amt: 1000, Input: secp256k1fx.Input{}},
+					},
+				},
+			}},
+			DestinationChain: cChainID,
+		},
+	}
+
+	mockIndexerParser.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	// Fetched exactly once despite two requests referencing it.
+	mockPClient.EXPECT().GetTx(gomock.Any(), stakingTxID).Return(stakingTx.Bytes(), nil)
+	// Reward UTXOs must be queried under the reward tx ID, never the staking tx ID.
+	mockPClient.EXPECT().GetRewardUTXOs(gomock.Any(), &api.GetTxArgs{
+		TxID:     rewardTxID,
+		Encoding: formatting.Hex,
+	}).Return(nil, nil)
+
+	backend, err := NewBackend(mockPClient, mockIndexerParser, avaxAssetID, networkIdentifier, networkID)
+	require.NoError(t, err)
+
+	deps, err := backend.fetchBlkDependencies(ctx, []*txs.Tx{spendingTx, rewardTx})
+	require.NoError(t, err)
+
+	require.Contains(t, deps, stakingTxID)
+	require.Contains(t, deps, rewardTxID)
+	require.Same(t, deps[stakingTxID], deps[rewardTxID])
+}
