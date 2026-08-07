@@ -531,6 +531,11 @@ func addAutoRenewedValidatorMetadataToStakeOuts(ops *txOps, tx *txs.AddAutoRenew
 	}
 	for _, out := range ops.StakeOuts {
 		out.Metadata[MetadataValidatorNodeID] = tx.NodeID().String()
+		// Weight reported here is the registration weight from the staking tx. Under
+		// ACP-236 the on-chain weight grows as rewards are auto-compounded across
+		// cycles, so this reflects the initial stake, not the current live weight.
+		// Auto-renewed validators also have no fixed start/end time, so the
+		// MetadataStakingStartTime/EndTime keys set for bounded stakers are omitted.
 		out.Metadata[MetadataValidatorWeight] = tx.Weight()
 		out.Metadata[MetadataDelegationFee] = tx.DelegationShares
 		out.Metadata[MetadataAutoCompoundRewardShares] = tx.AutoCompoundRewardShares

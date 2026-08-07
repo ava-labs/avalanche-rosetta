@@ -2,8 +2,8 @@ package cchainatomictx
 
 import (
 	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/atomic"
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"

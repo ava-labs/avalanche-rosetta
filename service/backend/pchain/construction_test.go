@@ -1090,10 +1090,10 @@ func TestAddAutoRenewedValidatorTxConstruction(t *testing.T) {
 	}
 
 	preprocessMetadata := map[string]interface{}{
-		"node_id":                  nodeID,
-		"shares":                   shares,
-		"auto_compound_reward_shares": autoCompoundShares,
-		"period":                   period,
+		"node_id":                       nodeID,
+		"shares":                        shares,
+		"auto_compound_reward_shares":   autoCompoundShares,
+		"period":                        period,
 		"reward_addresses":              []string{ewoqAccountP.Address},
 		"validator_authority_addresses": []string{ewoqAccountP.Address},
 		"bls_public_key":                sampleBlsPublicKey,
@@ -1525,6 +1525,26 @@ func TestBuildAutoRenewedValidatorMetadataValidation(t *testing.T) {
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "validator_authority_addresses must be non-empty")
+
+	// period must be non-zero (a syntactic constraint of AddAutoRenewedValidatorTx).
+	_, err = (&Backend{}).buildAutoRenewedValidatorMetadata(context.Background(), map[string]interface{}{
+		"node_id":                       "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+		"reward_addresses":              []string{authAddr},
+		"validator_authority_addresses": []string{authAddr},
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "period must be non-zero")
+
+	// shares must not exceed the reward denominator.
+	_, err = (&Backend{}).buildAutoRenewedValidatorMetadata(context.Background(), map[string]interface{}{
+		"node_id":                       "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+		"reward_addresses":              []string{authAddr},
+		"validator_authority_addresses": []string{authAddr},
+		"period":                        uint64(3600),
+		"shares":                        uint32(1_000_001),
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "shares must be")
 }
 
 func TestBuildAutoRenewedValidatorConfigMetadataValidation(t *testing.T) {

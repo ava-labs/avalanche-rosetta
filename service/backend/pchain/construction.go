@@ -11,6 +11,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -198,35 +199,32 @@ func (*Backend) buildAutoRenewedValidatorMetadata(
 		return nil, errors.New("validator_authority_addresses must be non-empty")
 	}
 
+	// Fail fast on the network-independent syntactic constraints
+	// AddAutoRenewedValidatorTx enforces, so the caller learns at /metadata rather
+	// than hitting an opaque /submit failure.
+	if opts.Period == 0 {
+		return nil, errors.New("period must be non-zero")
+	}
+	if opts.Shares > reward.PercentDenominator {
+		return nil, fmt.Errorf("shares must be <= %d", reward.PercentDenominator)
+	}
+	if opts.AutoCompoundRewardShares > reward.PercentDenominator {
+		return nil, fmt.Errorf("auto_compound_reward_shares must be <= %d", reward.PercentDenominator)
+	}
+
 	// A zero threshold on a non-empty owner is rejected by the P-chain on issue
 	// (OutputOwners.Verify returns ErrOutputUnoptimized), so default each to 1 when
 	// the client does not specify one.
-	threshold := opts.Threshold
-	if threshold == 0 {
-		threshold = 1
+	if opts.Threshold == 0 {
+		opts.Threshold = 1
 	}
-	authorityThreshold := opts.ValidatorAuthorityThreshold
-	if authorityThreshold == 0 {
-		authorityThreshold = 1
+	if opts.ValidatorAuthorityThreshold == 0 {
+		opts.ValidatorAuthorityThreshold = 1
 	}
 
-	return &pmapper.Metadata{
-		AutoRenewedValidator: &pmapper.AutoRenewedValidatorMetadata{
-			NodeID:                      opts.NodeID,
-			BLSPublicKey:                opts.BLSPublicKey,
-			BLSProofOfPossession:        opts.BLSProofOfPossession,
-			ValidationRewardsOwners:     opts.ValidationRewardsOwners,
-			DelegationRewardsOwners:     opts.DelegationRewardsOwners,
-			ValidatorAuthorityOwners:    opts.ValidatorAuthorityOwners,
-			Shares:                      opts.Shares,
-			AutoCompoundRewardShares:    opts.AutoCompoundRewardShares,
-			Period:                      opts.Period,
-			Locktime:                    opts.Locktime,
-			Threshold:                   threshold,
-			ValidatorAuthorityLocktime:  opts.ValidatorAuthorityLocktime,
-			ValidatorAuthorityThreshold: authorityThreshold,
-		},
-	}, nil
+	// AutoRenewedValidatorMetadata is an alias of AutoRenewedValidatorOptions, so the
+	// validated options are returned directly rather than copied field by field.
+	return &pmapper.Metadata{AutoRenewedValidator: &opts}, nil
 }
 
 func (*Backend) buildAutoRenewedValidatorConfigMetadata(
@@ -358,10 +356,10 @@ func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (comm
 
 	wantTotal := len(ins) + numAuthSigs
 	if len(signatures) < wantTotal {
-		return nil, service.WrapError(service.ErrInvalidInput, errors.New(fmt.Sprintf(
+		return nil, service.WrapError(service.ErrInvalidInput, fmt.Errorf(
 			"need %d signature(s) (%d for inputs, %d for auth), got %d",
 			wantTotal, len(ins), numAuthSigs, len(signatures),
-		)))
+		))
 	}
 
 	inputSigs := signatures[:len(signatures)-numAuthSigs]

@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm"
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"

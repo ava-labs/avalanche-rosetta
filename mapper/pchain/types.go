@@ -165,25 +165,11 @@ type AutoRenewedValidatorOptions struct {
 	ValidatorAuthorityThreshold uint32 `json:"validator_authority_threshold"`
 }
 
-// AutoRenewedValidatorMetadata contain response fields returned by /construction/metadata for OpAddAutoRenewedValidator transactions
-type AutoRenewedValidatorMetadata struct {
-	NodeID                   string   `json:"node_id"`
-	BLSPublicKey             string   `json:"bls_public_key"`
-	BLSProofOfPossession     string   `json:"bls_proof_of_possession"`
-	ValidationRewardsOwners  []string `json:"reward_addresses"`
-	DelegationRewardsOwners  []string `json:"delegator_reward_addresses"`
-	ValidatorAuthorityOwners []string `json:"validator_authority_addresses"`
-	Shares                   uint32   `json:"shares"`
-	AutoCompoundRewardShares uint32   `json:"auto_compound_reward_shares"`
-	Period                   uint64   `json:"period"`
-	Locktime                 uint64   `json:"locktime"`
-	Threshold                uint32   `json:"threshold"`
-	// ValidatorAuthorityLocktime and ValidatorAuthorityThreshold apply to the
-	// ValidatorAuthority owner and are kept independent of the reward owners above,
-	// so a reward-output locktime can never make the authority temporarily unusable.
-	ValidatorAuthorityLocktime  uint64 `json:"validator_authority_locktime"`
-	ValidatorAuthorityThreshold uint32 `json:"validator_authority_threshold"`
-}
+// AutoRenewedValidatorMetadata contains the response fields returned by
+// /construction/metadata for OpAddAutoRenewedValidator transactions. The options
+// accepted at /construction/preprocess are identical, so it aliases
+// AutoRenewedValidatorOptions rather than duplicating the field set.
+type AutoRenewedValidatorMetadata = AutoRenewedValidatorOptions
 
 // AutoRenewedValidatorConfigOptions contain options for /construction/preprocess for OpSetAutoRenewedValidatorConfig transactions
 type AutoRenewedValidatorConfigOptions struct {

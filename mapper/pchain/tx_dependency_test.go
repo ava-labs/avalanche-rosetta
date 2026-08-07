@@ -497,4 +497,3 @@ func TestTxDependencyIsAddPermissionlessValidator(t *testing.T) {
 	res2 := dep.GetUtxos()
 	require.Equal(res, res2)
 }
-

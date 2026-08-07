@@ -5,11 +5,11 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/atomic"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/atomic"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
