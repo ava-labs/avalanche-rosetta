@@ -180,7 +180,7 @@ type AutoRenewedValidatorConfigOptions struct {
 	// construction flow returns one signing payload per address so the caller can
 	// provide the ValidatorAuthority credential signatures. Required.
 	// AuthAddresses[i] must control ValidatorAuthority.Addrs[AuthSigIndices[i]], and
-	// AuthSigIndices must be strictly ascending (as secp256k1fx.Input requires).
+	// AuthSigIndices must be strictly ascending.
 	AuthAddresses  []string `json:"auth_addresses"`
 	AuthSigIndices []uint32 `json:"auth_sig_indices"`
 }

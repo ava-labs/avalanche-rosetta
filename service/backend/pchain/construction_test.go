@@ -1360,8 +1360,7 @@ func TestSetAutoRenewedValidatorConfigTxConstruction(t *testing.T) { //nolint:go
 		require.Len(t, parsedPTx.Tx.Creds, 2)
 
 		// /construction/parse of the signed tx must report both signers: the BaseTx
-		// input and the ValidatorAuthority auth signer. Before the ExtraSigners fix
-		// only the input signer was reported, causing a rosetta-cli signer mismatch.
+		// input and the ValidatorAuthority auth signer.
 		parseResp, terr := backend.ConstructionParse(ctx, &types.ConstructionParseRequest{
 			NetworkIdentifier: pChainNetworkIdentifier,
 			Signed:            true,

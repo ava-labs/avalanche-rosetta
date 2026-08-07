@@ -189,9 +189,7 @@ func (*Backend) buildAutoRenewedValidatorMetadata(
 
 	// buildOutputOwner returns an empty (unspendable) owner for an empty address
 	// list without erroring, so guard both owner lists here where the metadata is
-	// constructed. validator_authority_addresses must be explicit: silently falling
-	// back to the reward addresses would grant the reward key permanent authority to
-	// reconfigure or stop the validator, which the caller never asked for.
+	// constructed.
 	if len(opts.ValidationRewardsOwners) == 0 {
 		return nil, errors.New("reward_addresses must be non-empty")
 	}
@@ -238,7 +236,7 @@ func (*Backend) buildAutoRenewedValidatorConfigMetadata(
 
 	// Each authority key produces an extra signing payload in the construction flow,
 	// so at least one is required. AuthAddresses[i] pairs with AuthSigIndices[i], and
-	// the indices must be strictly ascending, as secp256k1fx.Input requires.
+	// the indices must be strictly ascending.
 	if len(opts.AuthAddresses) == 0 {
 		return nil, errors.New("auth_addresses must be non-empty")
 	}
