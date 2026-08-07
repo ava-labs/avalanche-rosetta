@@ -151,6 +151,13 @@ func BuildPayloads(
 		AccountIdentifierSigners: accountIdentifierSigners,
 	}
 
+	// BuildTx returns one signer per input operation followed by any tx-level
+	// signers (e.g. a ValidatorAuthority credential) that are not tied to an input.
+	// Record those trailing signers so /construction/parse can report them too.
+	if len(signers) > len(accountIdentifierSigners) {
+		rosettaTx.ExtraSigners = signers[len(accountIdentifierSigners):]
+	}
+
 	payloads := make([]*types.SigningPayload, len(signers))
 	for i, signer := range signers {
 		payloads[i] = &types.SigningPayload{
@@ -244,6 +251,7 @@ func Combine(
 	signedTransaction, err := json.Marshal(&RosettaTx{
 		Tx:                       combinedTx,
 		AccountIdentifierSigners: rosettaTx.AccountIdentifierSigners,
+		ExtraSigners:             rosettaTx.ExtraSigners,
 		DestinationChain:         rosettaTx.DestinationChain,
 		DestinationChainID:       rosettaTx.DestinationChainID,
 	})

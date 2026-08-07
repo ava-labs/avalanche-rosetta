@@ -27,8 +27,13 @@ type AvaxTx interface {
 type RosettaTx struct {
 	Tx                       AvaxTx
 	AccountIdentifierSigners []Signer
-	DestinationChain         string
-	DestinationChainID       *ids.ID
+	// ExtraSigners are tx-level signers not tied to an input operation (and thus
+	// to no coin), e.g. the ValidatorAuthority credential on
+	// SetAutoRenewedValidatorConfigTx. They are reported by /construction/parse in
+	// addition to the per-input signers.
+	ExtraSigners       []*types.AccountIdentifier
+	DestinationChain   string
+	DestinationChainID *ids.ID
 }
 
 // Signer contains details of coin identifiers and the accounts signing those coins
@@ -38,10 +43,11 @@ type Signer struct {
 }
 
 type rosettaTxWire struct {
-	Tx                 string   `json:"tx"`
-	Signers            []Signer `json:"signers"`
-	DestinationChain   string   `json:"destination_chain,omitempty"`
-	DestinationChainID *ids.ID  `json:"destination_chain_id,omitempty"`
+	Tx                 string                     `json:"tx"`
+	Signers            []Signer                   `json:"signers"`
+	ExtraSigners       []*types.AccountIdentifier `json:"extra_signers,omitempty"`
+	DestinationChain   string                     `json:"destination_chain,omitempty"`
+	DestinationChainID *ids.ID                    `json:"destination_chain_id,omitempty"`
 }
 
 func (t *RosettaTx) MarshalJSON() ([]byte, error) {
@@ -58,6 +64,7 @@ func (t *RosettaTx) MarshalJSON() ([]byte, error) {
 	txWire := &rosettaTxWire{
 		Tx:                 str,
 		Signers:            t.AccountIdentifierSigners,
+		ExtraSigners:       t.ExtraSigners,
 		DestinationChain:   t.DestinationChain,
 		DestinationChainID: t.DestinationChainID,
 	}
@@ -85,6 +92,7 @@ func (t *RosettaTx) UnmarshalJSON(data []byte) error {
 	}
 
 	t.AccountIdentifierSigners = txWire.Signers
+	t.ExtraSigners = txWire.ExtraSigners
 	t.DestinationChain = txWire.DestinationChain
 	t.DestinationChainID = txWire.DestinationChainID
 
@@ -117,6 +125,10 @@ func (t *RosettaTx) GetAccountIdentifiers(operations []*types.Operation) ([]*typ
 		}
 		signers = append(signers, signer)
 	}
+
+	// Append tx-level signers that are not tied to an input operation (e.g. the
+	// ValidatorAuthority credential on SetAutoRenewedValidatorConfigTx).
+	signers = append(signers, t.ExtraSigners...)
 
 	return signers, nil
 }
