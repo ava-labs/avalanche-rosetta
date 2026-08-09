@@ -1,3 +1,4 @@
+// If we add prefunded_account in config_erc20.json, then request_funds is not required.
 request_funds(1){
   find_account{
     currency = {"symbol":"AVAX", "decimals":18};
@@ -36,7 +37,7 @@ request_funds(1){
 
 create_account(1){
   create{
-    network = {"network":"Fuji", "blockchain":"Avalanche"};
+    network = {"network":"testnet", "blockchain":"Avalanche"};
     key = generate_key({"curve_type": "secp256k1"});
     account = derive({
       "network_identifier": {{network}},
@@ -53,7 +54,7 @@ create_account(1){
 
 simple_transfer_erc20(1){
   transfer{
-    transfer.network = {"network":"Fuji", "blockchain":"Avalanche"};
+    transfer.network = {"network":"testnet", "blockchain":"Avalanche"};
     avax_currency = {"symbol":"AVAX", "decimals":18};
 
     currency = {"symbol":"DAI", "decimals":18, "metadata": {"contractAddress": "0xEBbc3452Cc911591e4F18f3b36727Df45d6bd1f9"}};
@@ -61,7 +62,8 @@ simple_transfer_erc20(1){
       "minimum_balance":{
         "value": "10000000000000000", // 0.01 DAI
         "currency": {{currency}}
-      }
+      },
+      "account_identifier":{"address":"0xA4A4aea84128aDbc5AE9ca7Ff24e3C4bAe7DC41F"}
     });
     unused = find_balance({
       "account_identifier": {{sender.account_identifier}},
