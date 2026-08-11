@@ -368,6 +368,115 @@ func buildAddPermissionlessDelegator() (*txs.Tx, *txs.AddPermissionlessDelegator
 	return signedTx, addPermissionlessDelegator, inputTxAccounts
 }
 
+func buildAddAutoRenewedValidator() (*txs.Tx, *txs.AddAutoRenewedValidatorTx, map[string]*types.AccountIdentifier) {
+	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
+	txID, _ := ids.FromString("88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo")
+	stakeAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
+	rewardAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
+	validatorID, _ := ids.NodeIDFromString("NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX")
+
+	rewardsOwner := &secp256k1fx.OutputOwners{
+		Locktime:  0,
+		Threshold: 1,
+		Addrs:     []ids.ShortID{rewardAddr},
+	}
+
+	utx := &txs.AddAutoRenewedValidatorTx{
+		BaseTx: txs.BaseTx{
+			BaseTx: avax.BaseTx{
+				NetworkID:    uint32(5),
+				BlockchainID: [32]byte{},
+				Ins: []*avax.TransferableInput{{
+					UTXOID: avax.UTXOID{TxID: txID, OutputIndex: 0},
+					Asset:  avax.Asset{ID: avaxAssetID},
+					In: &secp256k1fx.TransferInput{
+						Amt:   2000000000,
+						Input: secp256k1fx.Input{SigIndices: []uint32{0}},
+					},
+				}},
+				Outs: []*avax.TransferableOutput{},
+				Memo: []byte{},
+			},
+		},
+		ValidatorNodeID: validatorID[:],
+		Signer:          &signer.Empty{},
+		StakeOuts: []*avax.TransferableOutput{{
+			Asset: avax.Asset{ID: avaxAssetID},
+			Out: &secp256k1fx.TransferOutput{
+				Amt: 2000000000,
+				OutputOwners: secp256k1fx.OutputOwners{
+					Locktime:  0,
+					Threshold: 1,
+					Addrs:     []ids.ShortID{stakeAddr},
+				},
+			},
+		}},
+		ValidatorRewardsOwner:    rewardsOwner,
+		DelegatorRewardsOwner:    rewardsOwner,
+		ValidatorAuthority:       rewardsOwner,
+		DelegationShares:         20000,
+		AutoCompoundRewardShares: 300000,
+		Period:                   14 * 24 * 3600,
+	}
+
+	signedTx, _ := txs.NewSigned(utx, block.Codec, nil)
+
+	inputTxAccounts := map[string]*types.AccountIdentifier{
+		utx.Ins[0].String(): {Address: stakeAddr.String()},
+	}
+
+	return signedTx, utx, inputTxAccounts
+}
+
+func buildSetAutoRenewedValidatorConfig() (*txs.Tx, *txs.SetAutoRenewedValidatorConfigTx, map[string]*types.AccountIdentifier) {
+	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
+	txID, _ := ids.FromString("88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo")
+	changeAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
+
+	stakingTxID := ids.ID{'s', 't', 'a', 'k', 'i', 'n', 'g', 'T', 'x', 'I', 'D'}
+
+	utx := &txs.SetAutoRenewedValidatorConfigTx{
+		BaseTx: txs.BaseTx{
+			BaseTx: avax.BaseTx{
+				NetworkID:    uint32(5),
+				BlockchainID: [32]byte{},
+				Ins: []*avax.TransferableInput{{
+					UTXOID: avax.UTXOID{TxID: txID, OutputIndex: 0},
+					Asset:  avax.Asset{ID: avaxAssetID},
+					In: &secp256k1fx.TransferInput{
+						Amt:   1000000,
+						Input: secp256k1fx.Input{SigIndices: []uint32{0}},
+					},
+				}},
+				Outs: []*avax.TransferableOutput{{
+					Asset: avax.Asset{ID: avaxAssetID},
+					Out: &secp256k1fx.TransferOutput{
+						Amt: 900000,
+						OutputOwners: secp256k1fx.OutputOwners{
+							Locktime:  0,
+							Threshold: 1,
+							Addrs:     []ids.ShortID{changeAddr},
+						},
+					},
+				}},
+				Memo: []byte{},
+			},
+		},
+		TxID:                     stakingTxID,
+		Auth:                     &secp256k1fx.Input{SigIndices: []uint32{0}},
+		AutoCompoundRewardShares: 500000,
+		Period:                   7 * 24 * 3600,
+	}
+
+	signedTx, _ := txs.NewSigned(utx, block.Codec, nil)
+
+	inputTxAccounts := map[string]*types.AccountIdentifier{
+		utx.Ins[0].String(): {Address: changeAddr.String()},
+	}
+
+	return signedTx, utx, inputTxAccounts
+}
+
 func buildAddPermissionlessValidator() (*txs.Tx, *txs.AddPermissionlessValidatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	txID, _ := ids.FromString("88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo")

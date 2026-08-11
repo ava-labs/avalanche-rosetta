@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/api/info"
+	evm "github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/client"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/rpc"
-	evm "github.com/ava-labs/coreth/plugin/evm/client"
 	ethereum "github.com/ava-labs/libevm"
 	"github.com/ava-labs/libevm/common"
 	"github.com/ava-labs/libevm/core/types"
@@ -45,7 +45,7 @@ type Client interface {
 	EstimateBaseFee(ctx context.Context) (*big.Int, error)
 }
 
-type EvmClient evm.Client
+type EvmClient struct{ *evm.Client }
 
 type client struct {
 	info.Client
@@ -65,7 +65,7 @@ func NewClient(ctx context.Context, endpoint string) (Client, error) {
 
 	return &client{
 		Client:         *info.NewClient(endpoint),
-		EvmClient:      evm.NewClient(endpoint, constants.CChain.String()),
+		EvmClient:      EvmClient{evm.NewClient(endpoint, constants.CChain.String())},
 		EthClient:      eth,
 		ContractClient: NewContractClient(eth.Client),
 	}, nil

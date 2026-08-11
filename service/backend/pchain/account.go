@@ -306,13 +306,13 @@ utxoFor:
 		switch out := utxo.Out.(type) {
 		case *secp256k1fx.TransferOutput:
 			if out.Locktime <= currentTime {
-				newBalance, err := math.Add64(accountBalance.Unlocked, out.Amount())
+				newBalance, err := math.Add(accountBalance.Unlocked, out.Amount())
 				if err != nil {
 					return nil, errUnlockedOverflow
 				}
 				accountBalance.Unlocked = newBalance
 			} else {
-				newBalance, err := math.Add64(accountBalance.LockedNotStakeable, out.Amount())
+				newBalance, err := math.Add(accountBalance.LockedNotStakeable, out.Amount())
 				if err != nil {
 					return nil, errNotStakeableOverflow
 				}
@@ -324,19 +324,19 @@ utxoFor:
 			case !ok:
 				continue utxoFor
 			case innerOut.Locktime > currentTime:
-				newBalance, err := math.Add64(accountBalance.LockedNotStakeable, out.Amount())
+				newBalance, err := math.Add(accountBalance.LockedNotStakeable, out.Amount())
 				if err != nil {
 					return nil, errLockedNotStakeableOverflow
 				}
 				accountBalance.LockedNotStakeable = newBalance
 			case out.Locktime <= currentTime:
-				newBalance, err := math.Add64(accountBalance.Unlocked, out.Amount())
+				newBalance, err := math.Add(accountBalance.Unlocked, out.Amount())
 				if err != nil {
 					return nil, errUnlockedOverflow
 				}
 				accountBalance.Unlocked = newBalance
 			default:
-				newBalance, err := math.Add64(accountBalance.LockedStakeable, out.Amount())
+				newBalance, err := math.Add(accountBalance.LockedStakeable, out.Amount())
 				if err != nil {
 					return nil, errUnlockedStakeableOverflow
 				}
@@ -347,12 +347,12 @@ utxoFor:
 		}
 	}
 
-	lockedBalance, err := math.Add64(accountBalance.LockedStakeable, accountBalance.LockedNotStakeable)
+	lockedBalance, err := math.Add(accountBalance.LockedStakeable, accountBalance.LockedNotStakeable)
 	if err != nil {
 		return nil, errLockedOverflow
 	}
 
-	totalBalance, err := math.Add64(accountBalance.Unlocked, lockedBalance)
+	totalBalance, err := math.Add(accountBalance.Unlocked, lockedBalance)
 	if err != nil {
 		return nil, errTotalOverflow
 	}

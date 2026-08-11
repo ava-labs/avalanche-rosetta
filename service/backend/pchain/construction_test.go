@@ -14,6 +14,8 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/gas"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -1053,6 +1055,441 @@ func marshalSigningPayloads(payloads []*types.SigningPayload) string {
 	return string(bytes)
 }
 
+func TestAddAutoRenewedValidatorTxConstruction(t *testing.T) {
+	period := uint64(14 * 86400)
+	shares := uint32(200000)
+	autoCompoundShares := uint32(300000)
+
+	operations := []*types.Operation{
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 0},
+			Type:                pmapper.OpAddAutoRenewedValidator,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-2_000_000_000_000)),
+			CoinChange: &types.CoinChange{
+				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
+				CoinAction:     "coin_spent",
+			},
+			Metadata: map[string]interface{}{
+				"type":        pmapper.OpTypeInput,
+				"sig_indices": []interface{}{0.0},
+				"locktime":    0.0,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 1},
+			Type:                pmapper.OpAddAutoRenewedValidator,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(2_000_000_000_000)),
+			Metadata: map[string]interface{}{
+				"type":      pmapper.OpTypeStakeOutput,
+				"locktime":  0.0,
+				"threshold": 1.0,
+			},
+		},
+	}
+
+	preprocessMetadata := map[string]interface{}{
+		"node_id":                       nodeID,
+		"shares":                        shares,
+		"auto_compound_reward_shares":   autoCompoundShares,
+		"period":                        period,
+		"reward_addresses":              []string{ewoqAccountP.Address},
+		"validator_authority_addresses": []string{ewoqAccountP.Address},
+		"bls_public_key":                sampleBlsPublicKey,
+		"bls_proof_of_possession":       sampleProofOfPossession,
+	}
+
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	clientMock := client.NewMockPChainClient(ctrl)
+	parserMock := indexer.NewMockParser(ctrl)
+	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	backend, err := NewBackend(
+		clientMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
+	require.NoError(t, err)
+
+	var metadataOptions map[string]interface{}
+	var payloadsMetadata map[string]interface{}
+	var unsignedTx string
+
+	t.Run("preprocess endpoint", func(t *testing.T) {
+		resp, terr := backend.ConstructionPreprocess(
+			ctx,
+			&types.ConstructionPreprocessRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Operations:        operations,
+				Metadata:          preprocessMetadata,
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.Options)
+		require.Equal(t, pmapper.OpAddAutoRenewedValidator, resp.Options[pmapper.MetadataOpType])
+		metadataOptions = resp.Options
+	})
+
+	t.Run("metadata endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
+		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
+
+		resp, terr := backend.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Options:           metadataOptions,
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.Metadata)
+		// Verify the auto_renewed_validator field is present and correctly populated
+		require.Equal(t, nodeID, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["node_id"])
+		require.Equal(t, sampleBlsPublicKey, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["bls_public_key"])
+		require.EqualValues(t, period, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["period"])
+		require.EqualValues(t, autoCompoundShares, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["auto_compound_reward_shares"])
+		// preprocessMetadata omits "threshold", so it must default to 1; a 0 threshold
+		// on a non-empty owner is rejected by the P-chain (ErrOutputUnoptimized).
+		require.EqualValues(t, 1, resp.Metadata["auto_renewed_validator"].(map[string]interface{})["threshold"])
+		payloadsMetadata = resp.Metadata
+	})
+
+	t.Run("payloads endpoint", func(t *testing.T) {
+		resp, terr := backend.ConstructionPayloads(
+			ctx,
+			&types.ConstructionPayloadsRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Operations:        operations,
+				Metadata:          payloadsMetadata,
+			},
+		)
+		require.Nil(t, terr)
+		// One signing payload: the single BaseTx input (no auth credential for this tx type).
+		require.Len(t, resp.Payloads, 1)
+		unsignedTx = resp.UnsignedTransaction
+	})
+
+	t.Run("combine endpoint", func(t *testing.T) {
+		dummySig := make([]byte, 65)
+		sig := &types.Signature{
+			SigningPayload: &types.SigningPayload{
+				AccountIdentifier: ewoqAccountP,
+				Bytes:             dummySig,
+				SignatureType:     types.EcdsaRecovery,
+			},
+			SignatureType: types.EcdsaRecovery,
+			Bytes:         dummySig,
+		}
+		resp, terr := backend.ConstructionCombine(
+			ctx,
+			&types.ConstructionCombineRequest{
+				NetworkIdentifier:   pChainNetworkIdentifier,
+				UnsignedTransaction: unsignedTx,
+				Signatures:          []*types.Signature{sig},
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.SignedTransaction)
+
+		// One credential for the single BaseTx input; no auth credential.
+		rosettaTx, err := backend.parsePayloadTxFromString(resp.SignedTransaction)
+		require.NoError(t, err)
+		parsedPTx, ok := rosettaTx.Tx.(*pTx)
+		require.True(t, ok)
+		require.Len(t, parsedPTx.Tx.Creds, 1)
+
+		// With no client-supplied threshold, all three owners must default to 1 so
+		// the tx is accepted on submit.
+		utx, ok := parsedPTx.Tx.Unsigned.(*txs.AddAutoRenewedValidatorTx)
+		require.True(t, ok)
+		for _, owner := range []interface{}{utx.ValidatorRewardsOwner, utx.DelegatorRewardsOwner, utx.ValidatorAuthority} {
+			oo, ok := owner.(*secp256k1fx.OutputOwners)
+			require.True(t, ok)
+			require.Equal(t, uint32(1), oo.Threshold)
+		}
+	})
+}
+
+func TestSetAutoRenewedValidatorConfigTxConstruction(t *testing.T) { //nolint:gocognit
+	stakingTxIDStr := "88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo"
+	autoCompoundShares := uint32(500000)
+	period := uint64(7 * 86400)
+
+	operations := []*types.Operation{
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 0},
+			Type:                pmapper.OpSetAutoRenewedValidatorConfig,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-1_000_000)),
+			CoinChange: &types.CoinChange{
+				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
+				CoinAction:     "coin_spent",
+			},
+			Metadata: map[string]interface{}{
+				"type":        pmapper.OpTypeInput,
+				"sig_indices": []interface{}{0.0},
+				"locktime":    0.0,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 1},
+			Type:                pmapper.OpSetAutoRenewedValidatorConfig,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(900_000)),
+			Metadata: map[string]interface{}{
+				"type":      pmapper.OpTypeOutput,
+				"locktime":  0.0,
+				"threshold": 1.0,
+			},
+		},
+	}
+
+	authAddress := ewoqAccountP.Address
+	preprocessMetadata := map[string]interface{}{
+		"staking_tx_id":               stakingTxIDStr,
+		"auto_compound_reward_shares": autoCompoundShares,
+		"period":                      period,
+		"auth_addresses":              []string{authAddress},
+		"auth_sig_indices":            []uint32{0},
+	}
+
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	clientMock := client.NewMockPChainClient(ctrl)
+	parserMock := indexer.NewMockParser(ctrl)
+	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	backend, err := NewBackend(
+		clientMock,
+		parserMock,
+		avaxAssetID,
+		pChainNetworkIdentifier,
+		avalancheNetworkID,
+	)
+	require.NoError(t, err)
+
+	var metadataOptions map[string]interface{}
+	var payloadsMetadata map[string]interface{}
+	var unsignedTx string
+
+	t.Run("preprocess endpoint", func(t *testing.T) {
+		resp, terr := backend.ConstructionPreprocess(
+			ctx,
+			&types.ConstructionPreprocessRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Operations:        operations,
+				Metadata:          preprocessMetadata,
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.Options)
+		require.Equal(t, pmapper.OpSetAutoRenewedValidatorConfig, resp.Options[pmapper.MetadataOpType])
+		metadataOptions = resp.Options
+	})
+
+	t.Run("metadata endpoint", func(t *testing.T) {
+		shouldMockGetFeeState(clientMock)
+		clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
+
+		resp, terr := backend.ConstructionMetadata(
+			ctx,
+			&types.ConstructionMetadataRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Options:           metadataOptions,
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.Metadata)
+		// Verify the auto_renewed_validator_config field is present and correctly populated
+		cfg := resp.Metadata["auto_renewed_validator_config"].(map[string]interface{})
+		require.EqualValues(t, autoCompoundShares, cfg["auto_compound_reward_shares"])
+		require.EqualValues(t, period, cfg["period"])
+		require.EqualValues(t, []interface{}{authAddress}, cfg["auth_addresses"])
+		require.EqualValues(t, []interface{}{float64(0)}, cfg["auth_sig_indices"]) // JSON numbers decode as float64
+		payloadsMetadata = resp.Metadata
+	})
+
+	t.Run("payloads endpoint", func(t *testing.T) {
+		resp, terr := backend.ConstructionPayloads(
+			ctx,
+			&types.ConstructionPayloadsRequest{
+				NetworkIdentifier: pChainNetworkIdentifier,
+				Operations:        operations,
+				Metadata:          payloadsMetadata,
+			},
+		)
+		require.Nil(t, terr)
+		// Two payloads: one for the BaseTx input, one for the Auth credential.
+		require.Len(t, resp.Payloads, 2)
+		unsignedTx = resp.UnsignedTransaction
+	})
+
+	t.Run("combine endpoint", func(t *testing.T) {
+		dummySig := make([]byte, 65) // all-zero 65-byte signature (secp256k1.SignatureLen)
+		mkSig := func() *types.Signature {
+			return &types.Signature{
+				SigningPayload: &types.SigningPayload{
+					AccountIdentifier: ewoqAccountP,
+					Bytes:             dummySig,
+					SignatureType:     types.EcdsaRecovery,
+				},
+				SignatureType: types.EcdsaRecovery,
+				Bytes:         dummySig,
+			}
+		}
+		// Provide 2 signatures: one for the BaseTx input credential, one for Auth.
+		resp, terr := backend.ConstructionCombine(
+			ctx,
+			&types.ConstructionCombineRequest{
+				NetworkIdentifier:   pChainNetworkIdentifier,
+				UnsignedTransaction: unsignedTx,
+				Signatures:          []*types.Signature{mkSig(), mkSig()},
+			},
+		)
+		require.Nil(t, terr)
+		require.NotNil(t, resp.SignedTransaction)
+
+		// Parse the signed tx and verify credential structure:
+		// 1 credential for the BaseTx input + 1 credential for the Auth field.
+		rosettaTx, err := backend.parsePayloadTxFromString(resp.SignedTransaction)
+		require.NoError(t, err)
+		parsedPTx, ok := rosettaTx.Tx.(*pTx)
+		require.True(t, ok)
+		require.Len(t, parsedPTx.Tx.Creds, 2)
+
+		// /construction/parse of the signed tx must report both signers: the BaseTx
+		// input and the ValidatorAuthority auth signer.
+		parseResp, terr := backend.ConstructionParse(ctx, &types.ConstructionParseRequest{
+			NetworkIdentifier: pChainNetworkIdentifier,
+			Signed:            true,
+			Transaction:       resp.SignedTransaction,
+		})
+		require.Nil(t, terr)
+		require.Len(t, parseResp.AccountIdentifierSigners, 2)
+	})
+}
+
+// TestSetAutoRenewedValidatorConfigTxMultisigAuth exercises a 2-of-N ValidatorAuthority
+// end to end: two auth keys must yield two extra signing payloads, a single Auth
+// credential holding both signatures, and two extra signers reported by /parse.
+func TestSetAutoRenewedValidatorConfigTxMultisigAuth(t *testing.T) {
+	ctx := context.Background()
+	authAddr2 := "P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je"
+
+	operations := []*types.Operation{
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 0},
+			Type:                pmapper.OpSetAutoRenewedValidatorConfig,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(-1_000_000)),
+			CoinChange: &types.CoinChange{
+				CoinIdentifier: &types.CoinIdentifier{Identifier: coinID1},
+				CoinAction:     "coin_spent",
+			},
+			Metadata: map[string]interface{}{
+				"type":        pmapper.OpTypeInput,
+				"sig_indices": []interface{}{0.0},
+				"locktime":    0.0,
+			},
+		},
+		{
+			OperationIdentifier: &types.OperationIdentifier{Index: 1},
+			Type:                pmapper.OpSetAutoRenewedValidatorConfig,
+			Account:             ewoqAccountP,
+			Amount:              mapper.AtomicAvaxAmount(big.NewInt(900_000)),
+			Metadata: map[string]interface{}{
+				"type":      pmapper.OpTypeOutput,
+				"locktime":  0.0,
+				"threshold": 1.0,
+			},
+		},
+	}
+
+	preprocessMetadata := map[string]interface{}{
+		"staking_tx_id":               "88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo",
+		"auto_compound_reward_shares": uint32(500000),
+		"period":                      uint64(7 * 86400),
+		// A 2-of-N ValidatorAuthority: two keys at indices 0 and 1.
+		"auth_addresses":   []string{ewoqAccountP.Address, authAddr2},
+		"auth_sig_indices": []uint32{0, 1},
+	}
+
+	ctrl := gomock.NewController(t)
+	clientMock := client.NewMockPChainClient(ctrl)
+	parserMock := indexer.NewMockParser(ctrl)
+	parserMock.EXPECT().GetGenesisBlock(ctx).Return(dummyGenesis, nil)
+	backend, err := NewBackend(clientMock, parserMock, avaxAssetID, pChainNetworkIdentifier, avalancheNetworkID)
+	require.NoError(t, err)
+
+	pre, terr := backend.ConstructionPreprocess(ctx, &types.ConstructionPreprocessRequest{
+		NetworkIdentifier: pChainNetworkIdentifier,
+		Operations:        operations,
+		Metadata:          preprocessMetadata,
+	})
+	require.Nil(t, terr)
+
+	shouldMockGetFeeState(clientMock)
+	clientMock.EXPECT().GetBlockchainID(ctx, constants.PChain.String()).Return(pChainID, nil)
+	meta, terr := backend.ConstructionMetadata(ctx, &types.ConstructionMetadataRequest{
+		NetworkIdentifier: pChainNetworkIdentifier,
+		Options:           pre.Options,
+	})
+	require.Nil(t, terr)
+
+	payloads, terr := backend.ConstructionPayloads(ctx, &types.ConstructionPayloadsRequest{
+		NetworkIdentifier: pChainNetworkIdentifier,
+		Operations:        operations,
+		Metadata:          meta.Metadata,
+	})
+	require.Nil(t, terr)
+	// 1 input payload + 2 auth payloads.
+	require.Len(t, payloads.Payloads, 3)
+
+	dummySig := make([]byte, 65)
+	mkSig := func() *types.Signature {
+		return &types.Signature{
+			SigningPayload: &types.SigningPayload{AccountIdentifier: ewoqAccountP, Bytes: dummySig, SignatureType: types.EcdsaRecovery},
+			SignatureType:  types.EcdsaRecovery,
+			Bytes:          dummySig,
+		}
+	}
+	combine, terr := backend.ConstructionCombine(ctx, &types.ConstructionCombineRequest{
+		NetworkIdentifier:   pChainNetworkIdentifier,
+		UnsignedTransaction: payloads.UnsignedTransaction,
+		Signatures:          []*types.Signature{mkSig(), mkSig(), mkSig()},
+	})
+	require.Nil(t, terr)
+
+	rosettaTx, err := backend.parsePayloadTxFromString(combine.SignedTransaction)
+	require.NoError(t, err)
+	parsedPTx, ok := rosettaTx.Tx.(*pTx)
+	require.True(t, ok)
+	// 1 input credential + 1 Auth credential.
+	require.Len(t, parsedPTx.Tx.Creds, 2)
+
+	utx, ok := parsedPTx.Tx.Unsigned.(*txs.SetAutoRenewedValidatorConfigTx)
+	require.True(t, ok)
+	authInput, ok := utx.Auth.(*secp256k1fx.Input)
+	require.True(t, ok)
+	require.Equal(t, []uint32{0, 1}, authInput.SigIndices)
+
+	// The Auth credential must hold both authority signatures.
+	authCred, ok := parsedPTx.Tx.Creds[1].(*secp256k1fx.Credential)
+	require.True(t, ok)
+	require.Len(t, authCred.Sigs, 2)
+
+	parseResp, terr := backend.ConstructionParse(ctx, &types.ConstructionParseRequest{
+		NetworkIdentifier: pChainNetworkIdentifier,
+		Signed:            true,
+		Transaction:       combine.SignedTransaction,
+	})
+	require.Nil(t, terr)
+	// 1 input signer + 2 auth signers.
+	require.Len(t, parseResp.AccountIdentifierSigners, 3)
+}
+
 func parsePoP(blsPublicKey, blsProofOfPossession string) (*signer.ProofOfPossession, error) {
 	publicKeyBytes, err := formatting.Decode(formatting.HexNC, blsPublicKey)
 	if err != nil {
@@ -1066,4 +1503,72 @@ func parsePoP(blsPublicKey, blsProofOfPossession string) (*signer.ProofOfPossess
 	copy(pop.PublicKey[:], publicKeyBytes)
 	copy(pop.ProofOfPossession[:], popBytes)
 	return pop, nil
+}
+
+// The metadata handlers ignore their receiver, so an empty Backend is enough.
+func TestBuildAutoRenewedValidatorMetadataValidation(t *testing.T) {
+	authAddr := "P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je"
+
+	// reward_addresses is required.
+	_, err := (&Backend{}).buildAutoRenewedValidatorMetadata(context.Background(), map[string]interface{}{
+		"node_id": "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "reward_addresses must be non-empty")
+
+	// validator_authority_addresses is required and must NOT silently fall back to
+	// the reward addresses (that would be an unintended authority grant).
+	_, err = (&Backend{}).buildAutoRenewedValidatorMetadata(context.Background(), map[string]interface{}{
+		"node_id":          "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+		"reward_addresses": []string{authAddr},
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "validator_authority_addresses must be non-empty")
+
+	// period must be non-zero (a syntactic constraint of AddAutoRenewedValidatorTx).
+	_, err = (&Backend{}).buildAutoRenewedValidatorMetadata(context.Background(), map[string]interface{}{
+		"node_id":                       "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+		"reward_addresses":              []string{authAddr},
+		"validator_authority_addresses": []string{authAddr},
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "period must be non-zero")
+
+	// shares must not exceed the reward denominator.
+	_, err = (&Backend{}).buildAutoRenewedValidatorMetadata(context.Background(), map[string]interface{}{
+		"node_id":                       "NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX",
+		"reward_addresses":              []string{authAddr},
+		"validator_authority_addresses": []string{authAddr},
+		"period":                        uint64(3600),
+		"shares":                        uint32(1_000_001),
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "shares must be")
+}
+
+func TestBuildAutoRenewedValidatorConfigMetadataValidation(t *testing.T) {
+	stakingTxID := "88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo"
+
+	// auth_addresses is required.
+	_, err := (&Backend{}).buildAutoRenewedValidatorConfigMetadata(context.Background(), map[string]interface{}{})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "auth_addresses must be non-empty")
+
+	// auth_addresses and auth_sig_indices must have equal length.
+	_, err = (&Backend{}).buildAutoRenewedValidatorConfigMetadata(context.Background(), map[string]interface{}{
+		"staking_tx_id":    stakingTxID,
+		"auth_addresses":   []string{"P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je"},
+		"auth_sig_indices": []uint32{},
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "equal length")
+
+	// auth_sig_indices must be strictly ascending.
+	_, err = (&Backend{}).buildAutoRenewedValidatorConfigMetadata(context.Background(), map[string]interface{}{
+		"staking_tx_id":    stakingTxID,
+		"auth_addresses":   []string{"P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je", "P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je"},
+		"auth_sig_indices": []uint32{1, 1},
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "strictly ascending")
 }
