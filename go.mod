@@ -2,6 +2,8 @@ module github.com/ava-labs/avalanche-rosetta
 
 go 1.25.10
 
+toolchain go1.26.10
+
 require (
 	github.com/ava-labs/avalanchego v1.15.0-fuji-rc.0
 	github.com/ava-labs/avalanchego/graft/coreth v1.15.0-fuji-rc.0
