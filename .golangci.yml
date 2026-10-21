@@ -59,7 +59,6 @@ linters:
     # - noctx
     - nolintlint
     - perfsprint
-    - prealloc
     - predeclared
     # - revive
     - spancheck
@@ -199,3 +198,22 @@ linters:
       disable:
         - go-require
         - float-compare
+  exclusions:
+    rules:
+      # revive v1.7+ checks validate options it does not know
+      - linters:
+          - revive
+        text: 'struct-tag: unknown option .* in validate tag'
+      # quick-fix suggestions; v1 did not run them
+      - linters:
+          - staticcheck
+        text: '^QF\d+'
+      # secret-pattern field names; new in gosec 2.22
+      - linters:
+          - gosec
+        text: 'G117'
+      # credential heuristics on test fixtures and test helpers
+      - linters:
+          - gosec
+        path: '(_test\.go|(^|/)test/)'
+        text: 'G101'
