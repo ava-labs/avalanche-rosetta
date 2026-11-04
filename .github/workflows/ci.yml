@@ -9,35 +9,55 @@ on:
 env:
   go_version: '~1.25.10'
 
+permissions: {}
+
 jobs:
   Build:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.go_version }}
       - run: make build
   Test:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.go_version }}
       - run: make test
   Lint:
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: golangci/golangci-lint-action@v7
         with:
           version: v2.5.0
   check_mockgen:
+    permissions:
+      contents: read
     name: Up-to-date mocks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.go_version }}
