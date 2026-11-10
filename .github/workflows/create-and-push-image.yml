@@ -5,12 +5,18 @@ on:
     tags:
       - '*'
 
+permissions: {}
+
 jobs:
   CreateAndPush:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          persist-credentials: false
 
       - name: Get the Tag
         id: get_version
