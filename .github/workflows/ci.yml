@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  go_version: '~1.26.10'
+  go_version: '1.26.10'
 
 jobs:
   Build:
@@ -41,7 +41,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.go_version }}
-          check-latest: true
       - shell: bash
         run: scripts/mock.gen.sh
       - shell: bash
