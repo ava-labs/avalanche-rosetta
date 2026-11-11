@@ -58,10 +58,10 @@ func TestAccountBalance(t *testing.T) {
 	t.Run("C-chain atomic tx balance is sum of UTXOs", func(t *testing.T) {
 		require := require.New(t)
 
-		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
-		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
+		utxo0Bytes := makeUtxo(t, utxos[0].id, utxos[0].amount)
+		utxo1Bytes := makeUtxo(t, utxos[1].id, utxos[1].amount)
 
-		utxos := [][]byte{utxo0Bytes, utxo1Bytes}
+		utxos := []*avax.UTXO{utxo0Bytes, utxo1Bytes}
 
 		var nilBigInt *big.Int
 		evmMock.EXPECT().HeaderByNumber(gomock.Any(), nilBigInt).Return(blockHeader, nil).Times(2)
@@ -101,22 +101,22 @@ func TestAccountCoins(t *testing.T) {
 	t.Run("C-chain atomic tx coins returns UTXOs", func(t *testing.T) {
 		require := require.New(t)
 
-		utxo0Bytes := makeUtxoBytes(t, backend, utxos[0].id, utxos[0].amount)
-		utxo1Bytes := makeUtxoBytes(t, backend, utxos[1].id, utxos[1].amount)
-		utxo2Bytes := makeUtxoBytes(t, backend, utxos[2].id, utxos[2].amount)
-		utxo3Bytes := makeUtxoBytes(t, backend, utxos[3].id, utxos[3].amount)
+		utxo0Bytes := makeUtxo(t, utxos[0].id, utxos[0].amount)
+		utxo1Bytes := makeUtxo(t, utxos[1].id, utxos[1].amount)
+		utxo2Bytes := makeUtxo(t, utxos[2].id, utxos[2].amount)
+		utxo3Bytes := makeUtxo(t, utxos[3].id, utxos[3].amount)
 
 		var nilBigInt *big.Int
 		evmMock.EXPECT().HeaderByNumber(gomock.Any(), nilBigInt).Return(blockHeader, nil).Times(2)
 		evmMock.EXPECT().
 			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
-			Return([][]byte{utxo0Bytes, utxo1Bytes}, addr, utxos[1].InputID(), nil)
+			Return([]*avax.UTXO{utxo0Bytes, utxo1Bytes}, addr, utxos[1].InputID(), nil)
 		evmMock.EXPECT().
 			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, addr, utxos[1].InputID()).
-			Return([][]byte{utxo2Bytes, utxo3Bytes}, addr, utxos[3].InputID(), nil)
+			Return([]*avax.UTXO{utxo2Bytes, utxo3Bytes}, addr, utxos[3].InputID(), nil)
 		evmMock.EXPECT().
 			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.PChain.String(), backend.getUTXOsPageSize, addr, utxos[3].InputID()).
-			Return([][]byte{utxo3Bytes}, addr, utxos[3].InputID(), nil)
+			Return([]*avax.UTXO{utxo3Bytes}, addr, utxos[3].InputID(), nil)
 		evmMock.EXPECT().
 			GetAtomicUTXOs(gomock.Any(), []ids.ShortID{addr}, constants.XChain.String(), backend.getUTXOsPageSize, ids.ShortEmpty, ids.Empty).
 			Return(nil, ids.ShortEmpty, ids.Empty, nil)
@@ -145,20 +145,12 @@ func TestAccountCoins(t *testing.T) {
 	})
 }
 
-func makeUtxoBytes(t *testing.T, backend *Backend, utxoIDStr string, amount uint64) []byte {
+func makeUtxo(t *testing.T, utxoIDStr string, amount uint64) *avax.UTXO {
 	utxoID, err := mapper.DecodeUTXOID(utxoIDStr)
-	if err != nil {
-		t.Fail()
-		return nil
-	}
+	require.NoError(t, err)
 
-	utxoBytes, err := backend.codec.Marshal(backend.codecVersion, &avax.UTXO{
+	return &avax.UTXO{
 		UTXOID: *utxoID,
 		Out:    &secp256k1fx.TransferOutput{Amt: amount},
-	})
-	if err != nil {
-		t.Fail()
 	}
-
-	return utxoBytes
 }

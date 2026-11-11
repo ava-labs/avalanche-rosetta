@@ -13,8 +13,8 @@ import (
 	"github.com/ava-labs/avalanchego/upgrade"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/gas"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
@@ -1203,7 +1203,7 @@ func TestAddAutoRenewedValidatorTxConstruction(t *testing.T) {
 
 		// With no client-supplied threshold, all three owners must default to 1 so
 		// the tx is accepted on submit.
-		utx, ok := parsedPTx.Tx.Unsigned.(*txs.AddAutoRenewedValidatorTx)
+		utx, ok := parsedPTx.Tx.Unsigned.(*platform.AddAutoRenewedValidatorTx)
 		require.True(t, ok)
 		for _, owner := range []interface{}{utx.ValidatorRewardsOwner, utx.DelegatorRewardsOwner, utx.ValidatorAuthority} {
 			oo, ok := owner.(*secp256k1fx.OutputOwners)
@@ -1469,7 +1469,7 @@ func TestSetAutoRenewedValidatorConfigTxMultisigAuth(t *testing.T) {
 	// 1 input credential + 1 Auth credential.
 	require.Len(t, parsedPTx.Tx.Creds, 2)
 
-	utx, ok := parsedPTx.Tx.Unsigned.(*txs.SetAutoRenewedValidatorConfigTx)
+	utx, ok := parsedPTx.Tx.Unsigned.(*platform.SetAutoRenewedValidatorConfigTx)
 	require.True(t, ok)
 	authInput, ok := utx.Auth.(*secp256k1fx.Input)
 	require.True(t, ok)

@@ -8,7 +8,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
@@ -19,57 +19,57 @@ type BlockTxDependencies map[ids.ID]*SingleTxDependency
 // GetTxDependenciesIDs generates the list of transaction ids used in the inputs to given unsigned transaction
 // this list is then used to fetch the dependency transactions in order to extract source addresses
 // as this information is not part of the transaction objects on chain.
-func GetTxDependenciesIDs(tx txs.UnsignedTx) ([]ids.ID, error) {
+func GetTxDependenciesIDs(tx platform.UnsignedTx) ([]ids.ID, error) {
 	// collect tx inputs
-	// TODO: Move to using [txs.Visitor] from AvalancheGo
+	// TODO: Move to using [platform.Visitor] from AvalancheGo
 	// Ref: https://github.com/ava-labs/avalanchego/blob/master/vms/platformvm/txs/visitor.go
 	var ins []*avax.TransferableInput
 	switch unsignedTx := tx.(type) {
-	case *txs.AddValidatorTx:
+	case *platform.AddValidatorTx:
 		ins = unsignedTx.Ins
-	case *txs.AddSubnetValidatorTx:
+	case *platform.AddSubnetValidatorTx:
 		ins = unsignedTx.Ins
-	case *txs.AddDelegatorTx:
+	case *platform.AddDelegatorTx:
 		ins = unsignedTx.Ins
-	case *txs.CreateChainTx:
+	case *platform.CreateChainTx:
 		ins = unsignedTx.Ins
-	case *txs.CreateSubnetTx:
+	case *platform.CreateSubnetTx:
 		ins = unsignedTx.Ins
-	case *txs.ImportTx:
+	case *platform.ImportTx:
 		ins = unsignedTx.Ins
-	case *txs.ExportTx:
+	case *platform.ExportTx:
 		ins = unsignedTx.Ins
-	case *txs.AdvanceTimeTx:
+	case *platform.AdvanceTimeTx:
 		return []ids.ID{}, nil
-	case *txs.RewardValidatorTx:
+	case *platform.RewardValidatorTx:
 		return []ids.ID{unsignedTx.TxID}, nil
-	case *txs.RemoveSubnetValidatorTx:
+	case *platform.RemoveSubnetValidatorTx:
 		ins = unsignedTx.Ins
-	case *txs.TransformSubnetTx:
+	case *platform.TransformSubnetTx:
 		ins = unsignedTx.Ins
-	case *txs.AddPermissionlessValidatorTx:
+	case *platform.AddPermissionlessValidatorTx:
 		ins = unsignedTx.Ins
-	case *txs.AddPermissionlessDelegatorTx:
+	case *platform.AddPermissionlessDelegatorTx:
 		ins = unsignedTx.Ins
-	case *txs.TransferSubnetOwnershipTx:
+	case *platform.TransferSubnetOwnershipTx:
 		ins = unsignedTx.Ins
-	case *txs.ConvertSubnetToL1Tx:
+	case *platform.ConvertSubnetToL1Tx:
 		ins = unsignedTx.Ins
-	case *txs.RegisterL1ValidatorTx:
+	case *platform.RegisterL1ValidatorTx:
 		ins = unsignedTx.Ins
-	case *txs.IncreaseL1ValidatorBalanceTx:
+	case *platform.IncreaseL1ValidatorBalanceTx:
 		ins = unsignedTx.Ins
-	case *txs.SetL1ValidatorWeightTx:
+	case *platform.SetL1ValidatorWeightTx:
 		ins = unsignedTx.Ins
-	case *txs.DisableL1ValidatorTx:
+	case *platform.DisableL1ValidatorTx:
 		ins = unsignedTx.Ins
-	case *txs.BaseTx:
+	case *platform.BaseTx:
 		ins = unsignedTx.Ins
-	case *txs.AddAutoRenewedValidatorTx:
+	case *platform.AddAutoRenewedValidatorTx:
 		ins = unsignedTx.Ins
-	case *txs.SetAutoRenewedValidatorConfigTx:
+	case *platform.SetAutoRenewedValidatorConfigTx:
 		ins = unsignedTx.Ins
-	case *txs.RewardAutoRenewedValidatorTx:
+	case *platform.RewardAutoRenewedValidatorTx:
 		return []ids.ID{unsignedTx.TxID}, nil
 	default:
 		return nil, fmt.Errorf("unknown tx type %T", unsignedTx)
@@ -122,7 +122,7 @@ func (bd BlockTxDependencies) GetReferencedAccounts(hrp string) (map[string]*typ
 type SingleTxDependency struct {
 	// [Tx] has some of its outputs spent as
 	// input from a tx dependent on it
-	Tx *txs.Tx
+	Tx *platform.Tx
 
 	// Staker txs are rewarded at the end of staking period
 	// with some utxos appended to staker txs' ones.
@@ -147,60 +147,60 @@ func (d *SingleTxDependency) GetUtxos() map[avax.UTXOID]*avax.UTXO {
 
 	if d.Tx != nil {
 		// Generate UTXOs from outputs
-		// TODO: Move to using [txs.Visitor] from AvalancheGo
+		// TODO: Move to using [platform.Visitor] from AvalancheGo
 		// Ref: https://github.com/ava-labs/avalanchego/blob/master/vms/platformvm/txs/visitor.go
 		outsToAdd := make([]*avax.TransferableOutput, 0)
 		switch unsignedTx := d.Tx.Unsigned.(type) {
-		case *txs.AddValidatorTx:
+		case *platform.AddValidatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
-		case *txs.AddSubnetValidatorTx:
+		case *platform.AddSubnetValidatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.AddDelegatorTx:
+		case *platform.AddDelegatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
-		case *txs.CreateChainTx:
+		case *platform.CreateChainTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.CreateSubnetTx:
+		case *platform.CreateSubnetTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.ImportTx:
+		case *platform.ImportTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.ExportTx:
+		case *platform.ExportTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.AdvanceTimeTx:
+		case *platform.AdvanceTimeTx:
 			// No outputs to add
-		case *txs.RewardValidatorTx:
+		case *platform.RewardValidatorTx:
 			// No outputs to add
-		case *txs.RemoveSubnetValidatorTx:
+		case *platform.RemoveSubnetValidatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.TransformSubnetTx:
+		case *platform.TransformSubnetTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.AddPermissionlessValidatorTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
-		case *txs.AddPermissionlessDelegatorTx:
+		case *platform.AddPermissionlessValidatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
-		case *txs.TransferSubnetOwnershipTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.ConvertSubnetToL1Tx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.RegisterL1ValidatorTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.IncreaseL1ValidatorBalanceTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.SetL1ValidatorWeightTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.DisableL1ValidatorTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.BaseTx:
-			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.AddAutoRenewedValidatorTx:
+		case *platform.AddPermissionlessDelegatorTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
 			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
-		case *txs.SetAutoRenewedValidatorConfigTx:
+		case *platform.TransferSubnetOwnershipTx:
 			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
-		case *txs.RewardAutoRenewedValidatorTx:
+		case *platform.ConvertSubnetToL1Tx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *platform.RegisterL1ValidatorTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *platform.IncreaseL1ValidatorBalanceTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *platform.SetL1ValidatorWeightTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *platform.DisableL1ValidatorTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *platform.BaseTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *platform.AddAutoRenewedValidatorTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+			outsToAdd = append(outsToAdd, unsignedTx.Stake()...)
+		case *platform.SetAutoRenewedValidatorConfigTx:
+			outsToAdd = append(outsToAdd, unsignedTx.Outputs()...)
+		case *platform.RewardAutoRenewedValidatorTx:
 			// No outputs to add; rewards are tracked via RewardUTXOs
 		default:
 			log.Printf("unknown type %T", unsignedTx)

@@ -11,8 +11,8 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -396,8 +396,8 @@ func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (comm
 // getTxAuthSigCount returns the number of trailing signatures required for a
 // tx-level authorization credential (e.g. SetAutoRenewedValidatorConfigTx.Auth).
 // Returns 0 for tx types that have no such credential.
-func getTxAuthSigCount(unsignedTx txs.UnsignedTx) (int, error) {
-	utx, ok := unsignedTx.(*txs.SetAutoRenewedValidatorConfigTx)
+func getTxAuthSigCount(unsignedTx platform.UnsignedTx) (int, error) {
+	utx, ok := unsignedTx.(*platform.SetAutoRenewedValidatorConfigTx)
 	if !ok {
 		return 0, nil
 	}
@@ -408,7 +408,7 @@ func getTxAuthSigCount(unsignedTx txs.UnsignedTx) (int, error) {
 	return len(authInput.SigIndices), nil
 }
 
-func (b *Backend) calculateFee(ctx context.Context, tx *txs.Tx) (uint64, error) {
+func (b *Backend) calculateFee(ctx context.Context, tx *platform.Tx) (uint64, error) {
 	feeCalculator, err := b.PickFeeCalculator(ctx, time.Now())
 	if err != nil {
 		return 0, err
@@ -433,54 +433,54 @@ func (b *Backend) PickFeeCalculator(ctx context.Context, timestamp time.Time) (t
 
 // getTxInputs fetches tx inputs based on the tx type.
 func getTxInputs(
-	unsignedTx txs.UnsignedTx,
+	unsignedTx platform.UnsignedTx,
 ) ([]*avax.TransferableInput, error) {
-	// TODO: Move to using [txs.Visitor] from AvalancheGo
+	// TODO: Move to using [platform.Visitor] from AvalancheGo
 	// Ref: https://github.com/ava-labs/avalanchego/blob/master/vms/platformvm/txs/visitor.go
 	switch utx := unsignedTx.(type) {
-	case *txs.AddValidatorTx:
+	case *platform.AddValidatorTx:
 		return utx.Ins, nil
-	case *txs.AddSubnetValidatorTx:
+	case *platform.AddSubnetValidatorTx:
 		return utx.Ins, nil
-	case *txs.AddDelegatorTx:
+	case *platform.AddDelegatorTx:
 		return utx.Ins, nil
-	case *txs.CreateChainTx:
+	case *platform.CreateChainTx:
 		return utx.Ins, nil
-	case *txs.CreateSubnetTx:
+	case *platform.CreateSubnetTx:
 		return utx.Ins, nil
-	case *txs.ImportTx:
+	case *platform.ImportTx:
 		return utx.ImportedInputs, nil
-	case *txs.ExportTx:
+	case *platform.ExportTx:
 		return utx.Ins, nil
-	case *txs.AdvanceTimeTx:
+	case *platform.AdvanceTimeTx:
 		return nil, nil
-	case *txs.RewardValidatorTx:
+	case *platform.RewardValidatorTx:
 		return nil, nil
-	case *txs.TransformSubnetTx:
+	case *platform.TransformSubnetTx:
 		return utx.Ins, nil
-	case *txs.AddPermissionlessValidatorTx:
+	case *platform.AddPermissionlessValidatorTx:
 		return utx.Ins, nil
-	case *txs.AddPermissionlessDelegatorTx:
+	case *platform.AddPermissionlessDelegatorTx:
 		return utx.Ins, nil
-	case *txs.TransferSubnetOwnershipTx:
+	case *platform.TransferSubnetOwnershipTx:
 		return utx.Ins, nil
-	case *txs.ConvertSubnetToL1Tx:
+	case *platform.ConvertSubnetToL1Tx:
 		return utx.Ins, nil
-	case *txs.RegisterL1ValidatorTx:
+	case *platform.RegisterL1ValidatorTx:
 		return utx.Ins, nil
-	case *txs.IncreaseL1ValidatorBalanceTx:
+	case *platform.IncreaseL1ValidatorBalanceTx:
 		return utx.Ins, nil
-	case *txs.SetL1ValidatorWeightTx:
+	case *platform.SetL1ValidatorWeightTx:
 		return utx.Ins, nil
-	case *txs.DisableL1ValidatorTx:
+	case *platform.DisableL1ValidatorTx:
 		return utx.Ins, nil
-	case *txs.BaseTx:
+	case *platform.BaseTx:
 		return utx.Ins, nil
-	case *txs.AddAutoRenewedValidatorTx:
+	case *platform.AddAutoRenewedValidatorTx:
 		return utx.Ins, nil
-	case *txs.SetAutoRenewedValidatorConfigTx:
+	case *platform.SetAutoRenewedValidatorConfigTx:
 		return utx.Ins, nil
-	case *txs.RewardAutoRenewedValidatorTx:
+	case *platform.RewardAutoRenewedValidatorTx:
 		return nil, nil
 	default:
 		return nil, errUnknownTxType

@@ -5,9 +5,8 @@ import (
 
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm/block"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -22,8 +21,8 @@ type genesisHandler interface {
 	getGenesisIdentifier() *types.BlockIdentifier
 
 	// [getFullGenesisTxs] returns proper genesis txs + genesis allocation tx
-	getFullGenesisTxs() ([]*txs.Tx, error)
-	buildGenesisAllocationTx() (*txs.Tx, error)
+	getFullGenesisTxs() ([]*platform.Tx, error)
+	buildGenesisAllocationTx() (*platform.Tx, error)
 }
 
 func newGenesisHandler(indexerParser indexer.Parser) (genesisHandler, error) {
@@ -33,7 +32,7 @@ func newGenesisHandler(indexerParser indexer.Parser) (genesisHandler, error) {
 		// Note: since genesis block and transactions can be considerably larger
 		// than any other block generated during the blockchain lifetime
 		// a special codec is used to parse genesis-related objects
-		genesisCodec: block.GenesisCodec,
+		genesisCodec: platform.GenesisCodec,
 	}
 
 	// initializing genesis block. No network calls are involved.
@@ -47,7 +46,7 @@ type gHandler struct {
 	genesisBlk        *indexer.ParsedGenesisBlock
 	genesisIdentifier *types.BlockIdentifier
 
-	allocationTx *txs.Tx
+	allocationTx *platform.Tx
 }
 
 func (gh *gHandler) loadGenesisBlk() error {
@@ -81,7 +80,7 @@ func (gh *gHandler) getGenesisIdentifier() *types.BlockIdentifier {
 	return gh.genesisIdentifier
 }
 
-func (gh *gHandler) getFullGenesisTxs() ([]*txs.Tx, error) {
+func (gh *gHandler) getFullGenesisTxs() ([]*platform.Tx, error) {
 	res := gh.genesisBlk.Txs
 	allocationTx, err := gh.buildGenesisAllocationTx()
 	if err != nil {
@@ -94,7 +93,7 @@ func (gh *gHandler) getFullGenesisTxs() ([]*txs.Tx, error) {
 // Genesis allocation UTXOs are not part of a real transaction.
 // For convenience and compatibility with the rest of the parsing functionality
 // they are treated as outputs of an import tx with no inputs and id ids.Empty
-func (gh *gHandler) buildGenesisAllocationTx() (*txs.Tx, error) {
+func (gh *gHandler) buildGenesisAllocationTx() (*platform.Tx, error) {
 	if gh.allocationTx != nil {
 		return gh.allocationTx, nil
 	}
@@ -130,9 +129,9 @@ func (gh *gHandler) buildGenesisAllocationTx() (*txs.Tx, error) {
 	// TODO: this is probably not the right way to build this tx
 	// Some fields are missing that we populate in tx Builder
 	// We also do not sign/initialize the transaction since genesis outputs are referred to empty id as tx id.
-	allocationTx := &txs.ImportTx{}
+	allocationTx := &platform.ImportTx{}
 	allocationTx.Outs = outs
-	tx := &txs.Tx{
+	tx := &platform.Tx{
 		Unsigned: allocationTx,
 	}
 

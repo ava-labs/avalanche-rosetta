@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/atomic"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
+	"github.com/ava-labs/avalanchego/vms/saevm/cchain/tx"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -105,21 +106,21 @@ func (b *Backend) ConstructionPreprocess(
 
 func (b *Backend) estimateGasUsed(opType string, matches []*parser.Match) (uint64, error) {
 	// building tx with dummy data to get byte size for fee estimate
-	tx, _, err := cmapper.BuildTx(
+	atomicTx, _, err := cmapper.BuildTx(
 		opType,
 		matches,
 		cmapper.Metadata{
 			SourceChainID:      &ids.Empty,
 			DestinationChainID: &ids.Empty,
 		},
-		b.codec,
 		b.avaxAssetID,
 	)
 	if err != nil {
 		return 0, err
 	}
 
-	return tx.GasUsed(true)
+	gasUsed, err := tx.GasUsed(atomicTx.Unsigned)
+	return uint64(gasUsed), err
 }
 
 // ConstructionMetadata implements /construction/metadata endpoint for C-chain atomic transactions
@@ -205,9 +206,7 @@ func (b *Backend) calculateSuggestedFee(ctx context.Context, gasUsed *big.Int) (
 // ConstructionPayloads implements /construction/payloads endpoint for C-chain atomic transactions
 func (b *Backend) ConstructionPayloads(_ context.Context, req *types.ConstructionPayloadsRequest) (*types.ConstructionPayloadsResponse, *types.Error) {
 	builder := cAtomicTxBuilder{
-		avaxAssetID:  b.avaxAssetID,
-		codec:        b.codec,
-		codecVersion: b.codecVersion,
+		avaxAssetID: b.avaxAssetID,
 	}
 	return common.BuildPayloads(builder, req)
 }
@@ -240,10 +239,7 @@ func (b *Backend) ConstructionParse(_ context.Context, req *types.ConstructionPa
 func (b *Backend) parsePayloadTxFromString(transaction string) (*common.RosettaTx, error) {
 	// Unmarshal input transaction
 	payloadsTx := &common.RosettaTx{
-		Tx: &cAtomicTx{
-			Codec:        b.codec,
-			CodecVersion: b.codecVersion,
-		},
+		Tx: &cAtomicTx{},
 	}
 
 	err := json.Unmarshal([]byte(transaction), payloadsTx)
@@ -271,41 +267,46 @@ func (*Backend) CombineTx(tx common.AvaxTx, signatures []*types.Signature) (comm
 		return nil, service.WrapError(service.ErrInvalidInput, "invalid transaction")
 	}
 
-	creds, err := getTxCreds(cTx.Tx.UnsignedAtomicTx, signatures)
+	creds, err := getTxCreds(cTx.Tx.Unsigned, signatures)
 	if err != nil {
 		return nil, service.WrapError(service.ErrInvalidInput, "unable attach signatures to transaction")
 	}
 
-	unsignedBytes, err := cTx.Marshal()
-	if err != nil {
-		return nil, service.WrapError(service.ErrInvalidInput, "unable to encode unsigned transaction")
-	}
-
 	cTx.Tx.Creds = creds
-
-	signedBytes, err := cTx.Marshal()
-	if err != nil {
-		return nil, service.WrapError(service.ErrInternalError, "unable to marshal signed transaction")
-	}
-
-	cTx.Tx.Initialize(unsignedBytes, signedBytes)
 
 	return cTx, nil
 }
 
 // getTxCreds fetches credentials based on the tx type
 func getTxCreds(
-	unsignedAtomicTx atomic.UnsignedAtomicTx,
+	unsignedAtomicTx tx.Unsigned,
 	signatures []*types.Signature,
-) ([]verify.Verifiable, error) {
+) ([]tx.Credential, error) {
+	var (
+		creds []verify.Verifiable
+		err   error
+	)
 	switch uat := unsignedAtomicTx.(type) {
-	case *atomic.UnsignedImportTx:
-		return common.BuildCredentialList(uat.ImportedInputs, signatures)
-	case *atomic.UnsignedExportTx:
-		return common.BuildSingletonCredentialList(signatures)
+	case *tx.Import:
+		creds, err = common.BuildCredentialList(uat.ImportedInputs, signatures)
+	case *tx.Export:
+		creds, err = common.BuildSingletonCredentialList(signatures)
+	default:
+		return nil, errUnknownTxType
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, errUnknownTxType
+	txCreds := make([]tx.Credential, len(creds))
+	for i, cred := range creds {
+		txCred, ok := cred.(*secp256k1fx.Credential)
+		if !ok {
+			return nil, errUnknownTxType
+		}
+		txCreds[i] = txCred
+	}
+	return txCreds, nil
 }
 
 // ConstructionHash implements /construction/hash endpoint for C-chain atomic transactions

@@ -3,8 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/graft/coreth/params"
-	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm"
+	"github.com/ava-labs/avalanchego/vms/saevm/cchain/libevm"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
 
@@ -12,11 +11,11 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-	evm.RegisterAllLibEVMExtras()
+	libevm.RegisterExtras()
 	t.Run("online", func(t *testing.T) {
 		cfg := Config{
 			Mode:      "online",
-			ChainID:   params.AvalancheMainnetChainID,
+			ChainID:   avalancheMainnetChainID,
 			NetworkID: &types.NetworkIdentifier{},
 		}
 
@@ -27,7 +26,7 @@ func TestConfig(t *testing.T) {
 	t.Run("offline", func(t *testing.T) {
 		cfg := Config{
 			Mode:      "offline",
-			ChainID:   params.AvalancheMainnetChainID,
+			ChainID:   avalancheMainnetChainID,
 			NetworkID: &types.NetworkIdentifier{},
 		}
 
@@ -37,8 +36,8 @@ func TestConfig(t *testing.T) {
 
 	t.Run("signer", func(t *testing.T) {
 		cfg := Config{
-			ChainID: params.AvalancheMainnetChainID,
+			ChainID: avalancheMainnetChainID,
 		}
-		require.IsType(t, ethtypes.NewLondonSigner(params.AvalancheMainnetChainID), cfg.Signer())
+		require.IsType(t, ethtypes.NewLondonSigner(avalancheMainnetChainID), cfg.Signer())
 	})
 }

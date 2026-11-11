@@ -9,9 +9,8 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
-	"github.com/ava-labs/avalanchego/vms/platformvm/block"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
@@ -50,9 +49,9 @@ func TestFetchBlkDependencies(t *testing.T) {
 	genesisTxID := ids.Empty
 	nonGenesisTxID := signedImportTx.ID()
 
-	tx := &txs.Tx{
-		Unsigned: &txs.ExportTx{
-			BaseTx: txs.BaseTx{
+	tx := &platform.Tx{
+		Unsigned: &platform.ExportTx{
+			BaseTx: platform.BaseTx{
 				BaseTx: avax.BaseTx{
 					NetworkID:    avalancheNetworkID,
 					BlockchainID: pChainID,
@@ -103,7 +102,7 @@ func TestFetchBlkDependencies(t *testing.T) {
 	backend, err := NewBackend(mockPClient, mockIndexerParser, avaxAssetID, networkIdentifier, networkID)
 	require.NoError(t, err)
 
-	deps, err := backend.fetchBlkDependencies(ctx, []*txs.Tx{tx})
+	deps, err := backend.fetchBlkDependencies(ctx, []*platform.Tx{tx})
 	require.NoError(t, err)
 
 	require.Len(t, deps, 2)
@@ -112,9 +111,9 @@ func TestFetchBlkDependencies(t *testing.T) {
 	require.Equal(t, signedImportTx, deps[nonGenesisTxID].Tx)
 }
 
-func makeImportTx(t *testing.T, networkID uint32) (*txs.Tx, error) {
-	importTx := &txs.ImportTx{
-		BaseTx: txs.BaseTx{
+func makeImportTx(t *testing.T, networkID uint32) (*platform.Tx, error) {
+	importTx := &platform.ImportTx{
+		BaseTx: platform.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID: networkID,
 				Outs: []*avax.TransferableOutput{
@@ -136,7 +135,7 @@ func makeImportTx(t *testing.T, networkID uint32) (*txs.Tx, error) {
 		SourceChain:    cChainID,
 		ImportedInputs: []*avax.TransferableInput{},
 	}
-	signedImportTx, err := txs.NewSigned(importTx, block.Codec, nil)
+	signedImportTx, err := platform.NewSignedTx(importTx, platform.Codec, nil)
 	require.NoError(t, err)
 	signedImportTx.Creds = []verify.Verifiable{}
 	return signedImportTx, err
@@ -170,22 +169,22 @@ func TestFetchBlkDependenciesRewardAutoRenewedValidator(t *testing.T) {
 		Addrs:     []ids.ShortID{ids.GenerateTestShortID()},
 	}
 	validatorNodeID := ids.GenerateTestNodeID()
-	stakingTx, err := txs.NewSigned(&txs.AddAutoRenewedValidatorTx{
-		BaseTx:                txs.BaseTx{BaseTx: avax.BaseTx{NetworkID: networkID}},
+	stakingTx, err := platform.NewSignedTx(&platform.AddAutoRenewedValidatorTx{
+		BaseTx:                platform.BaseTx{BaseTx: avax.BaseTx{NetworkID: networkID}},
 		ValidatorNodeID:       validatorNodeID[:],
 		Signer:                &signer.Empty{},
 		ValidatorRewardsOwner: rewardsOwner,
 		DelegatorRewardsOwner: rewardsOwner,
 		ValidatorAuthority:    rewardsOwner,
-	}, txs.Codec, nil)
+	}, platform.Codec, nil)
 	require.NoError(t, err)
 	stakingTxID := stakingTx.ID()
 
 	// Build the RewardAutoRenewedValidatorTx referencing the staking tx.
-	rewardTx, err := txs.NewSigned(&txs.RewardAutoRenewedValidatorTx{
+	rewardTx, err := platform.NewSignedTx(&platform.RewardAutoRenewedValidatorTx{
 		TxID:      stakingTxID,
 		Timestamp: 1,
-	}, txs.Codec, nil)
+	}, platform.Codec, nil)
 	require.NoError(t, err)
 	rewardTxID := rewardTx.ID()
 
@@ -204,7 +203,7 @@ func TestFetchBlkDependenciesRewardAutoRenewedValidator(t *testing.T) {
 	backend, err := NewBackend(mockPClient, mockIndexerParser, avaxAssetID, networkIdentifier, networkID)
 	require.NoError(t, err)
 
-	deps, err := backend.fetchBlkDependencies(ctx, []*txs.Tx{rewardTx})
+	deps, err := backend.fetchBlkDependencies(ctx, []*platform.Tx{rewardTx})
 	require.NoError(t, err)
 
 	// Dep is keyed by both the staking tx ID (for parser lookup via TxID) and the
@@ -245,30 +244,30 @@ func TestFetchBlkDependenciesRewardAndSpendSameStakingTx(t *testing.T) {
 		Addrs:     []ids.ShortID{ids.GenerateTestShortID()},
 	}
 	validatorNodeID := ids.GenerateTestNodeID()
-	stakingTx, err := txs.NewSigned(&txs.AddAutoRenewedValidatorTx{
-		BaseTx:                txs.BaseTx{BaseTx: avax.BaseTx{NetworkID: networkID}},
+	stakingTx, err := platform.NewSignedTx(&platform.AddAutoRenewedValidatorTx{
+		BaseTx:                platform.BaseTx{BaseTx: avax.BaseTx{NetworkID: networkID}},
 		ValidatorNodeID:       validatorNodeID[:],
 		Signer:                &signer.Empty{},
 		ValidatorRewardsOwner: rewardsOwner,
 		DelegatorRewardsOwner: rewardsOwner,
 		ValidatorAuthority:    rewardsOwner,
-	}, txs.Codec, nil)
+	}, platform.Codec, nil)
 	require.NoError(t, err)
 	stakingTxID := stakingTx.ID()
 
-	rewardTx, err := txs.NewSigned(&txs.RewardAutoRenewedValidatorTx{
+	rewardTx, err := platform.NewSignedTx(&platform.RewardAutoRenewedValidatorTx{
 		TxID:      stakingTxID,
 		Timestamp: 1,
-	}, txs.Codec, nil)
+	}, platform.Codec, nil)
 	require.NoError(t, err)
 	rewardTxID := rewardTx.ID()
 
 	// A second tx in the same block that spends an output of the staking tx X,
 	// producing a bare {X, ids.Empty} dependency request alongside the reward tx's
 	// {X, rewardTxID} request.
-	spendingTx := &txs.Tx{
-		Unsigned: &txs.ExportTx{
-			BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	spendingTx := &platform.Tx{
+		Unsigned: &platform.ExportTx{
+			BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 				NetworkID:    networkID,
 				BlockchainID: pChainID,
 				Ins: []*avax.TransferableInput{
@@ -295,7 +294,7 @@ func TestFetchBlkDependenciesRewardAndSpendSameStakingTx(t *testing.T) {
 	backend, err := NewBackend(mockPClient, mockIndexerParser, avaxAssetID, networkIdentifier, networkID)
 	require.NoError(t, err)
 
-	deps, err := backend.fetchBlkDependencies(ctx, []*txs.Tx{spendingTx, rewardTx})
+	deps, err := backend.fetchBlkDependencies(ctx, []*platform.Tx{spendingTx, rewardTx})
 	require.NoError(t, err)
 
 	require.Contains(t, deps, stakingTxID)

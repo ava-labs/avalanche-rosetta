@@ -2,10 +2,10 @@ package client
 
 import (
 	"context"
+	"math/big"
 
-	"github.com/ava-labs/avalanchego/graft/coreth/eth/tracers"
-	ethclient "github.com/ava-labs/avalanchego/graft/coreth/ethclient"
-	"github.com/ava-labs/avalanchego/graft/evm/rpc"
+	"github.com/ava-labs/avalanchego/vms/evm/evmclient"
+	"github.com/ava-labs/libevm/eth/tracers"
 )
 
 var (
@@ -16,8 +16,7 @@ var (
 
 // EthClient provides access to Coreth API
 type EthClient struct {
-	ethclient.Client
-	rpc         *rpc.Client
+	*evmclient.Client
 	traceConfig *tracers.TraceConfig
 }
 
@@ -25,14 +24,13 @@ type EthClient struct {
 func NewEthClient(ctx context.Context, endpoint string) (*EthClient, error) {
 	endpointURL := endpoint + prefixEth
 
-	c, err := rpc.DialContext(ctx, endpointURL)
+	c, err := evmclient.Dial(ctx, endpointURL)
 	if err != nil {
 		return nil, err
 	}
 
 	return &EthClient{
-		Client: *ethclient.NewClient(c),
-		rpc:    c,
+		Client: c,
 		traceConfig: &tracers.TraceConfig{
 			Timeout: &tracerTimeout,
 			Tracer:  &tracer,
@@ -44,7 +42,7 @@ func NewEthClient(ctx context.Context, endpoint string) (*EthClient, error) {
 func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 	var content TxPoolContent
 
-	err := c.rpc.CallContext(ctx, &content, "txpool_inspect")
+	err := c.RPC.CallContext(ctx, &content, "txpool_inspect")
 
 	return &content, err
 }
@@ -53,7 +51,7 @@ func (c *EthClient) TxPoolContent(ctx context.Context) (*TxPoolContent, error) {
 func (c *EthClient) TraceTransaction(ctx context.Context, hash string) (*Call, []*FlatCall, error) {
 	var result Call
 
-	err := c.rpc.CallContext(ctx, &result, "debug_traceTransaction", hash, c.traceConfig)
+	err := c.RPC.CallContext(ctx, &result, "debug_traceTransaction", hash, c.traceConfig)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -69,7 +67,7 @@ func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call,
 		*Call `json:"result"`
 	}
 
-	err := c.rpc.CallContext(ctx, &raw, "debug_traceBlockByHash", hash, c.traceConfig)
+	err := c.RPC.CallContext(ctx, &raw, "debug_traceBlockByHash", hash, c.traceConfig)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -82,4 +80,13 @@ func (c *EthClient) TraceBlockByHash(ctx context.Context, hash string) ([]*Call,
 	}
 
 	return result, flattened, nil
+}
+
+// EstimateBaseFee returns the node's estimate of the base fee of the next block.
+func (c *EthClient) EstimateBaseFee(ctx context.Context) (*big.Int, error) {
+	baseFee, err := c.Client.EstimateBaseFee(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return new(big.Int).SetUint64(uint64(baseFee)), nil
 }

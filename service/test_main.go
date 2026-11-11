@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm"
+	"github.com/ava-labs/avalanchego/vms/saevm/cchain/libevm"
 )
 
 func TestMain(m *testing.M) {
-	evm.RegisterAllLibEVMExtras()
+	libevm.RegisterExtras()
 	os.Exit(m.Run())
 }

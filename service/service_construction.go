@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ava-labs/avalanchego/graft/coreth/core"
 	ethereum "github.com/ava-labs/libevm"
 	"github.com/ava-labs/libevm/common"
 	"github.com/ava-labs/libevm/common/hexutil"
+	"github.com/ava-labs/libevm/core"
 	"github.com/ava-labs/libevm/crypto"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"
@@ -1453,7 +1453,7 @@ func generateErc20TransferData(toAddress string, value *big.Int) []byte {
 	paddedAddress := common.LeftPadBytes(to.Bytes(), requiredPaddingBytes)
 	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
 
-	var data []byte
+	data := make([]byte, 0, len(methodID)+len(paddedAddress)+len(paddedAmount))
 	data = append(data, methodID...)
 	data = append(data, paddedAddress...)
 	data = append(data, paddedAmount...)
@@ -1466,7 +1466,7 @@ func generateBridgeUnwrapTransferData(value *big.Int, chainID *big.Int) []byte {
 	paddedAmount := common.LeftPadBytes(value.Bytes(), requiredPaddingBytes)
 	paddedChainID := common.LeftPadBytes(chainID.Bytes(), requiredPaddingBytes)
 
-	var data []byte
+	data := make([]byte, 0, len(methodID)+len(paddedAmount)+len(paddedChainID))
 	data = append(data, methodID...)
 	data = append(data, paddedAmount...)
 	data = append(data, paddedChainID...)

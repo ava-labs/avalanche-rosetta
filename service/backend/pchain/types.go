@@ -6,7 +6,7 @@ import (
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/hashing"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/constants"
@@ -35,7 +35,7 @@ type AccountBalance struct {
 }
 
 type pTx struct {
-	Tx           *txs.Tx
+	Tx           *platform.Tx
 	Codec        codec.Manager
 	CodecVersion uint16
 }
@@ -52,7 +52,7 @@ func (p *pTx) Marshal() ([]byte, error) {
 }
 
 func (p *pTx) Unmarshal(bytes []byte) error {
-	tx := txs.Tx{}
+	tx := platform.Tx{}
 	_, err := p.Codec.Unmarshal(bytes, &tx)
 	if err != nil {
 		return err

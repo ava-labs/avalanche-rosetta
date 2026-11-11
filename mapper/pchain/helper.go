@@ -1,13 +1,13 @@
 package pchain
 
 import (
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
 func ParseRosettaTxs(
 	parserCfg TxParserConfig,
-	txs []*txs.Tx,
+	txs []*platform.Tx,
 	dependencyTxs BlockTxDependencies,
 ) ([]*types.Transaction, error) {
 	inputAddresses, err := dependencyTxs.GetReferencedAccounts(parserCfg.Hrp)

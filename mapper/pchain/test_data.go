@@ -5,15 +5,14 @@ import (
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm/block"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 )
 
-func buildImport() (*txs.Tx, *txs.ImportTx, map[string]*types.AccountIdentifier) {
+func buildImport() (*platform.Tx, *platform.ImportTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	sourceChain, _ := ids.FromString("2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm")
 	outAddr1, _ := address.ParseToID("P-fuji1xm0r37l6gyf2mly4pmzc0tz6wnwqkugedh95fk")
@@ -21,8 +20,8 @@ func buildImport() (*txs.Tx, *txs.ImportTx, map[string]*types.AccountIdentifier)
 	outAddr3, _ := address.ParseToID("P-fuji1j3sw805usytrsymfwxxrcwfqguyarumn45cllj")
 	importAddr, _ := address.ParseToID("C-fuji1xm0r37l6gyf2mly4pmzc0tz6wnwqkugedh95fk")
 	importedTxID, _ := ids.FromString("2DtYhzCvo9LRYMRJ6sCtYJ4aNPRpsibp46ETNyY6H5Cox1VLvX")
-	importTx := &txs.ImportTx{
-		BaseTx: txs.BaseTx{
+	importTx := &platform.ImportTx{
+		BaseTx: platform.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
@@ -86,7 +85,7 @@ func buildImport() (*txs.Tx, *txs.ImportTx, map[string]*types.AccountIdentifier)
 		}},
 	}
 
-	signedTx, _ := txs.NewSigned(importTx, block.Codec, nil)
+	signedTx, _ := platform.NewSignedTx(importTx, platform.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[importTx.ImportedInputs[0].String()] = &types.AccountIdentifier{Address: importAddr.String()}
@@ -94,14 +93,14 @@ func buildImport() (*txs.Tx, *txs.ImportTx, map[string]*types.AccountIdentifier)
 	return signedTx, importTx, inputTxAccounts
 }
 
-func buildExport() (*txs.Tx, *txs.ExportTx, map[string]*types.AccountIdentifier) {
+func buildExport() (*platform.Tx, *platform.ExportTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	outAddr, _ := address.ParseToID("P-fuji1wmd9dfrqpud6daq0cde47u0r7pkrr46ep60399")
 	exportOutAddr, _ := address.ParseToID("P-fuji1wmd9dfrqpud6daq0cde47u0r7pkrr46ep60399")
 	txID, _ := ids.FromString("27LaDkrUrMY1bhVf2i8RARCrRwFjeRw7vEu8ntLQXracgLzL1v")
 	destinationID, _ := ids.FromString("yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")
-	exportTx := &txs.ExportTx{
-		BaseTx: txs.BaseTx{
+	exportTx := &platform.ExportTx{
+		BaseTx: platform.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
@@ -144,7 +143,7 @@ func buildExport() (*txs.Tx, *txs.ExportTx, map[string]*types.AccountIdentifier)
 		}},
 	}
 
-	signedTx, _ := txs.NewSigned(exportTx, block.Codec, nil)
+	signedTx, _ := platform.NewSignedTx(exportTx, platform.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[exportTx.Ins[0].String()] = &types.AccountIdentifier{Address: outAddr.String()}
@@ -153,15 +152,15 @@ func buildExport() (*txs.Tx, *txs.ExportTx, map[string]*types.AccountIdentifier)
 }
 
 // TODO: Remove Post-Durango
-func buildAddDelegator() (*txs.Tx, *txs.AddDelegatorTx, map[string]*types.AccountIdentifier) {
+func buildAddDelegator() (*platform.Tx, *platform.AddDelegatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	txID, _ := ids.FromString("2JQGX1MBdszAaeV6eApCZm7CBpc917qWiyQ2cygFRJ6WteDkre")
 	outAddr, _ := address.ParseToID("P-fuji1gdkq8g208e3j4epyjmx65jglsw7vauh86l47ac")
 	validatorID, _ := ids.NodeIDFromString("NodeID-BFa1padLXBj7VHa2JYvYGzcTBPQGjPhUy")
 	stakeAddr, _ := address.ParseToID("P-fuji1l022sue7g2kzvrcuxughl30xkss2cj0az3e5r2")
 	rewardAddr, _ := address.ParseToID("P-fuji1l022sue7g2kzvrcuxughl30xkss2cj0az3e5r2")
-	addDelegator := &txs.AddDelegatorTx{
-		BaseTx: txs.BaseTx{
+	addDelegator := &platform.AddDelegatorTx{
+		BaseTx: platform.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
@@ -189,7 +188,7 @@ func buildAddDelegator() (*txs.Tx, *txs.AddDelegatorTx, map[string]*types.Accoun
 				Memo: []byte{},
 			},
 		},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: validatorID,
 			Start:  1656058022,
 			End:    1657872569,
@@ -214,7 +213,7 @@ func buildAddDelegator() (*txs.Tx, *txs.AddDelegatorTx, map[string]*types.Accoun
 		},
 	}
 
-	signedTx, _ := txs.NewSigned(addDelegator, block.Codec, nil)
+	signedTx, _ := platform.NewSignedTx(addDelegator, platform.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[addDelegator.Ins[0].String()] = &types.AccountIdentifier{Address: stakeAddr.String()}
@@ -223,15 +222,15 @@ func buildAddDelegator() (*txs.Tx, *txs.AddDelegatorTx, map[string]*types.Accoun
 }
 
 // TODO: Remove Post-Durango
-func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.AccountIdentifier) {
+func buildValidatorTx() (*platform.Tx, *platform.AddValidatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 
 	txID, _ := ids.FromString("88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo")
 	stakeAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
 	rewardAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
 	validatorID, _ := ids.NodeIDFromString("NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX")
-	addValidator := &txs.AddValidatorTx{
-		BaseTx: txs.BaseTx{
+	addValidator := &platform.AddValidatorTx{
+		BaseTx: platform.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
@@ -262,7 +261,7 @@ func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.Account
 				Memo: []byte{},
 			},
 		},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: validatorID,
 			Start:  1656084079,
 			End:    1687620079,
@@ -288,7 +287,7 @@ func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.Account
 		DelegationShares: 20000,
 	}
 
-	signedTx, _ := txs.NewSigned(addValidator, block.Codec, nil)
+	signedTx, _ := platform.NewSignedTx(addValidator, platform.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{
 		addValidator.Ins[0].String(): {Address: stakeAddr.String()},
@@ -298,15 +297,15 @@ func buildValidatorTx() (*txs.Tx, *txs.AddValidatorTx, map[string]*types.Account
 	return signedTx, addValidator, inputTxAccounts
 }
 
-func buildAddPermissionlessDelegator() (*txs.Tx, *txs.AddPermissionlessDelegatorTx, map[string]*types.AccountIdentifier) {
+func buildAddPermissionlessDelegator() (*platform.Tx, *platform.AddPermissionlessDelegatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	txID, _ := ids.FromString("2JQGX1MBdszAaeV6eApCZm7CBpc917qWiyQ2cygFRJ6WteDkre")
 	outAddr, _ := address.ParseToID("P-fuji1gdkq8g208e3j4epyjmx65jglsw7vauh86l47ac")
 	validatorID, _ := ids.NodeIDFromString("NodeID-BFa1padLXBj7VHa2JYvYGzcTBPQGjPhUy")
 	stakeAddr, _ := address.ParseToID("P-fuji1l022sue7g2kzvrcuxughl30xkss2cj0az3e5r2")
 	rewardAddr, _ := address.ParseToID("P-fuji1l022sue7g2kzvrcuxughl30xkss2cj0az3e5r2")
-	addPermissionlessDelegator := &txs.AddPermissionlessDelegatorTx{
-		BaseTx: txs.BaseTx{
+	addPermissionlessDelegator := &platform.AddPermissionlessDelegatorTx{
+		BaseTx: platform.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
@@ -334,7 +333,7 @@ func buildAddPermissionlessDelegator() (*txs.Tx, *txs.AddPermissionlessDelegator
 				Memo: []byte{},
 			},
 		},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: validatorID,
 			Start:  1656058022,
 			End:    1657872569,
@@ -360,7 +359,7 @@ func buildAddPermissionlessDelegator() (*txs.Tx, *txs.AddPermissionlessDelegator
 		},
 	}
 
-	signedTx, _ := txs.NewSigned(addPermissionlessDelegator, block.Codec, nil)
+	signedTx, _ := platform.NewSignedTx(addPermissionlessDelegator, platform.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{}
 	inputTxAccounts[addPermissionlessDelegator.Ins[0].String()] = &types.AccountIdentifier{Address: stakeAddr.String()}
@@ -368,7 +367,7 @@ func buildAddPermissionlessDelegator() (*txs.Tx, *txs.AddPermissionlessDelegator
 	return signedTx, addPermissionlessDelegator, inputTxAccounts
 }
 
-func buildAddAutoRenewedValidator() (*txs.Tx, *txs.AddAutoRenewedValidatorTx, map[string]*types.AccountIdentifier) {
+func buildAddAutoRenewedValidator() (*platform.Tx, *platform.AddAutoRenewedValidatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	txID, _ := ids.FromString("88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo")
 	stakeAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
@@ -381,8 +380,8 @@ func buildAddAutoRenewedValidator() (*txs.Tx, *txs.AddAutoRenewedValidatorTx, ma
 		Addrs:     []ids.ShortID{rewardAddr},
 	}
 
-	utx := &txs.AddAutoRenewedValidatorTx{
-		BaseTx: txs.BaseTx{
+	utx := &platform.AddAutoRenewedValidatorTx{
+		BaseTx: platform.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
@@ -419,7 +418,7 @@ func buildAddAutoRenewedValidator() (*txs.Tx, *txs.AddAutoRenewedValidatorTx, ma
 		Period:                   14 * 24 * 3600,
 	}
 
-	signedTx, _ := txs.NewSigned(utx, block.Codec, nil)
+	signedTx, _ := platform.NewSignedTx(utx, platform.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{
 		utx.Ins[0].String(): {Address: stakeAddr.String()},
@@ -428,15 +427,15 @@ func buildAddAutoRenewedValidator() (*txs.Tx, *txs.AddAutoRenewedValidatorTx, ma
 	return signedTx, utx, inputTxAccounts
 }
 
-func buildSetAutoRenewedValidatorConfig() (*txs.Tx, *txs.SetAutoRenewedValidatorConfigTx, map[string]*types.AccountIdentifier) {
+func buildSetAutoRenewedValidatorConfig() (*platform.Tx, *platform.SetAutoRenewedValidatorConfigTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	txID, _ := ids.FromString("88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo")
 	changeAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
 
 	stakingTxID := ids.ID{'s', 't', 'a', 'k', 'i', 'n', 'g', 'T', 'x', 'I', 'D'}
 
-	utx := &txs.SetAutoRenewedValidatorConfigTx{
-		BaseTx: txs.BaseTx{
+	utx := &platform.SetAutoRenewedValidatorConfigTx{
+		BaseTx: platform.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
@@ -468,7 +467,7 @@ func buildSetAutoRenewedValidatorConfig() (*txs.Tx, *txs.SetAutoRenewedValidator
 		Period:                   7 * 24 * 3600,
 	}
 
-	signedTx, _ := txs.NewSigned(utx, block.Codec, nil)
+	signedTx, _ := platform.NewSignedTx(utx, platform.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{
 		utx.Ins[0].String(): {Address: changeAddr.String()},
@@ -477,14 +476,14 @@ func buildSetAutoRenewedValidatorConfig() (*txs.Tx, *txs.SetAutoRenewedValidator
 	return signedTx, utx, inputTxAccounts
 }
 
-func buildAddPermissionlessValidator() (*txs.Tx, *txs.AddPermissionlessValidatorTx, map[string]*types.AccountIdentifier) {
+func buildAddPermissionlessValidator() (*platform.Tx, *platform.AddPermissionlessValidatorTx, map[string]*types.AccountIdentifier) {
 	avaxAssetID, _ := ids.FromString("U8iRqJoiJm8xZHAacmvYyZVwqQx6uDNtQeP3CQ6fcgQk3JqnK")
 	txID, _ := ids.FromString("88tfp1Pkw9vyKrRtVNiMrghFBrre6Q6CzqPW1t7StDNX9PJEo")
 	stakeAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
 	rewardAddr, _ := address.ParseToID("P-fuji1ljdzyey6vu3hgn3cwg4j5lpy0svd6arlxpj6je")
 	validatorID, _ := ids.NodeIDFromString("NodeID-CCecHmRK3ANe92VyvASxkNav26W4vAVpX")
-	addPermissionlessValidator := &txs.AddPermissionlessValidatorTx{
-		BaseTx: txs.BaseTx{
+	addPermissionlessValidator := &platform.AddPermissionlessValidatorTx{
+		BaseTx: platform.BaseTx{
 			BaseTx: avax.BaseTx{
 				NetworkID:    uint32(5),
 				BlockchainID: [32]byte{},
@@ -515,7 +514,7 @@ func buildAddPermissionlessValidator() (*txs.Tx, *txs.AddPermissionlessValidator
 				Memo: []byte{},
 			},
 		},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: validatorID,
 			Start:  1656084079,
 			End:    1687620079,
@@ -548,7 +547,7 @@ func buildAddPermissionlessValidator() (*txs.Tx, *txs.AddPermissionlessValidator
 		DelegationShares: 20000,
 	}
 
-	signedTx, _ := txs.NewSigned(addPermissionlessValidator, block.Codec, nil)
+	signedTx, _ := platform.NewSignedTx(addPermissionlessValidator, platform.Codec, nil)
 
 	inputTxAccounts := map[string]*types.AccountIdentifier{
 		addPermissionlessValidator.Ins[0].String(): {Address: stakeAddr.String()},
