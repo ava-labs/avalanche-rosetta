@@ -17,7 +17,7 @@ func newTxOps(isConstruction bool) *txOps {
 }
 
 func (t *txOps) IncludedOperations() []*types.Operation {
-	ops := []*types.Operation{}
+	ops := make([]*types.Operation, 0, len(t.Ins)+len(t.Outs)+len(t.StakeOuts))
 	ops = append(ops, t.Ins...)
 	ops = append(ops, t.Outs...)
 	ops = append(ops, t.StakeOuts...)

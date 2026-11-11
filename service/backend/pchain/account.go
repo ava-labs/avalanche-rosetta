@@ -182,8 +182,7 @@ func (b *Backend) getPendingRewardsBalance(ctx context.Context, req *types.Accou
 		return nil, service.WrapError(service.ErrInvalidInput, "malformed validator_node_id ")
 	}
 
-	var nodeIDs []ids.NodeID
-	nodeIDs = append(nodeIDs, validatorNodeID)
+	nodeIDs := []ids.NodeID{validatorNodeID}
 
 	validators, err := b.pClient.GetCurrentValidators(ctx, avaconstants.PrimaryNetworkID, nodeIDs)
 	if err != nil {

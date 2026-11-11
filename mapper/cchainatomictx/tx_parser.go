@@ -69,14 +69,14 @@ func (t *TxParser) parseExportTx(exportTx *tx.Export) ([]*types.Operation, error
 }
 
 func (t *TxParser) parseImportTx(importTx *tx.Import) ([]*types.Operation, error) {
-	operations := []*types.Operation{}
 	ins, err := t.importedInToOperations(0, mapper.OpImport, importTx.ImportedInputs)
 	if err != nil {
 		return nil, err
 	}
 
-	operations = append(operations, ins...)
 	outs := outsToOperations(len(ins), mapper.OpImport, importTx.Outs)
+	operations := make([]*types.Operation, 0, len(ins)+len(outs))
+	operations = append(operations, ins...)
 	operations = append(operations, outs...)
 
 	return operations, nil
@@ -84,7 +84,7 @@ func (t *TxParser) parseImportTx(importTx *tx.Import) ([]*types.Operation, error
 
 func insToOperations(startIdx int64, opType string, ins []tx.Input) []*types.Operation {
 	idx := startIdx
-	operations := []*types.Operation{}
+	operations := make([]*types.Operation, 0, len(ins))
 	for _, in := range ins {
 		inputAmount := new(big.Int).SetUint64(in.Amount)
 		operations = append(operations, &types.Operation{
@@ -133,7 +133,7 @@ func (t *TxParser) importedInToOperations(startIdx int64, opType string, ins []*
 
 func outsToOperations(startIdx int, opType string, outs []tx.Output) []*types.Operation {
 	idx := startIdx
-	operations := []*types.Operation{}
+	operations := make([]*types.Operation, 0, len(outs))
 	for _, out := range outs {
 		operations = append(operations, &types.Operation{
 			OperationIdentifier: &types.OperationIdentifier{

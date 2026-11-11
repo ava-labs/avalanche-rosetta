@@ -80,8 +80,8 @@ func buildImportTx(
 func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([]tx.Input, []*types.AccountIdentifier) {
 	inputMatch := matches[0]
 
-	ins := []tx.Input{}
-	signers := []*types.AccountIdentifier{}
+	ins := make([]tx.Input, 0, len(inputMatch.Operations))
+	signers := make([]*types.AccountIdentifier, 0, len(inputMatch.Operations))
 	for i, op := range inputMatch.Operations {
 		ins = append(ins, tx.Input{
 			Address: common.HexToAddress(op.Account.Address),
@@ -132,7 +132,7 @@ func buildImportedInputs(matches []*parser.Match, avaxAssetID ids.ID) ([]*avax.T
 func buildOuts(matches []*parser.Match, avaxAssetID ids.ID) []tx.Output {
 	outputMatch := matches[1]
 
-	outs := []tx.Output{}
+	outs := make([]tx.Output, 0, len(outputMatch.Operations))
 	for i, op := range outputMatch.Operations {
 		outs = append(outs, tx.Output{
 			Address: common.HexToAddress(op.Account.Address),

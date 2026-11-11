@@ -107,7 +107,7 @@ func (p *parser) GetGenesisBlock(_ context.Context) (*ParsedGenesisBlock, error)
 
 	genesisTimestamp := time.Unix(int64(genesisState.Timestamp), 0)
 
-	var genesisTxs []*platform.Tx
+	genesisTxs := make([]*platform.Tx, 0, len(genesisState.Validators)+len(genesisState.Chains))
 	genesisTxs = append(genesisTxs, genesisState.Validators...)
 	genesisTxs = append(genesisTxs, genesisState.Chains...)
 

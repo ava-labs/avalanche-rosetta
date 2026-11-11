@@ -165,7 +165,7 @@ func main() {
 		BridgeTokenList:    cfg.BridgeTokenList,
 	}
 
-	var operationTypes []string
+	operationTypes := make([]string, 0, len(mapper.OperationTypes)+len(pmapper.OperationTypes))
 	operationTypes = append(operationTypes, mapper.OperationTypes...)
 	operationTypes = append(operationTypes, pmapper.OperationTypes...)
 
