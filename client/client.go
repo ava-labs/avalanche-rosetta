@@ -6,14 +6,12 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/api/info"
-	evm "github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/client"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/ava-labs/avalanchego/vms/components/avax"
 	ethereum "github.com/ava-labs/libevm"
 	"github.com/ava-labs/libevm/common"
 	"github.com/ava-labs/libevm/core/types"
-
-	"github.com/ava-labs/avalanche-rosetta/constants"
 )
 
 // Interface compliance
@@ -41,11 +39,9 @@ type Client interface {
 	GetContractInfo(common.Address, bool) (string, uint8, error)
 	CallContract(context.Context, ethereum.CallMsg, *big.Int) ([]byte, error)
 	IssueTx(ctx context.Context, txBytes []byte, options ...rpc.Option) (ids.ID, error)
-	GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, sourceChain string, limit uint32, startAddress ids.ShortID, startUTXOID ids.ID, options ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error)
+	GetAtomicUTXOs(ctx context.Context, addrs []ids.ShortID, sourceChain string, limit uint32, startAddress ids.ShortID, startUTXOID ids.ID, options ...rpc.Option) ([]*avax.UTXO, ids.ShortID, ids.ID, error)
 	EstimateBaseFee(ctx context.Context) (*big.Int, error)
 }
-
-type EvmClient struct{ *evm.Client }
 
 type client struct {
 	info.Client
@@ -65,8 +61,8 @@ func NewClient(ctx context.Context, endpoint string) (Client, error) {
 
 	return &client{
 		Client:         *info.NewClient(endpoint),
-		EvmClient:      EvmClient{evm.NewClient(endpoint, constants.CChain.String())},
+		EvmClient:      NewEvmClient(endpoint),
 		EthClient:      eth,
-		ContractClient: NewContractClient(eth.Client),
+		ContractClient: NewContractClient(eth.Client.Eth),
 	}, nil
 }

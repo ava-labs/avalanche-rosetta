@@ -11,8 +11,8 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/libevm/common/math"
 	"github.com/coinbase/rosetta-sdk-go/parser"
@@ -34,7 +34,7 @@ func BuildTx(
 	payloadMetadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
+) (*platform.Tx, []*types.AccountIdentifier, error) {
 	switch opType {
 	case OpImportAvax:
 		return buildImportTx(matches, payloadMetadata, codec, avaxAssetID)
@@ -65,7 +65,7 @@ func buildImportTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
+) (*platform.Tx, []*types.AccountIdentifier, error) {
 	blockchainID := metadata.BlockchainID
 	sourceChainID := metadata.SourceChainID
 
@@ -79,8 +79,8 @@ func buildImportTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	tx := &txs.Tx{Unsigned: &txs.ImportTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	tx := &platform.Tx{Unsigned: &platform.ImportTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
@@ -99,7 +99,7 @@ func buildExportTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
+) (*platform.Tx, []*types.AccountIdentifier, error) {
 	if metadata.ExportMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -116,8 +116,8 @@ func buildExportTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	tx := &txs.Tx{Unsigned: &txs.ExportTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	tx := &platform.Tx{Unsigned: &platform.ExportTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
@@ -137,7 +137,7 @@ func buildAddValidatorTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
+) (*platform.Tx, []*types.AccountIdentifier, error) {
 	if metadata.StakingMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -173,14 +173,14 @@ func buildAddValidatorTx(
 		return nil, nil, err
 	}
 
-	tx := &txs.Tx{Unsigned: &txs.AddValidatorTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	tx := &platform.Tx{Unsigned: &platform.AddValidatorTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
 		}},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,
@@ -201,7 +201,7 @@ func buildAddDelegatorTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
+) (*platform.Tx, []*types.AccountIdentifier, error) {
 	if metadata.StakingMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -237,14 +237,14 @@ func buildAddDelegatorTx(
 		return nil, nil, err
 	}
 
-	tx := &txs.Tx{Unsigned: &txs.AddDelegatorTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	tx := &platform.Tx{Unsigned: &platform.AddDelegatorTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
 		}},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,
@@ -263,7 +263,7 @@ func buildAddPermissionlessValidatorTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
+) (*platform.Tx, []*types.AccountIdentifier, error) {
 	if metadata.StakingMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -336,14 +336,14 @@ func buildAddPermissionlessValidatorTx(
 		return nil, nil, err
 	}
 
-	tx := &txs.Tx{Unsigned: &txs.AddPermissionlessValidatorTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	tx := &platform.Tx{Unsigned: &platform.AddPermissionlessValidatorTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
 		}},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,
@@ -366,7 +366,7 @@ func buildAddPermissionlessDelegatorTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
+) (*platform.Tx, []*types.AccountIdentifier, error) {
 	if metadata.StakingMetadata == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -405,14 +405,14 @@ func buildAddPermissionlessDelegatorTx(
 		}
 	}
 
-	tx := &txs.Tx{Unsigned: &txs.AddPermissionlessDelegatorTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	tx := &platform.Tx{Unsigned: &platform.AddPermissionlessDelegatorTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: blockchainID,
 			Outs:         outs,
 			Ins:          ins,
 		}},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: nodeID,
 			Start:  metadata.Start,
 			End:    metadata.End,
@@ -585,7 +585,7 @@ func buildAddAutoRenewedValidatorTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
+) (*platform.Tx, []*types.AccountIdentifier, error) {
 	if metadata.AutoRenewedValidator == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -641,8 +641,8 @@ func buildAddAutoRenewedValidatorTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	tx := &txs.Tx{Unsigned: &txs.AddAutoRenewedValidatorTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	tx := &platform.Tx{Unsigned: &platform.AddAutoRenewedValidatorTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: metadata.BlockchainID,
 			Outs:         outs,
@@ -667,7 +667,7 @@ func buildSetAutoRenewedValidatorConfigTx(
 	metadata Metadata,
 	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*txs.Tx, []*types.AccountIdentifier, error) {
+) (*platform.Tx, []*types.AccountIdentifier, error) {
 	if metadata.AutoRenewedValidatorConfig == nil {
 		return nil, nil, errInvalidMetadata
 	}
@@ -685,8 +685,8 @@ func buildSetAutoRenewedValidatorConfigTx(
 		return nil, nil, fmt.Errorf("parse outputs failed: %w", err)
 	}
 
-	tx := &txs.Tx{Unsigned: &txs.SetAutoRenewedValidatorConfigTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	tx := &platform.Tx{Unsigned: &platform.SetAutoRenewedValidatorConfigTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    metadata.NetworkID,
 			BlockchainID: metadata.BlockchainID,
 			Outs:         outs,

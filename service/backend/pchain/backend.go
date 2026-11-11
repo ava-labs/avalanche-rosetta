@@ -5,7 +5,7 @@ import (
 	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/upgrade"
-	"github.com/ava-labs/avalanchego/vms/platformvm/block"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -69,8 +69,8 @@ func NewBackend(
 		pClient:            pClient,
 		indexerParser:      indexerParser,
 		getUTXOsPageSize:   1024,
-		codec:              block.Codec,
-		codecVersion:       block.CodecVersion,
+		codec:              platform.Codec,
+		codecVersion:       platform.CodecVersion,
 		avaxAssetID:        avaxAssetID,
 		txParserCfg: pmapper.TxParserConfig{
 			IsConstruction: false,

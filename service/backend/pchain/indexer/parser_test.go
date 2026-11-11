@@ -13,7 +13,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/platformvm/genesis"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -108,7 +108,7 @@ func TestGenesisBlockCreateChainTxs(t *testing.T) {
 
 	g.Txs = g.Txs[(len(g.Txs) - 2):]
 	for _, tx := range g.Txs {
-		castTx := tx.Unsigned.(*txs.CreateChainTx)
+		castTx := tx.Unsigned.(*platform.CreateChainTx)
 		castTx.GenesisData = []byte{}
 	}
 
@@ -161,7 +161,7 @@ func TestFixtures(t *testing.T) {
 	}
 }
 
-func initializeTxCtx(txs []*txs.Tx, networkID uint32) {
+func initializeTxCtx(txs []*platform.Tx, networkID uint32) {
 	aliaser := ids.NewAliaser()
 	_ = aliaser.Alias(avaconstants.PlatformChainID, constants.PChain.String())
 	ctx := &snow.Context{

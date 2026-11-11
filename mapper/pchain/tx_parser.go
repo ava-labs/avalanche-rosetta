@@ -11,8 +11,8 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -114,84 +114,84 @@ func NewTxParser(
 }
 
 // Parse converts the given unsigned P-chain tx to corresponding Rosetta Transaction
-func (t *TxParser) Parse(signedTx *txs.Tx) (*types.Transaction, error) {
+func (t *TxParser) Parse(signedTx *platform.Tx) (*types.Transaction, error) {
 	var (
 		ops    *txOps
 		txType string
 		err    error
 	)
 
-	// TODO: Move to using [txs.Visitor] from AvalancheGo
+	// TODO: Move to using [platform.Visitor] from AvalancheGo
 	// Ref: https://github.com/ava-labs/avalanchego/blob/master/vms/platformvm/txs/visitor.go
 	txID := signedTx.ID()
 	switch unsignedTx := signedTx.Unsigned.(type) {
-	case *txs.AddValidatorTx:
+	case *platform.AddValidatorTx:
 		txType = OpAddValidator
 		ops, err = t.parseAddValidatorTx(txID, unsignedTx)
-	case *txs.AddSubnetValidatorTx:
+	case *platform.AddSubnetValidatorTx:
 		txType = OpAddSubnetValidator
 		ops, err = t.parseAddSubnetValidatorTx(txID, unsignedTx)
-	case *txs.AddDelegatorTx:
+	case *platform.AddDelegatorTx:
 		txType = OpAddDelegator
 		ops, err = t.parseAddDelegatorTx(txID, unsignedTx)
-	case *txs.CreateChainTx:
+	case *platform.CreateChainTx:
 		txType = OpCreateChain
 		ops, err = t.parseCreateChainTx(txID, unsignedTx)
-	case *txs.CreateSubnetTx:
+	case *platform.CreateSubnetTx:
 		txType = OpCreateSubnet
 		ops, err = t.parseCreateSubnetTx(txID, unsignedTx)
-	case *txs.ImportTx:
+	case *platform.ImportTx:
 		txType = OpImportAvax
 		ops, err = t.parseImportTx(txID, unsignedTx)
-	case *txs.ExportTx:
+	case *platform.ExportTx:
 		txType = OpExportAvax
 		ops, err = t.parseExportTx(txID, unsignedTx)
-	case *txs.AdvanceTimeTx:
+	case *platform.AdvanceTimeTx:
 		txType = OpAdvanceTime
 		// no op tx
-	case *txs.RewardValidatorTx:
+	case *platform.RewardValidatorTx:
 		txType = OpRewardValidator
 		ops, err = t.parseRewardValidatorTx(unsignedTx)
-	case *txs.RemoveSubnetValidatorTx:
+	case *platform.RemoveSubnetValidatorTx:
 		txType = OpRemoveSubnetValidator
 		ops, err = t.parseRemoveSubnetValidatorTx(txID, unsignedTx)
-	case *txs.TransformSubnetTx:
+	case *platform.TransformSubnetTx:
 		txType = OpTransformSubnetValidator
 		ops, err = t.parseTransformSubnetTx(txID, unsignedTx)
-	case *txs.AddPermissionlessValidatorTx:
+	case *platform.AddPermissionlessValidatorTx:
 		txType = OpAddPermissionlessValidator
 		ops, err = t.parseAddPermissionlessValidatorTx(txID, unsignedTx)
-	case *txs.AddPermissionlessDelegatorTx:
+	case *platform.AddPermissionlessDelegatorTx:
 		txType = OpAddPermissionlessDelegator
 		ops, err = t.parseAddPermissionlessDelegatorTx(txID, unsignedTx)
-	case *txs.TransferSubnetOwnershipTx:
+	case *platform.TransferSubnetOwnershipTx:
 		txType = OpTransferSubnetOwnership
 		ops, err = t.parseTransferSubnetOwnershipTx(txID, unsignedTx)
-	case *txs.ConvertSubnetToL1Tx:
+	case *platform.ConvertSubnetToL1Tx:
 		txType = OpConvertSubnetToL1Tx
 		ops, err = t.parseConvertSubnetToL1Tx(txID, unsignedTx)
-	case *txs.RegisterL1ValidatorTx:
+	case *platform.RegisterL1ValidatorTx:
 		txType = OpRegisterL1ValidatorTx
 		ops, err = t.parseRegisterL1ValidatorTx(txID, unsignedTx)
-	case *txs.IncreaseL1ValidatorBalanceTx:
+	case *platform.IncreaseL1ValidatorBalanceTx:
 		txType = OpIncreaseL1ValidatorBalanceTx
 		ops, err = t.parseIncreaseL1ValidatorBalanceTx(txID, unsignedTx)
-	case *txs.SetL1ValidatorWeightTx:
+	case *platform.SetL1ValidatorWeightTx:
 		txType = OpSetL1ValidatorWeightTx
 		ops, err = t.parseSetL1ValidatorWeightTx(txID, unsignedTx)
-	case *txs.DisableL1ValidatorTx:
+	case *platform.DisableL1ValidatorTx:
 		txType = OpDisableL1ValidatorTx
 		ops, err = t.parseDisableL1ValidatorTx(txID, unsignedTx)
-	case *txs.BaseTx:
+	case *platform.BaseTx:
 		txType = OpBase
 		ops, err = t.parseBaseTx(txID, unsignedTx)
-	case *txs.AddAutoRenewedValidatorTx:
+	case *platform.AddAutoRenewedValidatorTx:
 		txType = OpAddAutoRenewedValidator
 		ops, err = t.parseAddAutoRenewedValidatorTx(txID, unsignedTx)
-	case *txs.SetAutoRenewedValidatorConfigTx:
+	case *platform.SetAutoRenewedValidatorConfigTx:
 		txType = OpSetAutoRenewedValidatorConfig
 		ops, err = t.parseSetAutoRenewedValidatorConfigTx(txID, unsignedTx)
-	case *txs.RewardAutoRenewedValidatorTx:
+	case *platform.RewardAutoRenewedValidatorTx:
 		txType = OpRewardAutoRenewedValidator
 		ops, err = t.parseRewardAutoRenewedValidatorTx(unsignedTx)
 	default:
@@ -241,7 +241,7 @@ func addOperationIdentifiers(operations []*types.Operation, startIdx int) []*typ
 	return result
 }
 
-func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) {
+func (t *TxParser) parseExportTx(txID ids.ID, tx *platform.ExportTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpExportAvax)
 	if err != nil {
 		return nil, err
@@ -260,7 +260,7 @@ func (t *TxParser) parseExportTx(txID ids.ID, tx *txs.ExportTx) (*txOps, error) 
 	return ops, nil
 }
 
-func (t *TxParser) parseImportTx(txID ids.ID, tx *txs.ImportTx) (*txOps, error) {
+func (t *TxParser) parseImportTx(txID ids.ID, tx *platform.ImportTx) (*txOps, error) {
 	ops := newTxOps(t.cfg.IsConstruction)
 
 	err := t.insToOperations(ops, OpImportAvax, tx.Ins, OpTypeInput)
@@ -281,7 +281,7 @@ func (t *TxParser) parseImportTx(txID ids.ID, tx *txs.ImportTx) (*txOps, error) 
 	return ops, nil
 }
 
-func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*txOps, error) {
+func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *platform.AddValidatorTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddValidator)
 	if err != nil {
 		return nil, err
@@ -296,7 +296,7 @@ func (t *TxParser) parseAddValidatorTx(txID ids.ID, tx *txs.AddValidatorTx) (*tx
 	return ops, nil
 }
 
-func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPermissionlessValidatorTx) (*txOps, error) {
+func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *platform.AddPermissionlessValidatorTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddPermissionlessValidator)
 	if err != nil {
 		return nil, err
@@ -317,7 +317,7 @@ func (t *TxParser) parseAddPermissionlessValidatorTx(txID ids.ID, tx *txs.AddPer
 	return ops, nil
 }
 
-func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*txOps, error) {
+func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *platform.AddDelegatorTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddDelegator)
 	if err != nil {
 		return nil, err
@@ -332,7 +332,7 @@ func (t *TxParser) parseAddDelegatorTx(txID ids.ID, tx *txs.AddDelegatorTx) (*tx
 	return ops, nil
 }
 
-func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPermissionlessDelegatorTx) (*txOps, error) {
+func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *platform.AddPermissionlessDelegatorTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddPermissionlessDelegator)
 	if err != nil {
 		return nil, err
@@ -347,7 +347,7 @@ func (t *TxParser) parseAddPermissionlessDelegatorTx(txID ids.ID, tx *txs.AddPer
 	return ops, nil
 }
 
-func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, error) {
+func (t *TxParser) parseRewardValidatorTx(tx *platform.RewardValidatorTx) (*txOps, error) {
 	stakingTxID := tx.TxID
 
 	if t.dependencyTxs == nil {
@@ -364,13 +364,13 @@ func (t *TxParser) parseRewardValidatorTx(tx *txs.RewardValidatorTx) (*txOps, er
 	}
 
 	switch utx := dep.Tx.Unsigned.(type) {
-	case *txs.AddValidatorTx:
+	case *platform.AddValidatorTx:
 		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), utx.Validator.EndTime(), t.cfg.Hrp)
-	case *txs.AddDelegatorTx:
+	case *platform.AddDelegatorTx:
 		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), utx.Validator.EndTime(), t.cfg.Hrp)
-	case *txs.AddPermissionlessValidatorTx:
+	case *platform.AddPermissionlessValidatorTx:
 		addValidatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), utx.Validator.EndTime(), t.cfg.Hrp)
-	case *txs.AddPermissionlessDelegatorTx:
+	case *platform.AddPermissionlessDelegatorTx:
 		addDelegatorMetadataToStakeOuts(ops, utx, utx.Validator.StartTime(), utx.Validator.EndTime(), t.cfg.Hrp)
 	default:
 		return nil, errUnknownRewardSourceTransaction
@@ -387,7 +387,7 @@ func getAddressArray(owners *secp256k1fx.OutputOwners, hrp string) []string {
 	return addrs
 }
 
-func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, startTime, endTime time.Time, hrp string) {
+func addValidatorMetadataToStakeOuts(ops *txOps, validator platform.ValidatorTx, startTime, endTime time.Time, hrp string) {
 	if validator == nil {
 		return
 	}
@@ -402,15 +402,15 @@ func addValidatorMetadataToStakeOuts(ops *txOps, validator txs.ValidatorTx, star
 		out.Metadata[MetadataSubnetID] = validator.SubnetID().String()
 
 		switch v := validator.(type) {
-		case *txs.AddValidatorTx:
+		case *platform.AddValidatorTx:
 			out.Metadata[MetadataDelegationFee] = v.DelegationShares
-		case *txs.AddPermissionlessValidatorTx:
+		case *platform.AddPermissionlessValidatorTx:
 			out.Metadata[MetadataDelegationFee] = v.DelegationShares
 		}
 	}
 }
 
-func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, startTime, endTime time.Time, hrp string) {
+func addDelegatorMetadataToStakeOuts(ops *txOps, delegator platform.DelegatorTx, startTime, endTime time.Time, hrp string) {
 	if delegator == nil {
 		return
 	}
@@ -425,55 +425,55 @@ func addDelegatorMetadataToStakeOuts(ops *txOps, delegator txs.DelegatorTx, star
 	}
 }
 
-func (t *TxParser) parseBaseTx(txID ids.ID, tx *txs.BaseTx) (*txOps, error) {
+func (t *TxParser) parseBaseTx(txID ids.ID, tx *platform.BaseTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, tx, OpBase)
 }
 
-func (t *TxParser) parseTransferSubnetOwnershipTx(txID ids.ID, tx *txs.TransferSubnetOwnershipTx) (*txOps, error) {
+func (t *TxParser) parseTransferSubnetOwnershipTx(txID ids.ID, tx *platform.TransferSubnetOwnershipTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpTransferSubnetOwnership)
 }
 
-func (t *TxParser) parseCreateSubnetTx(txID ids.ID, tx *txs.CreateSubnetTx) (*txOps, error) {
+func (t *TxParser) parseCreateSubnetTx(txID ids.ID, tx *platform.CreateSubnetTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpCreateSubnet)
 }
 
-func (t *TxParser) parseAddSubnetValidatorTx(txID ids.ID, tx *txs.AddSubnetValidatorTx) (*txOps, error) {
+func (t *TxParser) parseAddSubnetValidatorTx(txID ids.ID, tx *platform.AddSubnetValidatorTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddSubnetValidator)
 }
 
-func (t *TxParser) parseRemoveSubnetValidatorTx(txID ids.ID, tx *txs.RemoveSubnetValidatorTx) (*txOps, error) {
+func (t *TxParser) parseRemoveSubnetValidatorTx(txID ids.ID, tx *platform.RemoveSubnetValidatorTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpRemoveSubnetValidator)
 }
 
-func (t *TxParser) parseTransformSubnetTx(txID ids.ID, tx *txs.TransformSubnetTx) (*txOps, error) {
+func (t *TxParser) parseTransformSubnetTx(txID ids.ID, tx *platform.TransformSubnetTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpTransformSubnetValidator)
 }
 
-func (t *TxParser) parseCreateChainTx(txID ids.ID, tx *txs.CreateChainTx) (*txOps, error) {
+func (t *TxParser) parseCreateChainTx(txID ids.ID, tx *platform.CreateChainTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpCreateChain)
 }
 
-func (t *TxParser) parseConvertSubnetToL1Tx(txID ids.ID, tx *txs.ConvertSubnetToL1Tx) (*txOps, error) {
+func (t *TxParser) parseConvertSubnetToL1Tx(txID ids.ID, tx *platform.ConvertSubnetToL1Tx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpConvertSubnetToL1Tx)
 }
 
-func (t *TxParser) parseRegisterL1ValidatorTx(txID ids.ID, tx *txs.RegisterL1ValidatorTx) (*txOps, error) {
+func (t *TxParser) parseRegisterL1ValidatorTx(txID ids.ID, tx *platform.RegisterL1ValidatorTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpRegisterL1ValidatorTx)
 }
 
-func (t *TxParser) parseIncreaseL1ValidatorBalanceTx(txID ids.ID, tx *txs.IncreaseL1ValidatorBalanceTx) (*txOps, error) {
+func (t *TxParser) parseIncreaseL1ValidatorBalanceTx(txID ids.ID, tx *platform.IncreaseL1ValidatorBalanceTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpIncreaseL1ValidatorBalanceTx)
 }
 
-func (t *TxParser) parseSetL1ValidatorWeightTx(txID ids.ID, tx *txs.SetL1ValidatorWeightTx) (*txOps, error) {
+func (t *TxParser) parseSetL1ValidatorWeightTx(txID ids.ID, tx *platform.SetL1ValidatorWeightTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpSetL1ValidatorWeightTx)
 }
 
-func (t *TxParser) parseDisableL1ValidatorTx(txID ids.ID, tx *txs.DisableL1ValidatorTx) (*txOps, error) {
+func (t *TxParser) parseDisableL1ValidatorTx(txID ids.ID, tx *platform.DisableL1ValidatorTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpDisableL1ValidatorTx)
 }
 
-func (t *TxParser) parseAddAutoRenewedValidatorTx(txID ids.ID, tx *txs.AddAutoRenewedValidatorTx) (*txOps, error) {
+func (t *TxParser) parseAddAutoRenewedValidatorTx(txID ids.ID, tx *platform.AddAutoRenewedValidatorTx) (*txOps, error) {
 	ops, err := t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpAddAutoRenewedValidator)
 	if err != nil {
 		return nil, err
@@ -494,11 +494,11 @@ func (t *TxParser) parseAddAutoRenewedValidatorTx(txID ids.ID, tx *txs.AddAutoRe
 	return ops, nil
 }
 
-func (t *TxParser) parseSetAutoRenewedValidatorConfigTx(txID ids.ID, tx *txs.SetAutoRenewedValidatorConfigTx) (*txOps, error) {
+func (t *TxParser) parseSetAutoRenewedValidatorConfigTx(txID ids.ID, tx *platform.SetAutoRenewedValidatorConfigTx) (*txOps, error) {
 	return t.baseTxToCombinedOperations(txID, &tx.BaseTx, OpSetAutoRenewedValidatorConfig)
 }
 
-func (t *TxParser) parseRewardAutoRenewedValidatorTx(tx *txs.RewardAutoRenewedValidatorTx) (*txOps, error) {
+func (t *TxParser) parseRewardAutoRenewedValidatorTx(tx *platform.RewardAutoRenewedValidatorTx) (*txOps, error) {
 	if t.dependencyTxs == nil {
 		return nil, errNoDependencyTxs
 	}
@@ -513,7 +513,7 @@ func (t *TxParser) parseRewardAutoRenewedValidatorTx(tx *txs.RewardAutoRenewedVa
 		return nil, err
 	}
 
-	utx, ok := dep.Tx.Unsigned.(*txs.AddAutoRenewedValidatorTx)
+	utx, ok := dep.Tx.Unsigned.(*platform.AddAutoRenewedValidatorTx)
 	if !ok {
 		return nil, errUnknownRewardSourceTransaction
 	}
@@ -525,7 +525,7 @@ func (t *TxParser) parseRewardAutoRenewedValidatorTx(tx *txs.RewardAutoRenewedVa
 // addAutoRenewedValidatorMetadataToStakeOuts adds ACP-236 auto-renewed validator metadata
 // to stake/reward outputs. Unlike BoundedStaker-based validators, auto-renewed validators
 // have no fixed start/end time — they use Period and AutoCompoundRewardShares instead.
-func addAutoRenewedValidatorMetadataToStakeOuts(ops *txOps, tx *txs.AddAutoRenewedValidatorTx, hrp string) {
+func addAutoRenewedValidatorMetadataToStakeOuts(ops *txOps, tx *platform.AddAutoRenewedValidatorTx, hrp string) {
 	if tx == nil {
 		return
 	}
@@ -550,7 +550,7 @@ func addAutoRenewedValidatorMetadataToStakeOuts(ops *txOps, tx *txs.AddAutoRenew
 	}
 }
 
-func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *txs.BaseTx, txType string) (*txOps, error) {
+func (t *TxParser) baseTxToCombinedOperations(txID ids.ID, tx *platform.BaseTx, txType string) (*txOps, error) {
 	ops := newTxOps(t.cfg.IsConstruction)
 
 	err := t.insToOperations(ops, txType, tx.Ins, OpTypeInput)
@@ -864,7 +864,7 @@ func (t *TxParser) isMultisig(utxoid avax.UTXOID) (bool, error) {
 		// Possible for dependency txs like [DisableL1ValidatorTx] or [SetL1ValidatorWeightTx].
 		// These unfound UTXOs are generated by the network but are not included in the tx bytes.
 		switch dependencyTx.Tx.Unsigned.(type) {
-		case *txs.DisableL1ValidatorTx, *txs.SetL1ValidatorWeightTx:
+		case *platform.DisableL1ValidatorTx, *platform.SetL1ValidatorWeightTx:
 			return true, nil
 		}
 		return false, errFailedToCheckMultisig

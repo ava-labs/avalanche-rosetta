@@ -165,15 +165,9 @@ func (b *Backend) fetchCoinsFromChain(ctx context.Context, prefixAddress string,
 	return coins, nil
 }
 
-func (b *Backend) processUtxos(sourceChain constants.ChainIDAlias, utxos [][]byte) ([]*types.Coin, error) {
+func (b *Backend) processUtxos(sourceChain constants.ChainIDAlias, utxos []*avax.UTXO) ([]*types.Coin, error) {
 	coins := make([]*types.Coin, 0)
-	for _, utxoBytes := range utxos {
-		utxo := avax.UTXO{}
-		_, err := b.codec.Unmarshal(utxoBytes, &utxo)
-		if err != nil {
-			return nil, errUnableToParseUTXO
-		}
-
+	for _, utxo := range utxos {
 		transferableOut, ok := utxo.Out.(avax.TransferableOut)
 		if !ok {
 			return nil, errUnableToGetUTXOOutput

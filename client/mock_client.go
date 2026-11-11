@@ -21,6 +21,7 @@ import (
 	indexer "github.com/ava-labs/avalanchego/indexer"
 	rpc "github.com/ava-labs/avalanchego/utils/rpc"
 	avm "github.com/ava-labs/avalanchego/vms/avm"
+	avax "github.com/ava-labs/avalanchego/vms/components/avax"
 	gas "github.com/ava-labs/avalanchego/vms/components/gas"
 	platformvm "github.com/ava-labs/avalanchego/vms/platformvm"
 	signer "github.com/ava-labs/avalanchego/vms/platformvm/signer"
@@ -159,14 +160,14 @@ func (mr *MockClientMockRecorder) EstimateGas(arg0, arg1 any) *gomock.Call {
 }
 
 // GetAtomicUTXOs mocks base method.
-func (m *MockClient) GetAtomicUTXOs(arg0 context.Context, arg1 []ids.ShortID, arg2 string, arg3 uint32, arg4 ids.ShortID, arg5 ids.ID, arg6 ...rpc.Option) ([][]byte, ids.ShortID, ids.ID, error) {
+func (m *MockClient) GetAtomicUTXOs(arg0 context.Context, arg1 []ids.ShortID, arg2 string, arg3 uint32, arg4 ids.ShortID, arg5 ids.ID, arg6 ...rpc.Option) ([]*avax.UTXO, ids.ShortID, ids.ID, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2, arg3, arg4, arg5}
 	for _, a := range arg6 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetAtomicUTXOs", varargs...)
-	ret0, _ := ret[0].([][]byte)
+	ret0, _ := ret[0].([]*avax.UTXO)
 	ret1, _ := ret[1].(ids.ShortID)
 	ret2, _ := ret[2].(ids.ID)
 	ret3, _ := ret[3].(error)
