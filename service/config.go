@@ -60,19 +60,28 @@ func (c Config) IsTokenListEmpty() bool {
 // Signer returns an eth signer object for a given chain
 func (c Config) Signer() ethtypes.Signer {
 	if c.ChainID != nil {
-		if c.ChainID.Cmp(params.AvalancheMainnetChainID) == 0 {
-			return ethtypes.LatestSigner(GetChainConfig(params.AvalancheMainnetChainID))
+		if c.ChainID.Cmp(avalancheMainnetChainID) == 0 {
+			return ethtypes.LatestSigner(GetChainConfig(avalancheMainnetChainID))
 		}
-		if c.ChainID.Cmp(params.AvalancheFujiChainID) == 0 {
-			return ethtypes.LatestSigner(GetChainConfig(params.AvalancheFujiChainID))
+		if c.ChainID.Cmp(avalancheFujiChainID) == 0 {
+			return ethtypes.LatestSigner(GetChainConfig(avalancheFujiChainID))
 		}
-		if c.ChainID.Cmp(params.AvalancheLocalChainID) == 0 {
-			return ethtypes.LatestSigner(GetChainConfig(params.AvalancheLocalChainID))
+		if c.ChainID.Cmp(avalancheLocalChainID) == 0 {
+			return ethtypes.LatestSigner(GetChainConfig(avalancheLocalChainID))
 		}
 	}
 	return ethtypes.LatestSignerForChainID(c.ChainID)
 }
 
+// C-Chain EVM chain IDs.
+var (
+	avalancheMainnetChainID = big.NewInt(43114)
+	avalancheFujiChainID    = big.NewInt(43113)
+	avalancheLocalChainID   = big.NewInt(43112)
+)
+
+// GetChainConfig returns the EVM chain configuration used to select the transaction signer for
+// `chainID`.
 func GetChainConfig(chainID *big.Int) *params.ChainConfig {
 	c := &params.ChainConfig{
 		ChainID:             chainID,
@@ -88,6 +97,16 @@ func GetChainConfig(chainID *big.Int) *params.ChainConfig {
 		IstanbulBlock:       big.NewInt(0),
 		MuirGlacierBlock:    big.NewInt(0),
 	}
-	params.SetEthUpgrades(c)
+
+	// Berlin and London activated on the live networks at the blocks of the Apricot Phase 2 and 3
+	// upgrades, not at genesis.
+	switch {
+	case chainID.Cmp(avalancheFujiChainID) == 0:
+		c.BerlinBlock = big.NewInt(184985) // https://testnet.snowtrace.io/block/184985?chainid=43113
+		c.LondonBlock = big.NewInt(805078) // https://testnet.snowtrace.io/block/805078?chainid=43113
+	case chainID.Cmp(avalancheMainnetChainID) == 0:
+		c.BerlinBlock = big.NewInt(1640340) // https://snowtrace.io/block/1640340?chainid=43114
+		c.LondonBlock = big.NewInt(3308552) // https://snowtrace.io/block/3308552?chainid=43114
+	}
 	return c
 }

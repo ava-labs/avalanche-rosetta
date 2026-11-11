@@ -3,14 +3,13 @@ package cchainatomictx
 import (
 	"errors"
 	"fmt"
+	"slices"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/atomic"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/saevm/cchain/tx"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/libevm/common"
 	"github.com/coinbase/rosetta-sdk-go/parser"
@@ -23,12 +22,12 @@ var errMissingCoinIdentifier = errors.New("input operation does not have coin id
 
 // BuildTx constructs an evm tx based on the provided operation type, Rosetta matches and metadata
 // This method is only used during construction.
-func BuildTx(opType string, matches []*parser.Match, metadata Metadata, codec codec.Manager, avaxAssetID ids.ID) (*atomic.Tx, []*types.AccountIdentifier, error) {
+func BuildTx(opType string, matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) (*tx.Tx, []*types.AccountIdentifier, error) {
 	switch opType {
 	case mapper.OpExport:
-		return buildExportTx(matches, metadata, codec, avaxAssetID)
+		return buildExportTx(matches, metadata, avaxAssetID)
 	case mapper.OpImport:
-		return buildImportTx(matches, metadata, codec, avaxAssetID)
+		return buildImportTx(matches, metadata, avaxAssetID)
 	default:
 		return nil, nil, fmt.Errorf("unsupported atomic operation type %s", opType)
 	}
@@ -38,33 +37,30 @@ func BuildTx(opType string, matches []*parser.Match, metadata Metadata, codec co
 func buildExportTx(
 	matches []*parser.Match,
 	metadata Metadata,
-	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*atomic.Tx, []*types.AccountIdentifier, error) {
+) (*tx.Tx, []*types.AccountIdentifier, error) {
 	ins, signers := buildIns(matches, metadata, avaxAssetID)
 
-	exportedOutputs, err := buildExportedOutputs(matches, codec, avaxAssetID)
+	exportedOutputs, err := buildExportedOutputs(matches, avaxAssetID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	tx := &atomic.Tx{UnsignedAtomicTx: &atomic.UnsignedExportTx{
+	return &tx.Tx{Unsigned: &tx.Export{
 		NetworkID:        metadata.NetworkID,
 		BlockchainID:     metadata.CChainID,
 		DestinationChain: *metadata.DestinationChainID,
 		Ins:              ins,
 		ExportedOutputs:  exportedOutputs,
-	}}
-	return tx, signers, tx.Sign(codec, nil)
+	}}, signers, nil
 }
 
 // [buildImportTx] returns a duly initialized tx if it does not err
 func buildImportTx(
 	matches []*parser.Match,
 	metadata Metadata,
-	codec codec.Manager,
 	avaxAssetID ids.ID,
-) (*atomic.Tx, []*types.AccountIdentifier, error) {
+) (*tx.Tx, []*types.AccountIdentifier, error) {
 	importedInputs, signers, err := buildImportedInputs(matches, avaxAssetID)
 	if err != nil {
 		return nil, nil, err
@@ -72,23 +68,22 @@ func buildImportTx(
 
 	outs := buildOuts(matches, avaxAssetID)
 
-	tx := &atomic.Tx{UnsignedAtomicTx: &atomic.UnsignedImportTx{
+	return &tx.Tx{Unsigned: &tx.Import{
 		NetworkID:      metadata.NetworkID,
 		BlockchainID:   metadata.CChainID,
 		SourceChain:    *metadata.SourceChainID,
 		ImportedInputs: importedInputs,
 		Outs:           outs,
-	}}
-	return tx, signers, tx.Sign(codec, nil)
+	}}, signers, nil
 }
 
-func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([]atomic.EVMInput, []*types.AccountIdentifier) {
+func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([]tx.Input, []*types.AccountIdentifier) {
 	inputMatch := matches[0]
 
-	ins := []atomic.EVMInput{}
+	ins := []tx.Input{}
 	signers := []*types.AccountIdentifier{}
 	for i, op := range inputMatch.Operations {
-		ins = append(ins, atomic.EVMInput{
+		ins = append(ins, tx.Input{
 			Address: common.HexToAddress(op.Account.Address),
 			Amount:  inputMatch.Amounts[i].Uint64(),
 			AssetID: avaxAssetID,
@@ -97,10 +92,8 @@ func buildIns(matches []*parser.Match, metadata Metadata, avaxAssetID ids.ID) ([
 		signers = append(signers, op.Account)
 	}
 
-	// we do not use the signers as signing is performed externally to Rosetta
-	// instead we are using a dummy array with the same length as ins
-	evmSigners := make([][]*secp256k1.PrivateKey, len(ins))
-	atomic.SortEVMInputsAndSigners(ins, evmSigners)
+	// Signing is performed externally to Rosetta, so no signers are sorted alongside the inputs.
+	slices.SortFunc(ins, tx.Input.Compare)
 
 	return ins, signers
 }
@@ -136,23 +129,23 @@ func buildImportedInputs(matches []*parser.Match, avaxAssetID ids.ID) ([]*avax.T
 	return importedInputs, signers, nil
 }
 
-func buildOuts(matches []*parser.Match, avaxAssetID ids.ID) []atomic.EVMOutput {
+func buildOuts(matches []*parser.Match, avaxAssetID ids.ID) []tx.Output {
 	outputMatch := matches[1]
 
-	outs := []atomic.EVMOutput{}
+	outs := []tx.Output{}
 	for i, op := range outputMatch.Operations {
-		outs = append(outs, atomic.EVMOutput{
+		outs = append(outs, tx.Output{
 			Address: common.HexToAddress(op.Account.Address),
 			Amount:  outputMatch.Amounts[i].Uint64(),
 			AssetID: avaxAssetID,
 		})
 	}
-	utils.Sort(outs)
+	slices.SortFunc(outs, tx.Output.Compare)
 
 	return outs
 }
 
-func buildExportedOutputs(matches []*parser.Match, codec codec.Manager, avaxAssetID ids.ID) ([]*avax.TransferableOutput, error) {
+func buildExportedOutputs(matches []*parser.Match, avaxAssetID ids.ID) ([]*avax.TransferableOutput, error) {
 	outputMatch := matches[1]
 
 	outs := []*avax.TransferableOutput{}
@@ -175,7 +168,7 @@ func buildExportedOutputs(matches []*parser.Match, codec codec.Manager, avaxAsse
 		})
 	}
 
-	avax.SortTransferableOutputs(outs, codec)
+	tx.SortExportedOutputs(outs)
 
 	return outs, nil
 }

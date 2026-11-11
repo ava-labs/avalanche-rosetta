@@ -5,10 +5,10 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/atomic"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/saevm/cchain/tx"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -37,18 +37,18 @@ func NewTxParser(hrp string, chainIDs map[ids.ID]string, inputTxAccounts map[str
 
 // Parse converts the given atomic evm tx to corresponding Rosetta operations
 // This method is only used during construction.
-func (t *TxParser) Parse(tx atomic.Tx) ([]*types.Operation, error) {
-	switch unsignedTx := tx.UnsignedAtomicTx.(type) {
-	case *atomic.UnsignedExportTx:
+func (t *TxParser) Parse(atomicTx *tx.Tx) ([]*types.Operation, error) {
+	switch unsignedTx := atomicTx.Unsigned.(type) {
+	case *tx.Export:
 		return t.parseExportTx(unsignedTx)
-	case *atomic.UnsignedImportTx:
+	case *tx.Import:
 		return t.parseImportTx(unsignedTx)
 	default:
 		return nil, errors.New("unsupported tx type")
 	}
 }
 
-func (t *TxParser) parseExportTx(exportTx *atomic.UnsignedExportTx) ([]*types.Operation, error) {
+func (t *TxParser) parseExportTx(exportTx *tx.Export) ([]*types.Operation, error) {
 	operations := []*types.Operation{}
 	ins := insToOperations(0, mapper.OpExport, exportTx.Ins)
 
@@ -68,7 +68,7 @@ func (t *TxParser) parseExportTx(exportTx *atomic.UnsignedExportTx) ([]*types.Op
 	return operations, nil
 }
 
-func (t *TxParser) parseImportTx(importTx *atomic.UnsignedImportTx) ([]*types.Operation, error) {
+func (t *TxParser) parseImportTx(importTx *tx.Import) ([]*types.Operation, error) {
 	operations := []*types.Operation{}
 	ins, err := t.importedInToOperations(0, mapper.OpImport, importTx.ImportedInputs)
 	if err != nil {
@@ -82,7 +82,7 @@ func (t *TxParser) parseImportTx(importTx *atomic.UnsignedImportTx) ([]*types.Op
 	return operations, nil
 }
 
-func insToOperations(startIdx int64, opType string, ins []atomic.EVMInput) []*types.Operation {
+func insToOperations(startIdx int64, opType string, ins []tx.Input) []*types.Operation {
 	idx := startIdx
 	operations := []*types.Operation{}
 	for _, in := range ins {
@@ -131,7 +131,7 @@ func (t *TxParser) importedInToOperations(startIdx int64, opType string, ins []*
 	return operations, nil
 }
 
-func outsToOperations(startIdx int, opType string, outs []atomic.EVMOutput) []*types.Operation {
+func outsToOperations(startIdx int, opType string, outs []tx.Output) []*types.Operation {
 	idx := startIdx
 	operations := []*types.Operation{}
 	for _, out := range outs {

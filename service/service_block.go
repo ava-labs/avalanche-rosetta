@@ -5,9 +5,9 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ava-labs/avalanchego/graft/coreth/core"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/libevm/common"
+	"github.com/ava-labs/libevm/core"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/coinbase/rosetta-sdk-go/utils"

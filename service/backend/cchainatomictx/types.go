@@ -3,10 +3,9 @@ package cchainatomictx
 import (
 	"errors"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/atomic"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/hashing"
+	"github.com/ava-labs/avalanchego/vms/saevm/cchain/tx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/mapper"
@@ -23,38 +22,42 @@ var (
 )
 
 type cAtomicTx struct {
-	Tx           *atomic.Tx
-	Codec        codec.Manager
-	CodecVersion uint16
+	Tx *tx.Tx
+
+	// unsignedBytes is the canonical encoding of the unsigned transaction, which is what signers
+	// sign. It is set by Initialize.
+	unsignedBytes []byte
 }
 
+// Initialize caches the unsigned encoding of the transaction.
 func (c *cAtomicTx) Initialize() error {
 	if c.Tx == nil {
 		return common.ErrNoTxGiven
 	}
-	return c.Tx.Sign(c.Codec, nil)
-}
-
-func (c *cAtomicTx) Marshal() ([]byte, error) {
-	return c.Codec.Marshal(c.CodecVersion, c.Tx)
-}
-
-func (c *cAtomicTx) Unmarshal(bytes []byte) error {
-	tx := atomic.Tx{}
-	_, err := c.Codec.Unmarshal(bytes, &tx)
+	unsignedBytes, err := tx.UnsignedBytes(c.Tx.Unsigned)
 	if err != nil {
 		return err
 	}
-	if err := tx.Sign(c.Codec, nil); err != nil {
+	c.unsignedBytes = unsignedBytes
+	return nil
+}
+
+func (c *cAtomicTx) Marshal() ([]byte, error) {
+	return c.Tx.Bytes()
+}
+
+func (c *cAtomicTx) Unmarshal(bytes []byte) error {
+	t, err := tx.Parse(bytes)
+	if err != nil {
 		return err
 	}
-	c.Tx = &tx
+	c.Tx = t
 
 	return c.Initialize()
 }
 
 func (c *cAtomicTx) SigningPayload() []byte {
-	return hashing.ComputeHash256(c.Tx.Bytes())
+	return hashing.ComputeHash256(c.unsignedBytes)
 }
 
 func (c *cAtomicTx) Hash() ids.ID {
@@ -62,9 +65,7 @@ func (c *cAtomicTx) Hash() ids.ID {
 }
 
 type cAtomicTxBuilder struct {
-	avaxAssetID  ids.ID
-	codec        codec.Manager
-	codecVersion uint16
+	avaxAssetID ids.ID
 }
 
 func (c cAtomicTxBuilder) BuildTx(operations []*types.Operation, metadata map[string]interface{}) (common.AvaxTx, []*types.AccountIdentifier, *types.Error) {
@@ -80,16 +81,17 @@ func (c cAtomicTxBuilder) BuildTx(operations []*types.Operation, metadata map[st
 	}
 
 	opType := matches[0].Operations[0].Type
-	tx, signers, err := cmapper.BuildTx(opType, matches, cMetadata, c.codec, c.avaxAssetID)
+	atomicTx, signers, err := cmapper.BuildTx(opType, matches, cMetadata, c.avaxAssetID)
 	if err != nil {
 		return nil, nil, service.WrapError(service.ErrInternalError, err)
 	}
 
-	return &cAtomicTx{
-		Tx:           tx,
-		Codec:        c.codec,
-		CodecVersion: c.codecVersion,
-	}, signers, nil
+	cTx := &cAtomicTx{Tx: atomicTx}
+	if err := cTx.Initialize(); err != nil {
+		return nil, nil, service.WrapError(service.ErrInternalError, err)
+	}
+
+	return cTx, signers, nil
 }
 
 type cAtomicTxParser struct {
@@ -103,5 +105,5 @@ func (c cAtomicTxParser) ParseTx(tx *common.RosettaTx, inputAddresses map[string
 		return nil, errors.New("invalid transaction")
 	}
 	parser := cmapper.NewTxParser(c.hrp, c.chainIDs, inputAddresses)
-	return parser.Parse(*cTx.Tx)
+	return parser.Parse(cTx.Tx)
 }

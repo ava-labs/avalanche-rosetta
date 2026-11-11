@@ -7,7 +7,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"golang.org/x/sync/errgroup"
 
@@ -110,7 +110,7 @@ func (b *Backend) Block(ctx context.Context, request *types.BlockRequest) (*type
 // BlockTransaction implements the /block/transaction endpoint.
 func (b *Backend) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
 	var (
-		targetTxs     []*txs.Tx
+		targetTxs     []*platform.Tx
 		dependencyTxs pmapper.BlockTxDependencies
 	)
 
@@ -168,7 +168,7 @@ type depRequest struct {
 	rewardUTXOTxID ids.ID
 }
 
-func (b *Backend) fetchBlkDependencies(ctx context.Context, blkTxs []*txs.Tx) (pmapper.BlockTxDependencies, error) {
+func (b *Backend) fetchBlkDependencies(ctx context.Context, blkTxs []*platform.Tx) (pmapper.BlockTxDependencies, error) {
 	blockDeps := make(pmapper.BlockTxDependencies)
 
 	// depReqByTxID dedupes dependency requests by depTxID. Several txs in a block can
@@ -194,7 +194,7 @@ func (b *Backend) fetchBlkDependencies(ctx context.Context, blkTxs []*txs.Tx) (p
 	// isMultisig can resolve reward UTXOs when they are spent in a later block.
 	rewardTxIDs := make(map[ids.ID]ids.ID)
 	for _, tx := range blkTxs {
-		if utx, ok := tx.Unsigned.(*txs.RewardAutoRenewedValidatorTx); ok {
+		if utx, ok := tx.Unsigned.(*platform.RewardAutoRenewedValidatorTx); ok {
 			// Reward UTXOs are stored under the reward tx's own ID in AvalancheGo,
 			// not under the staking tx ID (utx.TxID). Fetch the staking tx for
 			// validator metadata, but query reward UTXOs with the reward tx ID.
@@ -267,7 +267,7 @@ func (b *Backend) fetchDependencyTx(ctx context.Context, txID ids.ID, rewardUTXO
 		return err
 	}
 
-	tx, err := txs.Parse(txs.Codec, txBytes)
+	tx, err := platform.ParseTx(platform.Codec, txBytes)
 	if err != nil {
 		return err
 	}

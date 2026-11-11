@@ -1,8 +1,6 @@
 package cchainatomictx
 
 import (
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/atomic"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
@@ -22,8 +20,6 @@ type Backend struct {
 	avalancheNetworkID uint32
 	cClient            client.Client
 	getUTXOsPageSize   uint32
-	codec              codec.Manager
-	codecVersion       uint16
 	avaxAssetID        ids.ID
 }
 
@@ -33,8 +29,6 @@ func NewBackend(cClient client.Client, avaxAssetID ids.ID, avalancheNetworkID ui
 		avalancheNetworkID: avalancheNetworkID,
 		cClient:            cClient,
 		getUTXOsPageSize:   1024,
-		codec:              atomic.Codec,
-		codecVersion:       0,
 		avaxAssetID:        avaxAssetID,
 	}
 }

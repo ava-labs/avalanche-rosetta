@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ava-labs/avalanchego/graft/coreth/core"
-	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/atomic"
 	"github.com/ava-labs/avalanchego/graft/coreth/plugin/evm/customtypes"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	cchaintx "github.com/ava-labs/avalanchego/vms/saevm/cchain/tx"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/libevm/common"
+	"github.com/ava-labs/libevm/core"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
 	"github.com/ava-labs/avalanche-rosetta/client"
@@ -34,6 +34,11 @@ var (
 	X2crate     = big.NewInt(1000000000)
 	zeroAddress = common.Address{}
 )
+
+// legacyEmptyMeta is the value of the `meta` field on C-Chain atomic operations. The field used to
+// hold a struct with only unexported fields, which always serialized as an empty JSON object. It is
+// kept so that response bodies stay byte-for-byte stable for existing clients.
+var legacyEmptyMeta = map[string]interface{}{}
 
 func Transaction(
 	header *ethtypes.Header,
@@ -144,7 +149,7 @@ func crossChainTransaction(
 	chainIDToAliasMapping map[ids.ID]constants.ChainIDAlias,
 	rawIdx int,
 	avaxAssetID string,
-	tx *atomic.Tx,
+	tx *cchaintx.Tx,
 ) ([]*types.Operation, map[string]interface{}, error) {
 	var (
 		ops          = []*types.Operation{}
@@ -156,13 +161,8 @@ func crossChainTransaction(
 		totalOutputAmount = big.NewInt(0)
 	)
 
-	// Prepare transaction for ID calcuation
-	if err := tx.Sign(atomic.Codec, nil); err != nil {
-		return nil, nil, err
-	}
-
-	switch t := tx.UnsignedAtomicTx.(type) {
-	case *atomic.UnsignedImportTx:
+	switch t := tx.Unsigned.(type) {
+	case *cchaintx.Import:
 		// Create de-duplicated list of input
 		// transaction IDs
 		mTxIDs := map[string]struct{}{}
@@ -199,19 +199,19 @@ func crossChainTransaction(
 					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
-					"tx":            t.ID().String(),
+					"tx":            tx.ID().String(),
 					"tx_ids":        txIDs,
 					"blockchain_id": t.BlockchainID.String(),
 					"network_id":    t.NetworkID,
 					"source_chain":  t.SourceChain.String(),
-					"meta":          t.Metadata,
+					"meta":          legacyEmptyMeta,
 					"asset_id":      out.AssetID.String(),
 				},
 			}
 			ops = append(ops, op)
 			idx++
 		}
-	case *atomic.UnsignedExportTx:
+	case *cchaintx.Export:
 		for _, in := range t.Ins {
 			if in.AssetID.String() != avaxAssetID {
 				continue
@@ -235,11 +235,11 @@ func crossChainTransaction(
 					Currency: AvaxCurrency,
 				},
 				Metadata: map[string]interface{}{
-					"tx":                t.ID().String(),
+					"tx":                tx.ID().String(),
 					"blockchain_id":     t.BlockchainID.String(),
 					"network_id":        t.NetworkID,
 					"destination_chain": t.DestinationChain.String(),
-					"meta":              t.Metadata,
+					"meta":              legacyEmptyMeta,
 					"asset_id":          in.AssetID.String(),
 				},
 			}
@@ -247,7 +247,7 @@ func crossChainTransaction(
 			idx++
 
 			if alias, ok := chainIDToAliasMapping[t.DestinationChain]; t.ExportedOutputs != nil && ok {
-				operations, totalExportedAmount, err := createExportedOuts(networkIdentifier, alias, t.ID(), t.ExportedOutputs)
+				operations, totalExportedAmount, err := createExportedOuts(networkIdentifier, alias, tx.ID(), t.ExportedOutputs)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -339,7 +339,7 @@ func CrossChainTransactions(
 		return transactions, nil
 	}
 
-	atomicTxs, err := atomic.ExtractAtomicTxs(extra, block.Time() >= ap5Activation, atomic.Codec)
+	atomicTxs, err := parseAtomicTxs(extra, block.Time() >= ap5Activation)
 	if err != nil {
 		return nil, err
 	}
@@ -650,4 +650,19 @@ func erc721Ops(transferLog *ethtypes.Log, opsLen int64) []*types.Operation {
 			},
 		},
 	}}
+}
+
+// parseAtomicTxs parses the atomic transactions in a block's extra data.
+//
+// Before ApricotPhase5 a block holds at most one transaction, serialized on its own. Afterwards the
+// extra data is a serialized slice of transactions.
+func parseAtomicTxs(extra []byte, isApricotPhase5 bool) ([]*cchaintx.Tx, error) {
+	if isApricotPhase5 {
+		return cchaintx.ParseSlice(extra)
+	}
+	t, err := cchaintx.Parse(extra)
+	if err != nil {
+		return nil, err
+	}
+	return []*cchaintx.Tx{t}, nil
 }

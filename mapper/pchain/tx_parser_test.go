@@ -6,7 +6,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/require"
@@ -620,11 +620,11 @@ func TestMapRewardAutoRenewedValidatorTx(t *testing.T) {
 	}
 
 	// Build the reward tx
-	rewardUtx := &txs.RewardAutoRenewedValidatorTx{
+	rewardUtx := &platform.RewardAutoRenewedValidatorTx{
 		TxID:      stakingTxID,
 		Timestamp: 1,
 	}
-	rewardSignedTx, err := txs.NewSigned(rewardUtx, txs.Codec, nil)
+	rewardSignedTx, err := platform.NewSignedTx(rewardUtx, platform.Codec, nil)
 	require.NoError(err)
 
 	deps := BlockTxDependencies{
@@ -682,15 +682,15 @@ func TestParseRewardAutoRenewedValidatorTxErrors(t *testing.T) {
 	stakingTx, _, _ := buildAddAutoRenewedValidator()
 	stakingTxID := stakingTx.ID()
 
-	rewardUtx := &txs.RewardAutoRenewedValidatorTx{
+	rewardUtx := &platform.RewardAutoRenewedValidatorTx{
 		TxID:      stakingTxID,
 		Timestamp: 1,
 	}
-	rewardSignedTx, err := txs.NewSigned(rewardUtx, txs.Codec, nil)
+	rewardSignedTx, err := platform.NewSignedTx(rewardUtx, platform.Codec, nil)
 	require.NoError(t, err)
 
 	// A dep whose Tx is not AddAutoRenewedValidatorTx (use ImportTx as a stand-in).
-	wrongTypeTx, _ := txs.NewSigned(&txs.ImportTx{}, txs.Codec, nil)
+	wrongTypeTx, _ := platform.NewSignedTx(&platform.ImportTx{}, platform.Codec, nil)
 
 	tests := []struct {
 		name    string

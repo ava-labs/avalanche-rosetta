@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ava-labs/avalanchego/graft/coreth/core"
 	ethereum "github.com/ava-labs/libevm"
 	"github.com/ava-labs/libevm/common"
 	"github.com/ava-labs/libevm/common/hexutil"
+	"github.com/ava-labs/libevm/core"
 	"github.com/ava-labs/libevm/crypto"
 	"github.com/coinbase/rosetta-sdk-go/parser"
 	"github.com/coinbase/rosetta-sdk-go/server"

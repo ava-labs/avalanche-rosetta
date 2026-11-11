@@ -3,17 +3,17 @@ package indexer
 import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/platformvm/genesis"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 )
 
 // ParsedBlock contains block details parsed from indexer containers
 type ParsedBlock struct {
-	BlockID   ids.ID    `json:"id"`
-	BlockType string    `json:"type"`
-	ParentID  ids.ID    `json:"parent"`
-	Timestamp int64     `json:"timestamp"`
-	Height    uint64    `json:"height"`
-	Txs       []*txs.Tx `json:"transactions"`
+	BlockID   ids.ID         `json:"id"`
+	BlockType string         `json:"type"`
+	ParentID  ids.ID         `json:"parent"`
+	Timestamp int64          `json:"timestamp"`
+	Height    uint64         `json:"height"`
+	Txs       []*platform.Tx `json:"transactions"`
 }
 
 // GenesisBlockData contains Genesis state details

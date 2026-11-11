@@ -9,10 +9,10 @@ import (
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/platform"
 	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/stretchr/testify/require"
 )
@@ -62,8 +62,8 @@ func TestTxDependencyIsCreateChain(t *testing.T) {
 	}
 
 	// create a non-reward validator tx
-	utx := &txs.CreateChainTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	utx := &platform.CreateChainTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    10,
 			BlockchainID: ids.ID{'c', 'h', 'a', 'i', 'n', 'I', 'D'},
 			Ins:          []*avax.TransferableInput{in},
@@ -77,7 +77,7 @@ func TestTxDependencyIsCreateChain(t *testing.T) {
 		GenesisData: []byte{'g', 'e', 'n', 'D', 'a', 't', 'a'},
 		SubnetAuth:  &secp256k1fx.Input{SigIndices: []uint32{1}},
 	}
-	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	tx, err := platform.NewSignedTx(utx, platform.Codec, nil)
 	require.NoError(err)
 
 	dep := &SingleTxDependency{Tx: tx}
@@ -157,8 +157,8 @@ func TestTxDependencyIsAddAutoRenewedValidator(t *testing.T) {
 		Threshold: 1,
 		Addrs:     []ids.ShortID{preFundedKeys[0].PublicKey().Address()},
 	}
-	utx := &txs.AddAutoRenewedValidatorTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	utx := &platform.AddAutoRenewedValidatorTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    uint32(1492),
 			BlockchainID: ids.GenerateTestID(),
 			Ins:          []*avax.TransferableInput{in},
@@ -174,7 +174,7 @@ func TestTxDependencyIsAddAutoRenewedValidator(t *testing.T) {
 		AutoCompoundRewardShares: 300000,
 		Period:                   14 * 24 * 3600,
 	}
-	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	tx, err := platform.NewSignedTx(utx, platform.Codec, nil)
 	require.NoError(err)
 
 	dep := &SingleTxDependency{Tx: tx}
@@ -231,8 +231,8 @@ func TestTxDependencyIsSetAutoRenewedValidatorConfig(t *testing.T) {
 			},
 		},
 	}
-	utx := &txs.SetAutoRenewedValidatorConfigTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	utx := &platform.SetAutoRenewedValidatorConfigTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    uint32(1492),
 			BlockchainID: ids.GenerateTestID(),
 			Ins:          []*avax.TransferableInput{in},
@@ -243,7 +243,7 @@ func TestTxDependencyIsSetAutoRenewedValidatorConfig(t *testing.T) {
 		AutoCompoundRewardShares: 500000,
 		Period:                   7 * 24 * 3600,
 	}
-	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	tx, err := platform.NewSignedTx(utx, platform.Codec, nil)
 	require.NoError(err)
 
 	dep := &SingleTxDependency{Tx: tx}
@@ -269,11 +269,11 @@ func TestTxDependencyIsRewardAutoRenewedValidator(t *testing.T) {
 
 	stakingTxID := ids.GenerateTestID()
 
-	utx := &txs.RewardAutoRenewedValidatorTx{
+	utx := &platform.RewardAutoRenewedValidatorTx{
 		TxID:      stakingTxID,
 		Timestamp: 1,
 	}
-	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	tx, err := platform.NewSignedTx(utx, platform.Codec, nil)
 	require.NoError(err)
 
 	dep := &SingleTxDependency{Tx: tx}
@@ -329,14 +329,14 @@ func TestTxDependencyIsAddValidator(t *testing.T) {
 			},
 		},
 	}
-	utx := &txs.AddValidatorTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	utx := &platform.AddValidatorTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    uint32(1492),
 			BlockchainID: ids.GenerateTestID(),
 			Ins:          []*avax.TransferableInput{in},
 			Outs:         []*avax.TransferableOutput{out},
 		}},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: ids.GenerateTestNodeID(),
 			Start:  uint64(clk.Time().Unix()),
 			End:    uint64(clk.Time().Add(time.Hour).Unix()),
@@ -350,7 +350,7 @@ func TestTxDependencyIsAddValidator(t *testing.T) {
 		},
 		DelegationShares: reward.PercentDenominator,
 	}
-	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	tx, err := platform.NewSignedTx(utx, platform.Codec, nil)
 	require.NoError(err)
 
 	dep := &SingleTxDependency{Tx: tx}
@@ -431,14 +431,14 @@ func TestTxDependencyIsAddPermissionlessValidator(t *testing.T) {
 			},
 		},
 	}
-	utx := &txs.AddPermissionlessValidatorTx{
-		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
+	utx := &platform.AddPermissionlessValidatorTx{
+		BaseTx: platform.BaseTx{BaseTx: avax.BaseTx{
 			NetworkID:    uint32(1492),
 			BlockchainID: ids.GenerateTestID(),
 			Ins:          []*avax.TransferableInput{in},
 			Outs:         []*avax.TransferableOutput{out},
 		}},
-		Validator: txs.Validator{
+		Validator: platform.Validator{
 			NodeID: ids.GenerateTestNodeID(),
 			Start:  uint64(clk.Time().Unix()),
 			End:    uint64(clk.Time().Add(time.Hour).Unix()),
@@ -459,7 +459,7 @@ func TestTxDependencyIsAddPermissionlessValidator(t *testing.T) {
 		},
 		DelegationShares: reward.PercentDenominator,
 	}
-	tx, err := txs.NewSigned(utx, txs.Codec, nil)
+	tx, err := platform.NewSignedTx(utx, platform.Codec, nil)
 	require.NoError(err)
 
 	dep := &SingleTxDependency{Tx: tx}
